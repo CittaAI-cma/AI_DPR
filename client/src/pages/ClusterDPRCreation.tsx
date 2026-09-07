@@ -10,15 +10,18 @@ import { ClusterDPRForm } from '@/components/cluster-dpr/ClusterDPRForm';
 import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 
 export const ClusterDPRCreation: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams] = useSearchParams();
   const { data, setCurrentStep, setGeneratedDPR, resetData, setDprIds, loadDataFromProject, setStepData } = useClusterDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
-  const [viewLanguage, setViewLanguage] = useState<'english' | 'telugu'>('english');
+  const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
   const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
   const [previewScroll, setPreviewScroll] = useState(0);
   const [project, setProject] = useState<any>(null); // Store the actual project object
@@ -299,7 +302,7 @@ export const ClusterDPRCreation: React.FC = () => {
       return false; // Indicate no save was needed
     } catch (error) {
       console.error('Error saving draft to database:', error);
-      toast.error('Failed to save draft to database');
+      toast.error(t('clusterDpr.toasts.saveFailedDb'));
       return false;
     }
   }, [data, setDprIds]);
@@ -363,13 +366,13 @@ export const ClusterDPRCreation: React.FC = () => {
     // Save to database
     const success = await saveToDatabase();
     if (success) {
-      toast.success('Draft saved to database successfully!');
+      toast.success(t('clusterDpr.toasts.saveSuccess'));
     } else {
       // Check if Step 1 is completed
       if (!data.step1?.clusterName) {
-        toast.error('Please complete Step 1 (Cluster Name) before saving');
+        toast.error(t('clusterDpr.toasts.needClusterName'));
       } else {
-        toast.error('Failed to save draft');
+        toast.error(t('clusterDpr.toasts.saveFailed'));
       }
     }
   };
@@ -379,7 +382,7 @@ export const ClusterDPRCreation: React.FC = () => {
     try {
       // Validate that at least some data is provided
       if (!data.step1 || !data.step1.clusterName) {
-        toast.error('Please fill in at least Step 1 (Basic Cluster Details) before generating DPR.');
+        toast.error(t('clusterDpr.toasts.needStep1'));
         setIsGenerating(false);
         return;
       }
@@ -387,7 +390,7 @@ export const ClusterDPRCreation: React.FC = () => {
       // Save current data before generating
       const saveSuccess = await saveToDatabase();
       if (!saveSuccess) {
-        toast.error('Failed to save data before generating DPR');
+        toast.error(t('clusterDpr.toasts.saveBeforeGenerateFailed'));
         setIsGenerating(false);
         return;
       }
@@ -462,7 +465,7 @@ export const ClusterDPRCreation: React.FC = () => {
         step12Data: completeData.step12,
       });
 
-      toast.loading('Generating DPR with AI enhancement...', { id: 'generating-dpr' });
+      toast.loading(t('clusterDpr.toasts.generating'), { id: 'generating-dpr' });
       
       // Call backend API to generate DPR with OpenAI enhancement
       const response = await api.generateClusterDPR(completeData, 'bilingual');
@@ -472,7 +475,7 @@ export const ClusterDPRCreation: React.FC = () => {
         setGeneratedDPR(response.data.content);
         resetData();
         // Navigate to view the generated DPR
-        toast.success('DPR generated successfully!', { id: 'generating-dpr' });
+        toast.success(t('clusterDpr.toasts.generateSuccess'), { id: 'generating-dpr' });
         navigate(`/dpr/view/${response.data.dprId}`);
       } else {
         throw new Error(response.message || 'Failed to generate DPR');
@@ -482,7 +485,7 @@ export const ClusterDPRCreation: React.FC = () => {
       toast.error(
         error.response?.data?.message || 
         error.message || 
-        'Failed to generate DPR. Please try again.',
+        t('clusterDpr.toasts.generateFailed'),
         { id: 'generating-dpr' }
       );
     } finally {
@@ -510,17 +513,18 @@ export const ClusterDPRCreation: React.FC = () => {
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  {t('common.back')}
                 </Button>
                 <div>
-                  <h1 className="text-2xl font-bold">Cluster DPR Creation</h1>
+                  <h1 className="text-2xl font-bold">{t('clusterDpr.title')}</h1>
                   <p className="text-sm text-muted-foreground">
-                    Step {currentStep} of {totalSteps}
+                    {t('clusterDpr.stepOf', { current: currentStep, total: totalSteps })}
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <LanguageToggle />
                 <Button
                   variant="outline"
                   size="sm"
@@ -528,7 +532,7 @@ export const ClusterDPRCreation: React.FC = () => {
                   className="gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  Save Draft
+                  {t('clusterDpr.saveDraft')}
                 </Button>
                 
                 <div className="flex items-center gap-1 border rounded-lg p-1">
@@ -538,7 +542,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     onClick={() => setPreviewMode('form')}
                     className="gap-2"
                   >
-                    Form
+                    {t('clusterDpr.form')}
                   </Button>
                   <Button
                     variant={previewMode === 'split' ? 'primary' : 'ghost'}
@@ -546,7 +550,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     onClick={() => setPreviewMode('split')}
                     className="gap-2"
                   >
-                    Split
+                    {t('clusterDpr.split')}
                   </Button>
                   <Button
                     variant={previewMode === 'preview' ? 'primary' : 'ghost'}
@@ -555,7 +559,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     className="gap-2"
                   >
                     <Eye className="h-4 w-4" />
-                    Preview
+                    {t('clusterDpr.preview')}
                   </Button>
                 </div>
                 
@@ -567,7 +571,7 @@ export const ClusterDPRCreation: React.FC = () => {
                   className="gap-2"
                   disabled={currentStep < totalSteps}
                 >
-                  Generate DPR
+                  {t('clusterDpr.generateDpr')}
                 </Button>
               </div>
             </div>
@@ -602,7 +606,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     `}>
                       {isCompleted && !isCurrent ? '✓' : step}
                     </span>
-                    <span className="hidden sm:inline">Step {step}</span>
+                    <span className="hidden sm:inline">{t('clusterDpr.stepShort', { n: step })}</span>
                   </button>
                 );
               })}
@@ -626,7 +630,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     <CardContent className="py-12">
                       <div className="flex flex-col items-center justify-center gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground">Loading draft data from database...</p>
+                        <p className="text-sm text-muted-foreground">{t('clusterDpr.loadingDraft')}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -634,24 +638,7 @@ export const ClusterDPRCreation: React.FC = () => {
                   <Card>
                     <CardHeader>
                       <CardTitle>
-                        {currentStep === 1 && 'Step 1: Executive Summary – Basic Cluster Details'}
-                        {currentStep === 2 && 'Step 2: Introduction & Sector Overview'}
-                        {currentStep === 3 && 'Step 3: District & Regional Profile'}
-                        {currentStep === 4 && 'Step 4: Cluster Profile'}
-                        {currentStep === 5 && 'Step 5: Value Chain Details'}
-                        {currentStep === 6 && 'Step 6: Market Assessment'}
-                        {currentStep === 7 && 'Step 7: Gap Analysis'}
-                        {currentStep === 8 && 'Step 8: SWOT Analysis'}
-                        {currentStep === 9 && 'Step 9: Proposed Interventions'}
-                        {currentStep === 10 && 'Step 10: Common Facility Centre (CFC) Details'}
-                        {currentStep === 11 && 'Step 11: SPV Details'}
-                        {currentStep === 12 && 'Step 12: Project Cost Details'}
-                        {currentStep === 13 && 'Step 13: Means of Finance'}
-                        {currentStep === 14 && 'Step 14: Operating Cost & Revenue'}
-                        {currentStep === 15 && 'Step 15: Financial Viability'}
-                        {currentStep === 16 && 'Step 16: Project Implementation Schedule'}
-                        {currentStep === 17 && 'Step 17: Expected Impact'}
-                        {currentStep === 18 && 'Step 18: Annexures & Document Uploads'}
+                        {t(`clusterDpr.steps.${currentStep}`)}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -674,7 +661,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     className="gap-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    {t('common.previous')}
                   </Button>
                   
                   <Button
@@ -683,7 +670,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     disabled={currentStep === totalSteps}
                     className="gap-2"
                   >
-                    Next
+                    {t('common.next')}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -696,7 +683,7 @@ export const ClusterDPRCreation: React.FC = () => {
                 <Card className="sticky top-[146px] max-h-[calc(100vh-170px)] overflow-hidden flex flex-col">
                   <CardHeader className="flex-shrink-0 border-b border-border">
                     <div className="flex items-center justify-between">
-                      <CardTitle>Live DPR Preview</CardTitle>
+                      <CardTitle>{t('clusterDpr.livePreview')}</CardTitle>
                       <div className="flex items-center gap-2">
                         {/* Zoom Controls */}
                         <div className="flex items-center gap-1 border rounded-lg p-1">
@@ -705,7 +692,7 @@ export const ClusterDPRCreation: React.FC = () => {
                             size="sm"
                             onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))}
                             className="h-7 w-7 p-0"
-                            title="Zoom Out"
+                            title={t('clusterDpr.zoomOut')}
                           >
                             <ZoomOut className="h-4 w-4" />
                           </Button>
@@ -717,7 +704,7 @@ export const ClusterDPRCreation: React.FC = () => {
                             size="sm"
                             onClick={() => setPreviewZoom(Math.min(2, previewZoom + 0.1))}
                             className="h-7 w-7 p-0"
-                            title="Zoom In"
+                            title={t('clusterDpr.zoomIn')}
                           >
                             <ZoomIn className="h-4 w-4" />
                           </Button>
@@ -726,7 +713,7 @@ export const ClusterDPRCreation: React.FC = () => {
                             size="sm"
                             onClick={() => setPreviewZoom(1)}
                             className="h-7 w-7 p-0"
-                            title="Reset Zoom"
+                            title={t('clusterDpr.resetZoom')}
                           >
                             <RotateCcw className="h-4 w-4" />
                           </Button>
@@ -790,7 +777,7 @@ export const ClusterDPRCreation: React.FC = () => {
                             projectType: 'cluster',
                             stepData: data,
                           }}
-                          viewLanguage="english"
+                          viewLanguage={viewLanguage}
                           onSectionClick={(stepNumber: number) => {
                             setCurrentStep(stepNumber);
                             // Scroll to top of the page when a section is clicked in preview

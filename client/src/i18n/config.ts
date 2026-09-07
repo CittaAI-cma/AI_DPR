@@ -28,7 +28,14 @@ i18n
 
 i18n.on('languageChanged', (lng) => {
   localStorage.setItem('i18nextLng', lng);
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = lng.startsWith('te') ? 'te' : 'en';
+  }
 });
+
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = savedLanguage === 'te' ? 'te' : 'en';
+}
 
 export default i18n;
 

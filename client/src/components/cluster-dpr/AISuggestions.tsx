@@ -5,6 +5,8 @@ import { AISuggestionsService, AISuggestion } from '@/services/aiSuggestions.ser
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { toast } from 'react-hot-toast';
 import { extraFieldsForScheme } from '@/lib/individualDpr/schemeFormConfig';
+import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 
 interface AISuggestionsProps {
   currentStep: number;
@@ -30,6 +32,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   isIndividualDPR = false,
 }) => {
   const clusterStore = useClusterDPRStore();
+  const tf = useClusterFormText();
   const data = dataProp ?? clusterStore.data;
   const setStepData = setStepDataProp ?? clusterStore.setStepData;
   const getStepData = getStepDataProp ?? clusterStore.getStepData;
@@ -557,7 +560,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         <div className="mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Sparkles className="h-4 w-4" />
-            <span className="text-xs">Complete Step 1 first to get AI suggestions for this step.</span>
+            <span className="text-xs">{tf('Complete Step 1 first to get AI suggestions for this step.')}</span>
           </div>
         </div>
       );
@@ -569,9 +572,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             <div>
-              <p className="text-sm font-semibold text-gray-900">Get AI Suggestions</p>
+              <p className="text-sm font-semibold text-gray-900">{tf('Get AI Suggestions')}</p>
               <p className="text-xs text-muted-foreground">
-                Get contextual recommendations based on your previous step data
+                {tf('Get contextual recommendations based on your previous step data')}
               </p>
             </div>
           </div>
@@ -581,7 +584,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm font-medium"
           >
             <Sparkles className="h-4 w-4" />
-            Generate Suggestions
+            {tf('Generate Suggestions')}
           </button>
         </div>
       </div>
@@ -594,7 +597,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
         <div className="flex items-center gap-2 text-primary">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm font-medium">Generating AI suggestions based on previous steps...</span>
+          <span className="text-sm font-medium">{tf('Generating AI suggestions based on previous steps...')}</span>
         </div>
       </div>
     );
@@ -607,14 +610,14 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Sparkles className="h-4 w-4" />
-            <span className="text-xs">No suggestions available. Try generating again or fill in more fields.</span>
+            <span className="text-xs">{tf('No suggestions available. Try generating again or fill in more fields.')}</span>
           </div>
           <button
             onClick={handleGenerateSuggestions}
             disabled={loading}
             className="px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
-            Retry
+            {tf('Retry')}
           </button>
         </div>
       </div>
@@ -632,7 +635,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
           >
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-sm">AI Suggestions</span>
+              <span className="font-semibold text-sm">{tf('AI Suggestions')}</span>
               <span className="text-xs text-muted-foreground">
                 ({suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''})
               </span>
@@ -650,7 +653,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
             title="Regenerate suggestions"
           >
             <Sparkles className="h-3 w-3" />
-            Regenerate
+            {tf('Regenerate')}
           </button>
           <button
             onClick={handleApplyAllSuggestions}
@@ -661,12 +664,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
             {applyingAll ? (
               <>
                 <Loader2 className="h-3 w-3 animate-spin" />
-                Applying...
+                {tf('Applying...')}
               </>
             ) : (
               <>
                 <Check className="h-3 w-3" />
-                Apply All
+                {tf('Apply All')}
               </>
             )}
           </button>
@@ -716,12 +719,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                         {isApplying ? (
                           <>
                             <Loader2 className="h-3 w-3 animate-spin" />
-                            Applying...
+                            {tf('Applying...')}
                           </>
                         ) : (
                           <>
                             <Check className="h-3 w-3" />
-                            Apply
+                            {tf('Apply')}
                           </>
                         )}
                       </button>

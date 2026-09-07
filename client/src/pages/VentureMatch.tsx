@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { VentureMatchCard } from '@/components/venture-match/VentureMatchCard';
@@ -131,10 +132,14 @@ export const VentureMatch: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto">
-        <Button variant="ghost" className="mb-6 gap-2" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4" />
-          {t('common.back')}
-        </Button>
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <Button variant="ghost" className="gap-2" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4" />
+            {t('common.back')}
+          </Button>
+          <LanguageToggle />
+        </div>
+        <h1 className="text-2xl font-bold mb-6">{t('ventureMatch.title')}</h1>
 
         {done ? (
           <VentureMatchResults

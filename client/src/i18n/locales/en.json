@@ -657,6 +657,7 @@
     "noMatches": "No schemes match these answers.",
     "notEligible": "{{count}} schemes do not match",
     "createDpr": "Create DPR",
+    "generateDprForMatch": "Generate DPR for this Match",
     "startOver": "Start again",
     "notAnswered": "Not answered",
     "criteria": {
@@ -903,6 +904,53 @@
           "export": "To other countries"
         }
       }
+    }
+  },
+  "clusterDpr": {
+    "title": "Cluster DPR Creation",
+    "stepOf": "Step {{current}} of {{total}}",
+    "stepShort": "Step {{n}}",
+    "saveDraft": "Save Draft",
+    "form": "Form",
+    "split": "Split",
+    "preview": "Preview",
+    "generateDpr": "Generate DPR",
+    "livePreview": "Live DPR Preview",
+    "loadingDraft": "Loading draft data from database...",
+    "zoomOut": "Zoom Out",
+    "zoomIn": "Zoom In",
+    "resetZoom": "Reset Zoom",
+    "lakhs": "Lakhs",
+    "toasts": {
+      "saveFailedDb": "Failed to save draft to database",
+      "saveSuccess": "Draft saved to database successfully!",
+      "needClusterName": "Please complete Step 1 (Cluster Name) before saving",
+      "saveFailed": "Failed to save draft",
+      "needStep1": "Please fill in at least Step 1 (Basic Cluster Details) before generating DPR.",
+      "saveBeforeGenerateFailed": "Failed to save data before generating DPR",
+      "generating": "Generating DPR with AI enhancement...",
+      "generateSuccess": "DPR generated successfully!",
+      "generateFailed": "Failed to generate DPR. Please try again."
+    },
+    "steps": {
+      "1": "Step 1: Executive Summary – Basic Cluster Details",
+      "2": "Step 2: Introduction & Sector Overview",
+      "3": "Step 3: District & Regional Profile",
+      "4": "Step 4: Cluster Profile",
+      "5": "Step 5: Value Chain Details",
+      "6": "Step 6: Market Assessment",
+      "7": "Step 7: Gap Analysis",
+      "8": "Step 8: SWOT Analysis",
+      "9": "Step 9: Proposed Interventions",
+      "10": "Step 10: Common Facility Centre (CFC) Details",
+      "11": "Step 11: SPV Details",
+      "12": "Step 12: Project Cost Details",
+      "13": "Step 13: Means of Finance",
+      "14": "Step 14: Operating Cost & Revenue",
+      "15": "Step 15: Financial Viability",
+      "16": "Step 16: Project Implementation Schedule",
+      "17": "Step 17: Expected Impact",
+      "18": "Step 18: Annexures & Document Uploads"
     }
   }
 }

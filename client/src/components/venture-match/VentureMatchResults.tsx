@@ -117,7 +117,7 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                       onClick={() => onCreateDprForScheme(scheme.code)}
                     >
                       <FolderPlus className="h-4 w-4" />
-                      Generate DPR for this Match
+                      {t('ventureMatch.generateDprForMatch')}
                     </Button>
                   </div>
                 </div>
