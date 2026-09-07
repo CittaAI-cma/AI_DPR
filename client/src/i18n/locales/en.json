@@ -670,7 +670,24 @@
       "useAnswer": "Use this answer",
       "thinking": "Thinking…",
       "error": "Could not get help. Try again.",
-      "lowConfidence": "This is a best guess — you can still pick another option on the card."
+      "lowConfidence": "This is a best guess — you can still pick another option on the card.",
+      "kickoff": "In your own words, tell me about this. I will match it to an option.",
+      "starters": {
+        "activity": ["I make pickles", "I have a kirana shop", "I sell from a street cart"],
+        "stage": ["It is a new business", "I already have a unit"],
+        "budget": ["About 3 lakh", "About 15 lakh", "About 1 crore"],
+        "legal": ["Only me", "With partners", "It is a Pvt Ltd"],
+        "owner": ["My wife owns it", "I am an SC man", "I am a general category man"],
+        "domicile": ["Yes, I live in AP", "I live in another state"],
+        "location": ["In a town", "In a village", "Inside an APIIC park"],
+        "riceCard": ["Yes, we have one", "No"],
+        "age": ["25", "55", "17"],
+        "education": ["I passed 10th", "I studied till 5th"],
+        "udyam": ["I already have Udyam", "I can register", "I do not want it"],
+        "priorSubsidy": ["Never took one", "Took one but repaid", "Still unpaid"],
+        "govtFamily": ["Yes", "No"],
+        "market": ["Local shop", "Online / ONDC", "We export"]
+      }
     },
     "criteria": {
       "streetVending": "Must be a street vendor",

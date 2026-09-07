@@ -65,7 +65,7 @@ export class VentureMatchHelpService {
     const turns = userTurnCount(input.messages || []);
     const mustRecommendSoon = turns >= 4;
 
-    const system = `You help an Andhra Pradesh MSME entrepreneur pick ONE Scheme Finder multiple-choice answer.
+    const system = `You help an Andhra Pradesh MSME entrepreneur pick a Scheme Finder multiple-choice answer.
 You are not a general chatbot. You only clarify the current question, then map their situation to allowed option ids.
 
 ${langRule}
@@ -79,6 +79,8 @@ Previous answers (context only): ${JSON.stringify(input.answersSoFar || {})}
 Rules:
 - Return JSON only. No markdown.
 - Never invent option ids. Only use ids from the allowed list.
+- Read negation carefully. "I don't own a company" / "I work on my own" is sole owner, not a company.
+- Do not match on a single keyword if the sentence means the opposite.
 - Ask at most ONE short clarifying question per turn (mode "ask").
 - suggestedUserReplies: 2 short example answers the user might tap (same language as assistantMessage).
 - When you are reasonably sure, use mode "recommend" with optionIds.
@@ -103,7 +105,9 @@ JSON shapes:
         { role: 'system', content: system },
         {
           role: 'user',
-          content: transcript || 'The user does not know which option to choose. Start by asking one simple clarifying question.',
+          content:
+            transcript ||
+            'The user does not know which option to choose. Start by asking one simple clarifying question.',
         },
       ],
     });
@@ -122,10 +126,10 @@ JSON shapes:
       mode: 'ask',
       assistantMessage:
         lang === 'te'
-          ? 'మీ పని ఏమిటో ఒక వాక్యంలో చెప్పండి. నేను సరైన ఎంపిక చూపిస్తాను.'
-          : 'In one sentence, tell me what you do. I will point to the right choice.',
+          ? 'మీ పరిస్థితి ఒక వాక్యంలో చెప్పండి. నేను సరైన ఎంపిక చూపిస్తాను.'
+          : 'In one sentence, tell me your situation. I will point to the right choice.',
       suggestedUserReplies:
-        lang === 'te' ? ['నేను ఆహారం తయారు చేస్తాను', 'నేను సేవలు ఇస్తాను'] : ['I make food products', 'I provide a service'],
+        lang === 'te' ? ['నాకు తెలియదు', 'సహాయం చేయండి'] : ['I am not sure', 'Help me pick'],
     };
 
     if (!parsed || typeof parsed !== 'object') return fallbackAsk;
@@ -153,6 +157,10 @@ JSON shapes:
     const suggested = Array.isArray(parsed.suggestedUserReplies)
       ? parsed.suggestedUserReplies.map((s: any) => String(s || '').trim()).filter(Boolean).slice(0, 4)
       : fallbackAsk.suggestedUserReplies;
-    return { mode: 'ask', assistantMessage, suggestedUserReplies: suggested.length ? suggested : fallbackAsk.suggestedUserReplies };
+    return {
+      mode: 'ask',
+      assistantMessage,
+      suggestedUserReplies: suggested.length ? suggested : fallbackAsk.suggestedUserReplies,
+    };
   }
 }

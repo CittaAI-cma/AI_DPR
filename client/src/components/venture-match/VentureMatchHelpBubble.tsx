@@ -62,6 +62,11 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
     ])
   );
 
+  const kickoffStarters = (): string[] => {
+    const raw = t(`ventureMatch.help.starters.${question.id}`, { returnObjects: true });
+    return Array.isArray(raw) ? raw.filter((s) => typeof s === 'string') : [];
+  };
+
   const callHelp = async (transcript: ChatMsg[], language: 'en' | 'te') => {
     const response = await api.ventureMatchHelp({
       questionId: question.id,
@@ -125,9 +130,12 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
     if (!open) return;
     if (kickKey.current === question.id) return;
     kickKey.current = question.id;
-    void sendTurn('', true);
+    setMessages([{ role: 'assistant', content: t('ventureMatch.help.kickoff') }]);
+    setSuggested(kickoffStarters());
+    setError(null);
+    setRecommend(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, question.id]);
+  }, [open, question.id, uiLang]);
 
   const recommendedLabels = recommend
     ? recommend.optionIds.map((id) => optionLabels[id] || id).join(', ')
