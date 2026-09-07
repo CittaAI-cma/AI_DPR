@@ -952,5 +952,44 @@
       "17": "Step 17: Expected Impact",
       "18": "Step 18: Annexures & Document Uploads"
     }
+  },
+  "individualDpr": {
+    "title": "Create New Latest DPR",
+    "stepOf": "Step {{current}} of {{total}} visible steps",
+    "hiddenForScheme": "({{count}} hidden for this scheme)",
+    "scheme": "Scheme: {{title}}",
+    "vanillaOption": "Know which scheme you want? Vanilla bank term loan",
+    "loading": "Loading...",
+    "fullscreen": "Fullscreen",
+    "steps": {
+      "1": "Step 1: Your unit – basic details",
+      "2": "Step 2: Sector overview",
+      "3": "Step 3: District & location",
+      "4": "Step 4: Your unit profile",
+      "5": "Step 5: Value chain",
+      "6": "Step 6: Market",
+      "7": "Step 7: Gaps",
+      "8": "Step 8: SWOT",
+      "9": "Step 9: What you plan to do",
+      "10": "Step 10: Workplace / shed / unit",
+      "11": "Step 11: Applicant / firm",
+      "12": "Step 12: Project cost",
+      "13": "Step 13: Means of finance",
+      "14": "Step 14: Operating cost & sales",
+      "15": "Step 15: Financial viability",
+      "16": "Step 16: Implementation schedule",
+      "17": "Step 17: Expected impact",
+      "18": "Step 18: Document uploads"
+    },
+    "toasts": {
+      "needUnitName": "Please complete Step 1 (Unit / project name) before saving",
+      "needUnitNameGenerate": "Please fill in at least Step 1 (unit name) before generating DPR.",
+      "needNameForAi": "Enter the unit / project name first so AI has something to write about.",
+      "fillNone": "AI could not fill any steps. Try again after adding district and location.",
+      "fillPartial": "Filled {{filled}} steps. Failed: {{failed}}.",
+      "fillSuccess": "Filled {{filled}} steps with AI. Review and edit as needed.",
+      "generateAllFailed": "Failed to generate all steps. Please try again.",
+      "fillingStep": "Filling step {{step}} ({{index}} of {{total}})…"
+    }
   }
 }

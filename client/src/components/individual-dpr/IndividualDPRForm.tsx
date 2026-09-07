@@ -20,6 +20,8 @@ import {
   isMudraShishuKishore,
 } from '@/lib/individualDpr/schemeFormConfig';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { useTranslation } from 'react-i18next';
 
 interface IndividualDPRFormProps {
   currentStep: number;
@@ -33,6 +35,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   onPrevious,
 }) => {
   const { data, setStepData, getStepData, setSchemeExtras, setCurrentStep } = useIndividualDPRStore();
+  const tf = useClusterFormText();
+  const { t } = useTranslation();
   const schemeCode = data.matchedSchemeCode || null;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   const extras = data.schemeExtras || {};
@@ -89,10 +93,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
     return (
       <label className={`block text-sm font-medium mb-2 ${required ? '' : ''} flex items-center gap-2`}>
-        {label}
+        {tf(label)}
         {required && <span className="text-red-500">*</span>}
         {description && (
-          <InfoTooltip content={description} />
+          <InfoTooltip content={tf(description)} />
         )}
       </label>
     );
@@ -138,7 +142,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
   const handleGenerateAllSteps = async () => {
     if (!data.step1?.clusterName) {
-      toast.error('Enter the unit / project name first so AI has something to write about.');
+      toast.error(t('individualDpr.toasts.needNameForAi'));
       return;
     }
     setIsFillingAll(true);
@@ -154,13 +158,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         onProgress: setFillProgress,
       });
       if (result.filledSteps.length === 0) {
-        toast.error('AI could not fill any steps. Try again after adding district and location.');
+        toast.error(t('individualDpr.toasts.fillNone'));
         return;
       }
       if (result.failedSteps.length) {
-        toast.error(`Filled ${result.filledSteps.length} steps. Failed: ${result.failedSteps.join(', ')}.`);
+        toast.error(t('individualDpr.toasts.fillPartial', { filled: result.filledSteps.length, failed: result.failedSteps.join(', ') }));
       } else {
-        toast.success(`Filled ${result.filledSteps.length} steps with AI. Review and edit as needed.`);
+        toast.success(t('individualDpr.toasts.fillSuccess', { filled: result.filledSteps.length }));
       }
       if (!['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP'].includes(schemeCode || '')) {
         setCurrentStep(2);
@@ -168,7 +172,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       }
     } catch (error) {
       console.error(error);
-      toast.error('Failed to generate all steps. Please try again.');
+      toast.error(t('individualDpr.toasts.generateAllFailed'));
     } finally {
       setIsFillingAll(false);
       setFillProgress(null);
@@ -220,79 +224,79 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-              Unit / Project Name *
+              {tf('Unit / Project Name *')}
               {stepDescriptions.clusterName && (
-                <InfoTooltip content={stepDescriptions.clusterName} />
+                <InfoTooltip content={tf(stepDescriptions.clusterName)} />
               )}
             </label>
             <Input
               value={stepData.clusterName || ''}
               onChange={(e) => handleInputChange('clusterName', e.target.value)}
-              placeholder="Enter unit or project name"
+              placeholder={tf("Enter unit or project name")}
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-              District *
+              {tf('District *')}
               {stepDescriptions.district && (
-                <InfoTooltip content={stepDescriptions.district} />
+                <InfoTooltip content={tf(stepDescriptions.district)} />
               )}
             </label>
             <Input
               value={stepData.district || ''}
               onChange={(e) => handleInputChange('district', e.target.value)}
-              placeholder="Enter district"
+              placeholder={tf("Enter district")}
             />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-            Location *
+            {tf('Location *')}
             {stepDescriptions.location && (
-              <InfoTooltip content={stepDescriptions.location} />
+              <InfoTooltip content={tf(stepDescriptions.location)} />
             )}
           </label>
           <Input
             value={stepData.location || ''}
             onChange={(e) => handleInputChange('location', e.target.value)}
-            placeholder="Village / town / industrial park"
+            placeholder={tf("Village / town / industrial park")}
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-              Nature of Business
+              {tf('Nature of Business')}
               {stepDescriptions.natureOfBusiness && (
-                <InfoTooltip content={stepDescriptions.natureOfBusiness} />
+                <InfoTooltip content={tf(stepDescriptions.natureOfBusiness)} />
               )}
             </label>
             <Input
               value={stepData.natureOfBusiness || ''}
               onChange={(e) => handleInputChange('natureOfBusiness', e.target.value)}
-              placeholder="Enter nature of business"
+              placeholder={tf("Enter nature of business")}
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-              Major Products
+              {tf('Major Products')}
               {stepDescriptions.majorProducts && (
-                <InfoTooltip content={stepDescriptions.majorProducts} />
+                <InfoTooltip content={tf(stepDescriptions.majorProducts)} />
               )}
             </label>
             <Input
               value={stepData.majorProducts || ''}
               onChange={(e) => handleInputChange('majorProducts', e.target.value)}
-              placeholder="Enter major products"
+              placeholder={tf("Enter major products")}
             />
           </div>
         </div>
 
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
-          <p className="text-sm font-medium">Generate the rest of this DPR with AI</p>
+          <p className="text-sm font-medium">{tf("Generate the rest of this DPR with AI")}</p>
           <p className="text-sm text-muted-foreground">
-            Uses the unit name, district, and location to fill every visible step except document uploads. You can edit anything afterwards.
+            {tf('Uses the unit name, district, and location to fill every visible step except document uploads. You can edit anything afterwards.')}
           </p>
           <Button
             type="button"
@@ -306,43 +310,47 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <Sparkles className="h-4 w-4" />
             )}
             {isFillingAll && fillProgress
-              ? `Filling step ${fillProgress.step} (${fillProgress.index} of ${fillProgress.total})…`
-              : 'Generate all steps with AI'}
+              ? t('individualDpr.toasts.fillingStep', {
+                  step: fillProgress.step,
+                  index: fillProgress.index,
+                  total: fillProgress.total,
+                })
+              : tf('Generate all steps with AI')}
           </Button>
         </div>
 
         {schemeCode === 'VISHWAKARMA' && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">PM Vishwakarma details</h3>
+            <h3 className="text-lg font-semibold">{tf("PM Vishwakarma details")}</h3>
             <div>
-              <label className="block text-sm font-medium mb-2">Craft / trade</label>
+              <label className="block text-sm font-medium mb-2">{tf("Craft / trade")}</label>
               <select
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={extras.craft || stepData.craft || ''}
                 onChange={(e) => updateExtras({ craft: e.target.value })}
               >
-                <option value="">Select your craft</option>
+                <option value="">{tf("Select your craft")}</option>
                 {VISHWAKARMA_CRAFTS.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Current tools</label>
+              <label className="block text-sm font-medium mb-2">{tf("Current tools")}</label>
               <textarea
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={extras.currentTools || stepData.currentTools || ''}
                 onChange={(e) => updateExtras({ currentTools: e.target.value })}
-                placeholder="Tools you use today"
+                placeholder={tf("Tools you use today")}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">New tools needed (₹15,000 voucher)</label>
+              <label className="block text-sm font-medium mb-2">{tf("New tools needed (₹15,000 voucher)")}</label>
               <textarea
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={extras.newTools || stepData.newTools || ''}
                 onChange={(e) => updateExtras({ newTools: e.target.value })}
-                placeholder="Tools you want to buy with the voucher"
+                placeholder={tf("Tools you want to buy with the voucher")}
               />
             </div>
           </div>
@@ -350,25 +358,25 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
         {schemeCode === 'SVANIDHI' && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">PM SVANidhi details</h3>
+            <h3 className="text-lg font-semibold">{tf("PM SVANidhi details")}</h3>
             <div>
-              <label className="block text-sm font-medium mb-2">Vending proof</label>
+              <label className="block text-sm font-medium mb-2">{tf("Vending proof")}</label>
               <select
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={extras.covOrLor || stepData.covOrLor || ''}
                 onChange={(e) => updateExtras({ covOrLor: e.target.value })}
               >
-                <option value="">Select</option>
-                <option value="cov">Certificate of Vending (CoV)</option>
-                <option value="lor">Letter of Recommendation (LoR)</option>
+                <option value="">{tf("Select")}</option>
+                <option value="cov">{tf("Certificate of Vending (CoV)")}</option>
+                <option value="lor">{tf("Letter of Recommendation (LoR)")}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">UPI QR code</label>
+              <label className="block text-sm font-medium mb-2">{tf("UPI QR code")}</label>
               <Input
                 value={extras.upiQr || stepData.upiQr || ''}
                 onChange={(e) => updateExtras({ upiQr: e.target.value })}
-                placeholder="UPI ID or QR details"
+                placeholder={tf("UPI ID or QR details")}
               />
             </div>
           </div>
@@ -376,30 +384,30 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
         {schemeCode === 'PMFME' && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">FSSAI</h3>
+            <h3 className="text-lg font-semibold">{tf("FSSAI")}</h3>
             <select
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={extras.fssai || stepData.fssai || ''}
               onChange={(e) => updateExtras({ fssai: e.target.value })}
             >
-              <option value="">FSSAI status</option>
-              <option value="yes">Already have FSSAI</option>
-              <option value="planned">Will obtain / draft FSSAI</option>
+              <option value="">{tf("FSSAI status")}</option>
+              <option value="yes">{tf("Already have FSSAI")}</option>
+              <option value="planned">{tf("Will obtain / draft FSSAI")}</option>
             </select>
           </div>
         )}
 
         {schemeCode === 'AP_EDP' && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">APIIC industrial park</h3>
+            <h3 className="text-lg font-semibold">{tf("APIIC industrial park")}</h3>
             <select
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={extras.apiicPark || stepData.apiicPark || ''}
               onChange={(e) => updateExtras({ apiicPark: e.target.value })}
             >
-              <option value="">Is the unit inside an APIIC park?</option>
-              <option value="yes">Yes — land rebate may apply</option>
-              <option value="no">No</option>
+              <option value="">{tf("Is the unit inside an APIIC park?")}</option>
+              <option value="yes">{tf("Yes — land rebate may apply")}</option>
+              <option value="no">{tf("No")}</option>
             </select>
           </div>
         )}
@@ -435,7 +443,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <Input
             value={stepData.sectorType || ''}
             onChange={(e) => handleInputChange('sectorType', e.target.value)}
-            placeholder="Enter sector type"
+            placeholder={tf("Enter sector type")}
           />
         </div>
 
@@ -445,7 +453,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.sectorDescription || ''}
             onChange={(e) => handleInputChange('sectorDescription', e.target.value)}
-            placeholder="Describe the sector in detail"
+            placeholder={tf("Describe the sector in detail")}
           />
         </div>
 
@@ -455,7 +463,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.nationalImportance || ''}
             onChange={(e) => handleInputChange('nationalImportance', e.target.value)}
-            placeholder="Describe national importance"
+            placeholder={tf("Describe national importance")}
           />
         </div>
 
@@ -465,7 +473,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.stateLevelImportance || ''}
             onChange={(e) => handleInputChange('stateLevelImportance', e.target.value)}
-            placeholder="Describe state-level importance"
+            placeholder={tf("Describe state-level importance")}
           />
         </div>
 
@@ -481,7 +489,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     updated[index] = e.target.value;
                     handleInputChange('keyProducts', updated);
                   }}
-                  placeholder="Enter product name"
+                  placeholder={tf("Enter product name")}
                 />
                 <Button
                   variant="ghost"
@@ -526,7 +534,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.geography || ''}
             onChange={(e) => handleInputChange('geography', e.target.value)}
-            placeholder="Describe geography"
+            placeholder={tf("Describe geography")}
           />
         </div>
         <div>
@@ -534,7 +542,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <Input
             value={stepData.climate || ''}
             onChange={(e) => handleInputChange('climate', e.target.value)}
-            placeholder="Enter climate details"
+            placeholder={tf("Enter climate details")}
           />
         </div>
         <div>
@@ -543,7 +551,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.infrastructure || ''}
             onChange={(e) => handleInputChange('infrastructure', e.target.value)}
-            placeholder="Describe infrastructure"
+            placeholder={tf("Describe infrastructure")}
           />
         </div>
         <div>
@@ -552,7 +560,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.keyEconomicActivities || ''}
             onChange={(e) => handleInputChange('keyEconomicActivities', e.target.value)}
-            placeholder="Describe key economic activities"
+            placeholder={tf("Describe key economic activities")}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -562,7 +570,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={stepData.rawMaterialAvailability || ''}
               onChange={(e) => handleInputChange('rawMaterialAvailability', e.target.value)}
-              placeholder="Describe raw material availability"
+              placeholder={tf("Describe raw material availability")}
             />
           </div>
           <div>
@@ -570,7 +578,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.rawMaterialQuantity || ''}
               onChange={(e) => handleInputChange('rawMaterialQuantity', e.target.value)}
-              placeholder="Enter quantity"
+              placeholder={tf("Enter quantity")}
             />
           </div>
         </div>
@@ -580,11 +588,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.industrialInfrastructure || ''}
             onChange={(e) => handleInputChange('industrialInfrastructure', e.target.value)}
-            placeholder="Describe industrial infrastructure"
+            placeholder={tf("Describe industrial infrastructure")}
           />
         </div>
         <div className="border-t pt-4">
-          <h3 className="text-lg font-semibold mb-4">Connectivity</h3>
+          <h3 className="text-lg font-semibold mb-4">{tf("Connectivity")}</h3>
           <div className="space-y-4">
             <div>
               {renderLabel('connectivity', 'Road')}
@@ -594,7 +602,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   ...stepData.connectivity,
                   road: e.target.value,
                 })}
-                placeholder="Enter road connectivity details"
+                placeholder={tf("Enter road connectivity details")}
               />
             </div>
             <div>
@@ -605,7 +613,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   ...stepData.connectivity,
                   rail: e.target.value,
                 })}
-                placeholder="Enter rail connectivity details"
+                placeholder={tf("Enter rail connectivity details")}
               />
             </div>
             <div>
@@ -616,7 +624,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   ...stepData.connectivity,
                   port: e.target.value,
                 })}
-                placeholder="Enter port connectivity details"
+                placeholder={tf("Enter port connectivity details")}
               />
             </div>
           </div>
@@ -644,7 +652,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             type="number"
             value={stepData.yearOfEstablishment || ''}
             onChange={(e) => handleInputChange('yearOfEstablishment', parseInt(e.target.value) || 0)}
-            placeholder="YYYY"
+            placeholder={tf("YYYY")}
           />
         </div>
         <div>
@@ -653,7 +661,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.clusterEvolution || ''}
             onChange={(e) => handleInputChange('clusterEvolution', e.target.value)}
-            placeholder="Describe how the unit evolved"
+            placeholder={tf("Describe how the unit evolved")}
           />
         </div>
         <div>
@@ -662,7 +670,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.presentActivities || ''}
             onChange={(e) => handleInputChange('presentActivities', e.target.value)}
-            placeholder="Describe present activities"
+            placeholder={tf("Describe present activities")}
           />
         </div>
         <div>
@@ -670,7 +678,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <Input
             value={stepData.typeOfUnits || ''}
             onChange={(e) => handleInputChange('typeOfUnits', e.target.value)}
-            placeholder="Enter type of units"
+            placeholder={tf("Enter type of units")}
           />
         </div>
         <div>
@@ -678,7 +686,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <Input
             value={stepData.productionCapacity || ''}
             onChange={(e) => handleInputChange('productionCapacity', e.target.value)}
-            placeholder="Enter production capacity"
+            placeholder={tf("Enter production capacity")}
           />
         </div>
         <div>
@@ -686,7 +694,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <Input
             value={stepData.technologyLevel || ''}
             onChange={(e) => handleInputChange('technologyLevel', e.target.value)}
-            placeholder="Enter technology level"
+            placeholder={tf("Enter technology level")}
           />
         </div>
         <div>
@@ -695,9 +703,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.stakeholders)}
             onChange={(e) => handleCommaSeparatedChange('stakeholders', e.target.value)}
-            placeholder="Enter stakeholders separated by commas (e.g., Stakeholder 1, Stakeholder 2, Stakeholder 3)"
+            placeholder={tf("Enter stakeholders separated by commas (e.g., Stakeholder 1, Stakeholder 2, Stakeholder 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple stakeholders with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple stakeholders with commas")}</p>
         </div>
       </div>
     );
@@ -735,12 +743,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   <Input
                     value={material.name || ''}
                     onChange={(e) => handleArrayUpdate('rawMaterials', index, { name: e.target.value })}
-                    placeholder="Material name"
+                    placeholder={tf("Material name")}
                   />
                   <Input
                     value={material.source || ''}
                     onChange={(e) => handleArrayUpdate('rawMaterials', index, { source: e.target.value })}
-                    placeholder="Source"
+                    placeholder={tf("Source")}
                   />
                 </div>
               </div>
@@ -763,9 +771,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.intermediateProducts)}
             onChange={(e) => handleCommaSeparatedChange('intermediateProducts', e.target.value)}
-            placeholder="Enter intermediate products separated by commas (e.g., Semi-finished Product 1, Semi-finished Product 2)"
+            placeholder={tf("Enter intermediate products separated by commas (e.g., Semi-finished Product 1, Semi-finished Product 2)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple products with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple products with commas")}</p>
         </div>
 
         <div>
@@ -780,7 +788,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     updated[index] = e.target.value;
                     handleInputChange('finalProducts', updated);
                   }}
-                  placeholder="Enter final product"
+                  placeholder={tf("Enter final product")}
                 />
                 <Button
                   variant="ghost"
@@ -822,13 +830,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   <Input
                     value={stage.stage || ''}
                     onChange={(e) => handleArrayUpdate('valueAdditionStages', index, { stage: e.target.value })}
-                    placeholder="Stage name"
+                    placeholder={tf("Stage name")}
                   />
                   <Input
                     type="number"
                     value={stage.sellingPrice || ''}
                     onChange={(e) => handleArrayUpdate('valueAdditionStages', index, { sellingPrice: parseFloat(e.target.value) || 0 })}
-                    placeholder="Selling price (₹ Lakhs)"
+                    placeholder={tf("Selling price (₹ Lakhs)")}
                   />
                 </div>
               </div>
@@ -851,9 +859,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.majorBuyers)}
             onChange={(e) => handleCommaSeparatedChange('majorBuyers', e.target.value)}
-            placeholder="Enter major buyers separated by commas (e.g., Buyer 1, Buyer 2, Buyer 3)"
+            placeholder={tf("Enter major buyers separated by commas (e.g., Buyer 1, Buyer 2, Buyer 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple buyers with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple buyers with commas")}</p>
         </div>
       </div>
     );
@@ -878,7 +886,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.existingDemand || ''}
             onChange={(e) => handleInputChange('existingDemand', e.target.value)}
-            placeholder="Describe existing demand"
+            placeholder={tf("Describe existing demand")}
           />
         </div>
         <div>
@@ -887,7 +895,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.demandSupplyGap || ''}
             onChange={(e) => handleInputChange('demandSupplyGap', e.target.value)}
-            placeholder="Describe demand-supply gap"
+            placeholder={tf("Describe demand-supply gap")}
           />
         </div>
         <div>
@@ -896,7 +904,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.targetMarket || ''}
             onChange={(e) => handleInputChange('targetMarket', e.target.value)}
-            placeholder="Describe target market"
+            placeholder={tf("Describe target market")}
           />
         </div>
         <div>
@@ -905,7 +913,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.competitorAnalysis || ''}
             onChange={(e) => handleInputChange('competitorAnalysis', e.target.value)}
-            placeholder="Describe competitor analysis"
+            placeholder={tf("Describe competitor analysis")}
           />
         </div>
         <div>
@@ -914,7 +922,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.priceTrends || ''}
             onChange={(e) => handleInputChange('priceTrends', e.target.value)}
-            placeholder="Describe price trends"
+            placeholder={tf("Describe price trends")}
           />
         </div>
         <div>
@@ -923,7 +931,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.exportPotential || ''}
             onChange={(e) => handleInputChange('exportPotential', e.target.value)}
-            placeholder="Describe export potential"
+            placeholder={tf("Describe export potential")}
           />
         </div>
       </div>
@@ -949,7 +957,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.technologyGaps || ''}
             onChange={(e) => handleInputChange('technologyGaps', e.target.value)}
-            placeholder="Describe technology gaps"
+            placeholder={tf("Describe technology gaps")}
           />
         </div>
         <div>
@@ -958,7 +966,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.infrastructureGaps || ''}
             onChange={(e) => handleInputChange('infrastructureGaps', e.target.value)}
-            placeholder="Describe infrastructure gaps"
+            placeholder={tf("Describe infrastructure gaps")}
           />
         </div>
         <div>
@@ -967,7 +975,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.skillGaps || ''}
             onChange={(e) => handleInputChange('skillGaps', e.target.value)}
-            placeholder="Describe skill gaps"
+            placeholder={tf("Describe skill gaps")}
           />
         </div>
         <div>
@@ -976,7 +984,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.marketingGaps || ''}
             onChange={(e) => handleInputChange('marketingGaps', e.target.value)}
-            placeholder="Describe marketing gaps"
+            placeholder={tf("Describe marketing gaps")}
           />
         </div>
         <div>
@@ -985,7 +993,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.financialGaps || ''}
             onChange={(e) => handleInputChange('financialGaps', e.target.value)}
-            placeholder="Describe financial gaps"
+            placeholder={tf("Describe financial gaps")}
           />
         </div>
         <div>
@@ -994,7 +1002,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.justificationForIntervention || ''}
             onChange={(e) => handleInputChange('justificationForIntervention', e.target.value)}
-            placeholder="Provide justification for intervention"
+            placeholder={tf("Provide justification for intervention")}
           />
         </div>
       </div>
@@ -1020,9 +1028,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.strengths)}
             onChange={(e) => handleCommaSeparatedChange('strengths', e.target.value)}
-            placeholder="Enter strengths separated by commas (e.g., Strong market presence, Skilled workforce, Good infrastructure)"
+            placeholder={tf("Enter strengths separated by commas (e.g., Strong market presence, Skilled workforce, Good infrastructure)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple strengths with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple strengths with commas")}</p>
         </div>
         <div>
           {renderLabel('weaknesses', 'Weaknesses')}
@@ -1030,9 +1038,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.weaknesses)}
             onChange={(e) => handleCommaSeparatedChange('weaknesses', e.target.value)}
-            placeholder="Enter weaknesses separated by commas (e.g., Limited technology, Lack of skilled workers, Poor infrastructure)"
+            placeholder={tf("Enter weaknesses separated by commas (e.g., Limited technology, Lack of skilled workers, Poor infrastructure)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple weaknesses with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple weaknesses with commas")}</p>
         </div>
         <div>
           {renderLabel('opportunities', 'Opportunities')}
@@ -1040,9 +1048,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.opportunities)}
             onChange={(e) => handleCommaSeparatedChange('opportunities', e.target.value)}
-            placeholder="Enter opportunities separated by commas (e.g., Growing market demand, Government support, Export potential)"
+            placeholder={tf("Enter opportunities separated by commas (e.g., Growing market demand, Government support, Export potential)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple opportunities with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple opportunities with commas")}</p>
         </div>
         <div>
           {renderLabel('threats', 'Threats')}
@@ -1050,9 +1058,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.threats)}
             onChange={(e) => handleCommaSeparatedChange('threats', e.target.value)}
-            placeholder="Enter threats separated by commas (e.g., Market competition, Price fluctuations, Regulatory changes)"
+            placeholder={tf("Enter threats separated by commas (e.g., Market competition, Price fluctuations, Regulatory changes)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple threats with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple threats with commas")}</p>
         </div>
       </div>
     );
@@ -1078,10 +1086,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             value={stepData.interventionType || ''}
             onChange={(e) => handleInputChange('interventionType', e.target.value)}
           >
-            <option value="">Select type</option>
-            <option value="Hard">Hard</option>
-            <option value="Soft">Soft</option>
-            <option value="Both">Both</option>
+            <option value="">{tf("Select type")}</option>
+            <option value="Hard">{tf("Hard")}</option>
+            <option value="Soft">{tf("Soft")}</option>
+            <option value="Both">{tf("Both")}</option>
           </select>
         </div>
         <div>
@@ -1090,7 +1098,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.description || ''}
             onChange={(e) => handleInputChange('description', e.target.value)}
-            placeholder="Describe the intervention"
+            placeholder={tf("Describe the intervention")}
           />
         </div>
         <div>
@@ -1099,9 +1107,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.objectives)}
             onChange={(e) => handleCommaSeparatedChange('objectives', e.target.value)}
-            placeholder="Enter objectives separated by commas (e.g., Objective 1, Objective 2, Objective 3)"
+            placeholder={tf("Enter objectives separated by commas (e.g., Objective 1, Objective 2, Objective 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple objectives with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple objectives with commas")}</p>
         </div>
         <div>
           {renderLabel('expectedBenefits', 'Expected Benefits')}
@@ -1109,9 +1117,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={normalizeToString(stepData.expectedBenefits)}
             onChange={(e) => handleCommaSeparatedChange('expectedBenefits', e.target.value)}
-            placeholder="Enter expected benefits separated by commas (e.g., Benefit 1, Benefit 2, Benefit 3)"
+            placeholder={tf("Enter expected benefits separated by commas (e.g., Benefit 1, Benefit 2, Benefit 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">Separate multiple benefits with commas</p>
+          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple benefits with commas")}</p>
         </div>
       </div>
     );
@@ -1136,7 +1144,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.name || ''}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Enter workplace or shed name"
+              placeholder={tf("Enter workplace or shed name")}
             />
           </div>
           <div>
@@ -1144,7 +1152,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.location || ''}
               onChange={(e) => handleInputChange('location', e.target.value)}
-              placeholder="Enter location"
+              placeholder={tf("Enter location")}
             />
           </div>
         </div>
@@ -1154,7 +1162,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.landDetails || ''}
             onChange={(e) => handleInputChange('landDetails', e.target.value)}
-            placeholder="Enter land details"
+            placeholder={tf("Enter land details")}
           />
         </div>
         <div>
@@ -1163,7 +1171,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.civilWorks || ''}
             onChange={(e) => handleInputChange('civilWorks', e.target.value)}
-            placeholder="Describe civil works"
+            placeholder={tf("Describe civil works")}
           />
         </div>
         <div>
@@ -1172,7 +1180,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.manufacturingProcess || ''}
             onChange={(e) => handleInputChange('manufacturingProcess', e.target.value)}
-            placeholder="Describe manufacturing process"
+            placeholder={tf("Describe manufacturing process")}
           />
         </div>
         <div>
@@ -1181,7 +1189,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.plantAndMachinery || ''}
             onChange={(e) => handleInputChange('plantAndMachinery', e.target.value)}
-            placeholder="Describe plant & machinery"
+            placeholder={tf("Describe plant & machinery")}
           />
         </div>
         <div>
@@ -1189,7 +1197,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <Input
             value={stepData.capacity || ''}
             onChange={(e) => handleInputChange('capacity', e.target.value)}
-            placeholder="Enter capacity"
+            placeholder={tf("Enter capacity")}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1198,7 +1206,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.powerRequirements || ''}
               onChange={(e) => handleInputChange('powerRequirements', e.target.value)}
-              placeholder="Enter power requirements"
+              placeholder={tf("Enter power requirements")}
             />
           </div>
           <div>
@@ -1206,7 +1214,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.waterRequirements || ''}
               onChange={(e) => handleInputChange('waterRequirements', e.target.value)}
-              placeholder="Enter water requirements"
+              placeholder={tf("Enter water requirements")}
             />
           </div>
           <div>
@@ -1214,7 +1222,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.manpowerRequirements || ''}
               onChange={(e) => handleInputChange('manpowerRequirements', e.target.value)}
-              placeholder="Enter manpower requirements"
+              placeholder={tf("Enter manpower requirements")}
             />
           </div>
         </div>
@@ -1241,7 +1249,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.spvName || ''}
               onChange={(e) => handleInputChange('spvName', e.target.value)}
-              placeholder="Enter applicant or firm name"
+              placeholder={tf("Enter applicant or firm name")}
             />
           </div>
           <div>
@@ -1249,7 +1257,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.legalStatus || ''}
               onChange={(e) => handleInputChange('legalStatus', e.target.value)}
-              placeholder="Enter legal status"
+              placeholder={tf("Enter legal status")}
             />
           </div>
         </div>
@@ -1260,7 +1268,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.yearOfIncorporation || ''}
               onChange={(e) => handleInputChange('yearOfIncorporation', parseInt(e.target.value) || 0)}
-              placeholder="YYYY"
+              placeholder={tf("YYYY")}
             />
           </div>
           <div>
@@ -1268,7 +1276,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.submittedTo || ''}
               onChange={(e) => handleInputChange('submittedTo', e.target.value)}
-              placeholder="e.g., DIC, District"
+              placeholder={tf("e.g., DIC, District")}
             />
           </div>
         </div>
@@ -1284,7 +1292,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     updated[index] = e.target.value;
                     handleInputChange('objectives', updated);
                   }}
-                  placeholder="Enter objective"
+                  placeholder={tf("Enter objective")}
                 />
                 <Button
                   variant="ghost"
@@ -1324,7 +1332,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 boardOfDirectors: names.map((name) => ({ name, designation: 'Owner' })),
               });
             }}
-            placeholder="Owner names, separated by commas"
+            placeholder={tf("Owner names, separated by commas")}
           />
         </div>
       </div>
@@ -1368,7 +1376,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   type="number"
                   value={stepData.land || ''}
                   onChange={(e) => handleInputChange('land', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
+                  placeholder={tf("0")}
                 />
               </div>
               <div>
@@ -1377,7 +1385,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   type="number"
                   value={stepData.building || ''}
                   onChange={(e) => handleInputChange('building', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
+                  placeholder={tf("0")}
                 />
               </div>
             </>
@@ -1388,7 +1396,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.machinery || ''}
               onChange={(e) => handleInputChange('machinery', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           {showHeavy && (
@@ -1399,7 +1407,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   type="number"
                   value={stepData.utilitiesAndInfrastructure || ''}
                   onChange={(e) => handleInputChange('utilitiesAndInfrastructure', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
+                  placeholder={tf("0")}
                 />
               </div>
               <div>
@@ -1408,7 +1416,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   type="number"
                   value={stepData.preliminaryAndPreOperative || ''}
                   onChange={(e) => handleInputChange('preliminaryAndPreOperative', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
+                  placeholder={tf("0")}
                 />
               </div>
             </>
@@ -1419,15 +1427,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.workingCapitalMargin || ''}
               onChange={(e) => handleInputChange('workingCapitalMargin', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
         </div>
         <div className="border-t pt-4">
           <div className="bg-primary/10 p-4 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold">Total Project Cost</span>
-              <span className="text-2xl font-bold text-primary">₹ {totalCost.toLocaleString('en-IN')} Lakhs</span>
+              <span className="text-lg font-semibold">{tf("Total Project Cost")}</span>
+              <span className="text-2xl font-bold text-primary">₹ {totalCost.toLocaleString('en-IN')} {tf("Lakhs")}</span>
             </div>
           </div>
         </div>
@@ -1460,7 +1468,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.spvContribution || ''}
               onChange={(e) => handleInputChange('spvContribution', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1469,7 +1477,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.governmentGrant || ''}
               onChange={(e) => handleInputChange('governmentGrant', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1478,7 +1486,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.bankLoan || ''}
               onChange={(e) => handleInputChange('bankLoan', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1487,15 +1495,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.otherSources || ''}
               onChange={(e) => handleInputChange('otherSources', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
         </div>
         <div className="border-t pt-4">
           <div className="bg-primary/10 p-4 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold">Total Finance</span>
-              <span className="text-2xl font-bold text-primary">₹ {total.toLocaleString('en-IN')} Lakhs</span>
+              <span className="text-lg font-semibold">{tf("Total Finance")}</span>
+              <span className="text-2xl font-bold text-primary">₹ {total.toLocaleString('en-IN')} {tf("Lakhs")}</span>
             </div>
           </div>
         </div>
@@ -1523,7 +1531,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.rawMaterialCost || ''}
               onChange={(e) => handleInputChange('rawMaterialCost', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1532,7 +1540,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.powerCost || ''}
               onChange={(e) => handleInputChange('powerCost', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1541,7 +1549,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.wages || ''}
               onChange={(e) => handleInputChange('wages', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1550,7 +1558,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.maintenance || ''}
               onChange={(e) => handleInputChange('maintenance', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1559,7 +1567,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.administrativeExpenses || ''}
               onChange={(e) => handleInputChange('administrativeExpenses', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1568,7 +1576,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.marketingExpenses || ''}
               onChange={(e) => handleInputChange('marketingExpenses', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1577,7 +1585,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.annualProductionVolume || ''}
               onChange={(e) => handleInputChange('annualProductionVolume', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
           <div>
@@ -1586,7 +1594,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={stepData.annualSalesRealization || ''}
               onChange={(e) => handleInputChange('annualSalesRealization', parseFloat(e.target.value) || 0)}
-              placeholder="0"
+              placeholder={tf("0")}
             />
           </div>
         </div>
@@ -1655,7 +1663,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
         {mudraSimple && (
           <div className="border rounded-lg p-4 space-y-3">
-            <h4 className="font-semibold">Mudra Nayak working capital</h4>
+            <h4 className="font-semibold">{tf("Mudra Nayak working capital")}</h4>
             <label className="block text-sm font-medium">Projected annual turnover (₹ Lakhs)</label>
             <Input
               type="number"
@@ -1702,12 +1710,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             type="number"
             value={stepData.breakEvenPoint || ''}
             onChange={(e) => handleInputChange('breakEvenPoint', parseFloat(e.target.value) || 0)}
-            placeholder="e.g. 55"
+            placeholder={tf("e.g. 55")}
           />
         </div>
         {showDscr(loan) && (
           <div className={`p-4 rounded-lg border ${avgDscr < 1.5 ? 'border-amber-400 bg-amber-50' : 'border-border'}`}>
-            <p className="font-semibold">DSCR (profit + depreciation vs EMI)</p>
+            <p className="font-semibold">{tf("DSCR (profit + depreciation vs EMI)")}</p>
             <p className="text-sm text-muted-foreground mt-1">
               Assumed 7-year term at 12%. Average DSCR: <strong>{avgDscr.toFixed(2)}</strong>
               {avgDscr < 1.5 ? ' — below 1.5; lenders may query this.' : ''}
@@ -1760,7 +1768,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     );
                     handleInputChange('milestones', next);
                   }}
-                  placeholder="Activity"
+                  placeholder={tf("Activity")}
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <Input
@@ -1884,7 +1892,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               )}
             </div>
             {stepData[item.id] && (
-              <p className="text-sm text-green-600 mt-1">✓ Uploaded: {getDisplayName(stepData[item.id])}</p>
+              <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData[item.id])}</p>
             )}
           </div>
         ))}
@@ -1897,7 +1905,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               onChange={(e) => handleFileChange('educationCertificate', e.target.files?.[0] || null)}
             />
             {stepData.educationCertificate && (
-              <p className="text-sm text-green-600 mt-1">✓ Uploaded: {getDisplayName(stepData.educationCertificate)}</p>
+              <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData.educationCertificate)}</p>
             )}
           </div>
         )}
