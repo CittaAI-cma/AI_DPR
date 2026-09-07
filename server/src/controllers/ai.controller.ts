@@ -2,6 +2,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import { OpenAIService } from '../services/openai.service';
+import { VentureMatchHelpService } from '../services/ventureMatchHelp.service';
 import multer from 'multer';
 
 // Setup multer for audio file uploads
@@ -261,6 +262,55 @@ export class AIController {
       res.status(500).json({
         success: false,
         message: 'Failed to generate speech',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Scheme Finder: map free-text help to a current-question option.
+   */
+  static async ventureMatchHelp(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const {
+        questionId,
+        optionIds,
+        optionLabels,
+        questionTitle,
+        questionLabel,
+        answersSoFar = {},
+        messages = [],
+        language,
+      } = req.body;
+
+      if (!questionId || !Array.isArray(optionIds) || optionIds.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: 'questionId and optionIds are required',
+        });
+        return;
+      }
+
+      const result = await VentureMatchHelpService.help({
+        questionId,
+        optionIds,
+        optionLabels: optionLabels || {},
+        questionTitle: questionTitle || '',
+        questionLabel: questionLabel || '',
+        answersSoFar,
+        messages,
+        language: language === 'te' ? 'te' : 'en',
+      });
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error: any) {
+      console.error('Venture Match help error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get Scheme Finder help',
         error: error.message,
       });
     }

@@ -958,6 +958,38 @@ class APIClient {
   }
 
   // AI endpoints
+  async ventureMatchHelp(payload: {
+    questionId: string;
+    optionIds: string[];
+    optionLabels: Record<string, string>;
+    questionTitle: string;
+    questionLabel: string;
+    answersSoFar: Record<string, unknown>;
+    messages: { role: 'user' | 'assistant'; content: string }[];
+    language: 'en' | 'te';
+  }) {
+    return this.handleRequest(
+      async () => {
+        const response = await this.client.post('/ai/venture-match/help', payload);
+        return response.data;
+      },
+      async () => ({
+        success: true,
+        data: {
+          mode: 'ask',
+          assistantMessage:
+            payload.language === 'te'
+              ? 'మీ పరిస్థితి ఒక వాక్యంలో చెప్పండి. నేను సరైన ఎంపిక చూపిస్తాను.'
+              : 'Tell me your situation in one sentence. I will point to the right choice.',
+          suggestedUserReplies:
+            payload.language === 'te'
+              ? ['నాకు తెలియదు', 'సహాయం చేయండి']
+              : ['I am not sure', 'Help me pick'],
+        },
+      })
+    );
+  }
+
   async chat(
     message: string,
     conversationHistory: any[] = [],

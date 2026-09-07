@@ -32,5 +32,15 @@ router.post(
   AIController.textToSpeech
 );
 
+// Scheme Finder option helper
+router.post(
+  '/venture-match/help',
+  validate([
+    body('questionId').trim().notEmpty().withMessage('questionId is required'),
+    body('optionIds').isArray({ min: 1 }).withMessage('optionIds is required'),
+  ]),
+  AIController.ventureMatchHelp
+);
+
 export default router;
 

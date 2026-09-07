@@ -660,6 +660,18 @@
     "generateDprForMatch": "Generate DPR for this Match",
     "startOver": "Start again",
     "notAnswered": "Not answered",
+    "help": {
+      "open": "Need help choosing?",
+      "close": "Close help",
+      "title": "Help me choose",
+      "subtitle": "Describe your situation. I will suggest the matching option.",
+      "placeholder": "Type here…",
+      "send": "Send",
+      "useAnswer": "Use this answer",
+      "thinking": "Thinking…",
+      "error": "Could not get help. Try again.",
+      "lowConfidence": "This is a best guess — you can still pick another option on the card."
+    },
     "criteria": {
       "streetVending": "Must be a street vendor",
       "urban": "Must be in a city or town",

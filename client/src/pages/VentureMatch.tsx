@@ -6,6 +6,7 @@ import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { VentureMatchCard } from '@/components/venture-match/VentureMatchCard';
+import { VentureMatchHelpBubble } from '@/components/venture-match/VentureMatchHelpBubble';
 import { VentureMatchResults } from '@/components/venture-match/VentureMatchResults';
 import { QUESTIONS, STORAGE_KEY } from '@/lib/ventureMatch/questions';
 import { evaluate, remainingCount } from '@/lib/ventureMatch/evaluate';
@@ -59,6 +60,21 @@ export const VentureMatch: React.FC = () => {
     }
     setAnswers(nextAnswers);
     setStep(step + 1);
+  };
+
+  const applyHelpOptions = (optionIds: string[]) => {
+    if (!question) return;
+    const valid = optionIds.filter((id) => question.optionIds.includes(id));
+    if (!valid.length) return;
+    if (question.multi) {
+      const owners = valid.includes('generalMale')
+        ? (['generalMale'] as OwnerTag[])
+        : (valid.filter((id) => id !== 'generalMale') as OwnerTag[]);
+      if (!owners.length) return;
+      goNext({ ...answers, owner: owners });
+      return;
+    }
+    goNext({ ...answers, [question.id]: valid[0] } as VentureMatchAnswers);
   };
 
   const handleSelect = (optionId: string) => {
@@ -150,15 +166,22 @@ export const VentureMatch: React.FC = () => {
           />
         ) : (
           question && (
-            <VentureMatchCard
-              question={question}
-              index={step}
-              total={QUESTIONS.length}
-              selected={selected as string | string[] | undefined}
-              remaining={remaining}
-              onSelect={handleSelect}
-              onContinue={handleOwnerContinue}
-            />
+            <>
+              <VentureMatchCard
+                question={question}
+                index={step}
+                total={QUESTIONS.length}
+                selected={selected as string | string[] | undefined}
+                remaining={remaining}
+                onSelect={handleSelect}
+                onContinue={handleOwnerContinue}
+              />
+              <VentureMatchHelpBubble
+                question={question}
+                answers={answers}
+                onApply={applyHelpOptions}
+              />
+            </>
           )
         )}
       </div>
