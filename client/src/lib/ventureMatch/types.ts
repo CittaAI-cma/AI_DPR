@@ -5,9 +5,12 @@ export type Activity =
   | 'service'
   | 'trade'
   | 'vending'
-  | 'crop';
+  | 'crop'
+  | 'mixed'
+  | 'notSure'
+  | 'notBusiness';
 
-export type Stage = 'greenfield' | 'brownfield';
+export type Stage = 'greenfield' | 'brownfield' | 'idea' | 'restart' | 'notSure';
 
 export type Budget =
   | 'under2L'
@@ -17,27 +20,48 @@ export type Budget =
   | '20to50L'
   | '50Lto1Cr'
   | '1to10Cr'
-  | 'above10Cr';
+  | 'above10Cr'
+  | 'none'
+  | 'notSure';
 
-export type Legal = 'sole' | 'partnership' | 'company';
+export type Legal =
+  | 'sole'
+  | 'partnership'
+  | 'company'
+  | 'unregistered'
+  | 'otherEntity'
+  | 'notSure';
 
-export type OwnerTag = 'female' | 'sc' | 'st' | 'bc' | 'pwd' | 'generalMale';
+export type OwnerTag =
+  | 'female'
+  | 'sc'
+  | 'st'
+  | 'bc'
+  | 'pwd'
+  | 'generalMale'
+  | 'notDecided'
+  | 'noMajority'
+  | 'notSure';
 
-export type Domicile = 'ap' | 'other';
+export type Domicile = 'ap' | 'other' | 'notSure' | 'planningAp';
 
-export type LocationType = 'urban' | 'rural' | 'apiic';
+export type LocationType = 'urban' | 'rural' | 'apiic' | 'home' | 'outsideAp' | 'notDecided';
 
-export type YesNo = 'yes' | 'no';
+export type RiceCard = 'yes' | 'no' | 'otherCard' | 'notSure';
 
-export type Age = 'under18' | '18to20' | '21to50' | '51to60' | 'above60';
+export type Age = 'under18' | '18to20' | '21to50' | '51to60' | 'above60' | 'notSure';
 
-export type Education = 'below8th' | '8thPlus';
+export type Education = 'below8th' | '8thPlus' | 'notSure';
 
-export type Udyam = 'yes' | 'willing' | 'refuse';
+export type Udyam = 'yes' | 'willing' | 'refuse' | 'applied' | 'notSure';
 
-export type PriorSubsidy = 'none' | 'repaid' | 'outstanding';
+export type PriorSubsidy = 'none' | 'repaid' | 'outstanding' | 'notSure';
 
-export type Market = 'offline' | 'ecommerce' | 'export';
+export type GovtFamily = 'yes' | 'no' | 'notSure';
+
+export type Market = 'offline' | 'ecommerce' | 'export' | 'both' | 'notSellingYet' | 'notSure';
+
+export const OWNER_EXCLUSIVE_TAGS: OwnerTag[] = ['generalMale', 'notDecided', 'noMajority', 'notSure'];
 
 export interface VentureMatchAnswers {
   activity?: Activity;
@@ -47,12 +71,12 @@ export interface VentureMatchAnswers {
   owner?: OwnerTag[];
   domicile?: Domicile;
   location?: LocationType;
-  riceCard?: YesNo;
+  riceCard?: RiceCard;
   age?: Age;
   education?: Education;
   udyam?: Udyam;
   priorSubsidy?: PriorSubsidy;
-  govtFamily?: YesNo;
+  govtFamily?: GovtFamily;
   market?: Market;
 }
 

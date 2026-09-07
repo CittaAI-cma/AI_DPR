@@ -11,7 +11,11 @@ import { VentureMatchResults } from '@/components/venture-match/VentureMatchResu
 import { QUESTIONS, STORAGE_KEY } from '@/lib/ventureMatch/questions';
 import { evaluate, remainingCount } from '@/lib/ventureMatch/evaluate';
 import { saveHandoff } from '@/lib/ventureMatch/mapToDpr';
-import { OwnerTag, QuestionId, VentureMatchAnswers } from '@/lib/ventureMatch/types';
+import { OWNER_EXCLUSIVE_TAGS, OwnerTag, QuestionId, VentureMatchAnswers } from '@/lib/ventureMatch/types';
+
+function isExclusiveOwner(id: string): boolean {
+  return OWNER_EXCLUSIVE_TAGS.includes(id as OwnerTag);
+}
 
 interface SavedProgress {
   answers: VentureMatchAnswers;
@@ -50,7 +54,7 @@ export const VentureMatch: React.FC = () => {
 
   const question = QUESTIONS[step];
   const result = useMemo(() => evaluate(answers), [answers]);
-  const remaining = remainingCount(answers);
+  const remaining = remainingCount(answers, question?.id);
 
   const goNext = (nextAnswers: VentureMatchAnswers) => {
     if (step >= QUESTIONS.length - 1) {
@@ -67,9 +71,10 @@ export const VentureMatch: React.FC = () => {
     const valid = optionIds.filter((id) => question.optionIds.includes(id));
     if (!valid.length) return;
     if (question.multi) {
-      const owners = valid.includes('generalMale')
-        ? (['generalMale'] as OwnerTag[])
-        : (valid.filter((id) => id !== 'generalMale') as OwnerTag[]);
+      const exclusive = valid.find(isExclusiveOwner);
+      const owners = exclusive
+        ? ([exclusive] as OwnerTag[])
+        : (valid.filter((id) => !isExclusiveOwner(id)) as OwnerTag[]);
       if (!owners.length) return;
       goNext({ ...answers, owner: owners });
       return;
@@ -81,14 +86,14 @@ export const VentureMatch: React.FC = () => {
     if (!question) return;
     if (question.multi) {
       const current = new Set(answers.owner || []);
-      if (optionId === 'generalMale') {
+      if (isExclusiveOwner(optionId)) {
         setAnswers({
           ...answers,
-          owner: current.has('generalMale') ? [] : ['generalMale'],
+          owner: current.has(optionId as OwnerTag) ? [] : [optionId as OwnerTag],
         });
         return;
       }
-      current.delete('generalMale');
+      OWNER_EXCLUSIVE_TAGS.forEach((tag) => current.delete(tag));
       if (current.has(optionId as OwnerTag)) current.delete(optionId as OwnerTag);
       else current.add(optionId as OwnerTag);
       setAnswers({ ...answers, owner: Array.from(current) as OwnerTag[] });

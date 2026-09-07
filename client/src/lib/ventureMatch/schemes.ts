@@ -7,10 +7,11 @@ import {
   LocationType,
   OwnerTag,
   SchemeRule,
+  Udyam,
   VentureMatchAnswers,
 } from './types';
 
-const BUDGET_MIN: Record<Budget, number> = {
+const BUDGET_MIN: Record<Exclude<Budget, 'none' | 'notSure'>, number> = {
   under2L: 0,
   '2to5L': 200_000,
   '5to10L': 500_000,
@@ -21,13 +22,46 @@ const BUDGET_MIN: Record<Budget, number> = {
   above10Cr: 100_000_000,
 };
 
+const NUMERIC_BUDGETS: Budget[] = [
+  'under2L',
+  '2to5L',
+  '5to10L',
+  '10to20L',
+  '20to50L',
+  '50Lto1Cr',
+  '1to10Cr',
+  'above10Cr',
+];
 const PMFME_BUDGETS: Budget[] = ['under2L', '2to5L', '5to10L', '10to20L', '20to50L'];
+const CGTMSE_BUDGETS: Budget[] = [
+  'under2L',
+  '2to5L',
+  '5to10L',
+  '10to20L',
+  '20to50L',
+  '50Lto1Cr',
+  '1to10Cr',
+];
 const MFG_LIKE: Activity[] = ['mfg', 'food', 'craft'];
 const SERVICE_LIKE: Activity[] = ['service', 'trade', 'vending'];
+const ENTERPRISE_ACTIVITIES: Activity[] = [
+  'mfg',
+  'food',
+  'craft',
+  'service',
+  'trade',
+  'vending',
+  'mixed',
+];
 const OBMMS_OWNERS: OwnerTag[] = ['sc', 'st', 'bc', 'pwd'];
 const STANDUP_OWNERS: OwnerTag[] = ['female', 'sc', 'st'];
 const OBMMS_AGES: Age[] = ['21to50', '51to60'];
 const SPECIAL_OWNERS: OwnerTag[] = ['female', 'sc', 'st', 'bc', 'pwd'];
+const AGE_18_PLUS: Age[] = ['18to20', '21to50', '51to60', 'above60'];
+const UDYAM_READY: Udyam[] = ['yes', 'willing', 'applied'];
+const FIRM_LEGAL: Legal[] = ['sole', 'partnership', 'company'];
+const AP_LOCATION: LocationType[] = ['urban', 'rural', 'apiic', 'home', 'notDecided'];
+const EDP_LOCATION: LocationType[] = ['urban', 'rural', 'apiic'];
 
 function requireValue<T>(
   value: T | undefined,
@@ -37,13 +71,29 @@ function requireValue<T>(
   return predicate(value) ? 'pass' : 'fail';
 }
 
+function passIf<T>(value: T | undefined, allowed: readonly T[]): CriterionStatus {
+  return requireValue(value, (v) => allowed.includes(v));
+}
+
 function owners(answers: VentureMatchAnswers): OwnerTag[] | undefined {
   if (!answers.owner || answers.owner.length === 0) return undefined;
   return answers.owner;
 }
 
 function budgetMin(answers: VentureMatchAnswers): number | undefined {
-  return answers.budget ? BUDGET_MIN[answers.budget] : undefined;
+  const band = answers.budget;
+  if (!band || band === 'none' || band === 'notSure') return undefined;
+  return BUDGET_MIN[band];
+}
+
+function requireNumericBudget(
+  answers: VentureMatchAnswers,
+  predicate: (min: number, band: Exclude<Budget, 'none' | 'notSure'>) => boolean
+): CriterionStatus {
+  const band = answers.budget;
+  if (band === undefined) return 'unknown';
+  if (band === 'none' || band === 'notSure') return 'fail';
+  return predicate(BUDGET_MIN[band], band) ? 'pass' : 'fail';
 }
 
 function isSpecialCategory(answers: VentureMatchAnswers): boolean {
@@ -57,6 +107,10 @@ function isFemale(answers: VentureMatchAnswers): boolean {
 export function shouldShowOwnershipHint(answers: VentureMatchAnswers): boolean {
   const tags = answers.owner || [];
   return tags.includes('generalMale') && !tags.includes('female');
+}
+
+export function blocksAllSchemes(answers: VentureMatchAnswers): boolean {
+  return answers.activity === 'notBusiness' || answers.activity === 'notSure';
 }
 
 function pmegpSubsidy(answers: VentureMatchAnswers): string {
@@ -74,17 +128,24 @@ function apBoosted(answers: VentureMatchAnswers): boolean {
 
 function pmegpEducation(answers: VentureMatchAnswers): CriterionStatus {
   const activity = answers.activity;
-  const min = budgetMin(answers);
   if (!activity) return 'unknown';
 
   let threshold: number | undefined;
   if (MFG_LIKE.includes(activity)) threshold = 1_000_000;
-  else if (SERVICE_LIKE.includes(activity)) threshold = 500_000;
+  else if (SERVICE_LIKE.includes(activity) || activity === 'mixed') threshold = 500_000;
 
   if (threshold === undefined) return 'pass';
-  if (min === undefined) return 'unknown';
-  if (min < threshold) return 'pass';
-  return requireValue(answers.education, (edu) => edu === '8thPlus');
+  const band = answers.budget;
+  if (band === undefined) return 'unknown';
+  if (band === 'none' || band === 'notSure') return 'fail';
+  if (BUDGET_MIN[band] < threshold) return 'pass';
+  return passIf(answers.education, ['8thPlus']);
+}
+
+function pmegpStage(answers: VentureMatchAnswers): CriterionStatus {
+  if (!answers.stage) return 'unknown';
+  if (answers.stage === 'idea') return 'unknown';
+  return answers.stage === 'greenfield' ? 'pass' : 'fail';
 }
 
 export const SCHEMES: SchemeRule[] = [
@@ -98,19 +159,19 @@ export const SCHEMES: SchemeRule[] = [
         id: 'activity',
         questionId: 'activity',
         labelKey: 'ventureMatch.criteria.streetVending',
-        test: (a) => requireValue(a.activity, (v) => v === 'vending'),
+        test: (a) => passIf(a.activity, ['vending']),
       },
       {
         id: 'location',
         questionId: 'location',
         labelKey: 'ventureMatch.criteria.urban',
-        test: (a) => requireValue(a.location, (v) => v === 'urban'),
+        test: (a) => passIf(a.location, ['urban']),
       },
       {
         id: 'age',
         questionId: 'age',
         labelKey: 'ventureMatch.criteria.age18',
-        test: (a) => requireValue(a.age, (v) => v !== 'under18'),
+        test: (a) => passIf(a.age, AGE_18_PLUS),
       },
     ],
   },
@@ -124,25 +185,25 @@ export const SCHEMES: SchemeRule[] = [
         id: 'activity',
         questionId: 'activity',
         labelKey: 'ventureMatch.criteria.craft',
-        test: (a) => requireValue(a.activity, (v) => v === 'craft'),
+        test: (a) => passIf(a.activity, ['craft']),
       },
       {
         id: 'age',
         questionId: 'age',
         labelKey: 'ventureMatch.criteria.age18',
-        test: (a) => requireValue(a.age, (v) => v !== 'under18'),
+        test: (a) => passIf(a.age, AGE_18_PLUS),
       },
       {
         id: 'priorSubsidy',
         questionId: 'priorSubsidy',
         labelKey: 'ventureMatch.criteria.noOutstandingSubsidy',
-        test: (a) => requireValue(a.priorSubsidy, (v) => v !== 'outstanding'),
+        test: (a) => passIf(a.priorSubsidy, ['none', 'repaid']),
       },
       {
         id: 'govtFamily',
         questionId: 'govtFamily',
         labelKey: 'ventureMatch.criteria.noGovtFamily',
-        test: (a) => requireValue(a.govtFamily, (v) => v === 'no'),
+        test: (a) => passIf(a.govtFamily, ['no']),
       },
     ],
   },
@@ -156,25 +217,25 @@ export const SCHEMES: SchemeRule[] = [
         id: 'activity',
         questionId: 'activity',
         labelKey: 'ventureMatch.criteria.foodProcessing',
-        test: (a) => requireValue(a.activity, (v) => v === 'food'),
+        test: (a) => passIf(a.activity, ['food']),
       },
       {
         id: 'budget',
         questionId: 'budget',
         labelKey: 'ventureMatch.criteria.budgetPmFme',
-        test: (a) => requireValue(a.budget, (v) => PMFME_BUDGETS.includes(v)),
+        test: (a) => passIf(a.budget, PMFME_BUDGETS),
       },
       {
         id: 'legal',
         questionId: 'legal',
-        labelKey: 'ventureMatch.criteria.legalSoleOrPartnership',
-        test: (a) => requireValue(a.legal, (v: Legal) => v === 'sole' || v === 'partnership'),
+        labelKey: 'ventureMatch.criteria.legalPmfme',
+        test: (a) => passIf(a.legal, ['sole', 'partnership', 'otherEntity'] as Legal[]),
       },
       {
         id: 'education',
         questionId: 'education',
         labelKey: 'ventureMatch.criteria.education8th',
-        test: (a) => requireValue(a.education, (v) => v === '8thPlus'),
+        test: (a) => passIf(a.education, ['8thPlus']),
       },
     ],
   },
@@ -188,19 +249,31 @@ export const SCHEMES: SchemeRule[] = [
         id: 'stage',
         questionId: 'stage',
         labelKey: 'ventureMatch.criteria.greenfield',
-        test: (a) => requireValue(a.stage, (v) => v === 'greenfield'),
+        test: pmegpStage,
       },
       {
         id: 'age',
         questionId: 'age',
         labelKey: 'ventureMatch.criteria.age18',
-        test: (a) => requireValue(a.age, (v) => v !== 'under18'),
+        test: (a) => passIf(a.age, AGE_18_PLUS),
       },
       {
         id: 'activity',
         questionId: 'activity',
-        labelKey: 'ventureMatch.criteria.notCrop',
-        test: (a) => requireValue(a.activity, (v) => v !== 'crop'),
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalPmegp',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetRequired',
+        test: (a) => passIf(a.budget, NUMERIC_BUDGETS),
       },
       {
         id: 'education',
@@ -219,14 +292,20 @@ export const SCHEMES: SchemeRule[] = [
       {
         id: 'activity',
         questionId: 'activity',
-        labelKey: 'ventureMatch.criteria.notCrop',
-        test: (a) => requireValue(a.activity, (v) => v !== 'crop'),
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
       },
       {
         id: 'stage',
         questionId: 'stage',
         labelKey: 'ventureMatch.criteria.greenfield',
-        test: (a) => requireValue(a.stage, (v) => v === 'greenfield'),
+        test: (a) => passIf(a.stage, ['greenfield']),
       },
       {
         id: 'owner',
@@ -239,25 +318,25 @@ export const SCHEMES: SchemeRule[] = [
         id: 'budgetMin',
         questionId: 'budget',
         labelKey: 'ventureMatch.criteria.standupMin',
-        test: (a) => requireValue(budgetMin(a), (min) => min >= 1_000_000),
+        test: (a) => requireNumericBudget(a, (min) => min >= 1_000_000),
       },
       {
         id: 'budgetMax',
         questionId: 'budget',
         labelKey: 'ventureMatch.criteria.standupMax',
-        test: (a) => requireValue(budgetMin(a), (min) => min <= 10_000_000),
+        test: (a) => requireNumericBudget(a, (min) => min <= 10_000_000),
       },
       {
         id: 'age',
         questionId: 'age',
         labelKey: 'ventureMatch.criteria.age18',
-        test: (a) => requireValue(a.age, (v) => v !== 'under18'),
+        test: (a) => passIf(a.age, AGE_18_PLUS),
       },
       {
         id: 'udyam',
         questionId: 'udyam',
         labelKey: 'ventureMatch.criteria.udyam',
-        test: (a) => requireValue(a.udyam, (v) => v !== 'refuse'),
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },
@@ -270,20 +349,33 @@ export const SCHEMES: SchemeRule[] = [
       {
         id: 'activity',
         questionId: 'activity',
-        labelKey: 'ventureMatch.criteria.notCrop',
-        test: (a) => requireValue(a.activity, (v) => v !== 'crop'),
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
       },
       {
         id: 'budget',
         questionId: 'budget',
         labelKey: 'ventureMatch.criteria.mudraCap',
-        test: (a) => requireValue(budgetMin(a), (min) => min <= 2_000_000),
+        test: (a) =>
+          requireNumericBudget(a, (min) => min <= 2_000_000),
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
       },
       {
         id: 'udyam',
         questionId: 'udyam',
         labelKey: 'ventureMatch.criteria.udyam',
-        test: (a) => requireValue(a.udyam, (v) => v !== 'refuse'),
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },
@@ -295,22 +387,28 @@ export const SCHEMES: SchemeRule[] = [
       isFemale(a) ? 'ventureMatch.benefits.cgtmseWomen' : 'ventureMatch.benefits.cgtmse',
     criteria: [
       {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
         id: 'udyam',
         questionId: 'udyam',
         labelKey: 'ventureMatch.criteria.udyam',
-        test: (a) => requireValue(a.udyam, (v) => v === 'yes' || v === 'willing'),
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
       {
         id: 'budget',
         questionId: 'budget',
         labelKey: 'ventureMatch.criteria.budgetUnder10Cr',
-        test: (a) => requireValue(a.budget, (v) => v !== 'above10Cr'),
+        test: (a) => passIf(a.budget, CGTMSE_BUDGETS),
       },
       {
         id: 'activity',
         questionId: 'activity',
-        labelKey: 'ventureMatch.criteria.notCrop',
-        test: (a) => requireValue(a.activity, (v) => v !== 'crop'),
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
       },
     ],
   },
@@ -324,19 +422,43 @@ export const SCHEMES: SchemeRule[] = [
         id: 'activity',
         questionId: 'activity',
         labelKey: 'ventureMatch.criteria.manufacturing',
-        test: (a) => requireValue(a.activity, (v) => v === 'mfg'),
+        test: (a) => passIf(a.activity, ['mfg']),
       },
       {
         id: 'stage',
         questionId: 'stage',
         labelKey: 'ventureMatch.criteria.greenfield',
-        test: (a) => requireValue(a.stage, (v) => v === 'greenfield'),
+        test: (a) => passIf(a.stage, ['greenfield']),
       },
       {
         id: 'domicile',
         questionId: 'domicile',
         labelKey: 'ventureMatch.criteria.apDomicile',
-        test: (a) => requireValue(a.domicile, (v) => v === 'ap'),
+        test: (a) => passIf(a.domicile, ['ap']),
+      },
+      {
+        id: 'location',
+        questionId: 'location',
+        labelKey: 'ventureMatch.criteria.apUnitLocation',
+        test: (a) => passIf(a.location, EDP_LOCATION),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalApEdp',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetRequired',
+        test: (a) => passIf(a.budget, NUMERIC_BUDGETS),
       },
     ],
   },
@@ -350,19 +472,31 @@ export const SCHEMES: SchemeRule[] = [
         id: 'domicile',
         questionId: 'domicile',
         labelKey: 'ventureMatch.criteria.apDomicile',
-        test: (a) => requireValue(a.domicile, (v) => v === 'ap'),
+        test: (a) => passIf(a.domicile, ['ap']),
       },
       {
         id: 'activity',
         questionId: 'activity',
         labelKey: 'ventureMatch.criteria.foodProcessing',
-        test: (a) => requireValue(a.activity, (v) => v === 'food'),
+        test: (a) => passIf(a.activity, ['food']),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalPmfme',
+        test: (a) => passIf(a.legal, ['sole', 'partnership', 'company', 'otherEntity'] as Legal[]),
+      },
+      {
+        id: 'location',
+        questionId: 'location',
+        labelKey: 'ventureMatch.criteria.apLocation',
+        test: (a) => passIf(a.location, AP_LOCATION),
       },
       {
         id: 'udyam',
         questionId: 'udyam',
         labelKey: 'ventureMatch.criteria.udyam',
-        test: (a) => requireValue(a.udyam, (v) => v !== 'refuse'),
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },
@@ -376,19 +510,31 @@ export const SCHEMES: SchemeRule[] = [
         id: 'activity',
         questionId: 'activity',
         labelKey: 'ventureMatch.criteria.manufacturing',
-        test: (a) => requireValue(a.activity, (v) => v === 'mfg'),
+        test: (a) => passIf(a.activity, ['mfg']),
       },
       {
         id: 'stage',
         questionId: 'stage',
         labelKey: 'ventureMatch.criteria.brownfield',
-        test: (a) => requireValue(a.stage, (v) => v === 'brownfield'),
+        test: (a) => passIf(a.stage, ['brownfield', 'restart']),
       },
       {
         id: 'domicile',
         questionId: 'domicile',
         labelKey: 'ventureMatch.criteria.apDomicile',
-        test: (a) => requireValue(a.domicile, (v) => v === 'ap'),
+        test: (a) => passIf(a.domicile, ['ap']),
+      },
+      {
+        id: 'location',
+        questionId: 'location',
+        labelKey: 'ventureMatch.criteria.apLocation',
+        test: (a) => passIf(a.location, AP_LOCATION),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
       },
     ],
   },
@@ -399,16 +545,22 @@ export const SCHEMES: SchemeRule[] = [
     benefit: () => 'ventureMatch.benefits.mseSpice',
     criteria: [
       {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
         id: 'stage',
         questionId: 'stage',
         labelKey: 'ventureMatch.criteria.brownfield',
-        test: (a) => requireValue(a.stage, (v) => v === 'brownfield'),
+        test: (a) => passIf(a.stage, ['brownfield', 'restart']),
       },
       {
         id: 'udyam',
         questionId: 'udyam',
         labelKey: 'ventureMatch.criteria.udyam',
-        test: (a) => requireValue(a.udyam, (v) => v !== 'refuse'),
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },
@@ -422,7 +574,7 @@ export const SCHEMES: SchemeRule[] = [
         id: 'domicile',
         questionId: 'domicile',
         labelKey: 'ventureMatch.criteria.apDomicile',
-        test: (a) => requireValue(a.domicile, (v) => v === 'ap'),
+        test: (a) => passIf(a.domicile, ['ap']),
       },
       {
         id: 'owner',
@@ -435,13 +587,37 @@ export const SCHEMES: SchemeRule[] = [
         id: 'riceCard',
         questionId: 'riceCard',
         labelKey: 'ventureMatch.criteria.riceCard',
-        test: (a) => requireValue(a.riceCard, (v) => v === 'yes'),
+        test: (a) => passIf(a.riceCard, ['yes']),
       },
       {
         id: 'age',
         questionId: 'age',
         labelKey: 'ventureMatch.criteria.age21to60',
-        test: (a) => requireValue(a.age, (v) => OBMMS_AGES.includes(v)),
+        test: (a) => passIf(a.age, OBMMS_AGES),
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.obmmsStage',
+        test: (a) => passIf(a.stage, ['greenfield', 'brownfield', 'restart']),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetRequired',
+        test: (a) => passIf(a.budget, NUMERIC_BUDGETS),
+      },
+      {
+        id: 'location',
+        questionId: 'location',
+        labelKey: 'ventureMatch.criteria.apLocation',
+        test: (a) => passIf(a.location, AP_LOCATION),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalObmms',
+        test: (a) => passIf(a.legal, ['unregistered', 'sole'] as Legal[]),
       },
     ],
   },
@@ -455,13 +631,19 @@ export const SCHEMES: SchemeRule[] = [
         id: 'location',
         questionId: 'location',
         labelKey: 'ventureMatch.criteria.apiic',
-        test: (a) => requireValue(a.location, (v: LocationType) => v === 'apiic'),
+        test: (a) => passIf(a.location, ['apiic']),
       },
       {
         id: 'domicile',
         questionId: 'domicile',
         labelKey: 'ventureMatch.criteria.apDomicile',
-        test: (a) => requireValue(a.domicile, (v) => v === 'ap'),
+        test: (a) => passIf(a.domicile, ['ap']),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
       },
     ],
   },
@@ -472,10 +654,22 @@ export const SCHEMES: SchemeRule[] = [
     benefit: () => 'ventureMatch.benefits.rampTeam',
     criteria: [
       {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
         id: 'market',
         questionId: 'market',
         labelKey: 'ventureMatch.criteria.ecommerce',
-        test: (a) => requireValue(a.market, (v) => v === 'ecommerce'),
+        test: (a) => passIf(a.market, ['ecommerce', 'both']),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },
@@ -486,10 +680,22 @@ export const SCHEMES: SchemeRule[] = [
     benefit: () => 'ventureMatch.benefits.epmNiryat',
     criteria: [
       {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
         id: 'market',
         questionId: 'market',
         labelKey: 'ventureMatch.criteria.export',
-        test: (a) => requireValue(a.market, (v) => v === 'export'),
+        test: (a) => passIf(a.market, ['export']),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },

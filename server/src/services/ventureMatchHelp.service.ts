@@ -79,12 +79,13 @@ Previous answers (context only): ${JSON.stringify(input.answersSoFar || {})}
 Rules:
 - Return JSON only. No markdown.
 - Never invent option ids. Only use ids from the allowed list.
-- Read negation carefully. "I don't own a company" / "I work on my own" is sole owner, not a company.
+- Read negation carefully. "I don't own a company yet" / "no firm" / "not registered" is unregistered, not sole owner and not company.
+- "I work on my own" with no registration is unregistered if they say they have no firm; sole only if they are a registered sole proprietor.
 - Do not match on a single keyword if the sentence means the opposite.
+- For questionId "owner": optionIds may be several tags (female, sc, st, bc, pwd). Never combine generalMale, notDecided, noMajority, or notSure with any other tag.
 - Ask at most ONE short clarifying question per turn (mode "ask").
 - suggestedUserReplies: 2 short example answers the user might tap (same language as assistantMessage).
 - When you are reasonably sure, use mode "recommend" with optionIds.
-- For questionId "owner": optionIds may be several tags (female, sc, st, bc, pwd). Never combine generalMale with any other tag. If they are a general-category man only, optionIds is ["generalMale"].
 - For all other questions, optionIds must have exactly one id.
 - If still unclear after several turns, recommend the closest fit with confidence "low" and tell them they can tap a different option on the card.
 ${mustRecommendSoon ? '- You MUST use mode "recommend" this turn (pick the best allowed id).' : ''}

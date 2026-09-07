@@ -8,12 +8,15 @@ const ACTIVITY_SECTOR: Record<string, string> = {
   trade: 'Trading',
   vending: 'Street vending',
   crop: 'Agriculture',
+  mixed: 'Mixed activities',
 };
 
 const LEGAL_LABEL: Record<string, string> = {
   sole: 'Sole proprietorship',
   partnership: 'Partnership / LLP',
   company: 'Private / Public limited company',
+  unregistered: 'Not registered yet',
+  otherEntity: 'SHG / cooperative / trust / society / FPO',
 };
 
 const BUDGET_MID_LAKHS: Record<string, number> = {
@@ -28,10 +31,40 @@ const BUDGET_MID_LAKHS: Record<string, number> = {
 };
 
 export function prefillFromVentureMatch(answers: VentureMatchAnswers) {
-  const sector = answers.activity ? ACTIVITY_SECTOR[answers.activity] : '';
-  const cost = answers.budget ? BUDGET_MID_LAKHS[answers.budget] : 0;
+  const skipSector = answers.activity === 'notBusiness' || answers.activity === 'notSure';
+  const sector = skipSector ? '' : answers.activity ? ACTIVITY_SECTOR[answers.activity] || '' : '';
+  const cost =
+    answers.budget && answers.budget !== 'none' && answers.budget !== 'notSure'
+      ? BUDGET_MID_LAKHS[answers.budget]
+      : 0;
   const locationType =
-    answers.location === 'rural' ? 'Village' : answers.location === 'apiic' ? 'APIIC industrial park' : answers.location === 'urban' ? 'City / town' : '';
+    answers.location === 'rural'
+      ? 'Village'
+      : answers.location === 'apiic'
+        ? 'APIIC industrial park'
+        : answers.location === 'urban'
+          ? 'City / town'
+          : answers.location === 'home'
+            ? 'Home-based'
+            : answers.location === 'outsideAp'
+              ? 'Outside Andhra Pradesh'
+              : '';
+  const udyamText =
+    answers.udyam === 'yes'
+      ? 'Udyam registered'
+      : answers.udyam === 'willing' || answers.udyam === 'applied'
+        ? 'Will take Udyam registration'
+        : '';
+  const stageDesc =
+    answers.stage === 'greenfield'
+      ? 'New unit.'
+      : answers.stage === 'brownfield'
+        ? 'Existing unit – expansion or upgrade.'
+        : answers.stage === 'idea'
+          ? 'Idea stage.'
+          : answers.stage === 'restart'
+            ? 'Restarting a closed unit.'
+            : '';
 
   return {
     step1: {
@@ -43,7 +76,7 @@ export function prefillFromVentureMatch(answers: VentureMatchAnswers) {
     },
     step2: {
       sectorType: sector,
-      sectorDescription: answers.stage === 'greenfield' ? 'New unit.' : answers.stage === 'brownfield' ? 'Existing unit – expansion or upgrade.' : '',
+      sectorDescription: stageDesc,
     },
     step3: {
       geography: answers.domicile === 'ap' ? 'Andhra Pradesh' : answers.domicile === 'other' ? 'Other Indian state' : '',
@@ -63,7 +96,7 @@ export function prefillFromVentureMatch(answers: VentureMatchAnswers) {
     step11: {
       spvName: '',
       legalStatus: answers.legal ? LEGAL_LABEL[answers.legal] : '',
-      submittedTo: answers.udyam === 'yes' ? 'Udyam registered' : answers.udyam === 'willing' ? 'Will take Udyam registration' : '',
+      submittedTo: udyamText,
     },
     step12: cost
       ? {

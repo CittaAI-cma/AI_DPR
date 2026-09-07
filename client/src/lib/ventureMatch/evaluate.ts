@@ -1,6 +1,7 @@
-import { SCHEMES, shouldShowOwnershipHint } from './schemes';
+import { SCHEMES, blocksAllSchemes, shouldShowOwnershipHint } from './schemes';
 import {
   EvaluateResult,
+  QuestionId,
   SchemeCriterion,
   SchemeExclusion,
   SchemeMatch,
@@ -13,9 +14,19 @@ export function sortCriteria(criteria: SchemeCriterion[]): SchemeCriterion[] {
   return [...criteria].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
 }
 
+function activityBlockCriterion(): SchemeCriterion {
+  return {
+    id: 'activity',
+    questionId: 'activity',
+    labelKey: 'ventureMatch.criteria.mustBeEnterprise',
+    status: 'fail',
+  };
+}
+
 export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
   const matches: SchemeMatch[] = [];
   const excluded: SchemeExclusion[] = [];
+  const blocked = blocksAllSchemes(answers);
 
   for (const scheme of SCHEMES) {
     const criteria: SchemeCriterion[] = scheme.criteria.map((criterion) => ({
@@ -24,6 +35,12 @@ export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
       labelKey: criterion.labelKey,
       status: criterion.test(answers),
     }));
+
+    if (blocked) {
+      const activityCrit = criteria.find((c) => c.questionId === 'activity');
+      if (activityCrit) activityCrit.status = 'fail';
+      else criteria.unshift(activityBlockCriterion());
+    }
 
     const hasFail = criteria.some((c) => c.status === 'fail');
     const hasPass = criteria.some((c) => c.status === 'pass');
@@ -52,8 +69,14 @@ export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
   };
 }
 
-export function remainingCount(answers: VentureMatchAnswers): number {
+export function remainingCount(
+  answers: VentureMatchAnswers,
+  ignoreQuestionId?: QuestionId
+): number {
+  const scoped: VentureMatchAnswers = { ...answers };
+  if (ignoreQuestionId) delete scoped[ignoreQuestionId];
+  if (blocksAllSchemes(scoped)) return 0;
   return SCHEMES.filter((scheme) =>
-    scheme.criteria.every((criterion) => criterion.test(answers) !== 'fail')
+    scheme.criteria.every((criterion) => criterion.test(scoped) !== 'fail')
   ).length;
 }

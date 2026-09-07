@@ -3,11 +3,22 @@ import { QuestionDef } from './types';
 export const QUESTIONS: QuestionDef[] = [
   {
     id: 'activity',
-    optionIds: ['mfg', 'food', 'craft', 'service', 'trade', 'vending', 'crop'],
+    optionIds: [
+      'mfg',
+      'food',
+      'craft',
+      'service',
+      'trade',
+      'vending',
+      'crop',
+      'mixed',
+      'notSure',
+      'notBusiness',
+    ],
   },
   {
     id: 'stage',
-    optionIds: ['greenfield', 'brownfield'],
+    optionIds: ['greenfield', 'brownfield', 'idea', 'restart', 'notSure'],
   },
   {
     id: 'budget',
@@ -20,52 +31,64 @@ export const QUESTIONS: QuestionDef[] = [
       '50Lto1Cr',
       '1to10Cr',
       'above10Cr',
+      'none',
+      'notSure',
     ],
   },
   {
     id: 'legal',
-    optionIds: ['sole', 'partnership', 'company'],
+    optionIds: ['sole', 'partnership', 'company', 'unregistered', 'otherEntity', 'notSure'],
   },
   {
     id: 'owner',
     multi: true,
-    optionIds: ['female', 'sc', 'st', 'bc', 'pwd', 'generalMale'],
+    optionIds: [
+      'female',
+      'sc',
+      'st',
+      'bc',
+      'pwd',
+      'generalMale',
+      'notDecided',
+      'noMajority',
+      'notSure',
+    ],
   },
   {
     id: 'domicile',
-    optionIds: ['ap', 'other'],
+    optionIds: ['ap', 'other', 'planningAp', 'notSure'],
   },
   {
     id: 'location',
-    optionIds: ['urban', 'rural', 'apiic'],
+    optionIds: ['urban', 'rural', 'apiic', 'home', 'outsideAp', 'notDecided'],
   },
   {
     id: 'riceCard',
-    optionIds: ['yes', 'no'],
+    optionIds: ['yes', 'no', 'otherCard', 'notSure'],
   },
   {
     id: 'age',
-    optionIds: ['under18', '18to20', '21to50', '51to60', 'above60'],
+    optionIds: ['under18', '18to20', '21to50', '51to60', 'above60', 'notSure'],
   },
   {
     id: 'education',
-    optionIds: ['below8th', '8thPlus'],
+    optionIds: ['below8th', '8thPlus', 'notSure'],
   },
   {
     id: 'udyam',
-    optionIds: ['yes', 'willing', 'refuse'],
+    optionIds: ['yes', 'willing', 'applied', 'refuse', 'notSure'],
   },
   {
     id: 'priorSubsidy',
-    optionIds: ['none', 'repaid', 'outstanding'],
+    optionIds: ['none', 'repaid', 'outstanding', 'notSure'],
   },
   {
     id: 'govtFamily',
-    optionIds: ['yes', 'no'],
+    optionIds: ['yes', 'no', 'notSure'],
   },
   {
     id: 'market',
-    optionIds: ['offline', 'ecommerce', 'export'],
+    optionIds: ['offline', 'ecommerce', 'export', 'both', 'notSellingYet', 'notSure'],
   },
 ];
 

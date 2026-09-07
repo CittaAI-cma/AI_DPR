@@ -10,12 +10,15 @@ const ACTIVITY_SECTOR: Record<string, string> = {
   trade: 'Trading',
   vending: 'Retail',
   crop: 'Agriculture & Allied',
+  mixed: 'Mixed activities',
 };
 
 const LEGAL_LABEL: Record<string, string> = {
   sole: 'Sole Proprietorship',
   partnership: 'Partnership / LLP',
   company: 'Private / Public Limited Company',
+  unregistered: 'Not registered yet',
+  otherEntity: 'SHG / Cooperative / Trust / Society / FPO',
 };
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -54,22 +57,46 @@ function lookupEn(path: string, fallback: string): string {
 export function buildDprPrefill(answers: VentureMatchAnswers, matches: SchemeMatch[]) {
   const owner = answers.owner || [];
   const categories = owner.map((o) => CATEGORY_MAP[o]).filter(Boolean);
-  const mfgLike = answers.activity === 'mfg' || answers.activity === 'food' || answers.activity === 'craft';
+  const activity = answers.activity;
+  const skipSector = activity === 'notBusiness' || activity === 'notSure';
+  const mfgLike = activity === 'mfg' || activity === 'food' || activity === 'craft';
+  const stageBlurb =
+    answers.stage === 'greenfield'
+      ? 'New (greenfield) unit.'
+      : answers.stage === 'brownfield'
+        ? 'Expansion / upgrade of an existing (brownfield) unit.'
+        : answers.stage === 'idea'
+          ? 'Idea stage — operations not started.'
+          : answers.stage === 'restart'
+            ? 'Restarting a closed or sick unit.'
+            : '';
+  const locationType =
+    answers.location === 'rural'
+      ? 'Rural'
+      : answers.location === 'home'
+        ? 'Home-based'
+        : answers.location === 'outsideAp'
+          ? 'Outside Andhra Pradesh'
+          : answers.location
+            ? 'Urban'
+            : undefined;
 
   return {
     businessOverview: {
-      industrySector: answers.activity ? ACTIVITY_SECTOR[answers.activity] : '',
-      businessDescription: answers.stage
-        ? answers.stage === 'greenfield'
-          ? 'New (greenfield) unit.'
-          : 'Expansion / upgrade of an existing (brownfield) unit.'
-        : '',
+      industrySector: skipSector ? '' : activity && ACTIVITY_SECTOR[activity] ? ACTIVITY_SECTOR[activity] : '',
+      businessDescription: stageBlurb,
     },
     applicantInfo: {
       gender: owner.includes('female') ? 'Female' : owner.includes('generalMale') ? 'Male' : undefined,
-      locationType: answers.location === 'rural' ? 'Rural' : answers.location ? 'Urban' : undefined,
+      locationType,
       categories,
-      projectType: mfgLike ? 'Manufacturing Unit' : answers.activity ? 'Service Unit' : undefined,
+      projectType: skipSector
+        ? undefined
+        : mfgLike
+          ? 'Manufacturing Unit'
+          : activity
+            ? 'Service Unit'
+            : undefined,
       legalStatus: answers.legal ? LEGAL_LABEL[answers.legal] : undefined,
     },
     eligibleSchemes: {
@@ -81,7 +108,10 @@ export function buildDprPrefill(answers: VentureMatchAnswers, matches: SchemeMat
         category: m.kind,
       })),
     },
-    ventureMatchBudget: answers.budget ? BUDGET_MID[answers.budget] : undefined,
+    ventureMatchBudget:
+      answers.budget && answers.budget !== 'none' && answers.budget !== 'notSure'
+        ? BUDGET_MID[answers.budget]
+        : undefined,
   };
 }
 

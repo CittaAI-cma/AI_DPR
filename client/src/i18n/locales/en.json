@@ -673,20 +673,20 @@
       "lowConfidence": "This is a best guess — you can still pick another option on the card.",
       "kickoff": "In your own words, tell me about this. I will match it to an option.",
       "starters": {
-        "activity": ["I make pickles", "I have a kirana shop", "I sell from a street cart"],
-        "stage": ["It is a new business", "I already have a unit"],
-        "budget": ["About 3 lakh", "About 15 lakh", "About 1 crore"],
-        "legal": ["Only me", "With partners", "It is a Pvt Ltd"],
-        "owner": ["My wife owns it", "I am an SC man", "I am a general category man"],
-        "domicile": ["Yes, I live in AP", "I live in another state"],
-        "location": ["In a town", "In a village", "Inside an APIIC park"],
-        "riceCard": ["Yes, we have one", "No"],
-        "age": ["25", "55", "17"],
-        "education": ["I passed 10th", "I studied till 5th"],
-        "udyam": ["I already have Udyam", "I can register", "I do not want it"],
-        "priorSubsidy": ["Never took one", "Took one but repaid", "Still unpaid"],
-        "govtFamily": ["Yes", "No"],
-        "market": ["Local shop", "Online / ONDC", "We export"]
+        "activity": ["I make pickles", "I have a kirana shop", "I am not starting a unit"],
+        "stage": ["It is a new business", "I already have a unit", "It is only an idea"],
+        "budget": ["About 3 lakh", "About 15 lakh", "I do not know yet"],
+        "legal": ["Only me", "No firm yet", "It is a Pvt Ltd"],
+        "owner": ["My wife owns it", "Ownership is not decided", "I am a general category man"],
+        "domicile": ["Yes, I live in AP", "I live in another state", "I plan to move to AP"],
+        "location": ["In a town", "From home", "Outside Andhra Pradesh"],
+        "riceCard": ["Yes, White Rice Card", "We have another ration card", "Not sure"],
+        "age": ["25", "55", "I am not sure"],
+        "education": ["I passed 10th", "I studied till 5th", "No certificates"],
+        "udyam": ["I already have Udyam", "I have applied", "I do not know what Udyam is"],
+        "priorSubsidy": ["Never took one", "Took one but repaid", "I am not sure"],
+        "govtFamily": ["No", "Yes", "I am not sure"],
+        "market": ["Local shop", "Both shop and online", "Not selling yet"]
       }
     },
     "criteria": {
@@ -698,13 +698,24 @@
       "noGovtFamily": "No close family member should have a government job",
       "foodProcessing": "Must be a food processing business",
       "budgetPmFme": "Project cost must be up to about ₹50 lakh",
-      "legalSoleOrPartnership": "Must be a sole owner or partnership, not a company",
+      "legalSoleOrPartnership": "Must be a sole owner, partnership, or SHG / FPO / cooperative",
+      "legalPmfme": "Must be a sole owner, partnership, or SHG / FPO / cooperative",
+      "legalPmegp": "Must be a registered sole owner, partnership, or company",
+      "legalRegistered": "Must have a registered firm (not “no firm yet”)",
+      "legalObmms": "Apply as an individual (no registered company needed)",
+      "legalApEdp": "Must be a registered sole owner, partnership, or company",
       "education8th": "Must have passed 8th class or higher",
       "greenfield": "Must be a new business",
-      "brownfield": "Must be an existing business",
-      "notCrop": "Not for growing crops on a farm",
+      "brownfield": "Must be an existing unit, or a closed unit being restarted",
+      "notCrop": "Must be a non-farm enterprise (making, services, trade, or mixed)",
+      "enterpriseActivity": "Must be a non-farm enterprise (making, services, trade, or mixed)",
+      "mustBeEnterprise": "Must be starting or running a business unit, not a job search",
+      "budgetRequired": "Must have a project cost (not zero and not unknown)",
+      "apLocation": "The unit must be in Andhra Pradesh",
+      "apUnitLocation": "The unit must be in a city, village, or APIIC park in Andhra Pradesh (not from home)",
+      "obmmsStage": "Must be a planned or running unit, not only an idea",
       "pmegpEducation": "If the project is large, you must have passed 8th class (₹10 lakh for making goods, ₹5 lakh for services)",
-      "womanScSt": "Main owner must be a woman, SC, or ST",
+      "womanScSt": "Main owner must be a woman, SC, or ST holding 51% or more",
       "standupMin": "Loan amount starts from ₹10 lakh",
       "standupMax": "Loan amount can be up to ₹1 crore",
       "udyam": "Must have Udyam registration, or be ready to get it",
@@ -799,7 +810,7 @@
     },
     "questions": {
       "activity": {
-        "label": "Type of business",
+        "label": "What is your hustle?",
         "title": "What kind of work do you want to do?",
         "options": {
           "mfg": "Making goods (for example: machines, plastic items, metal work)",
@@ -808,20 +819,26 @@
           "service": "Services (for example: salon, clinic, repair shop, small IT work)",
           "trade": "Buying and selling (for example: kirana shop, cloth shop)",
           "vending": "Street vending (for example: food cart or market stall)",
-          "crop": "Growing crops on a farm"
+          "crop": "Growing crops on a farm",
+          "mixed": "More than one type (for example: bakery plus a shop)",
+          "notSure": "Still deciding",
+          "notBusiness": "I am not starting a business unit"
         }
       },
       "stage": {
-        "label": "Business stage",
-        "title": "Is this a new business or an existing one?",
+        "label": "Starting fresh or scaling up?",
+        "title": "Is this a new business, an existing one, or only an idea?",
         "options": {
           "greenfield": "New business",
-          "brownfield": "Existing business (I want to expand or upgrade)"
+          "brownfield": "Existing business (I want to expand or upgrade)",
+          "idea": "Only an idea so far — no land, machines, or operations yet",
+          "restart": "Reopening a closed or sick unit",
+          "notSure": "Not sure yet"
         }
       },
       "budget": {
         "label": "Project cost",
-        "title": "How much money do you need for this project?",
+        "title": "How much money do you need to set this up?",
         "options": {
           "under2L": "Less than ₹2 lakh",
           "2to5L": "₹2 lakh to ₹5 lakh",
@@ -830,20 +847,25 @@
           "20to50L": "₹20 lakh to ₹50 lakh",
           "50Lto1Cr": "₹50 lakh to ₹1 crore",
           "1to10Cr": "₹1 crore to ₹10 crore",
-          "above10Cr": "More than ₹10 crore"
+          "above10Cr": "More than ₹10 crore",
+          "none": "No money needed",
+          "notSure": "Budget not calculated yet"
         }
       },
       "legal": {
-        "label": "Business type",
+        "label": "How is it registered?",
         "title": "How is your business registered?",
         "options": {
           "sole": "Sole owner (only me)",
           "partnership": "Partnership or LLP",
-          "company": "Private or public limited company"
+          "company": "Private or public limited company",
+          "unregistered": "No firm yet — not registered",
+          "otherEntity": "SHG, cooperative, trust, society, or FPO",
+          "notSure": "Not decided yet"
         }
       },
       "owner": {
-        "label": "Main owner",
+        "label": "Majority owner (51% or more)",
         "title": "Who owns more than half of the business (51% or more)?",
         "options": {
           "female": "Woman",
@@ -851,32 +873,42 @@
           "st": "Scheduled Tribe (ST)",
           "bc": "Backward Class (BC) or Minority",
           "pwd": "Person with disability",
-          "generalMale": "General category man"
+          "generalMale": "General category man",
+          "notDecided": "Ownership not decided yet",
+          "noMajority": "No one holds 51% (equal split)",
+          "notSure": "Not sure about the category"
         }
       },
       "domicile": {
-        "label": "Home state",
+        "label": "Andhra Pradesh resident?",
         "title": "Do you live in Andhra Pradesh?",
         "options": {
           "ap": "Yes, I live in Andhra Pradesh",
-          "other": "No, I live in another state"
+          "other": "No, I live in another state",
+          "planningAp": "I live elsewhere but plan to set up in Andhra Pradesh",
+          "notSure": "Not sure"
         }
       },
       "location": {
-        "label": "Place",
-        "title": "Where is your business?",
+        "label": "Where is the unit?",
+        "title": "Where is your business physically located?",
         "options": {
           "urban": "City or town (municipality)",
           "rural": "Village (gram panchayat)",
-          "apiic": "Inside an APIIC industrial park"
+          "apiic": "Inside an APIIC industrial park",
+          "home": "From home (no shop or plot)",
+          "outsideAp": "Outside Andhra Pradesh",
+          "notDecided": "Location not decided yet"
         }
       },
       "riceCard": {
-        "label": "Rice card",
+        "label": "White Rice Card",
         "title": "Does your family have a White Rice Card?",
         "options": {
           "yes": "Yes",
-          "no": "No"
+          "no": "No",
+          "otherCard": "We have another ration card (not White Rice Card)",
+          "notSure": "Not sure"
         }
       },
       "age": {
@@ -887,7 +919,8 @@
           "18to20": "18 to 20 years",
           "21to50": "21 to 50 years",
           "51to60": "51 to 60 years",
-          "above60": "Above 60 years"
+          "above60": "Above 60 years",
+          "notSure": "Not sure"
         }
       },
       "education": {
@@ -895,7 +928,8 @@
         "title": "What is the highest class you have passed?",
         "options": {
           "below8th": "Below 8th class",
-          "8thPlus": "8th class or higher"
+          "8thPlus": "8th class or higher",
+          "notSure": "Not sure / no certificates"
         }
       },
       "udyam": {
@@ -904,7 +938,9 @@
         "options": {
           "yes": "Yes",
           "willing": "No, but I am ready to register (it is free)",
-          "refuse": "No, and I do not want to register"
+          "applied": "I have applied, but do not have the certificate yet",
+          "refuse": "No, and I do not want to register",
+          "notSure": "Not sure what Udyam is"
         }
       },
       "priorSubsidy": {
@@ -913,7 +949,8 @@
         "options": {
           "none": "No",
           "repaid": "Yes, but I have fully repaid it",
-          "outstanding": "Yes, I still have an unpaid subsidy loan"
+          "outstanding": "Yes, I still have an unpaid subsidy loan",
+          "notSure": "Not sure"
         }
       },
       "govtFamily": {
@@ -921,16 +958,20 @@
         "title": "Does anyone in your close family have a government job?",
         "options": {
           "yes": "Yes",
-          "no": "No"
+          "no": "No",
+          "notSure": "Not sure"
         }
       },
       "market": {
-        "label": "How you sell",
+        "label": "Where will you sell?",
         "title": "How do you mainly sell your products?",
         "options": {
           "offline": "In a shop or local market",
           "ecommerce": "Online (ONDC or other websites)",
-          "export": "To other countries"
+          "export": "To other countries",
+          "both": "Both shop/market and online",
+          "notSellingYet": "Not selling yet",
+          "notSure": "Not sure"
         }
       }
     }
