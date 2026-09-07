@@ -660,6 +660,9 @@
     "generateDprForMatch": "Generate DPR for this Match",
     "startOver": "Start again",
     "notAnswered": "Not answered",
+    "stepExclusionsTitle": "Why some schemes dropped out",
+    "stepExclusionBecause": "{{name}} is not matching because {{reason}}.",
+    "stepExclusionBecauseMany": "{{name}} is not matching because: {{reason}}.",
     "help": {
       "open": "Need help choosing?",
       "close": "Close help",

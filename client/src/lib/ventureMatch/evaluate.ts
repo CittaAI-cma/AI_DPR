@@ -1,3 +1,4 @@
+import { QUESTIONS } from './questions';
 import { SCHEMES, blocksAllSchemes, shouldShowOwnershipHint } from './schemes';
 import {
   EvaluateResult,
@@ -21,6 +22,21 @@ function activityBlockCriterion(): SchemeCriterion {
     labelKey: 'ventureMatch.criteria.mustBeEnterprise',
     status: 'fail',
   };
+}
+
+/** Answers from questions before the current one. Later (and in-progress) answers do not count. */
+function scopedAnswers(
+  answers: VentureMatchAnswers,
+  ignoreQuestionId?: QuestionId
+): VentureMatchAnswers {
+  if (!ignoreQuestionId) return { ...answers };
+  const dropFrom = QUESTIONS.findIndex((q) => q.id === ignoreQuestionId);
+  if (dropFrom < 0) return { ...answers };
+  const scoped: VentureMatchAnswers = { ...answers };
+  for (let i = dropFrom; i < QUESTIONS.length; i++) {
+    delete scoped[QUESTIONS[i].id];
+  }
+  return scoped;
 }
 
 export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
@@ -69,12 +85,21 @@ export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
   };
 }
 
+export function excludedSchemes(
+  answers: VentureMatchAnswers,
+  ignoreQuestionId?: QuestionId
+): SchemeExclusion[] {
+  return evaluate(scopedAnswers(answers, ignoreQuestionId)).excluded.map((scheme) => ({
+    ...scheme,
+    criteria: scheme.criteria.filter((item) => item.status === 'fail'),
+  }));
+}
+
 export function remainingCount(
   answers: VentureMatchAnswers,
   ignoreQuestionId?: QuestionId
 ): number {
-  const scoped: VentureMatchAnswers = { ...answers };
-  if (ignoreQuestionId) delete scoped[ignoreQuestionId];
+  const scoped = scopedAnswers(answers, ignoreQuestionId);
   if (blocksAllSchemes(scoped)) return 0;
   return SCHEMES.filter((scheme) =>
     scheme.criteria.every((criterion) => criterion.test(scoped) !== 'fail')

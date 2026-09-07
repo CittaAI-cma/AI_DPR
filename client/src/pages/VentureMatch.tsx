@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/Button';
 import { VentureMatchCard } from '@/components/venture-match/VentureMatchCard';
 import { VentureMatchHelpBubble } from '@/components/venture-match/VentureMatchHelpBubble';
 import { VentureMatchResults } from '@/components/venture-match/VentureMatchResults';
+import { VentureMatchStepExclusions } from '@/components/venture-match/VentureMatchStepExclusions';
 import { QUESTIONS, STORAGE_KEY } from '@/lib/ventureMatch/questions';
-import { evaluate, remainingCount } from '@/lib/ventureMatch/evaluate';
+import { evaluate, excludedSchemes, remainingCount } from '@/lib/ventureMatch/evaluate';
 import { saveHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { OWNER_EXCLUSIVE_TAGS, OwnerTag, QuestionId, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
@@ -55,6 +56,10 @@ export const VentureMatch: React.FC = () => {
   const question = QUESTIONS[step];
   const result = useMemo(() => evaluate(answers), [answers]);
   const remaining = remainingCount(answers, question?.id);
+  const stepExcluded = useMemo(
+    () => excludedSchemes(answers, question?.id),
+    [answers, question?.id]
+  );
 
   const goNext = (nextAnswers: VentureMatchAnswers) => {
     if (step >= QUESTIONS.length - 1) {
@@ -181,6 +186,7 @@ export const VentureMatch: React.FC = () => {
                 onSelect={handleSelect}
                 onContinue={handleOwnerContinue}
               />
+              <VentureMatchStepExclusions excluded={stepExcluded} />
               <VentureMatchHelpBubble
                 question={question}
                 answers={answers}

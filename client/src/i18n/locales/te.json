@@ -577,6 +577,9 @@
     "generateDprForMatch": "ఈ మ్యాచ్‌కు DPR రూపొందించండి",
     "startOver": "మళ్లీ మొదలుపెట్టండి",
     "notAnswered": "సమాధానం ఇవ్వలేదు",
+    "stepExclusionsTitle": "కొన్ని పథకాలు ఎందుకు తగ్గాయి",
+    "stepExclusionBecause": "{{name}} సరిపోలడం లేదు ఎందుకంటే {{reason}}.",
+    "stepExclusionBecauseMany": "{{name}} సరిపోలడం లేదు ఎందుకంటే: {{reason}}.",
     "help": {
       "open": "ఎంపికలో సహాయం కావాలా?",
       "close": "సహాయం మూసివేయి",
