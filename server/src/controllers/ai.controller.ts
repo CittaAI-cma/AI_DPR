@@ -281,6 +281,8 @@ export class AIController {
         answersSoFar = {},
         messages = [],
         language,
+        apGuideNotes,
+        clarifyingScript,
       } = req.body;
 
       if (!questionId || !Array.isArray(optionIds) || optionIds.length === 0) {
@@ -300,6 +302,8 @@ export class AIController {
         answersSoFar,
         messages,
         language: language === 'te' ? 'te' : 'en',
+        apGuideNotes,
+        clarifyingScript,
       });
 
       res.status(200).json({

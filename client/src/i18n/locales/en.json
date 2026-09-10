@@ -667,29 +667,29 @@
       "open": "Need help choosing?",
       "close": "Close help",
       "title": "Help me choose",
-      "subtitle": "Describe your situation. I will suggest the matching option.",
-      "placeholder": "Type here…",
+      "subtitle": "Answer a few Andhra Pradesh–specific questions. I will suggest the matching option.",
+      "placeholder": "Or type your situation…",
       "send": "Send",
       "useAnswer": "Use this answer",
       "thinking": "Thinking…",
       "error": "Could not get help. Try again.",
       "lowConfidence": "This is a best guess — you can still pick another option on the card.",
-      "kickoff": "In your own words, tell me about this. I will match it to an option.",
+      "kickoff": "I will ask short questions based on Andhra Pradesh scheme rules, then match you to an option.",
       "starters": {
-        "activity": ["I make pickles", "I have a kirana shop", "I am not starting a unit"],
-        "stage": ["It is a new business", "I already have a unit", "It is only an idea"],
-        "budget": ["About 3 lakh", "About 15 lakh", "I do not know yet"],
-        "legal": ["Only me", "No firm yet", "It is a Pvt Ltd"],
-        "owner": ["My wife owns it", "Ownership is not decided", "I am a general category man"],
-        "domicile": ["Yes, I live in AP", "I live in another state", "I plan to move to AP"],
-        "location": ["In a town", "From home", "Outside Andhra Pradesh"],
-        "riceCard": ["Yes, White Rice Card", "We have another ration card", "Not sure"],
-        "age": ["25", "55", "I am not sure"],
-        "education": ["I passed 10th", "I studied till 5th", "No certificates"],
-        "udyam": ["I already have Udyam", "I have applied", "I do not know what Udyam is"],
-        "priorSubsidy": ["Never took one", "Took one but repaid", "I am not sure"],
-        "govtFamily": ["No", "Yes", "I am not sure"],
-        "market": ["Local shop", "Both shop and online", "Not selling yet"]
+        "activity": ["Making / processing", "Buying and selling", "Giving a service", "Only farming crops"],
+        "stage": ["Yes, already running", "Not started yet", "Not sure"],
+        "budget": ["Yes, I have a rough cost", "No money needed", "Not calculated yet"],
+        "legal": ["Yes, registered", "No firm yet", "SHG / coop / trust / FPO", "Not decided yet"],
+        "owner": ["Someone holds 51%+", "Equal split (no 51%)", "Ownership not decided", "Not sure"],
+        "domicile": ["Yes, I live in AP", "No, another state", "Not sure"],
+        "location": ["Yes, in Andhra Pradesh", "Outside Andhra Pradesh", "Location not decided"],
+        "riceCard": ["Yes, White Rice Card", "No White Rice Card", "Not sure"],
+        "age": ["Below 18", "18 to 20", "21 to 50", "51 to 60"],
+        "education": ["Yes, 8th or higher", "Below 8th class", "Not sure"],
+        "udyam": ["Yes, I have Udyam", "No, not yet", "Not sure what Udyam is"],
+        "priorSubsidy": ["Yes", "No", "Not sure"],
+        "govtFamily": ["Yes", "No", "Not sure"],
+        "market": ["Already selling", "Not selling yet", "Not sure"]
       }
     },
     "criteria": {
@@ -735,11 +735,11 @@
     },
     "ownershipHint": {
       "title": "Think about putting the business in your wife’s or mother’s name",
-      "body": "You said the main owner is a general category man. If your wife or mother owns 51% or more, you may get extra help:",
-      "subsidy": "Subsidy: AP EDP 4.0 support can go from 25% to 35% of building and machine cost (up to 45% for small units).",
-      "debt": "Loan: You may become eligible for Stand-Up India, up to ₹1 crore.",
-      "guarantee": "Guarantee: Bank guarantee cover can go up to 90%, with a lower yearly fee.",
-      "ecosystem": "Extra support: Free quality certificate (ZED) and a women’s quota in the RAMP TEAM online selling programme."
+      "body": "You said the main owner is a general category man. If your wife or mother owns 51% or more, you may get extra help under Andhra Pradesh schemes:",
+      "subsidy": "Subsidy: AP EDP 4.0 / Food Processing Policy support can rise for women and special-category local entrepreneurs (building and machine cost).",
+      "debt": "Welfare loans: SC / ST / BC / PWD owners with a White Rice Card may qualify for AP OBMMS self-employment loans.",
+      "guarantee": "APIIC: SC/ST-led micro and small units in APIIC parks may get a higher land-cost rebate under AP MSME-PARKS.",
+      "ecosystem": "Special category under AP MSME & EDP 4.0 includes women, BC, SC, ST, minority, specially abled, and transgender entrepreneurs with AP domicile."
     },
     "schemes": {
       "SVANIDHI": {

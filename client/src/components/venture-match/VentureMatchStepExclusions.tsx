@@ -13,11 +13,11 @@ export const VentureMatchStepExclusions: React.FC<VentureMatchStepExclusionsProp
   if (!excluded.length) return null;
 
   return (
-    <div className="w-full max-w-2xl mx-auto mt-6 mb-24">
+    <div className="w-full max-w-2xl mx-auto mt-6 pb-28">
       <h3 className="text-sm font-semibold text-foreground mb-3">
         {t('ventureMatch.stepExclusionsTitle')}
       </h3>
-      <div className="max-h-[min(40vh,320px)] overflow-y-auto space-y-2 pr-1">
+      <div className="space-y-2">
         {excluded.map((scheme) => {
           const name = t(`ventureMatch.schemes.${scheme.code}.name`, { defaultValue: scheme.name });
           const reasons = scheme.criteria.map((item) => t(item.labelKey));

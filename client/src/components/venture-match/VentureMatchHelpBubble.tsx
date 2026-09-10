@@ -3,6 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { HelpCircle, Send, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { QuestionDef, VentureMatchAnswers } from '@/lib/ventureMatch/types';
+import {
+  ClarifyingQuestion,
+  HelpReply,
+  filterBudgetNarrowReplies,
+  getHelpGuide,
+  labelForReply,
+  promptForQuestion,
+  sanitizeOwnerOptionIds,
+} from '@/lib/ventureMatch/helpGuides';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -36,15 +45,21 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [suggested, setSuggested] = useState<string[]>([]);
+  const [guideChips, setGuideChips] = useState<HelpReply[]>([]);
+  const [replyIds, setReplyIds] = useState<string[]>([]);
   const [recommend, setRecommend] = useState<Recommend | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const kickKey = useRef('');
 
+  const guide = getHelpGuide(question.id);
+
   useEffect(() => {
     setMessages([]);
     setSuggested([]);
+    setGuideChips([]);
+    setReplyIds([]);
     setRecommend(null);
     setError(null);
     setDraft('');
@@ -53,7 +68,7 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, loading, recommend]);
+  }, [messages, loading, recommend, guideChips]);
 
   const optionLabels = Object.fromEntries(
     question.optionIds.map((id) => [
@@ -62,9 +77,56 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
     ])
   );
 
-  const kickoffStarters = (): string[] => {
-    const raw = t(`ventureMatch.help.starters.${question.id}`, { returnObjects: true });
-    return Array.isArray(raw) ? raw.filter((s) => typeof s === 'string') : [];
+  const repliesForQuestion = (q: ClarifyingQuestion, collected: string[]): HelpReply[] => {
+    if (question.id === 'budget' && q.id === 'bandNarrow') {
+      return filterBudgetNarrowReplies(q.replies, collected);
+    }
+    return q.replies;
+  };
+
+  const showClarifying = (collected: string[], lang: 'en' | 'te') => {
+    const idx = guide.nextQuestionIndex(collected);
+    if (idx === null) {
+      setGuideChips([]);
+      return;
+    }
+    const q = guide.clarifyingQuestions[idx];
+    if (!q) {
+      setGuideChips([]);
+      return;
+    }
+    setMessages((prev) => [...prev, { role: 'assistant', content: promptForQuestion(q, lang) }]);
+    setGuideChips(repliesForQuestion(q, collected));
+    setSuggested([]);
+    setRecommend(null);
+  };
+
+  const applyMapped = (
+    optionIds: string[],
+    lang: 'en' | 'te',
+    confidence: 'high' | 'low' = 'high',
+    collected: string[] = []
+  ) => {
+    let ids = optionIds.filter((id) => question.optionIds.includes(id));
+    if (question.id === 'owner') ids = sanitizeOwnerOptionIds(ids);
+    if (!ids.length) {
+      showClarifying(collected, lang);
+      return;
+    }
+    const names = ids.map((id) => optionLabels[id] || id).join(', ');
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'assistant',
+        content:
+          lang === 'te'
+            ? `దీనికి సరిపోయే ఎంపిక: ${names}`
+            : `Based on Andhra Pradesh scheme rules, the matching choice is: ${names}`,
+      },
+    ]);
+    setRecommend({ optionIds: ids, confidence });
+    setGuideChips([]);
+    setSuggested([]);
   };
 
   const callHelp = async (transcript: ChatMsg[], language: 'en' | 'te') => {
@@ -77,11 +139,48 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
       answersSoFar: answers as Record<string, unknown>,
       messages: transcript,
       language,
+      apGuideNotes: guide.apRuleNotes,
+      clarifyingScript: guide.clarifyingQuestions.map((q) => ({
+        id: q.id,
+        prompt: q.prompt.en,
+        replies: q.replies.map((r) => ({ id: r.id, label: r.label.en })),
+      })),
     });
     return response?.data;
   };
 
-  const sendTurn = async (text: string, kickoff = false) => {
+  const handleGuideReply = (reply: HelpReply) => {
+    if (loading || recommend) return;
+    const lang = uiLang;
+    const label = labelForReply(reply, lang);
+    const nextCollected = [...replyIds, reply.id];
+    setReplyIds(nextCollected);
+
+    setMessages((prev) => {
+      const withUser = [...prev, { role: 'user' as const, content: label }];
+      const mapped = guide.mapToOption(nextCollected);
+      if (mapped) {
+        setGuideChips([]);
+        queueMicrotask(() => applyMapped(mapped, lang, 'high', nextCollected));
+        return withUser;
+      }
+      const nextIdx = guide.nextQuestionIndex(nextCollected);
+      if (nextIdx !== null) {
+        const q = guide.clarifyingQuestions[nextIdx];
+        const chips = repliesForQuestion(q, nextCollected);
+        queueMicrotask(() => {
+          setGuideChips(chips);
+          setSuggested([]);
+          setRecommend(null);
+        });
+        return [...withUser, { role: 'assistant' as const, content: promptForQuestion(q, lang) }];
+      }
+      queueMicrotask(() => void sendTurn(label, false, withUser));
+      return withUser;
+    });
+  };
+
+  const sendTurn = async (text: string, kickoff = false, forcedTranscript?: ChatMsg[]) => {
     const trimmed = text.trim();
     if (!kickoff && !trimmed) return;
     if (loading) return;
@@ -89,16 +188,19 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
     const language = resolveHelpLanguage(uiLang, trimmed);
     const nextMessages: ChatMsg[] = kickoff
       ? messages
-      : [...messages, { role: 'user', content: trimmed }];
+      : forcedTranscript || [...messages, { role: 'user', content: trimmed }];
 
-    if (!kickoff) {
+    if (!kickoff && !forcedTranscript) {
       setMessages(nextMessages);
+      setDraft('');
+    } else if (!kickoff && forcedTranscript) {
       setDraft('');
     }
     setLoading(true);
     setError(null);
     setRecommend(null);
     setSuggested([]);
+    setGuideChips([]);
 
     try {
       const data = await callHelp(nextMessages, language);
@@ -109,7 +211,8 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
       setMessages((prev) => [...prev, { role: 'assistant', content: assistantMessage }]);
 
       if (data?.mode === 'recommend' && Array.isArray(data.optionIds) && data.optionIds.length) {
-        const valid = data.optionIds.filter((id: string) => question.optionIds.includes(id));
+        let valid = data.optionIds.filter((id: string) => question.optionIds.includes(id));
+        if (question.id === 'owner') valid = sanitizeOwnerOptionIds(valid);
         if (valid.length) {
           setRecommend({
             optionIds: valid,
@@ -131,9 +234,16 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
     if (kickKey.current === question.id) return;
     kickKey.current = question.id;
     setMessages([{ role: 'assistant', content: t('ventureMatch.help.kickoff') }]);
-    setSuggested(kickoffStarters());
+    setReplyIds([]);
     setError(null);
     setRecommend(null);
+    setSuggested([]);
+    const idx = guide.nextQuestionIndex([]);
+    if (idx !== null) {
+      const q = guide.clarifyingQuestions[idx];
+      setMessages((prev) => [...prev, { role: 'assistant', content: promptForQuestion(q, uiLang) }]);
+      setGuideChips(repliesForQuestion(q, []));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, question.id, uiLang]);
 
@@ -208,7 +318,21 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
                 </Button>
               </div>
             )}
-            {suggested.length > 0 && !recommend && !loading && (
+            {guideChips.length > 0 && !recommend && !loading && (
+              <div className="flex flex-wrap gap-2">
+                {guideChips.map((chip) => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => handleGuideReply(chip)}
+                    className="text-xs rounded-full border border-primary/30 px-3 py-1.5 hover:bg-primary/10"
+                  >
+                    {labelForReply(chip, uiLang)}
+                  </button>
+                ))}
+              </div>
+            )}
+            {suggested.length > 0 && !recommend && !loading && guideChips.length === 0 && (
               <div className="flex flex-wrap gap-2">
                 {suggested.map((chip) => (
                   <button

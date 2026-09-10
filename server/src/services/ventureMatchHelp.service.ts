@@ -23,6 +23,36 @@ export type HelpResult =
       confidence: 'high' | 'low';
     };
 
+/** Fallback AP rule notes when client does not send guides (by questionId). */
+const AP_GUIDE_NOTES: Record<string, string> = {
+  activity:
+    'AP MSME-EDP 4.0 targets manufacturing. AP Food Processing Policy 4.0 targets food processing in AP. OBMMS covers broader self-employment. Crop-only farming is not an MSME industrial unit under these AP schemes.',
+  stage:
+    'AP EDP 4.0 focuses on new (greenfield) enterprises. AP Technology Upgradation is for existing or restarted manufacturing. OBMMS needs a planned or running unit, not idea-only.',
+  budget:
+    'AP EDP / FPP / OBMMS need a real project cost band for incentives or welfare loans. Map to the closest cost option.',
+  legal:
+    'AP EDP needs registered sole / partnership / company. OBMMS often allows individual / unregistered. SHG/FPO/coop/trust/society is otherEntity.',
+  owner:
+    'AP special category includes women, BC, SC, ST, minority, specially abled, transgender with AP domicile. OBMMS needs SC/ST/BC/PWD. Exclusive tags: generalMale, notDecided, noMajority, notSure.',
+  domicile:
+    'AP EDP, Food Processing, OBMMS, and APIIC park rebates require Andhra Pradesh local domicile.',
+  location:
+    'AP EDP needs city/town, village, or APIIC park in AP — not home-only. AP MSME-PARKS needs APIIC. Outside AP fails state schemes.',
+  riceCard:
+    'AP OBMMS requires an Andhra Pradesh White Rice Card. Other ration cards are not enough.',
+  age: 'AP OBMMS typically requires age 21 to 60.',
+  education: 'Used for DIC / welfare paperwork completeness in Andhra Pradesh applications.',
+  udyam:
+    'AP MSME & EDP 4.0 and Food Processing Policy 4.0 require Udyam registration or readiness to register for MSME incentives.',
+  priorSubsidy:
+    'Ask about Andhra Pradesh government subsidy or welfare corporation loans in the last 5 years. Outstanding AP subsidy loans can block new welfare support.',
+  govtFamily:
+    'AP welfare corporation self-employment screening often asks whether a close family member holds a government job.',
+  market:
+    'Map how they mainly sell for AP unit context. Do not recommend central ONDC/RAMP or export incentive schemes.',
+};
+
 function extractJson(text: string): any {
   if (!text) return null;
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -44,6 +74,22 @@ function userTurnCount(messages: HelpMessage[]): number {
   return messages.filter((m) => m.role === 'user').length;
 }
 
+function formatClarifyingScript(
+  clarifyingScript?: Array<{
+    id: string;
+    prompt: string;
+    replies: Array<{ id: string; label: string }>;
+  }>
+): string {
+  if (!Array.isArray(clarifyingScript) || !clarifyingScript.length) return '';
+  return clarifyingScript
+    .map((q, i) => {
+      const replies = (q.replies || []).map((r) => `${r.id}=${r.label}`).join('; ');
+      return `Q${i + 1} (${q.id}): ${q.prompt} | replies: ${replies}`;
+    })
+    .join('\n');
+}
+
 export class VentureMatchHelpService {
   static async help(input: {
     questionId: string;
@@ -54,6 +100,12 @@ export class VentureMatchHelpService {
     answersSoFar: Record<string, any>;
     messages: HelpMessage[];
     language: 'en' | 'te';
+    apGuideNotes?: string;
+    clarifyingScript?: Array<{
+      id: string;
+      prompt: string;
+      replies: Array<{ id: string; label: string }>;
+    }>;
   }): Promise<HelpResult> {
     const allowed = new Set(input.optionIds || []);
     const lang = input.language === 'te' ? 'te' : 'en';
@@ -65,8 +117,19 @@ export class VentureMatchHelpService {
     const turns = userTurnCount(input.messages || []);
     const mustRecommendSoon = turns >= 4;
 
+    const apNotes =
+      (typeof input.apGuideNotes === 'string' && input.apGuideNotes.trim()) ||
+      AP_GUIDE_NOTES[input.questionId] ||
+      'Use Andhra Pradesh Industries, Welfare Corporation, and APIIC rules only.';
+    const script = formatClarifyingScript(input.clarifyingScript);
+
     const system = `You help an Andhra Pradesh MSME entrepreneur pick a Scheme Finder multiple-choice answer.
 You are not a general chatbot. You only clarify the current question, then map their situation to allowed option ids.
+
+STRICT SCOPE — Andhra Pradesh government / state rules ONLY:
+- Ground every clarification and recommendation in AP Industries & Commerce policies (MSME-EDP 4.0, Food Processing Policy 4.0, Technology Upgradation, APIIC / MSME-PARKS) and AP State Welfare Corporation (OBMMS) rules.
+- Do NOT cite, recommend, or compare central Government of India schemes (PMEGP, MUDRA, Stand-Up India, PMFME, SVANidhi, Vishwakarma, CGTMSE, RAMP, ONDC programmes, etc.).
+- If the user mentions a central scheme, ignore it for matching and stay on the current AP Scheme Finder question.
 
 ${langRule}
 
@@ -76,6 +139,10 @@ Question text: ${input.questionTitle}
 Allowed option ids and labels: ${JSON.stringify(input.optionLabels)}
 Previous answers (context only): ${JSON.stringify(input.answersSoFar || {})}
 
+AP guide for this question:
+${apNotes}
+${script ? `\nPreferred clarifying script (follow this order when asking):\n${script}` : ''}
+
 Rules:
 - Return JSON only. No markdown.
 - Never invent option ids. Only use ids from the allowed list.
@@ -83,8 +150,8 @@ Rules:
 - "I work on my own" with no registration is unregistered if they say they have no firm; sole only if they are a registered sole proprietor.
 - Do not match on a single keyword if the sentence means the opposite.
 - For questionId "owner": optionIds may be several tags (female, sc, st, bc, pwd). Never combine generalMale, notDecided, noMajority, or notSure with any other tag.
-- Ask at most ONE short clarifying question per turn (mode "ask").
-- suggestedUserReplies: 2 short example answers the user might tap (same language as assistantMessage).
+- Ask at most ONE short clarifying question per turn (mode "ask"). Prefer the clarifying script above.
+- suggestedUserReplies: 2–4 short example answers the user might tap (same language as assistantMessage).
 - When you are reasonably sure, use mode "recommend" with optionIds.
 - For all other questions, optionIds must have exactly one id.
 - If still unclear after several turns, recommend the closest fit with confidence "low" and tell them they can tap a different option on the card.
@@ -108,7 +175,7 @@ JSON shapes:
           role: 'user',
           content:
             transcript ||
-            'The user does not know which option to choose. Start by asking one simple clarifying question.',
+            'The user does not know which option to choose. Start by asking one simple clarifying question from the AP clarifying script.',
         },
       ],
     });

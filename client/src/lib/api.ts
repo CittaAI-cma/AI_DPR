@@ -967,6 +967,12 @@ class APIClient {
     answersSoFar: Record<string, unknown>;
     messages: { role: 'user' | 'assistant'; content: string }[];
     language: 'en' | 'te';
+    apGuideNotes?: string;
+    clarifyingScript?: Array<{
+      id: string;
+      prompt: string;
+      replies: Array<{ id: string; label: string }>;
+    }>;
   }) {
     return this.handleRequest(
       async () => {
