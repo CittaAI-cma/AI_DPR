@@ -165,7 +165,7 @@ export const VentureMatch: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto overflow-x-visible">
         <div className="flex items-center justify-between gap-3 mb-6">
           <Button variant="ghost" className="gap-2" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
