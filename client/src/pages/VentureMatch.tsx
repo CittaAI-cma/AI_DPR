@@ -6,7 +6,10 @@ import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { VentureMatchCard } from '@/components/venture-match/VentureMatchCard';
-import { VentureMatchHelpBubble } from '@/components/venture-match/VentureMatchHelpBubble';
+import {
+  VentureMatchHelpBubble,
+  VentureMatchHelpTrigger,
+} from '@/components/venture-match/VentureMatchHelpBubble';
 import { VentureMatchResults } from '@/components/venture-match/VentureMatchResults';
 import { VentureMatchStepExclusions } from '@/components/venture-match/VentureMatchStepExclusions';
 import { QUESTIONS, STORAGE_KEY } from '@/lib/ventureMatch/questions';
@@ -31,6 +34,7 @@ export const VentureMatch: React.FC = () => {
   const [answers, setAnswers] = useState<VentureMatchAnswers>({});
   const [done, setDone] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -52,6 +56,10 @@ export const VentureMatch: React.FC = () => {
     const payload: SavedProgress = { answers, step, done };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }, [answers, step, done, hydrated]);
+
+  useEffect(() => {
+    setHelpOpen(false);
+  }, [step]);
 
   const question = QUESTIONS[step];
   const result = useMemo(() => evaluate(answers), [answers]);
@@ -185,12 +193,15 @@ export const VentureMatch: React.FC = () => {
                 remaining={remaining}
                 onSelect={handleSelect}
                 onContinue={handleOwnerContinue}
+                helpTrigger={<VentureMatchHelpTrigger onClick={() => setHelpOpen(true)} />}
               />
               <VentureMatchStepExclusions excluded={stepExcluded} />
               <VentureMatchHelpBubble
                 question={question}
                 answers={answers}
                 onApply={applyHelpOptions}
+                open={helpOpen}
+                onOpenChange={setHelpOpen}
               />
             </>
           )

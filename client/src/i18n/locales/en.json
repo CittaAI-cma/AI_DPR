@@ -675,6 +675,7 @@
       "error": "Could not get help. Try again.",
       "lowConfidence": "This is a best guess — you can still pick another option on the card.",
       "kickoff": "I will ask short questions based on Andhra Pradesh scheme rules, then match you to an option.",
+      "languageToggle": "Chat language",
       "starters": {
         "activity": ["Making / processing", "Buying and selling", "Giving a service", "Only farming crops"],
         "stage": ["Yes, already running", "Not started yet", "Not sure"],

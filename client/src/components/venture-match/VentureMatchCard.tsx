@@ -12,6 +12,8 @@ interface VentureMatchCardProps {
   remaining: number;
   onSelect: (optionId: string) => void;
   onContinue?: () => void;
+  /** “Need help choosing?” — shown above the question on mobile, beside Option A on sm+. */
+  helpTrigger?: React.ReactNode;
 }
 
 export const VentureMatchCard: React.FC<VentureMatchCardProps> = ({
@@ -22,6 +24,7 @@ export const VentureMatchCard: React.FC<VentureMatchCardProps> = ({
   remaining,
   onSelect,
   onContinue,
+  helpTrigger,
 }) => {
   const { t } = useTranslation();
   const selectedSet = new Set(Array.isArray(selected) ? selected : selected ? [selected] : []);
@@ -41,6 +44,8 @@ export const VentureMatchCard: React.FC<VentureMatchCardProps> = ({
       </div>
 
       <div className="rounded-[18px] border-2 border-primary/20 bg-card shadow-lg p-6 sm:p-8">
+        {helpTrigger && <div className="mb-4 sm:hidden">{helpTrigger}</div>}
+
         <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
           {t(`ventureMatch.questions.${question.id}.label`)}
         </p>
@@ -51,24 +56,32 @@ export const VentureMatchCard: React.FC<VentureMatchCardProps> = ({
           <p className="text-sm text-muted-foreground mb-4">{t('ventureMatch.selectAll')}</p>
         )}
         <div className="space-y-3">
-          {question.optionIds.map((optionId) => {
+          {question.optionIds.map((optionId, optionIndex) => {
             const active = selectedSet.has(optionId);
-            const letter = String.fromCharCode(65 + question.optionIds.indexOf(optionId));
+            const letter = String.fromCharCode(65 + optionIndex);
+            const isOptionA = optionIndex === 0;
             return (
-              <button
+              <div
                 key={optionId}
-                type="button"
-                onClick={() => onSelect(optionId)}
-                className={cn(
-                  'w-full text-left rounded-[12px] border-2 px-4 py-4 transition-colors',
-                  active
-                    ? 'border-primary bg-primary/10 text-foreground'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/60'
-                )}
+                className={cn('flex items-center gap-2', isOptionA && helpTrigger && 'sm:gap-3')}
               >
-                <span className="font-semibold text-primary mr-2">{letter}.</span>
-                {t(`ventureMatch.questions.${question.id}.options.${optionId}`)}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onSelect(optionId)}
+                  className={cn(
+                    'flex-1 min-w-0 text-left rounded-[12px] border-2 px-4 py-4 transition-colors',
+                    active
+                      ? 'border-primary bg-primary/10 text-foreground'
+                      : 'border-border hover:border-primary/50 hover:bg-muted/60'
+                  )}
+                >
+                  <span className="font-semibold text-primary mr-2">{letter}.</span>
+                  {t(`ventureMatch.questions.${question.id}.options.${optionId}`)}
+                </button>
+                {isOptionA && helpTrigger && (
+                  <div className="hidden sm:flex shrink-0 self-center">{helpTrigger}</div>
+                )}
+              </div>
             );
           })}
         </div>
