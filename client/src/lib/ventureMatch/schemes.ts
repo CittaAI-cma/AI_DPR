@@ -11,6 +11,17 @@ import {
   VentureMatchAnswers,
 } from './types';
 
+const BUDGET_MIN: Record<Exclude<Budget, 'none' | 'notSure'>, number> = {
+  under2L: 0,
+  '2to5L': 200_000,
+  '5to10L': 500_000,
+  '10to20L': 1_000_000,
+  '20to50L': 2_000_000,
+  '50Lto1Cr': 5_000_000,
+  '1to10Cr': 10_000_000,
+  above10Cr: 100_000_000,
+};
+
 const NUMERIC_BUDGETS: Budget[] = [
   'under2L',
   '2to5L',
@@ -21,11 +32,35 @@ const NUMERIC_BUDGETS: Budget[] = [
   '1to10Cr',
   'above10Cr',
 ];
+const PMFME_BUDGETS: Budget[] = ['under2L', '2to5L', '5to10L', '10to20L', '20to50L'];
+const CGTMSE_BUDGETS: Budget[] = [
+  'under2L',
+  '2to5L',
+  '5to10L',
+  '10to20L',
+  '20to50L',
+  '50Lto1Cr',
+  '1to10Cr',
+];
+const MFG_LIKE: Activity[] = ['mfg', 'food', 'craft'];
+const SERVICE_LIKE: Activity[] = ['service', 'trade', 'vending', 'knowledge'];
+const ENTERPRISE_ACTIVITIES: Activity[] = [
+  'mfg',
+  'knowledge',
+  'food',
+  'craft',
+  'service',
+  'trade',
+  'vending',
+  'mixed',
+];
 const OBMMS_OWNERS: OwnerTag[] = ['sc', 'st', 'bc', 'pwd'];
+const STANDUP_OWNERS: OwnerTag[] = ['female', 'sc', 'st'];
 const OBMMS_AGES: Age[] = ['21to50', '51to60'];
 const SPECIAL_OWNERS: OwnerTag[] = ['female', 'sc', 'st', 'bc', 'pwd'];
 const CMEP_ACTIVITIES: Activity[] = ['mfg', 'knowledge'];
 const CMEP_BOOST_OWNERS: OwnerTag[] = ['female', 'transgender', 'exServiceman', 'pwd'];
+const AGE_18_PLUS: Age[] = ['18to20', '21to50', '51to60', 'above60'];
 const UDYAM_READY: Udyam[] = ['yes', 'willing', 'applied'];
 const FIRM_LEGAL: Legal[] = ['sole', 'partnership', 'company'];
 const AP_LOCATION: LocationType[] = ['urban', 'rural', 'apiic', 'home', 'notDecided'];
@@ -48,8 +83,22 @@ function owners(answers: VentureMatchAnswers): OwnerTag[] | undefined {
   return answers.owner;
 }
 
+function requireNumericBudget(
+  answers: VentureMatchAnswers,
+  predicate: (min: number, band: Exclude<Budget, 'none' | 'notSure'>) => boolean
+): CriterionStatus {
+  const band = answers.budget;
+  if (band === undefined) return 'unknown';
+  if (band === 'none' || band === 'notSure') return 'fail';
+  return predicate(BUDGET_MIN[band], band) ? 'pass' : 'fail';
+}
+
 function isSpecialCategory(answers: VentureMatchAnswers): boolean {
   return (answers.owner || []).some((o) => SPECIAL_OWNERS.includes(o));
+}
+
+function isFemale(answers: VentureMatchAnswers): boolean {
+  return (answers.owner || []).includes('female');
 }
 
 export function shouldShowOwnershipHint(answers: VentureMatchAnswers): boolean {
@@ -59,6 +108,15 @@ export function shouldShowOwnershipHint(answers: VentureMatchAnswers): boolean {
 
 export function blocksAllSchemes(answers: VentureMatchAnswers): boolean {
   return answers.activity === 'notBusiness' || answers.activity === 'notSure';
+}
+
+function pmegpSubsidy(answers: VentureMatchAnswers): string {
+  const special = owners(answers) ? isSpecialCategory(answers) : false;
+  const rural = answers.location === 'rural';
+  if (rural && special) return 'ventureMatch.benefits.pmegpRuralSpecial';
+  if (!rural && special) return 'ventureMatch.benefits.pmegpUrbanSpecial';
+  if (rural) return 'ventureMatch.benefits.pmegpRural';
+  return 'ventureMatch.benefits.pmegpUrban';
 }
 
 function apBoosted(answers: VentureMatchAnswers): boolean {
@@ -73,8 +131,292 @@ export function cmepBoosted(answers: VentureMatchAnswers): boolean {
   );
 }
 
-/** Andhra Pradesh state schemes only (Industries / Welfare / APIIC). */
+function pmegpEducation(answers: VentureMatchAnswers): CriterionStatus {
+  const activity = answers.activity;
+  if (!activity) return 'unknown';
+
+  let threshold: number | undefined;
+  if (MFG_LIKE.includes(activity)) threshold = 1_000_000;
+  else if (SERVICE_LIKE.includes(activity) || activity === 'mixed') threshold = 500_000;
+
+  if (threshold === undefined) return 'pass';
+  const band = answers.budget;
+  if (band === undefined) return 'unknown';
+  if (band === 'none' || band === 'notSure') return 'fail';
+  if (BUDGET_MIN[band] < threshold) return 'pass';
+  return passIf(answers.education, ['8thPlus']);
+}
+
+function pmegpStage(answers: VentureMatchAnswers): CriterionStatus {
+  if (!answers.stage) return 'unknown';
+  if (answers.stage === 'idea') return 'unknown';
+  return answers.stage === 'greenfield' ? 'pass' : 'fail';
+}
+
+/** Central + Andhra Pradesh schemes. AP domicile is required only on AP state schemes (including CMEP). */
 export const SCHEMES: SchemeRule[] = [
+  {
+    code: 'SVANIDHI',
+    name: 'PM SVANidhi',
+    kind: 'loan',
+    benefit: () => 'ventureMatch.benefits.svanidhi',
+    criteria: [
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.streetVending',
+        test: (a) => passIf(a.activity, ['vending']),
+      },
+      {
+        id: 'location',
+        questionId: 'location',
+        labelKey: 'ventureMatch.criteria.urban',
+        test: (a) => passIf(a.location, ['urban']),
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
+      },
+    ],
+  },
+  {
+    code: 'VISHWAKARMA',
+    name: 'PM Vishwakarma',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.vishwakarma',
+    criteria: [
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.craft',
+        test: (a) => passIf(a.activity, ['craft']),
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
+      },
+      {
+        id: 'priorSubsidy',
+        questionId: 'priorSubsidy',
+        labelKey: 'ventureMatch.criteria.noOutstandingSubsidy',
+        test: (a) => passIf(a.priorSubsidy, ['none', 'repaid']),
+      },
+      {
+        id: 'govtFamily',
+        questionId: 'govtFamily',
+        labelKey: 'ventureMatch.criteria.noGovtFamily',
+        test: (a) => passIf(a.govtFamily, ['no']),
+      },
+    ],
+  },
+  {
+    code: 'PMFME',
+    name: 'PM Formalisation of Micro Food Processing Enterprises (PMFME)',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.pmfme',
+    criteria: [
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.foodProcessing',
+        test: (a) => passIf(a.activity, ['food']),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetPmFme',
+        test: (a) => passIf(a.budget, PMFME_BUDGETS),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalPmfme',
+        test: (a) => passIf(a.legal, ['sole', 'partnership', 'otherEntity'] as Legal[]),
+      },
+      {
+        id: 'education',
+        questionId: 'education',
+        labelKey: 'ventureMatch.criteria.education8th',
+        test: (a) => passIf(a.education, ['8thPlus']),
+      },
+    ],
+  },
+  {
+    code: 'PMEGP',
+    name: 'Prime Minister’s Employment Generation Programme (PMEGP)',
+    kind: 'subsidy',
+    benefit: (a) => pmegpSubsidy(a),
+    criteria: [
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.greenfield',
+        test: pmegpStage,
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalPmegp',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetRequired',
+        test: (a) => passIf(a.budget, NUMERIC_BUDGETS),
+      },
+      {
+        id: 'education',
+        questionId: 'education',
+        labelKey: 'ventureMatch.criteria.pmegpEducation',
+        test: pmegpEducation,
+      },
+    ],
+  },
+  {
+    code: 'STANDUP',
+    name: 'Stand-Up India',
+    kind: 'loan',
+    benefit: () => 'ventureMatch.benefits.standup',
+    criteria: [
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.greenfield',
+        test: (a) => passIf(a.stage, ['greenfield']),
+      },
+      {
+        id: 'owner',
+        questionId: 'owner',
+        labelKey: 'ventureMatch.criteria.womanScSt',
+        test: (a) =>
+          requireValue(owners(a), (tags) => tags.some((o) => STANDUP_OWNERS.includes(o))),
+      },
+      {
+        id: 'budgetMin',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.standupMin',
+        test: (a) => requireNumericBudget(a, (min) => min >= 1_000_000),
+      },
+      {
+        id: 'budgetMax',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.standupMax',
+        test: (a) => requireNumericBudget(a, (min) => min <= 10_000_000),
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'MUDRA',
+    name: 'Pradhan Mantri MUDRA Yojana',
+    kind: 'loan',
+    benefit: () => 'ventureMatch.benefits.mudra',
+    criteria: [
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.mudraCap',
+        test: (a) => requireNumericBudget(a, (min) => min <= 2_000_000),
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'CGTMSE',
+    name: 'Credit Guarantee Fund Trust for Micro and Small Enterprises (CGTMSE)',
+    kind: 'guarantee',
+    benefit: (a) =>
+      isFemale(a) ? 'ventureMatch.benefits.cgtmseWomen' : 'ventureMatch.benefits.cgtmse',
+    criteria: [
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetUnder10Cr',
+        test: (a) => passIf(a.budget, CGTMSE_BUDGETS),
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+    ],
+  },
   {
     code: 'AP_EDP',
     name: 'AP MSME-EDP 4.0',
@@ -202,6 +544,32 @@ export const SCHEMES: SchemeRule[] = [
     ],
   },
   {
+    code: 'MSE_SPICE',
+    name: 'RAMP MSE-SPICE',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.mseSpice',
+    criteria: [
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.brownfield',
+        test: (a) => passIf(a.stage, ['brownfield', 'restart']),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
     code: 'OBMMS',
     name: 'AP State Welfare Corporation Self-Employment Loans (OBMMS)',
     kind: 'subsidy',
@@ -314,6 +682,58 @@ export const SCHEMES: SchemeRule[] = [
         questionId: 'budget',
         labelKey: 'ventureMatch.criteria.cmepCredit',
         test: (a) => passIf(a.budget, NUMERIC_BUDGETS),
+      },
+    ],
+  },
+  {
+    code: 'RAMP_TEAM',
+    name: 'RAMP TEAM (ONDC)',
+    kind: 'support',
+    benefit: () => 'ventureMatch.benefits.rampTeam',
+    criteria: [
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'market',
+        questionId: 'market',
+        labelKey: 'ventureMatch.criteria.ecommerce',
+        test: (a) => passIf(a.market, ['ecommerce', 'both']),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'EPM_NIRYAT',
+    name: 'EPM Niryat Protsahan',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.epmNiryat',
+    criteria: [
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'market',
+        questionId: 'market',
+        labelKey: 'ventureMatch.criteria.export',
+        test: (a) => passIf(a.market, ['export']),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },
