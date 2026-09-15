@@ -663,6 +663,8 @@
     "stepExclusionsTitle": "Why some schemes dropped out",
     "stepExclusionBecause": "{{name}} is not matching because {{reason}}.",
     "stepExclusionBecauseMany": "{{name}} is not matching because: {{reason}}.",
+    "cmepBoosterTitle": "CMEP Special Booster Match",
+    "cmepBoosterBody": "As a Woman / Transgender / Ex-Serviceman / Specially-Abled promoter, you qualify for enhanced back-ended subsidy support under AP CMEP.",
     "help": {
       "open": "Need help choosing?",
       "close": "Close help",
@@ -732,7 +734,10 @@
       "age21to60": "Age must be 21 to 60 years",
       "apiic": "Unit must be inside an APIIC industrial park",
       "ecommerce": "For selling online (like ONDC)",
-      "export": "For selling goods to other countries"
+      "export": "For selling goods to other countries",
+      "cmepActivity": "AP CMEP is strictly for Manufacturing or Knowledge Economy ventures.",
+      "cmepDomicile": "AP CMEP requires Andhra Pradesh local domicile.",
+      "cmepCredit": "AP CMEP requires a bank-linked credit loan."
     },
     "ownershipHint": {
       "title": "Think about putting the business in your wife’s or mother’s name",
@@ -763,6 +768,9 @@
       },
       "CGTMSE": {
         "name": "CGTMSE (loan guarantee)"
+      },
+      "AP_CMEP": {
+        "name": "AP Chief Minister's Entrepreneur Programme (AP CMEP)"
       },
       "AP_EDP": {
         "name": "AP MSME-EDP 4.0"
@@ -801,6 +809,8 @@
       "mudra": "Loan without extra property as security, up to ₹20 lakh",
       "cgtmseWomen": "Up to 90% loan guarantee for women-owned units",
       "cgtmse": "Loan guarantee without extra property as security",
+      "apCmep": "Credit-linked back-ended subsidy for a new manufacturing or knowledge-economy unit under AP CMEP",
+      "apCmepBoost": "Enhanced credit-linked back-ended subsidy under AP CMEP for women, transgender, ex-servicemen, or specially-abled promoters",
       "apEdp": "Andhra Pradesh subsidy for new manufacturing units",
       "apEdpBoost": "Andhra Pradesh subsidy for new manufacturing units, plus extra 10% for special category",
       "apFpp": "Andhra Pradesh subsidy for food processing units",
@@ -818,9 +828,10 @@
         "title": "What kind of work do you want to do?",
         "options": {
           "mfg": "Making goods (for example: machines, plastic items, metal work)",
+          "knowledge": "Knowledge economy & tech services (IT/ITeS, software, biotech, R&D)",
           "food": "Food processing (for example: bakery, pickle unit, spice grinding)",
           "craft": "Traditional craft (for example: carpentry, pottery, tailoring, goldsmith)",
-          "service": "Services (for example: salon, clinic, repair shop, small IT work)",
+          "service": "Services (for example: salon, clinic, repair shop)",
           "trade": "Buying and selling (for example: kirana shop, cloth shop)",
           "vending": "Street vending (for example: food cart or market stall)",
           "crop": "Growing crops on a farm",
@@ -877,6 +888,8 @@
           "st": "Scheduled Tribe (ST)",
           "bc": "Backward Class (BC) or Minority",
           "pwd": "Person with disability",
+          "transgender": "Transgender person",
+          "exServiceman": "Ex-serviceman",
           "generalMale": "General category man",
           "notDecided": "Ownership not decided yet",
           "noMajority": "No one holds 51% (equal split)",

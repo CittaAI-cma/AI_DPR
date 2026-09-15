@@ -4,6 +4,7 @@ import en from '@/i18n/locales/en.json';
 
 const ACTIVITY_SECTOR: Record<string, string> = {
   mfg: 'Manufacturing',
+  knowledge: 'Knowledge Economy / Tech Services',
   food: 'Food Processing',
   craft: 'Handicrafts',
   service: 'Services',
@@ -87,7 +88,13 @@ export function buildDprPrefill(answers: VentureMatchAnswers, matches: SchemeMat
       businessDescription: stageBlurb,
     },
     applicantInfo: {
-      gender: owner.includes('female') ? 'Female' : owner.includes('generalMale') ? 'Male' : undefined,
+      gender: owner.includes('female')
+        ? 'Female'
+        : owner.includes('transgender')
+          ? 'Transgender'
+          : owner.includes('generalMale')
+            ? 'Male'
+            : undefined,
       locationType,
       categories,
       projectType: skipSector

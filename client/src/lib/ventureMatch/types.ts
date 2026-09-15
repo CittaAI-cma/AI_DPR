@@ -1,5 +1,6 @@
 export type Activity =
   | 'mfg'
+  | 'knowledge'
   | 'food'
   | 'craft'
   | 'service'
@@ -38,6 +39,8 @@ export type OwnerTag =
   | 'st'
   | 'bc'
   | 'pwd'
+  | 'transgender'
+  | 'exServiceman'
   | 'generalMale'
   | 'notDecided'
   | 'noMajority'
@@ -122,6 +125,8 @@ export interface SchemeMatch {
   name: string;
   kind: SchemeKind;
   benefit: string;
+  /** True only for AP_CMEP when domicile is AP and a booster promoter tag is present. */
+  boosted?: boolean;
 }
 
 export interface SchemeExclusion {

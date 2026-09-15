@@ -1,5 +1,5 @@
 import { QUESTIONS } from './questions';
-import { SCHEMES, blocksAllSchemes, shouldShowOwnershipHint } from './schemes';
+import { SCHEMES, blocksAllSchemes, cmepBoosted, shouldShowOwnershipHint } from './schemes';
 import {
   EvaluateResult,
   QuestionId,
@@ -74,6 +74,7 @@ export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
         name: scheme.name,
         kind: scheme.kind,
         benefit: scheme.benefit(answers),
+        ...(scheme.code === 'AP_CMEP' ? { boosted: cmepBoosted(answers) } : {}),
       });
     }
   }

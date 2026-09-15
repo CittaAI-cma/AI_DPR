@@ -1,4 +1,5 @@
 import {
+  Activity,
   Age,
   Budget,
   CriterionStatus,
@@ -23,6 +24,8 @@ const NUMERIC_BUDGETS: Budget[] = [
 const OBMMS_OWNERS: OwnerTag[] = ['sc', 'st', 'bc', 'pwd'];
 const OBMMS_AGES: Age[] = ['21to50', '51to60'];
 const SPECIAL_OWNERS: OwnerTag[] = ['female', 'sc', 'st', 'bc', 'pwd'];
+const CMEP_ACTIVITIES: Activity[] = ['mfg', 'knowledge'];
+const CMEP_BOOST_OWNERS: OwnerTag[] = ['female', 'transgender', 'exServiceman', 'pwd'];
 const UDYAM_READY: Udyam[] = ['yes', 'willing', 'applied'];
 const FIRM_LEGAL: Legal[] = ['sole', 'partnership', 'company'];
 const AP_LOCATION: LocationType[] = ['urban', 'rural', 'apiic', 'home', 'notDecided'];
@@ -60,6 +63,14 @@ export function blocksAllSchemes(answers: VentureMatchAnswers): boolean {
 
 function apBoosted(answers: VentureMatchAnswers): boolean {
   return answers.domicile === 'ap' && isSpecialCategory(answers);
+}
+
+/** True only if AP domicile AND at least one CMEP booster promoter tag. */
+export function cmepBoosted(answers: VentureMatchAnswers): boolean {
+  return (
+    answers.domicile === 'ap' &&
+    (answers.owner || []).some((o) => CMEP_BOOST_OWNERS.includes(o))
+  );
 }
 
 /** Andhra Pradesh state schemes only (Industries / Welfare / APIIC). */
@@ -270,6 +281,39 @@ export const SCHEMES: SchemeRule[] = [
         questionId: 'legal',
         labelKey: 'ventureMatch.criteria.legalRegistered',
         test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+    ],
+  },
+  {
+    code: 'AP_CMEP',
+    name: "AP Chief Minister's Entrepreneur Programme (AP CMEP)",
+    kind: 'subsidy',
+    benefit: (a) =>
+      cmepBoosted(a) ? 'ventureMatch.benefits.apCmepBoost' : 'ventureMatch.benefits.apCmep',
+    criteria: [
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.cmepActivity',
+        test: (a) => passIf(a.activity, CMEP_ACTIVITIES),
+      },
+      {
+        id: 'domicile',
+        questionId: 'domicile',
+        labelKey: 'ventureMatch.criteria.cmepDomicile',
+        test: (a) => passIf(a.domicile, ['ap']),
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.greenfield',
+        test: (a) => passIf(a.stage, ['greenfield']),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.cmepCredit',
+        test: (a) => passIf(a.budget, NUMERIC_BUDGETS),
       },
     ],
   },

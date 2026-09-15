@@ -5,6 +5,7 @@ export const QUESTIONS: QuestionDef[] = [
     id: 'activity',
     optionIds: [
       'mfg',
+      'knowledge',
       'food',
       'craft',
       'service',
@@ -48,6 +49,8 @@ export const QUESTIONS: QuestionDef[] = [
       'st',
       'bc',
       'pwd',
+      'transgender',
+      'exServiceman',
       'generalMale',
       'notDecided',
       'noMajority',

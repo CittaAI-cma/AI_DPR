@@ -87,7 +87,7 @@ export function showPmegpEducationGate(
 ): boolean {
   if (code !== 'PMEGP') return false;
   const mfg = activity === 'mfg' || activity === 'food' || activity === 'craft';
-  const service = activity === 'service' || activity === 'trade' || activity === 'vending' || activity === 'mixed';
+  const service = activity === 'service' || activity === 'knowledge' || activity === 'trade' || activity === 'vending' || activity === 'mixed';
   if (mfg && totalCostLakhs > 10) return true;
   if (service && totalCostLakhs > 5) return true;
   return false;

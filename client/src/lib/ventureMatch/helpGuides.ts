@@ -34,7 +34,7 @@ function firstOf(replyIds: string[], ids: string[]): string | undefined {
 const activityGuide: QuestionHelpGuide = {
   questionId: 'activity',
   apRuleNotes:
-    'AP MSME-EDP 4.0 targets manufacturing units. AP Food Processing Policy 4.0 targets food processing in AP. OBMMS welfare loans cover broader self-employment. Crop-only farming is not an MSME unit under these AP industrial schemes. Do not cite PMEGP, MUDRA, or other central schemes.',
+    'AP CMEP targets Manufacturing or Knowledge Economy / tech services (IT/ITeS, software, biotech, R&D). AP MSME-EDP 4.0 targets manufacturing units. AP Food Processing Policy 4.0 targets food processing in AP. OBMMS welfare loans cover broader self-employment. Crop-only farming is not an MSME unit under these AP industrial schemes. Do not cite PMEGP, MUDRA, or other central schemes.',
   clarifyingQuestions: [
     {
       id: 'mainType',
@@ -76,18 +76,31 @@ const activityGuide: QuestionHelpGuide = {
         { id: 'deciding', label: { en: 'Still deciding', te: 'ఇంకా నిర్ణయించలేదు' } },
       ],
     },
+    {
+      id: 'serviceKind',
+      prompt: {
+        en: 'Is it knowledge economy / tech services (IT, software, biotech, R&D) or a general service (salon, clinic, repair)?',
+        te: 'ఇది నాలెడ్జ్ ఎకానమీ / టెక్ సేవలా (IT, సాఫ్ట్‌వేర్, బయోటెక్, R&D) లేదా సాధారణ సేవ (సెలూన్, క్లినిక్, రిపేర్)?',
+      },
+      replies: [
+        { id: 'knowledge', label: { en: 'Knowledge economy / tech', te: 'నాలెడ్జ్ ఎకానమీ / టెక్' } },
+        { id: 'generalService', label: { en: 'General service', te: 'సాధారణ సేవ' } },
+      ],
+    },
   ],
   nextQuestionIndex(replyIds) {
     if (!replyIds.length) return 0;
     if (has(replyIds, 'making') && !firstOf(replyIds, ['foodProc', 'otherMfg', 'craftWork'])) return 1;
     if (has(replyIds, 'otherPath') && !firstOf(replyIds, ['craft', 'vending', 'mixed', 'notBusiness', 'deciding']))
       return 2;
+    if (has(replyIds, 'serving') && !firstOf(replyIds, ['knowledge', 'generalService'])) return 3;
     return null;
   },
   mapToOption(replyIds) {
     if (has(replyIds, 'farming')) return ['crop'];
     if (has(replyIds, 'trading')) return ['trade'];
-    if (has(replyIds, 'serving')) return ['service'];
+    if (has(replyIds, 'knowledge')) return ['knowledge'];
+    if (has(replyIds, 'generalService')) return ['service'];
     if (has(replyIds, 'foodProc')) return ['food'];
     if (has(replyIds, 'otherMfg')) return ['mfg'];
     if (has(replyIds, 'craftWork') || has(replyIds, 'craft')) return ['craft'];
@@ -102,7 +115,7 @@ const activityGuide: QuestionHelpGuide = {
 const stageGuide: QuestionHelpGuide = {
   questionId: 'stage',
   apRuleNotes:
-    'AP EDP 4.0 incentives focus on new (greenfield) enterprises. AP Technology Upgradation is for existing or restarted manufacturing units. OBMMS needs a planned or running unit, not idea-only. Do not cite central schemes.',
+    'AP CMEP and AP EDP 4.0 incentives focus on new (greenfield) enterprises. AP Technology Upgradation is for existing or restarted manufacturing units. OBMMS needs a planned or running unit, not idea-only. Do not cite central schemes.',
   clarifyingQuestions: [
     {
       id: 'started',
@@ -158,7 +171,7 @@ const stageGuide: QuestionHelpGuide = {
 const budgetGuide: QuestionHelpGuide = {
   questionId: 'budget',
   apRuleNotes:
-    'AP EDP / FPP / OBMMS need a real project cost (not zero/unknown) for incentive or loan sizing. Help map to the closest cost band. Andhra Pradesh Industries rules only.',
+    'AP EDP / FPP / CMEP / OBMMS need a real project cost (not zero/unknown). AP CMEP is credit-linked: "no money needed" fails. Help map to the closest cost band. Andhra Pradesh Industries rules only.',
   clarifyingQuestions: [
     {
       id: 'hasBudget',
@@ -288,7 +301,7 @@ const legalGuide: QuestionHelpGuide = {
 const ownerGuide: QuestionHelpGuide = {
   questionId: 'owner',
   apRuleNotes:
-    'AP special category (higher incentives) includes women, BC, SC, ST, minority, specially abled, transgender with AP domicile. OBMMS needs SC/ST/BC/PWD. Majority means 51%+. Exclusive tags: generalMale, notDecided, noMajority, notSure — never combine with others.',
+    'AP CMEP enhanced subsidy needs AP domicile plus woman, transgender, ex-serviceman, or PWD. AP special category (EDP) includes women, BC, SC, ST, minority, specially abled with AP domicile. OBMMS needs SC/ST/BC/PWD. Majority means 51%+. Exclusive tags: generalMale, notDecided, noMajority, notSure — never combine with others. Combinable tags include female, sc, st, bc, pwd, transgender, exServiceman.',
   clarifyingQuestions: [
     {
       id: 'majority',
@@ -325,7 +338,20 @@ const ownerGuide: QuestionHelpGuide = {
         { id: 'st', label: { en: 'Scheduled Tribe (ST)', te: 'ఎస్టీ (ST)' } },
         { id: 'bc', label: { en: 'BC or Minority', te: 'బీసీ లేదా మైనారిటీ' } },
         { id: 'pwd', label: { en: 'Person with disability', te: 'వికలాంగులు' } },
-        { id: 'general', label: { en: 'General category man', te: 'సాధారణ వర్గం పురుషుడు' } },
+        { id: 'general', label: { en: 'General category', te: 'సాధారణ వర్గం' } },
+      ],
+    },
+    {
+      id: 'extraBoost',
+      prompt: {
+        en: 'Does any of this also apply to the majority owner?',
+        te: 'మెజారిటీ యజమానికి ఇంకేదైనా వర్తిస్తుందా?',
+      },
+      replies: [
+        { id: 'transgender', label: { en: 'Transgender person', te: 'ట్రాన్స్‌జెండర్ వ్యక్తి' } },
+        { id: 'exServiceman', label: { en: 'Ex-serviceman', te: 'మాజీ సైనికుడు' } },
+        { id: 'bothBoost', label: { en: 'Transgender and ex-serviceman', te: 'ట్రాన్స్‌జెండర్ మరియు మాజీ సైనికుడు' } },
+        { id: 'noneExtra', label: { en: 'None of these', te: 'వీటిలో ఏదీ కాదు' } },
       ],
     },
   ],
@@ -338,6 +364,12 @@ const ownerGuide: QuestionHelpGuide = {
       !firstOf(replyIds, ['sc', 'st', 'bc', 'pwd', 'general'])
     )
       return 2;
+    if (
+      has(replyIds, 'hasMajority') &&
+      firstOf(replyIds, ['sc', 'st', 'bc', 'pwd', 'general']) &&
+      !firstOf(replyIds, ['transgender', 'exServiceman', 'bothBoost', 'noneExtra'])
+    )
+      return 3;
     return null;
   },
   mapToOption(replyIds) {
@@ -348,13 +380,15 @@ const ownerGuide: QuestionHelpGuide = {
     if (!firstOf(replyIds, ['isWoman', 'notWoman'])) return null;
     const cat = firstOf(replyIds, ['sc', 'st', 'bc', 'pwd', 'general']);
     if (!cat) return null;
-    if (cat === 'general') {
-      if (has(replyIds, 'isWoman')) return ['female'];
-      return ['generalMale'];
-    }
+    const extra = firstOf(replyIds, ['transgender', 'exServiceman', 'bothBoost', 'noneExtra']);
+    if (!extra) return null;
+
     const tags: string[] = [];
     if (has(replyIds, 'isWoman')) tags.push('female');
-    tags.push(cat);
+    if (cat !== 'general') tags.push(cat);
+    if (has(replyIds, 'transgender') || has(replyIds, 'bothBoost')) tags.push('transgender');
+    if (has(replyIds, 'exServiceman') || has(replyIds, 'bothBoost')) tags.push('exServiceman');
+    if (!tags.length) return ['generalMale'];
     return tags;
   },
 };
@@ -362,7 +396,7 @@ const ownerGuide: QuestionHelpGuide = {
 const domicileGuide: QuestionHelpGuide = {
   questionId: 'domicile',
   apRuleNotes:
-    'AP EDP, Food Processing Policy, OBMMS, and APIIC park rebates require Andhra Pradesh local domicile. Living elsewhere but planning to set up in AP is planningAp — usually not enough for domicile-gated incentives until they are AP residents.',
+    'AP CMEP, EDP, Food Processing Policy, OBMMS, and APIIC park rebates require Andhra Pradesh local domicile. Living elsewhere but planning to set up in AP is planningAp — usually not enough for domicile-gated incentives until they are AP residents.',
   clarifyingQuestions: [
     {
       id: 'liveAp',

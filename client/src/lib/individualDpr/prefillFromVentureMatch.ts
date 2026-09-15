@@ -2,6 +2,7 @@ import { VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const ACTIVITY_SECTOR: Record<string, string> = {
   mfg: 'Manufacturing',
+  knowledge: 'Knowledge Economy / Tech Services',
   food: 'Food Processing',
   craft: 'Traditional craft / artisan trade',
   service: 'Services',

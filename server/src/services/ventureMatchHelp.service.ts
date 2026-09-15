@@ -26,17 +26,17 @@ export type HelpResult =
 /** Fallback AP rule notes when client does not send guides (by questionId). */
 const AP_GUIDE_NOTES: Record<string, string> = {
   activity:
-    'AP MSME-EDP 4.0 targets manufacturing. AP Food Processing Policy 4.0 targets food processing in AP. OBMMS covers broader self-employment. Crop-only farming is not an MSME industrial unit under these AP schemes.',
+    'AP CMEP targets Manufacturing or Knowledge Economy / tech services. AP MSME-EDP 4.0 targets manufacturing. AP Food Processing Policy 4.0 targets food processing in AP. OBMMS covers broader self-employment. Crop-only farming is not an MSME industrial unit under these AP schemes.',
   stage:
-    'AP EDP 4.0 focuses on new (greenfield) enterprises. AP Technology Upgradation is for existing or restarted manufacturing. OBMMS needs a planned or running unit, not idea-only.',
+    'AP EDP 4.0 and AP CMEP focus on new (greenfield) enterprises. AP Technology Upgradation is for existing or restarted manufacturing. OBMMS needs a planned or running unit, not idea-only.',
   budget:
-    'AP EDP / FPP / OBMMS need a real project cost band for incentives or welfare loans. Map to the closest cost option.',
+    'AP EDP / FPP / CMEP / OBMMS need a real project cost band (bank-linked credit for CMEP). Map to the closest cost option. Budget "none" means no loan and fails CMEP.',
   legal:
     'AP EDP needs registered sole / partnership / company. OBMMS often allows individual / unregistered. SHG/FPO/coop/trust/society is otherEntity.',
   owner:
-    'AP special category includes women, BC, SC, ST, minority, specially abled, transgender with AP domicile. OBMMS needs SC/ST/BC/PWD. Exclusive tags: generalMale, notDecided, noMajority, notSure.',
+    'AP CMEP enhanced subsidy needs AP domicile plus woman, transgender, ex-serviceman, or PWD. Combinable tags: female, sc, st, bc, pwd, transgender, exServiceman. Exclusive tags: generalMale, notDecided, noMajority, notSure. OBMMS needs SC/ST/BC/PWD.',
   domicile:
-    'AP EDP, Food Processing, OBMMS, and APIIC park rebates require Andhra Pradesh local domicile.',
+    'AP CMEP, EDP, FPP, OBMMS, and APIIC park rebates require Andhra Pradesh local domicile.',
   location:
     'AP EDP needs city/town, village, or APIIC park in AP — not home-only. AP MSME-PARKS needs APIIC. Outside AP fails state schemes.',
   riceCard:
@@ -149,7 +149,7 @@ Rules:
 - Read negation carefully. "I don't own a company yet" / "no firm" / "not registered" is unregistered, not sole owner and not company.
 - "I work on my own" with no registration is unregistered if they say they have no firm; sole only if they are a registered sole proprietor.
 - Do not match on a single keyword if the sentence means the opposite.
-- For questionId "owner": optionIds may be several tags (female, sc, st, bc, pwd). Never combine generalMale, notDecided, noMajority, or notSure with any other tag.
+- For questionId "owner": optionIds may be several tags (female, sc, st, bc, pwd, transgender, exServiceman). Never combine generalMale, notDecided, noMajority, or notSure with any other tag.
 - Ask at most ONE short clarifying question per turn (mode "ask"). Prefer the clarifying script above.
 - suggestedUserReplies: 2–4 short example answers the user might tap (same language as assistantMessage).
 - When you are reasonably sure, use mode "recommend" with optionIds.
