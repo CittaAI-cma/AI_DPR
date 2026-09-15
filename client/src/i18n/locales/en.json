@@ -1077,6 +1077,21 @@
       "fillSuccess": "Filled {{filled}} steps with AI. Review and edit as needed.",
       "generateAllFailed": "Failed to generate all steps. Please try again.",
       "fillingStep": "Filling step {{step}} ({{index}} of {{total}})…"
+    },
+    "brief": {
+      "benefits": "Benefits",
+      "eligibility": "Eligibility",
+      "howToApply": "How to Apply",
+      "documents": "Documents",
+      "faqs": "FAQs",
+      "quickInfo": "Quick Info",
+      "ministry": "Ministry",
+      "category": "Category",
+      "type": "Type",
+      "status": "Status",
+      "source": "Official source",
+      "disclaimer": "Summary for drafting this DPR. Confirm live ceilings, fees, and GOs with the implementing agency before you apply.",
+      "formNotes": "How this DPR form changes — {{title}}"
     }
   }
 }

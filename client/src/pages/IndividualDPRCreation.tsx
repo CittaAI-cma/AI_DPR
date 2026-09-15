@@ -17,6 +17,7 @@ import { toClusterPayload } from '@/lib/individualDpr/toClusterPayload';
 import { getVisibleSteps, getStepTitle, SCHEME_OPTIONS, getSchemeImpact } from '@/lib/individualDpr/schemeFormConfig';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { prefillFromVentureMatch } from '@/lib/individualDpr/prefillFromVentureMatch';
+import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
 
 export const IndividualDPRCreation: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -243,11 +244,8 @@ export const IndividualDPRCreation: React.FC = () => {
                     const code = e.target.value || null;
                     setMatchedSchemeCode(code);
                     const nextVisible = getVisibleSteps(code);
-                    const impact = getSchemeImpact(code);
-                    const jumpTo = nextVisible.includes(impact.firstChangedStep)
-                      ? impact.firstChangedStep
-                      : nextVisible[0];
-                    setCurrentStep(jumpTo);
+                    const stayOn = nextVisible.includes(currentStep) ? currentStep : nextVisible[0];
+                    setCurrentStep(stayOn || 1);
                   }}
                 >
                   {SCHEME_OPTIONS.map((opt) => (
@@ -322,20 +320,33 @@ export const IndividualDPRCreation: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-amber-50 border-b border-amber-200">
-          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <p className="text-sm font-semibold text-foreground">
-              {t('individualDpr.scheme', { title: tf(schemeImpact.title) })}
-            </p>
-            <ul className="mt-1 text-sm text-muted-foreground list-disc pl-5 space-y-0.5">
-              {schemeImpact.bullets.map((b) => (
-                <li key={b}>{tf(b)}</li>
-              ))}
-            </ul>
+        {currentStep !== 1 && (
+          <div className="bg-amber-50 border-b border-amber-200">
+            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+              <p className="text-sm font-semibold text-foreground">
+                {t('individualDpr.scheme', { title: tf(schemeImpact.title) })}
+              </p>
+              <ul className="mt-1 text-sm text-muted-foreground list-disc pl-5 space-y-0.5">
+                {schemeImpact.bullets.map((b) => (
+                  <li key={b}>{tf(b)}</li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {currentStep === 1 && (
+            <div className="mb-6">
+              <SchemeBriefPanel
+                schemeCode={data.matchedSchemeCode || null}
+                formNotes={{
+                  title: tf(schemeImpact.title),
+                  bullets: schemeImpact.bullets.map((b) => tf(b)),
+                }}
+              />
+            </div>
+          )}
           <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {(previewMode === 'form' || previewMode === 'split') && (
               <div id="cluster-dpr-form" className="space-y-6">
