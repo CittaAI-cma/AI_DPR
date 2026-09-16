@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI_DRP — Application Architecture</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm 18mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      color: #1a2332;
+      font-size: 10.5pt;
+      line-height: 1.42;
+      max-width: 190mm;
+      margin: 0 auto;
+    }
+    h1 { font-size: 20pt; line-height: 1.15; margin: 0 0 6pt; color: #0f2744; }
+    h2 {
+      font-size: 13pt; margin: 18pt 0 7pt; color: #0f2744;
+      page-break-after: avoid; border-bottom: 1px solid #c5d0dc; padding-bottom: 3pt;
+    }
+    h3 { font-size: 11pt; margin: 12pt 0 5pt; color: #1b4d7a; page-break-after: avoid; }
+    p, li { margin: 0 0 6pt; }
+    ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
+    .kicker {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 8.5pt; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #5a6a7a; margin-bottom: 4pt;
+    }
+    .meta {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 9pt; color: #4a5563; margin-bottom: 12pt;
+    }
+    .box {
+      background: #f4f7fb; border: 1px solid #d5dee8; border-left: 4px solid #1b4d7a;
+      padding: 8pt 10pt; margin: 8pt 0 12pt; page-break-inside: avoid;
+    }
+    .diagram {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 7.6pt; line-height: 1.28; background: #0f2744; color: #e8eef5;
+      padding: 10pt 11pt; border-radius: 6px; white-space: pre; overflow: hidden;
+      margin: 8pt 0 12pt; page-break-inside: avoid;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 6pt 0 12pt; }
+    th, td { border: 1px solid #cfd8e3; padding: 5pt 6pt; vertical-align: top; text-align: left; }
+    th {
+      background: #e8eef5; font-family: system-ui, -apple-system, sans-serif;
+      font-size: 8pt; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    tr { page-break-inside: avoid; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 8.5pt; background: #eef2f7; padding: 1px 4px; border-radius: 3px;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; margin: 8pt 0 12pt; }
+    .card {
+      border: 1px solid #d5dee8; border-radius: 6px; padding: 8pt 9pt;
+      background: #fff; page-break-inside: avoid;
+    }
+    .card h3 { margin-top: 0; }
+    footer.note {
+      font-family: system-ui, -apple-system, sans-serif; font-size: 8pt; color: #5a6a7a;
+      margin-top: 16pt; border-top: 1px solid #d5dee8; padding-top: 6pt;
+    }
+    strong { color: #0f2744; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+  <div class="kicker">AI-Enabled MSME DPR Platform</div>
+  <h1>Application Architecture</h1>
+  <p class="meta">
+    Repository: <strong>AI_DRP</strong> &nbsp;·&nbsp;
+    Stack: React + Vite / Express + MongoDB &nbsp;·&nbsp;
+    Generated from codebase structure &nbsp;·&nbsp;
+    Bilingual EN / TE
+  </p>
+
+  <div class="box">
+    <strong>Purpose.</strong> Guide entrepreneurs to create bank-ready Detailed Project Reports (DPRs),
+    match them to central and Andhra Pradesh MSME schemes, and support AI-assisted drafting,
+    analytics, and admin document workflows — with optional AP MSME ONE portal integration.
+  </div>
+
+  <h2>1. System context</h2>
+  <div class="diagram">┌─────────────────┐     HTTPS/JSON      ┌──────────────────────┐
+│  Browser (SPA)  │ ◄─────────────────► │  Express API (:5000) │
+│  Vite React     │   /api/* + JWT      │  Node.js + TS        │
+│  (:5173)        │                     └──────────┬───────────┘
+└────────┬────────┘                                │
+         │ Zustand stores                          │ Mongoose
+         │ i18n EN/TE                              ▼
+         │                              ┌──────────────────────┐
+         │                              │  MongoDB             │
+         │                              │  Users, Projects,    │
+         │                              │  DPRs, Schemes, Docs │
+         │                              └──────────┬───────────┘
+         │                                         │
+         │         ┌───────────────────────────────┼────────────────────────┐
+         │         ▼                               ▼                        ▼
+         │  ┌─────────────┐               ┌──────────────┐         ┌──────────────┐
+         │  │ OpenAI GPT  │               │ Whisper /    │         │ Cloudinary   │
+         │  │ (content)   │               │ Telugu STT   │         │ (uploads)    │
+         │  └─────────────┘               └──────────────┘         └──────────────┘
+         │                                         │
+         └────────── Scheme Finder (client rules) ─┘
+                    + ventureMatchHelp (server LLM)
+                    + AP MSME ONE (optional)</div>
+
+  <h2>2. Repository layout</h2>
+  <table>
+    <thead>
+      <tr><th>Path</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>client/</code></td><td>React 18 SPA (Vite, Tailwind, Zustand, react-i18next, Recharts)</td></tr>
+      <tr><td><code>server/</code></td><td>Express API, Mongo models, AI/PDF/scheme services, JWT auth</td></tr>
+      <tr><td><code>docs/</code></td><td>Architecture and product notes (this PDF)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>Client (<code>client/src</code>)</h3>
+      <ul>
+        <li><code>pages/</code> — routes / screens</li>
+        <li><code>components/</code> — UI by domain</li>
+        <li><code>store/</code> — Zustand state</li>
+        <li><code>lib/</code> — API client, scheme matcher, DPR helpers</li>
+        <li><code>i18n/</code> — EN / TE locale packs</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Server (<code>server/src</code>)</h3>
+      <ul>
+        <li><code>routes/</code> — HTTP mount points</li>
+        <li><code>controllers/</code> — request handlers</li>
+        <li><code>services/</code> — business + AI logic</li>
+        <li><code>models/</code> — Mongoose schemas</li>
+        <li><code>middleware/</code> — auth, errors, rate limits</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>3. Frontend routes &amp; product surfaces</h2>
+  <table>
+    <thead>
+      <tr><th>Route</th><th>Page</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>/</code></td><td>Landing</td><td>Marketing / entry</td></tr>
+      <tr><td><code>/login</code>, <code>/register</code></td><td>Auth</td><td>JWT session; roles: entrepreneur, officer, admin</td></tr>
+      <tr><td><code>/dashboard</code></td><td>Dashboard</td><td>User home / shortcuts</td></tr>
+      <tr><td><code>/projects</code></td><td>Projects</td><td>CRUD project shells for DPRs</td></tr>
+      <tr><td><code>/venture-match</code></td><td>Scheme Finder</td><td>14-question wizard → ranked scheme matches + CMEP booster</td></tr>
+      <tr><td><code>/individual-dpr/create</code></td><td>Individual Latest DPR</td><td>18-step unit DPR; scheme overlay + scheme brief panel</td></tr>
+      <tr><td><code>/cluster-dpr/create</code></td><td>Cluster DPR</td><td>Multi-unit / SPV-style cluster report flow</td></tr>
+      <tr><td><code>/dpr/builder</code></td><td>AI Guided Builder</td><td>Chat + step analyze assist for classic DPR sessions</td></tr>
+      <tr><td><code>/dpr/:projectId</code>, <code>/dpr/view/:dprId</code></td><td>Generate / Preview</td><td>Generation and document view / download</td></tr>
+      <tr><td><code>/chat</code></td><td>Chat</td><td>General AI guidance chatbot</td></tr>
+      <tr><td><code>/admin</code>, <code>/admin/documents</code></td><td>Admin</td><td>Ops dashboard + document / template management</td></tr>
+      <tr><td><code>/profile</code></td><td>Profile</td><td>User profile / Udyam / contact</td></tr>
+    </tbody>
+  </table>
+
+  <p>Protected routes wrap authenticated pages via <code>ProtectedRoute</code>. Language toggle drives EN/TE UI strings and DPR view language.</p>
+
+  <h2 class="page-break">4. Client component domains</h2>
+  <table>
+    <thead>
+      <tr><th>Folder</th><th>Responsibility</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>components/venture-match/</code></td><td>Question cards, results, help bubble, step exclusions</td></tr>
+      <tr><td><code>components/individual-dpr/</code></td><td>Step form, scheme brief panel (Benefits / Eligibility / …)</td></tr>
+      <tr><td><code>components/cluster-dpr/</code></td><td>Cluster form, AI suggestions, document view, financials, charts</td></tr>
+      <tr><td><code>components/dpr-builder/</code></td><td>Step analyze assist + step chat panel</td></tr>
+      <tr><td><code>components/dpr/</code></td><td>Legacy / shared DPR workflow widgets</td></tr>
+      <tr><td><code>components/layout/</code>, <code>ui/</code>, <code>auth/</code></td><td>Shell, primitives, role picker, route guard</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Zustand stores</h3>
+  <ul>
+    <li><code>authStore</code> — user, token, role</li>
+    <li><code>projectStore</code> — project list / selection</li>
+    <li><code>dprStore</code> / <code>chatStore</code> — classic session + chat state</li>
+    <li><code>clusterDPRStore</code> — cluster multi-step draft</li>
+    <li><code>individualDPRStore</code> — individual steps, matched scheme, VentureMatch answers, extras</li>
+  </ul>
+
+  <h2>5. Scheme Finder (client-first matching)</h2>
+  <div class="box">
+    Matching logic lives primarily on the <strong>client</strong> under <code>client/src/lib/ventureMatch/</code>.
+    The server adds an LLM helper for clarifying free-text answers (<code>ventureMatchHelp.service</code>).
+  </div>
+  <table>
+    <thead>
+      <tr><th>Module</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>questions.ts</code> / <code>types.ts</code></td><td>14 cards + option IDs (activity includes <code>knowledge</code>; owners include transgender / ex-serviceman)</td></tr>
+      <tr><td><code>schemes.ts</code></td><td>16 scheme rules (15 original + <code>AP_CMEP</code>); pass/fail/unknown criteria; CMEP booster</td></tr>
+      <tr><td><code>evaluate.ts</code></td><td>Scores remaining schemes each step; exclusion reasons</td></tr>
+      <tr><td><code>helpGuides.ts</code></td><td>AP-oriented chip trees for hybrid help chat</td></tr>
+      <tr><td><code>mapToDpr.ts</code></td><td>Handoff → Individual DPR prefill + <code>?scheme=</code></td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>AP domicile gate</strong> applies only to AP state schemes (EDP, FPP, Tech Upgrade, Parks, OBMMS, CMEP).
+    Central schemes remain available to AP residents.
+  </p>
+
+  <h2>6. Individual Latest DPR pipeline</h2>
+  <div class="diagram">Scheme Finder answers
+        │
+        ▼
+ matchedSchemeCode + ventureMatchAnswers
+        │
+        ▼
+┌───────────────────────────────────────────────┐
+│ IndividualDPRCreation (step 1…18)             │
+│  • SchemeBriefPanel (brochure tabs EN/TE)     │
+│  • schemeFormConfig (hidden steps, uploads)   │
+│  • IndividualDPRForm + AISuggestions          │
+│  • fillAllStepsWithAi (bulk AI fill)          │
+└──────────────────────┬────────────────────────┘
+                       │ toClusterPayload()
+                       ▼
+              POST /api/dpr  (cluster draft / generate)
+                       │
+                       ▼
+              ClusterDPRDocumentView / PDF download</div>
+  <p>
+    Scheme briefs are static bilingual packs in <code>lib/individualDpr/schemeBriefs/</code>
+    (central + AP), rendered like AP MSME One (Benefits, Eligibility, How to Apply, Documents, FAQs + Quick Info).
+  </p>
+
+  <h2 class="page-break">7. Backend API map</h2>
+  <p>All business routes mount under <code>/api</code>. Health: <code>GET /api/health</code>.</p>
+  <table>
+    <thead>
+      <tr><th>Mount</th><th>Concern</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>/api/auth</code></td><td>Register, login, JWT profile</td></tr>
+      <tr><td><code>/api/projects</code></td><td>Project CRUD</td></tr>
+      <tr><td><code>/api/dpr</code></td><td>Sessions, builder analyze/chat, uploads, cluster individual drafts, PDF/DOCX, generation</td></tr>
+      <tr><td><code>/api/schemes</code></td><td>Scheme catalog / matching helpers</td></tr>
+      <tr><td><code>/api/ai</code></td><td>Chat, suggestions, VentureMatch help, translation-related AI</td></tr>
+      <tr><td><code>/api/apmsme</code></td><td>AP MSME ONE bridge (schemes, submit, status)</td></tr>
+      <tr><td><code>/api/documents</code></td><td>Admin / knowledge documents</td></tr>
+      <tr><td><code>/api/feedback</code></td><td>User feedback for quality loops</td></tr>
+      <tr><td><code>/api/admin</code></td><td>Admin analytics &amp; ops</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cross-cutting middleware</h3>
+  <ul>
+    <li>Helmet, CORS, compression, Morgan logging</li>
+    <li>JSON body up to 50mb (HTML capture for print-faithful PDFs)</li>
+    <li>Rate limiter on <code>/api</code></li>
+    <li><code>authenticate</code> JWT guard on protected controllers</li>
+    <li>Central <code>errorHandler</code> / <code>notFound</code></li>
+    <li>Static <code>/uploads</code> with CORS for embedded PDFs/images</li>
+  </ul>
+
+  <h2>8. Core services</h2>
+  <table>
+    <thead>
+      <tr><th>Service</th><th>Responsibility</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>openai.service</code></td><td>Primary LLM for DPR content, chat, field suggestions</td></tr>
+      <tr><td><code>gemini.service</code></td><td>Alternate / supplemental generative path</td></tr>
+      <tr><td><code>dpr.service</code> / <code>clusterDPR.service</code></td><td>Session orchestration, cluster/individual draft persistence, generation</td></tr>
+      <tr><td><code>dprBuilderAssist.service</code></td><td>Grounded step analyze + step chat for AI Guided Builder</td></tr>
+      <tr><td><code>financial.service</code></td><td>Cost structures, viability helpers</td></tr>
+      <tr><td><code>scheme.service</code></td><td>Scheme data / recommendation support</td></tr>
+      <tr><td><code>ventureMatchHelp.service</code></td><td>LLM fallback for Scheme Finder free-text help</td></tr>
+      <tr><td><code>quality.service</code> / <code>ml.service</code></td><td>Quality scores, bankability / analytics signals</td></tr>
+      <tr><td><code>translation.service</code></td><td>EN ↔ TE content support</td></tr>
+      <tr><td><code>whisper-telugu.service</code></td><td>Speech-to-text (Telugu-aware)</td></tr>
+      <tr><td><code>cloudinary.service</code></td><td>Media / file hosting when configured</td></tr>
+      <tr><td><code>apmsme.service</code></td><td>External AP MSME ONE API adapter (+ mocks)</td></tr>
+      <tr><td><code>suggestion.service</code></td><td>Field-level AI suggestions</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9. Data model (MongoDB)</h2>
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Stores</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>User</code></td><td>Identity, bcrypt password, role (entrepreneur / officer / admin), Udyam, location</td></tr>
+      <tr><td><code>Project</code></td><td>Entrepreneur project shell linked to DPRs</td></tr>
+      <tr><td><code>DPRSession</code> / versions / templates</td><td>Guided builder sessions, templates, version history</td></tr>
+      <tr><td><code>ClusterSection</code></td><td>Cluster / individual multi-step draft sections</td></tr>
+      <tr><td><code>Scheme</code> / <code>SchemeMatch</code></td><td>Scheme catalog and match records</td></tr>
+      <tr><td><code>Document</code> / <code>Policy</code></td><td>Admin knowledge / policy docs</td></tr>
+      <tr><td><code>Feedback</code> / <code>DPRAnalytics</code> / <code>RAGMetrics</code></td><td>Feedback loops and analytics</td></tr>
+      <tr><td><code>VectorStore</code></td><td>Embeddings / RAG support when used</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="page-break">10. End-to-end flows</h2>
+
+  <h3>A. Scheme → Individual DPR</h3>
+  <ol>
+    <li>User answers Scheme Finder questions; client evaluator narrows 16 schemes.</li>
+    <li>Optional help bubble: chip tree first, then LLM via <code>/api/ai</code>.</li>
+    <li>“Generate DPR for this Match” writes handoff + navigates to Individual DPR with scheme code.</li>
+    <li>Step 1 shows scheme brief; form fields / uploads adapt via <code>schemeFormConfig</code>.</li>
+    <li>Drafts save through cluster DPR APIs; generate produces bank-ready document (EN/TE).</li>
+  </ol>
+
+  <h3>B. Cluster DPR</h3>
+  <ol>
+    <li>User fills cluster steps in <code>ClusterDPRCreation</code> + shared AI suggestion widgets.</li>
+    <li>Server <code>clusterDPR.service</code> persists sections and generates narrative / tables.</li>
+    <li>Preview via <code>ClusterDPRDocumentView</code>; export PDF (incl. HTML capture path).</li>
+  </ol>
+
+  <h3>C. AI Guided Builder</h3>
+  <ol>
+    <li>Session started under <code>/api/dpr/sessions</code>.</li>
+    <li>Per-step analyze (<code>/builder/analyze</code>) and chat (<code>/builder/chat</code>) grounded on prompts in <code>constants/</code>.</li>
+    <li>Final DPR downloadable as PDF/DOCX from session endpoints.</li>
+  </ol>
+
+  <h2>11. Cross-cutting product capabilities</h2>
+  <ul>
+    <li><strong>Bilingual:</strong> react-i18next locales + server translation service; DPR view language switch.</li>
+    <li><strong>Offline / mock:</strong> <code>offlineDetector</code>, <code>mockData</code>, offline QA / DPR helpers for degraded networks.</li>
+    <li><strong>RBAC:</strong> client <code>rbac.ts</code> + server role on User; admin routes gated.</li>
+    <li><strong>Quality loop:</strong> feedback + ML/quality services → admin analytics.</li>
+    <li><strong>Deploy:</strong> client/server <code>vercel.json</code>; Railway references in helmet CSP for hosted API.</li>
+  </ul>
+
+  <h2>12. Architecture principles (as implemented)</h2>
+  <div class="box">
+    <ul>
+      <li><strong>SPA + API:</strong> UI never talks to Mongo directly; all persistence through Express.</li>
+      <li><strong>Domain packs on client:</strong> Scheme matching and scheme brochure copy ship with the SPA for snappy UX; LLM used when rules need language understanding.</li>
+      <li><strong>Shared DPR document view:</strong> Individual flow reuses cluster document rendering via payload adapter.</li>
+      <li><strong>Scheme-aware forms:</strong> One 18-step skeleton; scheme code toggles fields, hidden steps, and uploads.</li>
+      <li><strong>AI as co-pilot:</strong> Suggestions and fill-all assist; human review before generate.</li>
+    </ul>
+  </div>
+
+  <h2>13. Local runtime</h2>
+  <table>
+    <thead>
+      <tr><th>Process</th><th>Default</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Client Vite</td><td><code>http://localhost:5173</code> — <code>VITE_API_URL</code> → API</td></tr>
+      <tr><td>Server Express</td><td><code>http://localhost:5000/api</code> — requires <code>OPENAI_API_KEY</code>, Mongo URI</td></tr>
+    </tbody>
+  </table>
+
+  <footer class="note">
+    AI_DRP application architecture — derived from repository layout, routes, stores, and services.
+    Not a formal compliance document; scheme percentages and GOs should be confirmed with implementing agencies.
+  </footer>
+
+</body>
+</html>
