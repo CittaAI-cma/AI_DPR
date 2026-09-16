@@ -1,0 +1,32 @@
+---
+description: Keep Create New DPR business-logic markdown in sync with code changes
+globs:
+  - client/src/pages/IndividualDPRCreation.tsx
+  - client/src/components/individual-dpr/**
+  - client/src/lib/individualDpr/**
+  - client/src/store/individualDPRStore.ts
+  - client/src/lib/ventureMatch/mapToDpr.ts
+  - client/src/lib/ventureMatch/schemes.ts
+alwaysApply: false
+---
+
+# Create New Latest DPR → update business-logic doc
+
+When you change **Create New Latest DPR / Individual DPR** behaviour (steps, scheme overlay, extras, uploads, hidden steps, MUDRA/PMEGP gates, scheme briefs, prefill from Venture Match, handoff consumption, `toClusterPayload`, generate/save flow), you **must** also update:
+
+`docs/create-new-dpr-business-logic.md`
+
+## What to update in the MD
+
+- Reflect **business rules** (which scheme changes which steps/fields/uploads, brief tabs, prefill mapping, API adapter flags).
+- Keep the **“How this links to Scheme Finder”** section accurate if handoff, `matchedSchemeCode`, or use of `ventureMatchAnswers` changes.
+- If the **link contract** with Scheme Finder changes (handoff, CTA targets, shared scheme list), also update `docs/venture-match-business-logic.md`.
+
+## Do not
+
+- Skip the MD for scheme-form-only tweaks — extras, uploads, and brief pack changes count.
+- Document unimplemented ideas as current behaviour.
+
+## Done check
+
+Before finishing: MD matches the new behaviour and still cross-links correctly to Scheme Finder.

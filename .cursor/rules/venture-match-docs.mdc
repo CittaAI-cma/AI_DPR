@@ -1,0 +1,32 @@
+---
+description: Keep Scheme Finder business-logic markdown in sync with code changes
+globs:
+  - client/src/lib/ventureMatch/**
+  - client/src/components/venture-match/**
+  - client/src/pages/VentureMatch.tsx
+  - server/src/services/ventureMatchHelp.service.ts
+  - client/src/i18n/locales/en.json
+  - client/src/i18n/locales/te.json
+alwaysApply: false
+---
+
+# Scheme Finder → update business-logic doc
+
+When you change **Scheme Finder / Venture Match** behaviour (questions, options, scheme rules, evaluate/match logic, CMEP booster, ownership hint, help chat, handoff to DPR, results CTAs, or related i18n scheme/criteria/benefit copy), you **must** also update:
+
+`docs/venture-match-business-logic.md`
+
+## What to update in the MD
+
+- Reflect **business rules** (eligibility gates, option IDs, match/exclude behaviour, storage keys, navigation).
+- Keep the **“How this links to Create New Latest DPR”** section accurate if handoff, query params, or shared scheme catalog changes.
+- If the **link contract** with Individual DPR changes (handoff shape, `?scheme=`, prefill fields consumed), also update `docs/create-new-dpr-business-logic.md`.
+
+## Do not
+
+- Skip the MD update for “small” rule tweaks — option adds, domicile gates, and benefit strings count.
+- Invent policy text that is not in code; document what the code does.
+
+## Done check
+
+Before finishing: MD describes the new behaviour and still cross-links correctly to Create New DPR.

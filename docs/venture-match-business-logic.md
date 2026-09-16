@@ -4,6 +4,8 @@
 > Primary route: `/venture-match`  
 > UI label: **Scheme Finder**
 
+**Maintenance:** Any business-logic change to Scheme Finder / Venture Match must update this file (Cursor rule: `.cursor/rules/venture-match-docs.mdc`). If the handoff or link to Individual DPR changes, update [create-new-dpr-business-logic.md](./create-new-dpr-business-logic.md) too.
+
 Related doc: [Create New Latest DPR business logic](./create-new-dpr-business-logic.md)
 
 ---

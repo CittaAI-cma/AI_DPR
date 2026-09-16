@@ -4,6 +4,8 @@
 > Primary route: `/individual-dpr/create`  
 > UI title i18n: **Create New Latest DPR**
 
+**Maintenance:** Any business-logic change to Create New Latest DPR / Individual DPR must update this file (Cursor rule: `.cursor/rules/create-new-dpr-docs.mdc`). If the handoff or link to Scheme Finder changes, update [venture-match-business-logic.md](./venture-match-business-logic.md) too.
+
 Related doc: [Scheme Finder (Venture Match) business logic](./venture-match-business-logic.md)
 
 ---
