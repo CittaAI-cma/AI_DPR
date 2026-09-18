@@ -20,6 +20,7 @@ import {
   isMudraShishuKishore,
 } from '@/lib/individualDpr/schemeFormConfig';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
+import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
 
