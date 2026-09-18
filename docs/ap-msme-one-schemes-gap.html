@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AP MSME One — Scheme Gap vs Create New Latest DPR &amp; Scheme Finder</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm 18mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      color: #1a2332;
+      font-size: 10.5pt;
+      line-height: 1.42;
+      max-width: 190mm;
+      margin: 0 auto;
+    }
+    h1 { font-size: 20pt; line-height: 1.15; margin: 0 0 6pt; color: #0f2744; }
+    h2 {
+      font-size: 13pt; margin: 18pt 0 7pt; color: #0f2744;
+      page-break-after: avoid; border-bottom: 1px solid #c5d0dc; padding-bottom: 3pt;
+    }
+    h3 { font-size: 11pt; margin: 12pt 0 5pt; color: #1b4d7a; page-break-after: avoid; }
+    h4 { font-size: 10.5pt; margin: 10pt 0 4pt; color: #1b4d7a; page-break-after: avoid; }
+    p, li { margin: 0 0 6pt; }
+    ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
+    .kicker {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 8.5pt; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #5a6a7a; margin-bottom: 4pt;
+    }
+    .meta {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 9pt; color: #4a5563; margin-bottom: 12pt;
+    }
+    .box {
+      background: #f4f7fb; border: 1px solid #d5dee8; border-left: 4px solid #1b4d7a;
+      padding: 8pt 10pt; margin: 8pt 0 12pt; page-break-inside: avoid;
+    }
+    .warn {
+      background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #c2410c;
+      padding: 8pt 10pt; margin: 8pt 0 12pt; page-break-inside: avoid;
+    }
+    .ok {
+      background: #ecfdf5; border: 1px solid #a7f3d0; border-left: 4px solid #047857;
+      padding: 8pt 10pt; margin: 8pt 0 12pt; page-break-inside: avoid;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 8.6pt; margin: 6pt 0 12pt; }
+    th, td { border: 1px solid #cfd8e3; padding: 4.5pt 5.5pt; vertical-align: top; text-align: left; }
+    th {
+      background: #e8eef5; font-family: system-ui, -apple-system, sans-serif;
+      font-size: 7.6pt; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    tr { page-break-inside: avoid; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 8.2pt; background: #eef2f7; padding: 1px 4px; border-radius: 3px;
+    }
+    .card {
+      border: 1px solid #d5dee8; border-radius: 6px; padding: 8pt 9pt;
+      background: #fff; page-break-inside: avoid; margin: 0 0 9pt;
+    }
+    .card h3 { margin-top: 0; }
+    footer.note {
+      font-family: system-ui, -apple-system, sans-serif; font-size: 8pt; color: #5a6a7a;
+      margin-top: 16pt; border-top: 1px solid #d5dee8; padding-top: 6pt;
+    }
+    strong { color: #0f2744; }
+    .page-break { page-break-before: always; }
+    .stat {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; margin: 8pt 0 12pt;
+    }
+    .stat .n {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 18pt; font-weight: 700; color: #0f2744; line-height: 1.1;
+    }
+    .stat .l {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 8pt; color: #5a6a7a; margin-top: 2pt;
+    }
+    .stat-box {
+      border: 1px solid #d5dee8; background: #f8fafc; padding: 8pt 9pt; border-radius: 6px;
+      page-break-inside: avoid;
+    }
+    .tag {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 7.5pt; letter-spacing: 0.04em; text-transform: uppercase;
+      background: #e8eef5; color: #1b4d7a; padding: 1px 6px; border-radius: 3px;
+    }
+    .tag-skip { background: #ffedd5; color: #9a3412; }
+    .tag-in { background: #d1fae5; color: #065f46; }
+    .tag-miss { background: #fee2e2; color: #991b1b; }
+    .tag-keep { background: #e0e7ff; color: #3730a3; }
+  </style>
+</head>
+<body>
+
+  <div class="kicker">Create New Latest DPR · Scheme Finder · AP MSME One</div>
+  <h1>AP MSME One schemes — gap analysis and integration design</h1>
+  <p class="meta">
+    Source: live catalog at <strong>https://apmsmeone.ap.gov.in/schemes</strong> (31 entries in portal JS bundle) &nbsp;·&nbsp;
+    App catalog: <code>client/src/lib/ventureMatch/schemes.ts</code> (16 matcher schemes) &nbsp;·&nbsp;
+    Date: 18 Sep 2026
+  </p>
+
+  <div class="box">
+    <p><strong>Decision for Create New Latest DPR:</strong> do not add cluster / common-facility schemes to the individual scheme-card picker. Route those users to Cluster DPR. Integrate the remaining missing <em>unit-level</em> schemes into Scheme Finder scoring and into Create New Latest DPR overlays (full 18-step bank DPR, short overlay, or no-DPR redirect).</p>
+  </div>
+
+  <div class="stat">
+    <div class="stat-box"><div class="n">31</div><div class="l">Schemes on AP MSME One</div></div>
+    <div class="stat-box"><div class="n">4</div><div class="l">Cluster / CFC — skip individual DPR</div></div>
+    <div class="stat-box"><div class="n">27</div><div class="l">Relevant to a single unit</div></div>
+    <div class="stat-box"><div class="n">9</div><div class="l">Of those 27 already in the app</div></div>
+    <div class="stat-box"><div class="n">18</div><div class="l">Missing from the app (to integrate)</div></div>
+    <div class="stat-box"><div class="n">7</div><div class="l">In the app but not on this 31-list (keep)</div></div>
+  </div>
+
+  <h2>1. How the 31 were counted</h2>
+  <p>The public SPA at <code>/schemes</code> loads a schemes module. That module contains <strong>exactly 31 scheme objects</strong> with <code>id</code>, <code>name</code>, <code>shortName</code>, and <code>category</code>. Category <code>cluster</code> is used for CFC / industrial-estate / traditional-cluster programmes.</p>
+  <p>This document treats that 31 as the portal’s official list. Confirm live GOs, ceilings, and agency names before locking a DPR.</p>
+
+  <h2>2. Full portal catalog (31)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Portal ID</th>
+        <th>Name</th>
+        <th>Portal category</th>
+        <th>Bucket</th>
+        <th>In app?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><code>PMEGP</code></td><td>Prime Minister's Employment Generation Programme</td><td>credit</td><td>Individual</td><td><span class="tag tag-in">Yes — PMEGP</span></td></tr>
+      <tr><td>2</td><td><code>2ndLoan(PMEGP)</code></td><td>2nd Loan for Up-gradation of Existing PMEGP / REGP / MUDRA Units</td><td>credit</td><td>Individual</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>3</td><td><code>CGTMSE</code></td><td>Credit Guarantee Scheme for Micro &amp; Small Enterprises</td><td>credit</td><td>Individual</td><td><span class="tag tag-in">Yes — CGTMSE</span></td></tr>
+      <tr><td>4</td><td><code>PMMY</code></td><td>Pradhan Mantri Mudra Yojana</td><td>credit</td><td>Individual</td><td><span class="tag tag-in">Yes — MUDRA</span></td></tr>
+      <tr><td>5</td><td><code>APCMEP</code></td><td>Andhra Pradesh Chief Minister's Entrepreneur Programme</td><td>credit</td><td>Individual</td><td><span class="tag tag-in">Yes — AP_CMEP</span></td></tr>
+      <tr><td>6</td><td><code>SUPI</code></td><td>Stand Up India (DFS, MoF)</td><td>credit</td><td>Individual</td><td><span class="tag tag-in">Yes — STANDUP</span></td></tr>
+      <tr><td>7</td><td><code>ECLGS</code></td><td>Emergency Credit Line Guarantee Scheme</td><td>credit</td><td>Individual</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>8</td><td><code>PMVK</code></td><td>PM Vishwakarma</td><td>skills</td><td>Individual</td><td><span class="tag tag-in">Yes — VISHWAKARMA</span></td></tr>
+      <tr><td>9</td><td><code>ESDP</code></td><td>Entrepreneurship and Skill Development Programme</td><td>skills</td><td>No bank DPR</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>10</td><td><code>ATI</code></td><td>Assistance to Training Institutions</td><td>skills</td><td>Institution (not unit DPR)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>11</td><td><code>SCSTHUB</code></td><td>National SC/ST Hub</td><td>skills</td><td>Procurement pack</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>12</td><td><code>MSECDP</code></td><td>Micro &amp; Small Enterprises Cluster Development Programme</td><td>cluster</td><td><span class="tag tag-skip">Cluster — skip</span></td><td>No (correct)</td></tr>
+      <tr><td>13</td><td><code>SFURTI</code></td><td>Scheme of Fund for Regeneration of Traditional Industries</td><td>cluster</td><td><span class="tag tag-skip">Cluster — skip</span></td><td>No (correct)</td></tr>
+      <tr><td>14</td><td><code>APCDP</code></td><td>Andhra Pradesh Cluster Development Programme</td><td>cluster</td><td><span class="tag tag-skip">Cluster — skip</span></td><td>No (correct)</td></tr>
+      <tr><td>15</td><td><code>APICF</code></td><td>Assistance to Pharmaceutical Industry for Common Facilities</td><td>cluster</td><td><span class="tag tag-skip">Cluster — skip</span></td><td>No (correct)</td></tr>
+      <tr><td>16</td><td><code>ASPIRE</code></td><td>Promotion of Innovation, Rural Industries and Entrepreneurship</td><td>innovation</td><td>Individual (incubator)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>17</td><td><code>CHMPS</code></td><td>MSME Champions Scheme</td><td>technology</td><td>Routing / short form</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>18</td><td><code>IPR</code></td><td>Innovative – Incubation, Design, IPR</td><td>technology</td><td>Short overlay</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>19</td><td><code>LEAN</code></td><td>Competitive LEAN</td><td>technology</td><td>Short overlay</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>20</td><td><code>ZED</code></td><td>Sustainable ZED Certification</td><td>technology</td><td>Short overlay</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>21</td><td><code>CLCSS</code></td><td>Credit Linked Capital Subsidy (CLCSS / TUS)</td><td>technology</td><td>Individual (upgrade DPR)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>22</td><td><code>PTUAS</code></td><td>Pharmaceutical Technology Upgradation Assistance</td><td>technology</td><td>Individual (pharma)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>23</td><td><code>NTCEC</code></td><td>New Technology Centres and Extension Centres</td><td>technology</td><td>Service request</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>24</td><td><code>MSEGIFT</code></td><td>MSE Green Investment and Financing for Transformation</td><td>sustainability</td><td>Individual (green capex)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>25</td><td><code>MSESPICE</code></td><td>MSE Scheme for Promotion &amp; Investment in Circular Economy</td><td>sustainability</td><td>Individual</td><td><span class="tag tag-in">Yes — MSE_SPICE</span></td></tr>
+      <tr><td>26</td><td><code>PMS</code></td><td>Procurement and Marketing Scheme</td><td>market</td><td>Short marketing annex</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>27</td><td><code>MSMETEAM</code></td><td>Trade Enablement and Marketing Initiative (TEAM / ONDC)</td><td>market</td><td>Individual</td><td><span class="tag tag-in">Yes — RAMP_TEAM</span></td></tr>
+      <tr><td>28</td><td><code>CVY</code></td><td>Coir Vikas Yojana</td><td>sectoral</td><td>Individual (coir extras)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>29</td><td><code>NHDP</code></td><td>National Handloom Development Programme</td><td>sectoral</td><td>Individual (handloom extras)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>30</td><td><code>PMPDS</code></td><td>Pharmaceutical &amp; Medical Devices Promotion and Development</td><td>sectoral</td><td>Individual (pharma extras)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>31</td><td><code>PMFME</code></td><td>PM Formalisation of Micro Food Processing Enterprises</td><td>sectoral</td><td>Individual</td><td><span class="tag tag-in">Yes — PMFME</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Cluster schemes — 4, do not put on Create New Latest DPR cards</h2>
+  <p>These are multi-unit / SPV / Common Facility Centre programmes. Create New Latest DPR is a <strong>single-unit</strong> report. Forcing a proprietor through CFC, shareholding, and cluster employment grids produces a document a scheme officer will reject.</p>
+  <table>
+    <thead>
+      <tr><th>Portal</th><th>Why cluster</th><th>Where it belongs in this app</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>MSE-CDP</strong><br/><code>MSECDP</code></td>
+        <td>GoI grant for CFCs (indicative up to ₹15–30 Cr) and industrial-estate infrastructure. Needs many units + SPV.</td>
+        <td>Cluster DPR <code>/cluster-dpr/create</code>. Optional Scheme Finder result: “Use Cluster DPR”, not individual cards.</td>
+      </tr>
+      <tr>
+        <td><strong>SFURTI</strong></td>
+        <td>Regeneration of traditional <em>industries as clusters</em> (CFC, raw-material bank, design). IA + SPV model.</td>
+        <td>Cluster DPR. Matcher: activity <code>craft</code> + many artisans → cluster CTA.</td>
+      </tr>
+      <tr>
+        <td><strong>APCDP</strong></td>
+        <td>State cluster development programme (same shape as MSE-CDP / SFURTI).</td>
+        <td>Cluster DPR. AP domicile boost. Do not overlay on individual 18 steps.</td>
+      </tr>
+      <tr>
+        <td><strong>APICF</strong></td>
+        <td>Pharma <em>common</em> facilities (testing, ETP, logistics) per cluster, not one factory’s plant.</td>
+        <td>Cluster DPR with pharma extras. Individual pharma units use PTUAS / PMPDS instead.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="warn">
+    <p><strong>Product rule:</strong> the Create New Latest DPR picker must not list these four. If Scheme Finder ranks them, show a card that navigates to Cluster DPR with a short explanation (“this is a multi-unit / CFC scheme”).</p>
+  </div>
+
+  <h2>4. Already in the app — 9 of 27 unit-level portal schemes</h2>
+  <table>
+    <thead>
+      <tr><th>Portal ID</th><th>Our code</th><th>Scheme Finder today</th><th>Create New Latest DPR overlay today</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>PMEGP</td><td><code>PMEGP</code></td>
+        <td>Greenfield micro unit; education / caste / rural subsidy rules.</td>
+        <td>18 steps. Step 18: quotes, building estimate, caste cert if SC/ST/BC. 8th-pass gate by cost.</td>
+      </tr>
+      <tr>
+        <td>CGTMSE</td><td><code>CGTMSE</code></td>
+        <td>Collateral-free guarantee; budget bands through ~₹10 Cr.</td>
+        <td>Default 18-step individual overlay (no extra fields in v1).</td>
+      </tr>
+      <tr>
+        <td>PMMY</td><td><code>MUDRA</code></td>
+        <td>Budget bands map Shishu / Kishore / Tarun / Tarun Plus.</td>
+        <td>Hide complex capex under ₹5L; Nayak WC; shop proof / statements / optional Mudra closure.</td>
+      </tr>
+      <tr>
+        <td>SUPI</td><td><code>STANDUP</code></td>
+        <td>SC/ST or woman + greenfield + ₹10L–₹1Cr-ish.</td>
+        <td>Default 18-step overlay.</td>
+      </tr>
+      <tr>
+        <td>PMVK</td><td><code>VISHWAKARMA</code></td>
+        <td>Craft / artisan; not a factory term loan.</td>
+        <td>Drops steps 15–17. Step 1: craft + tools. Uploads: Aadhaar, passbook, ration card.</td>
+      </tr>
+      <tr>
+        <td>PMFME</td><td><code>PMFME</code></td>
+        <td>Food processing activity.</td>
+        <td>Step 1 FSSAI. Step 18: quotes, lease, draft FSSAI.</td>
+      </tr>
+      <tr>
+        <td>APCMEP</td><td><code>AP_CMEP</code></td>
+        <td>AP booster for manufacturing / knowledge.</td>
+        <td>Default 18-step + AP brief pack.</td>
+      </tr>
+      <tr>
+        <td>MSESPICE</td><td><code>MSE_SPICE</code></td>
+        <td>Circular / resource-efficient tech.</td>
+        <td>Default 18-step + brief.</td>
+      </tr>
+      <tr>
+        <td>MSMETEAM</td><td><code>RAMP_TEAM</code></td>
+        <td>ONDC / e-commerce market.</td>
+        <td>Default 18-step + brief.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>In our matcher but not on this 31-list — keep (7)</h3>
+  <p>These are still valid for Andhra Pradesh users. Do not delete them just because the current portal JS omits them.</p>
+  <table>
+    <thead><tr><th>Our code</th><th>Name</th><th>Why keep</th></tr></thead>
+    <tbody>
+      <tr><td><code>SVANIDHI</code></td><td>PM SVANidhi</td><td>Street vendors; CoV/LoR overlay already built.</td></tr>
+      <tr><td><code>AP_EDP</code></td><td>AP MSME-EDP 4.0</td><td>State industrial policy overlay (APIIC park, FCI, CFE/CFO).</td></tr>
+      <tr><td><code>AP_FPP</code></td><td>AP Food Processing Policy 4.0</td><td>State food-processing incentives beyond PMFME.</td></tr>
+      <tr><td><code>AP_TECH_UPGRADE</code></td><td>AP Technology Upgradation Subsidy</td><td>State tech-upgrade; pairs with CLCSS when added.</td></tr>
+      <tr><td><code>OBMMS</code></td><td>AP welfare corporation self-employment loans</td><td>Caste / welfare-corp channel.</td></tr>
+      <tr><td><code>AP_PARKS</code></td><td>AP MSME-PARKS land rebate</td><td>Land/plot incentive, not a term loan.</td></tr>
+      <tr><td><code>EPM_NIRYAT</code></td><td>EPM Niryat Protsahan</td><td>Export promotion; complements TEAM/ONDC.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5. Current Scheme Finder questions (14) — baseline</h2>
+  <p>File: <code>client/src/lib/ventureMatch/questions.ts</code>. Matching is client-side and deterministic.</p>
+  <table>
+    <thead><tr><th>#</th><th>ID</th><th>What it captures</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>activity</code></td><td>mfg, knowledge, food, craft, service, trade, vending, crop, mixed, notSure, notBusiness</td></tr>
+      <tr><td>2</td><td><code>stage</code></td><td>greenfield, brownfield, idea, restart, notSure</td></tr>
+      <tr><td>3</td><td><code>budget</code></td><td>under2L … above10Cr, none, notSure</td></tr>
+      <tr><td>4</td><td><code>legal</code></td><td>sole, partnership, company, unregistered, otherEntity</td></tr>
+      <tr><td>5</td><td><code>owner</code></td><td>female, sc, st, bc, pwd, transgender, exServiceman (multi) vs exclusive generalMale / notSure</td></tr>
+      <tr><td>6</td><td><code>domicile</code></td><td>ap, other, planningAp</td></tr>
+      <tr><td>7</td><td><code>location</code></td><td>urban, rural, apiic, home, outsideAp</td></tr>
+      <tr><td>8</td><td><code>riceCard</code></td><td>AP rice / other card</td></tr>
+      <tr><td>9</td><td><code>age</code></td><td>under18 … above60</td></tr>
+      <tr><td>10</td><td><code>education</code></td><td>below8th, 8thPlus</td></tr>
+      <tr><td>11</td><td><code>udyam</code></td><td>yes, willing, applied, refuse</td></tr>
+      <tr><td>12</td><td><code>priorSubsidy</code></td><td>none, repaid, outstanding</td></tr>
+      <tr><td>13</td><td><code>govtFamily</code></td><td>yes / no (PMEGP-style exclusion)</td></tr>
+      <tr><td>14</td><td><code>market</code></td><td>offline, ecommerce, export, both, notSellingYet</td></tr>
+    </tbody>
+  </table>
+  <p>These 14 score credit schemes well. They <strong>cannot</strong> fairly rank ZED, LEAN, PMS, 2nd PMEGP loan, pharma, coir, or handloom without extra questions (section 7).</p>
+
+  <h2>6. Current Create New Latest DPR overlay — baseline</h2>
+  <p>Shared skeleton: steps 1–18. Overlay via <code>matchedSchemeCode</code> in <code>schemeFormConfig.ts</code>:</p>
+  <ul>
+    <li><strong>Hidden steps:</strong> Vishwakarma and SVANidhi drop 15, 16, 17.</li>
+    <li><strong>Step 1 extras:</strong> craft/tools (Vishwakarma), CoV/UPI (SVANidhi), FSSAI (PMFME), APIIC park (AP EDP).</li>
+    <li><strong>Step 12/15:</strong> MUDRA Shishu–Kishore hides land/building; Nayak WC on step 15.</li>
+    <li><strong>Step 18 uploads:</strong> scheme-specific lists; default Aadhaar/PAN, Udyam, passbook, quotations.</li>
+    <li>Most of the 9 mapped portal schemes other than PMEGP / MUDRA / Vishwakarma / PMFME still use the <em>generic</em> “no extra fields on 1–17” impact copy.</li>
+  </ul>
+
+  <div class="page-break"></div>
+  <h2>7. Shared questions to add once (not per-scheme sprawl)</h2>
+  <p>Add a small number of Scheme Finder questions so the 18 missing schemes can be scored without a 40-question wizard. Recommended insertions after <code>stage</code> / <code>market</code>:</p>
+  <table>
+    <thead><tr><th>New question ID</th><th>Options (summary)</th><th>Unlocks</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>supportType</code></td>
+        <td>loanOrSubsidy, guarantee, certification, training, marketingFair, clusterCfc, notSure</td>
+        <td>Filters ESDP/ATI/ZED/LEAN/PMS vs bank DPR vs Cluster DPR.</td>
+      </tr>
+      <tr>
+        <td><code>upgradeIntent</code></td>
+        <td>newUnit, expandSameLine, techUpgrade, secondPmegpLoan, workingCapitalOnly, notSure</td>
+        <td>2nd PMEGP loan, CLCSS, ECLGS, PTUAS, AP tech upgrade.</td>
+      </tr>
+      <tr>
+        <td><code>qualityGoal</code> (optional / skip if supportType ≠ certification)</td>
+        <td>zed, lean, ipr, none, notSure</td>
+        <td>ZED, LEAN, IPR, Champions.</td>
+      </tr>
+      <tr>
+        <td><code>sectorFlag</code> (only if activity is mfg / craft / food)</td>
+        <td>none, pharma, coir, handloom, foodAlreadyCovered, notSure</td>
+        <td>PTUAS, PMPDS, CVY, NHDP. Food already uses <code>activity=food</code> → PMFME.</td>
+      </tr>
+      <tr>
+        <td><code>procurementInterest</code> (if owner includes sc/st)</td>
+        <td>yes, no, notSure</td>
+        <td>National SC/ST Hub vs ordinary credit.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Handoff to Create New Latest DPR must pass these new fields in <code>ventureMatchAnswers</code> so overlays and uploads can branch.</p>
+
+  <h2>8. Missing schemes — how Scheme Finder and Create New Latest DPR change</h2>
+  <p>Each card below is the integration spec. Codes in backticks are proposed app codes.</p>
+
+  <h3>8.1 Credit / loan overlays (keep full or near-full DPR)</h3>
+
+  <div class="card">
+    <h3>2nd Loan (PMEGP) — proposed <code>PMEGP_2ND</code></h3>
+    <p><span class="tag tag-miss">Missing</span> Portal: upgrade loan for existing PMEGP / REGP / MUDRA units (indicative subsidy on upgrade cost).</p>
+    <p><strong>Scheme Finder</strong></p>
+    <ul>
+      <li>Require <code>stage</code> = brownfield (or restart with prior unit).</li>
+      <li>Require <code>upgradeIntent</code> = secondPmegpLoan (or techUpgrade + priorSubsidy repaid).</li>
+      <li>Fail if <code>stage</code> = greenfield / idea (that is first PMEGP).</li>
+      <li>Reuse PMEGP owner / education / rural location scoring; do not double-count as a new unit.</li>
+    </ul>
+    <p><strong>Create New Latest DPR</strong></p>
+    <ul>
+      <li>Keep 18 steps but retitle copy: “upgrade of existing unit”, not “establishment of new unit”.</li>
+      <li>Step 1 extras: previous scheme (PMEGP / REGP / MUDRA), previous sanction amount, year of first subsidy, Udyam of existing unit.</li>
+      <li>Step 9–12: only incremental machinery / civil — not a greenfield land story.</li>
+      <li>Step 18: prior sanction letter, subsidy claim / adjustment proof, CA certificate of existing investment, quotations for new P&amp;M.</li>
+      <li>Brief pack: separate from first PMEGP (eligibility is existing assisted unit).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>ECLGS — proposed <code>ECLGS</code></h3>
+    <p>Emergency / additional working-capital guarantee for existing MSMEs. Not a greenfield project loan.</p>
+    <p><strong>Scheme Finder</strong></p>
+    <ul>
+      <li>Require existing unit: <code>stage</code> brownfield; <code>udyam</code> yes or applied.</li>
+      <li><code>upgradeIntent</code> = workingCapitalOnly (or supportType = guarantee).</li>
+      <li>Fail idea / greenfield with no operations.</li>
+    </ul>
+    <p><strong>Create New Latest DPR</strong></p>
+    <ul>
+      <li>Do not pretend this is a 18-step capex DPR. Use a <strong>short WC pack</strong>: unit identity, last 12 months turnover, existing limits, additional WC sought, repayment, bank statements.</li>
+      <li>Hide or collapse steps 9–10, 16 (implementation Gantt) and cluster-style impact.</li>
+      <li>Step 18: Udyam, GST returns / ITR, bank statements, existing sanction, CA turnover certificate.</li>
+      <li>If product insists on one form: keep steps 1, 4, 11, 13, 14, 18 visible only.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>CLCSS / TUS — proposed <code>CLCSS</code></h3>
+    <p>Capital subsidy on institutional loan for technology upgradation (brownfield machinery).</p>
+    <p><strong>Scheme Finder</strong></p>
+    <ul>
+      <li><code>stage</code> brownfield; <code>upgradeIntent</code> = techUpgrade.</li>
+      <li><code>activity</code> mfg / food / craft (not pure vending).</li>
+      <li>Budget typically machinery-sized (₹10L–₹ several Cr) — fail <code>under2L</code> unless quotes exist.</li>
+    </ul>
+    <p><strong>Create New Latest DPR</strong></p>
+    <ul>
+      <li>Full 18-step bank DPR is appropriate (term loan + subsidy).</li>
+      <li>Step 1 extras: existing vs proposed technology, industry list / eligible machinery class.</li>
+      <li>Step 12: plant &amp; machinery dominant; land/building optional.</li>
+      <li>Step 13: term loan + CLCSS subsidy line + promoter margin.</li>
+      <li>Step 18: machinery quotations with tech specs, existing Udyam, term-loan sanction (or in-principle), CA certificate of existing FCI.</li>
+      <li>Can share overlay patterns with existing <code>AP_TECH_UPGRADE</code>.</li>
+    </ul>
+  </div>
+
+  <h3>8.2 Certification / quality — short overlay, not 18 bank steps</h3>
+
+  <div class="card">
+    <h3>ZED — proposed <code>ZED</code></h3>
+    <p><strong>Scheme Finder:</strong> <code>supportType</code> = certification or <code>qualityGoal</code> = zed; existing unit preferred; Udyam yes/willing.</p>
+    <p><strong>Create New Latest DPR:</strong> do not run full bank DPR. Visible steps: 1 (unit), 4 (profile), 11 (applicant), plus a new compact block “ZED assessment” (current level, target Bronze/Silver/Gold, consultant, assessment fee). Step 18: Udyam, existing QMS if any. Generate a <em>certification assistance note</em>, not a term-loan DPR. CTA from matcher: “Prepare ZED pack” not “Generate bank DPR”.</p>
+  </div>
+  <div class="card">
+    <h3>LEAN — proposed <code>LEAN</code></h3>
+    <p><strong>Scheme Finder:</strong> qualityGoal = lean; brownfield manufacturing / food.</p>
+    <p><strong>Create New Latest DPR:</strong> short pack: process map, bottleneck, consultant, implementation cost. Hide 5-year P&amp;L unless they also pick a credit scheme. Step 18: Udyam, shop-floor photos optional.</p>
+  </div>
+  <div class="card">
+    <h3>IPR (MSME Innovative) — proposed <code>MSME_IPR</code></h3>
+    <p><strong>Scheme Finder:</strong> qualityGoal = ipr, or supportType = certification with innovation intent. Knowledge / mfg / food.</p>
+    <p><strong>Create New Latest DPR:</strong> extras: IP type (patent / design / trademark / GI), filing stage, attorney cost. Hide capex tables. Step 18: draft specification or TM search, Udyam.</p>
+  </div>
+  <div class="card">
+    <h3>MSME Champions — proposed <code>CHAMPIONS</code></h3>
+    <p><strong>Scheme Finder:</strong> low weight; supportType not loan. This is a helpdesk / delayed-payment / public-procurement facilitation channel.</p>
+    <p><strong>Create New Latest DPR:</strong> no 18-step form. Result card: “Raise on Champions / contact DIC” plus optional 5-field complaint template. Do not add to scheme picker as a DPR overlay.</p>
+  </div>
+
+  <h3>8.3 Skills / institutions — usually no DPR</h3>
+
+  <div class="card">
+    <h3>ESDP — proposed <code>ESDP</code></h3>
+    <p><strong>Scheme Finder:</strong> supportType = training; idea / greenfield welcome; age/education already captured.</p>
+    <p><strong>Create New Latest DPR:</strong> skip. After match, CTA = “Register interest for ESDP batch” (name, district, trade). Optionally prefill Create New Latest DPR vanilla if they later want a bank DPR.</p>
+  </div>
+  <div class="card">
+    <h3>ATI — proposed <code>ATI</code></h3>
+    <p>Assistance is to <em>training institutions / EDIs</em>, not a citizen unit. <strong>Do not</strong> add to individual picker. Scheme Finder: hide unless a future “I represent an institution” path exists.</p>
+  </div>
+  <div class="card">
+    <h3>National SC/ST Hub — proposed <code>SCST_HUB</code></h3>
+    <p><strong>Scheme Finder:</strong> owner includes sc or st; procurementInterest = yes; Udyam yes/willing.</p>
+    <p><strong>Create New Latest DPR:</strong> procurement-readiness pack (not term loan): products, GeM/tender experience, capacity, quality certs. Step 18: caste certificate, Udyam, cancelled cheque. Keep 18-step bank DPR only if they also match PMEGP/MUDRA/Stand-Up.</p>
+  </div>
+  <div class="card">
+    <h3>NTCEC (Technology Centres) — proposed <code>NTCEC</code></h3>
+    <p><strong>Scheme Finder:</strong> supportType = training or techUpgrade; mfg.</p>
+    <p><strong>Create New Latest DPR:</strong> service request (tooling / training / job work), not a loan DPR. CTA: nearest MSME Technology Centre / extension centre.</p>
+  </div>
+
+  <h3>8.4 Innovation / green</h3>
+
+  <div class="card">
+    <h3>ASPIRE — proposed <code>ASPIRE</code></h3>
+    <p><strong>Scheme Finder:</strong> rural location or agri-allied / livelihood; idea or greenfield; innovation / incubator intent. Fail large <code>above10Cr</code> factory budgets.</p>
+    <p><strong>Create New Latest DPR:</strong> livelihood / incubation DPR: shorter financials (maybe hide 15–17 like Vishwakarma). Step 1 extras: livelihood activity, incubator name if any. Step 18: rural address proof, concept note.</p>
+  </div>
+  <div class="card">
+    <h3>MSE-GIFT — proposed <code>MSE_GIFT</code></h3>
+    <p><strong>Scheme Finder:</strong> brownfield mfg/food; upgradeIntent = techUpgrade; optional “green machinery” chip.</p>
+    <p><strong>Create New Latest DPR:</strong> same skeleton as CLCSS but extras: energy baseline (kWh), old vs new machine, expected saving. Step 18: energy bill, quotations for EE equipment, Udyam. Can sit beside <code>MSE_SPICE</code>.</p>
+  </div>
+
+  <h3>8.5 Market and sector-specific</h3>
+
+  <div class="card">
+    <h3>PMS (Procurement &amp; Marketing Support) — proposed <code>PMS</code></h3>
+    <p><strong>Scheme Finder:</strong> supportType = marketingFair; Udyam yes; existing unit preferred.</p>
+    <p><strong>Create New Latest DPR:</strong> marketing annex: event name, city class, stall size, space-rent estimate — not plant DPR. Hide steps 12–17 or replace with a 4-field fair budget. Step 18: Udyam, previous fair photos optional. If they also need a term loan, keep a second CTA to vanilla/PMEGP DPR.</p>
+  </div>
+  <div class="card">
+    <h3>Coir Vikas Yojana — proposed <code>CVY</code></h3>
+    <p><strong>Scheme Finder:</strong> sectorFlag = coir, or activity = craft/mfg + coir products. AP coastal districts boost later if needed.</p>
+    <p><strong>Create New Latest DPR:</strong> 18-step bank/subsidy DPR. Step 1 extras: coir product line, Coir Board registration planned/yes. Step 18: Coir Board docs, quotations. Brief pack from Coir Board guidelines (confirm live).</p>
+  </div>
+  <div class="card">
+    <h3>NHDP (Handloom) — proposed <code>NHDP</code></h3>
+    <p><strong>Scheme Finder:</strong> sectorFlag = handloom; activity = craft; may combine with Vishwakarma (different benefit — do not auto-merge).</p>
+    <p><strong>Create New Latest DPR:</strong> extras: loom type, weaver ID / handloom corp membership, yarn. May drop heavy P&amp;L like Vishwakarma if it is a weaver household, not a mill. Step 18: weaver ID, Aadhaar, passbook.</p>
+  </div>
+  <div class="card">
+    <h3>PTUAS — proposed <code>PTUAS</code></h3>
+    <p><strong>Scheme Finder:</strong> sectorFlag = pharma; brownfield; techUpgrade.</p>
+    <p><strong>Create New Latest DPR:</strong> 18-step upgrade DPR. Extras: WHO-GMP / Schedule M status, product licences. Step 18: manufacturing licence, pollution consent, quotations, CA FCI. Distinct from APICF (cluster common facilities).</p>
+  </div>
+  <div class="card">
+    <h3>PMPDS — proposed <code>PMPDS</code></h3>
+    <p><strong>Scheme Finder:</strong> sectorFlag = pharma; can be promotion / bulk-drug park / medical devices — score separately from PTUAS.</p>
+    <p><strong>Create New Latest DPR:</strong> extras: device vs formulation, CDSCO / SLA licences. Uploads: product licence, Udyam, quotations. Use full DPR if capex; short pack if only promotional support.</p>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>9. Matrix — 18 missing schemes at a glance</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Proposed code</th>
+        <th>Portal</th>
+        <th>VM: extra signals</th>
+        <th>DPR shape</th>
+        <th>Picker?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>PMEGP_2ND</code></td><td>2nd Loan (PMEGP)</td><td>brownfield + secondPmegpLoan</td><td>Full 18, upgrade copy + prior-subsidy docs</td><td>Yes</td></tr>
+      <tr><td><code>ECLGS</code></td><td>ECLGS</td><td>brownfield + WC only</td><td>Short WC pack (steps 1,4,11,13,14,18)</td><td>Yes (short)</td></tr>
+      <tr><td><code>CLCSS</code></td><td>CLCSS/TUS</td><td>brownfield + techUpgrade</td><td>Full 18, P&amp;M-heavy</td><td>Yes</td></tr>
+      <tr><td><code>ZED</code></td><td>ZED</td><td>certification / zed</td><td>Certification note</td><td>Yes (short)</td></tr>
+      <tr><td><code>LEAN</code></td><td>LEAN</td><td>certification / lean</td><td>Process-improvement pack</td><td>Yes (short)</td></tr>
+      <tr><td><code>MSME_IPR</code></td><td>IPR</td><td>ipr</td><td>IP filing pack</td><td>Yes (short)</td></tr>
+      <tr><td><code>CHAMPIONS</code></td><td>CHMPS</td><td>not loan</td><td>No DPR — helpdesk CTA</td><td>No</td></tr>
+      <tr><td><code>ESDP</code></td><td>ESDP</td><td>training</td><td>No DPR — batch interest</td><td>No</td></tr>
+      <tr><td><code>ATI</code></td><td>ATI</td><td>institution only</td><td>Out of scope</td><td>No</td></tr>
+      <tr><td><code>SCST_HUB</code></td><td>SCSTHUB</td><td>sc/st + procurement</td><td>Procurement pack; bank DPR only if also credit-match</td><td>Optional</td></tr>
+      <tr><td><code>NTCEC</code></td><td>NTCEC</td><td>training / tooling</td><td>Service request</td><td>No</td></tr>
+      <tr><td><code>ASPIRE</code></td><td>ASPIRE</td><td>rural / incubator</td><td>Shorter livelihood DPR</td><td>Yes</td></tr>
+      <tr><td><code>MSE_GIFT</code></td><td>MSEGIFT</td><td>green techUpgrade</td><td>Full 18 + energy extras</td><td>Yes</td></tr>
+      <tr><td><code>PMS</code></td><td>PMS</td><td>marketingFair</td><td>Fair/stall annex</td><td>Yes (short)</td></tr>
+      <tr><td><code>CVY</code></td><td>CVY</td><td>sectorFlag coir</td><td>Full 18 + coir extras</td><td>Yes</td></tr>
+      <tr><td><code>NHDP</code></td><td>NHDP</td><td>sectorFlag handloom</td><td>Weaver overlay (may drop 15–17)</td><td>Yes</td></tr>
+      <tr><td><code>PTUAS</code></td><td>PTUAS</td><td>pharma + upgrade</td><td>Full 18 + pharma licences</td><td>Yes</td></tr>
+      <tr><td><code>PMPDS</code></td><td>PMPDS</td><td>pharma promotion</td><td>Full or short by capex</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+
+  <h2>10. Recommended implementation order</h2>
+  <ol>
+    <li><strong>Guardrails:</strong> keep 4 cluster schemes off the individual picker; add Cluster DPR CTAs in Scheme Finder for MSE-CDP / SFURTI / APCDP / APICF.</li>
+    <li><strong>Matcher questions:</strong> add <code>supportType</code> and <code>upgradeIntent</code> first (unblocks 2nd PMEGP, CLCSS, ECLGS, ZED/LEAN filter).</li>
+    <li><strong>Highest-value DPR overlays:</strong> <code>PMEGP_2ND</code>, <code>CLCSS</code> (align with AP_TECH_UPGRADE), <code>MSE_GIFT</code>.</li>
+    <li><strong>Short packs:</strong> ZED, LEAN, PMS (stop sending these users through 18 empty bank steps).</li>
+    <li><strong>Sector extras:</strong> CVY, NHDP, PTUAS / PMPDS.</li>
+    <li><strong>Non-DPR CTAs:</strong> ESDP, Champions, NTCEC, ATI (hide ATI from citizen matcher).</li>
+    <li>For each new code: SchemeRule in <code>schemes.ts</code>, brief in <code>schemeBriefs/*</code>, extras/uploads/hidden steps in <code>schemeFormConfig.ts</code>, picker card, and updates to both business-logic markdown files.</li>
+  </ol>
+
+  <h2>11. Files that would change when integrating</h2>
+  <table>
+    <thead><tr><th>File</th><th>Change</th></tr></thead>
+    <tbody>
+      <tr><td><code>client/src/lib/ventureMatch/types.ts</code></td><td>New answer fields and option unions.</td></tr>
+      <tr><td><code>client/src/lib/ventureMatch/questions.ts</code></td><td>Insert 2–5 questions; i18n EN/TE.</td></tr>
+      <tr><td><code>client/src/lib/ventureMatch/schemes.ts</code></td><td>New SchemeRule entries; cluster rules CTA to cluster flow.</td></tr>
+      <tr><td><code>client/src/lib/ventureMatch/evaluate.ts</code></td><td>Only if matching primitives change.</td></tr>
+      <tr><td><code>client/src/lib/individualDpr/schemeFormConfig.ts</code></td><td>extras, hidden steps, uploads, getSchemeImpact.</td></tr>
+      <tr><td><code>client/src/lib/individualDpr/schemeBriefs/*</code></td><td>Brochure EN/TE per new code.</td></tr>
+      <tr><td><code>client/src/lib/individualDpr/prefillFromVentureMatch.ts</code></td><td>Map new answers into steps.</td></tr>
+      <tr><td><code>client/src/components/individual-dpr/SchemePickerGrid.tsx</code></td><td>Cards appear automatically from SCHEME_OPTIONS; exclude cluster codes.</td></tr>
+      <tr><td><code>docs/venture-match-business-logic.md</code></td><td>Questions + scheme list.</td></tr>
+      <tr><td><code>docs/create-new-dpr-business-logic.md</code></td><td>Overlays, uploads, picker exclusions.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>12. What this document is not</h2>
+  <ul>
+    <li>Not a substitute for live scheme GOs. Ceilings on the portal (e.g. older PMEGP ₹25L/₹10L vs current KVIC ₹50L/₹20L) already diverge — briefs must say “confirm with DIC / agency”.</li>
+    <li>Not an instruction to add all 18 as full 18-step bank DPRs. Training, certification, and fair-support schemes would harm users if forced through plant-and-machinery tables.</li>
+    <li>Not a Cluster DPR redesign. MSE-CDP already matches the existing cluster form (SPV, CFC, member units).</li>
+  </ul>
+
+  <footer class="note">
+    AI_DRP · AP MSME One gap analysis · Source catalog extracted from apmsmeone.ap.gov.in schemes bundle ·
+    App baseline: 16 Scheme Finder codes in ventureMatch/schemes.ts ·
+    Related: docs/venture-match-business-logic.md, docs/create-new-dpr-business-logic.md
+  </footer>
+</body>
+</html>
