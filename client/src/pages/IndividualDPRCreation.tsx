@@ -14,16 +14,19 @@ import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { toClusterPayload } from '@/lib/individualDpr/toClusterPayload';
-import { getVisibleSteps, getStepTitle, SCHEME_OPTIONS, getSchemeImpact } from '@/lib/individualDpr/schemeFormConfig';
+import { getVisibleSteps, getStepTitle, getSchemeImpact } from '@/lib/individualDpr/schemeFormConfig';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { prefillFromVentureMatch } from '@/lib/individualDpr/prefillFromVentureMatch';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
+import { SchemePickerGrid } from '@/components/individual-dpr/SchemePickerGrid';
 import {
   collectFieldHits,
   diffPayloadFieldPaths,
   highlightHit,
   scrollHitIntoPreview,
 } from '@/lib/individualDpr/previewFieldHits';
+
+type SetupPhase = 'pick' | 'brief' | 'form';
 
 export const IndividualDPRCreation: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -48,6 +51,7 @@ export const IndividualDPRCreation: React.FC = () => {
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [setupPhase, setSetupPhase] = useState<SetupPhase>('pick');
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
 
   const currentStep = data.currentStep || 1;
@@ -157,6 +161,8 @@ export const IndividualDPRCreation: React.FC = () => {
             applyPrefill(prefillFromVentureMatch(answers));
           }
           setCurrentStep(1);
+          // Scheme Finder with a code → brief; otherwise show cards first
+          setSetupPhase(scheme ? 'brief' : 'pick');
           setIsLoadingData(false);
           return;
         }
@@ -178,11 +184,14 @@ export const IndividualDPRCreation: React.FC = () => {
             loadDataFromProject(projectData, dprData);
             const pid = projectData._id || projectData.id;
             setDprIds(dprData?._id || dprData?.id || '', pid);
+            setSetupPhase('form');
           } catch {
             resetData();
+            setSetupPhase('pick');
           }
         } else {
           resetData();
+          setSetupPhase('pick');
         }
       } finally {
         setIsLoadingData(false);
@@ -296,6 +305,31 @@ export const IndividualDPRCreation: React.FC = () => {
     return !!stepData;
   };
 
+  const handlePickScheme = (code: string | null) => {
+    setMatchedSchemeCode(code);
+    const nextVisible = getVisibleSteps(code);
+    setCurrentStep(nextVisible[0] || 1);
+    setSetupPhase('brief');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBriefNext = () => {
+    setSetupPhase('form');
+    setCurrentStep(visibleSteps[0] || 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const headerSubtitle =
+    setupPhase === 'pick'
+      ? t('individualDpr.picker.headerHint', { defaultValue: 'Select a scheme to continue' })
+      : setupPhase === 'brief'
+        ? t('individualDpr.picker.briefHint', { defaultValue: 'Review the scheme, then continue to the form' })
+        : `${t('individualDpr.stepOf', { current: stepOrdinal, total: visibleSteps.length })}${
+            visibleSteps.length !== 18
+              ? ` ${t('individualDpr.hiddenForScheme', { count: 18 - visibleSteps.length })}`
+              : ''
+          }`;
+
   return (
     <Layout>
       <div className="min-h-screen bg-background">
@@ -303,71 +337,117 @@ export const IndividualDPRCreation: React.FC = () => {
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (setupPhase === 'brief') {
+                      setSetupPhase('pick');
+                      return;
+                    }
+                    if (setupPhase === 'form') {
+                      setSetupPhase('brief');
+                      return;
+                    }
+                    navigate('/dashboard');
+                  }}
+                  className="gap-2"
+                >
                   <ArrowLeft className="h-4 w-4" />
-                  {t('common.back')}
+                  {setupPhase === 'pick' ? t('common.back') : t('common.previous')}
                 </Button>
                 <div>
                   <h1 className="text-2xl font-bold">{t('individualDpr.title')}</h1>
-                  <p className="text-sm text-muted-foreground">
-                    {t('individualDpr.stepOf', { current: stepOrdinal, total: visibleSteps.length })}
-                    {visibleSteps.length !== 18 ? ` ${t('individualDpr.hiddenForScheme', { count: 18 - visibleSteps.length })}` : ''}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{headerSubtitle}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
                 <LanguageToggle />
-                <select
-                  className="h-9 rounded-md border border-input bg-background px-2 text-sm max-w-[260px]"
-                  value={data.matchedSchemeCode || ''}
-                  onChange={(e) => {
-                    const code = e.target.value || null;
-                    setMatchedSchemeCode(code);
-                    const nextVisible = getVisibleSteps(code);
-                    const stayOn = nextVisible.includes(currentStep) ? currentStep : nextVisible[0];
-                    setCurrentStep(stayOn || 1);
-                  }}
-                >
-                  {SCHEME_OPTIONS.map((opt) => (
-                    <option key={opt.code || 'vanilla'} value={opt.code}>
-                      {opt.code
-                        ? t(`ventureMatch.schemes.${opt.code}.name`, { defaultValue: opt.label })
-                        : t('individualDpr.vanillaOption')}
-                    </option>
-                  ))}
-                </select>
-                <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2">
-                  <Save className="h-4 w-4" />
-                  {t('clusterDpr.saveDraft')}
-                </Button>
-                <div className="flex items-center gap-1 border rounded-lg p-1">
-                  <Button variant={previewMode === 'form' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('form')}>
-                    {t('clusterDpr.form')}
-                  </Button>
-                  <Button variant={previewMode === 'split' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('split')}>
-                    {t('clusterDpr.split')}
-                  </Button>
-                  <Button variant={previewMode === 'preview' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('preview')} className="gap-2">
-                    <Eye className="h-4 w-4" />
-                    {t('clusterDpr.preview')}
-                  </Button>
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleGenerateDPR}
-                  isLoading={isGenerating}
-                  className="gap-2"
-                  disabled={currentStep !== lastVisible}
-                >
-                  {t('clusterDpr.generateDpr')}
-                </Button>
+                {setupPhase === 'form' && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSetupPhase('pick');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      {t('individualDpr.picker.changeScheme', { defaultValue: 'Change scheme' })}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2">
+                      <Save className="h-4 w-4" />
+                      {t('clusterDpr.saveDraft')}
+                    </Button>
+                    <div className="flex items-center gap-1 border rounded-lg p-1">
+                      <Button variant={previewMode === 'form' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('form')}>
+                        {t('clusterDpr.form')}
+                      </Button>
+                      <Button variant={previewMode === 'split' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('split')}>
+                        {t('clusterDpr.split')}
+                      </Button>
+                      <Button variant={previewMode === 'preview' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('preview')} className="gap-2">
+                        <Eye className="h-4 w-4" />
+                        {t('clusterDpr.preview')}
+                      </Button>
+                    </div>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleGenerateDPR}
+                      isLoading={isGenerating}
+                      className="gap-2"
+                      disabled={currentStep !== lastVisible}
+                    >
+                      {t('clusterDpr.generateDpr')}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
 
+        {setupPhase === 'pick' && (
+          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {isLoadingData ? (
+              <div className="flex flex-col items-center justify-center gap-4 py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">{t('individualDpr.loading')}</p>
+              </div>
+            ) : (
+              <SchemePickerGrid onSelect={handlePickScheme} />
+            )}
+          </div>
+        )}
+
+        {setupPhase === 'brief' && (
+          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-5xl mx-auto space-y-6">
+              <SchemeBriefPanel
+                schemeCode={data.matchedSchemeCode || null}
+                formNotes={{
+                  title: tf(schemeImpact.title),
+                  bullets: schemeImpact.bullets.map((b) => tf(b)),
+                }}
+              />
+              <div className="flex items-center justify-between gap-3">
+                <Button variant="outline" onClick={() => setSetupPhase('pick')} className="gap-2">
+                  <ChevronLeft className="h-4 w-4" />
+                  {t('individualDpr.picker.backToSchemes', { defaultValue: 'All schemes' })}
+                </Button>
+                <Button variant="primary" onClick={handleBriefNext} className="gap-2">
+                  {t('individualDpr.picker.continueToForm', { defaultValue: 'Next — start DPR steps' })}
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {setupPhase === 'form' && (
+          <>
         <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -417,17 +497,6 @@ export const IndividualDPRCreation: React.FC = () => {
         )}
 
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {currentStep === 1 && (
-            <div className="mb-6">
-              <SchemeBriefPanel
-                schemeCode={data.matchedSchemeCode || null}
-                formNotes={{
-                  title: tf(schemeImpact.title),
-                  bullets: schemeImpact.bullets.map((b) => tf(b)),
-                }}
-              />
-            </div>
-          )}
           <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {(previewMode === 'form' || previewMode === 'split') && (
               <div id="cluster-dpr-form" className="space-y-6">
@@ -593,6 +662,8 @@ export const IndividualDPRCreation: React.FC = () => {
             )}
           </div>
         </div>
+          </>
+        )}
       </div>
     </Layout>
   );

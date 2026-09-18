@@ -51,6 +51,12 @@ Changing the scheme dropdown mid-flow updates `matchedSchemeCode`, visible steps
 3. Set scheme from query string (may be null).  
 4. Prefill steps from handoff answers if any.  
 5. Force `currentStep = 1`, clear loading.
+6. **Setup phases (UI):**
+   - No `scheme` in URL → **pick** (scheme cards grid).  
+   - `?scheme=CODE` (e.g. from Scheme Finder) → **brief** (description box for that scheme).  
+   - Tap a card → **brief** for that scheme.  
+   - **Next** on brief → **form** (step strip + live preview).  
+   - Resume with `projectId` → **form** directly.
 
 ### Resume / load
 
@@ -160,15 +166,18 @@ If scheme is `PMEGP` and project cost (lakhs) exceeds:
 
 ---
 
-## 6. Step 1 scheme brief (brochure UI)
+## 6. Scheme pick → brief → form
 
-When `currentStep === 1`, `SchemeBriefPanel` renders above the form:
+**Pick:** `SchemePickerGrid` shows all `SCHEME_OPTIONS` (vanilla + every scheme) as cards (title, intro, category/type chips).
+
+**Brief:** Tapping a card (or arriving with `?scheme=`) opens `SchemeBriefPanel`:
 
 - Intro  
 - Tabs: **Benefits / Eligibility / How to Apply / Documents / FAQs**  
 - Sidebar **Quick Info**: Ministry, Category, Type, Status  
 - EN/TE from page language  
-- Footer **form notes** from `getSchemeImpact` (how the DPR steps change)
+- Footer **form notes** from `getSchemeImpact` (how the DPR steps change)  
+- **Next** continues to the form steps; **All schemes** returns to the grid
 
 Data packs:
 
@@ -176,7 +185,7 @@ Data packs:
 - `lib/individualDpr/schemeBriefs/ap.ts` — AP schemes incl. CMEP  
 - Lookup: `getSchemeBrief(code)`  
 
-On other steps, a compact amber **scheme impact** strip still shows form-change bullets.
+On form steps after step 1, a compact amber **scheme impact** strip still shows form-change bullets. **Change scheme** in the header returns to the card grid.
 
 ---
 
@@ -230,7 +239,8 @@ Form: `IndividualDPRForm.tsx`
 
 | File | Role |
 |------|------|
-| `client/src/pages/IndividualDPRCreation.tsx` | Route shell, scheme select, brief panel, save/generate |
+| `client/src/pages/IndividualDPRCreation.tsx` | Route shell, pick/brief/form phases, save/generate |
+| `client/src/components/individual-dpr/SchemePickerGrid.tsx` | Scheme card grid |
 | `client/src/components/individual-dpr/IndividualDPRForm.tsx` | Step fields + AI |
 | `client/src/components/individual-dpr/SchemeBriefPanel.tsx` | Scheme brochure UI |
 | `client/src/lib/individualDpr/schemeFormConfig.ts` | Overlay rules, uploads, impact copy |

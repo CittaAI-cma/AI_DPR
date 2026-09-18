@@ -14,8 +14,8 @@ export const VANILLA_BRIEF: SchemeBrief = {
   code: '',
   title: L('Bank term loan (no scheme overlay)', 'బ్యాంకు టర్మ్ లోన్ (పథకం లేకుండా)'),
   intro: L(
-    'This DPR is drafted as a standard bank term-loan proposal. No central or Andhra Pradesh subsidy overlay is applied until you pick a scheme in the dropdown above.',
-    'ఈ DPR సాధారణ బ్యాంకు టర్మ్-లోన్ ప్రతిపాదనగా రూపొందుతుంది. పైన పథకం ఎంచుకునే వరకు కేంద్ర లేదా ఆంధ్రప్రదేశ్ సబ్సిడీ జోడించబడదు.'
+    'This DPR is drafted as a standard bank term-loan proposal. No central or Andhra Pradesh subsidy overlay is applied until you pick a scheme.',
+    'ఈ DPR సాధారణ బ్యాంకు టర్మ్-లోన్ ప్రతిపాదనగా రూపొందుతుంది. పథకం ఎంచుకునే వరకు కేంద్ర లేదా ఆంధ్రప్రదేశ్ సబ్సిడీ జోడించబడదు.'
   ),
   benefits: [
     L('Bank appraises the unit on viability, security, and cash flow.', 'బ్యాంకు యూనిట్‌ను లాభదాయకత, భద్రత, నగదు ప్రవాహం ఆధారంగా పరిశీలిస్తుంది.'),

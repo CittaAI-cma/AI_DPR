@@ -1048,6 +1048,15 @@
     "vanillaOption": "Know which scheme you want? Vanilla bank term loan",
     "loading": "Loading...",
     "fullscreen": "Fullscreen",
+    "picker": {
+      "title": "Choose how to draft this DPR",
+      "subtitle": "Pick a scheme to overlay subsidy rules and documents, or continue with a plain bank term loan.",
+      "headerHint": "Select a scheme to continue",
+      "briefHint": "Review the scheme, then continue to the form",
+      "changeScheme": "Change scheme",
+      "backToSchemes": "All schemes",
+      "continueToForm": "Next — start DPR steps"
+    },
     "steps": {
       "1": "Step 1: Your unit – basic details",
       "2": "Step 2: Sector overview",
