@@ -1,10 +1,10 @@
 // @ts-nocheck
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
@@ -18,6 +18,12 @@ import { getVisibleSteps, getStepTitle, SCHEME_OPTIONS, getSchemeImpact } from '
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { prefillFromVentureMatch } from '@/lib/individualDpr/prefillFromVentureMatch';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
+import {
+  collectFieldHits,
+  diffPayloadFieldPaths,
+  highlightHit,
+  scrollHitIntoPreview,
+} from '@/lib/individualDpr/previewFieldHits';
 
 export const IndividualDPRCreation: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -50,6 +56,81 @@ export const IndividualDPRCreation: React.FC = () => {
   const stepOrdinal = Math.max(1, visibleSteps.indexOf(currentStep) + 1);
   const schemeImpact = getSchemeImpact(data.matchedSchemeCode || null);
   const clusterPayload = toClusterPayload(data);
+
+  const prevPayloadRef = useRef<any>(null);
+  const pendingPathsRef = useRef<string[]>([]);
+  const lastHitPathsRef = useRef<string[]>([]);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipNextDiffRef = useRef(true);
+  const [previewHitIndex, setPreviewHitIndex] = useState(0);
+  const [previewHitCount, setPreviewHitCount] = useState(0);
+  const previewHitsRef = useRef<HTMLElement[]>([]);
+
+  const refreshHits = useCallback((paths: string[]) => {
+    const root = document.getElementById('dpr-preview');
+    const hits = collectFieldHits(root, paths);
+    previewHitsRef.current = hits;
+    lastHitPathsRef.current = paths;
+    setPreviewHitCount(hits.length);
+    return hits;
+  }, []);
+
+  const goToPreviewHit = useCallback(
+    (index: number) => {
+      const fresh = refreshHits(lastHitPathsRef.current);
+      if (!fresh.length) return;
+      const next = Math.max(0, Math.min(index, fresh.length - 1));
+      setPreviewHitIndex(next);
+      const scrollParent = document.getElementById('dpr-preview-scroll');
+      const target = fresh[next];
+      if (scrollParent && target) {
+        scrollHitIntoPreview(scrollParent, target, previewZoom);
+        highlightHit(target);
+      }
+    },
+    [previewZoom, refreshHits]
+  );
+
+  useEffect(() => {
+    if (skipNextDiffRef.current) {
+      skipNextDiffRef.current = false;
+      prevPayloadRef.current = clusterPayload;
+      return;
+    }
+    const changed = diffPayloadFieldPaths(prevPayloadRef.current, clusterPayload);
+    prevPayloadRef.current = clusterPayload;
+    if (!changed.length) return;
+
+    pendingPathsRef.current = Array.from(
+      new Set([...pendingPathsRef.current, ...changed])
+    );
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      const paths = pendingPathsRef.current;
+      pendingPathsRef.current = [];
+      // Double rAF: wait for React commit + layout after fieldHit DOM updates
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const hits = refreshHits(paths);
+          if (hits.length > 0) {
+            setPreviewHitIndex(0);
+            const scrollParent = document.getElementById('dpr-preview-scroll');
+            if (scrollParent) {
+              scrollHitIntoPreview(scrollParent, hits[0], previewZoom);
+              highlightHit(hits[0]);
+            }
+          } else {
+            setPreviewHitIndex(0);
+            highlightHit(null);
+          }
+        });
+      });
+    }, 140);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [clusterPayload, previewZoom, refreshHits]);
 
   useEffect(() => {
     const load = async () => {
@@ -410,7 +491,7 @@ export const IndividualDPRCreation: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => document.getElementById('dpr-preview-container')?.requestFullscreen?.()}
+                          onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
                           className="gap-2"
                         >
                           <Maximize2 className="h-4 w-4" />
@@ -419,49 +500,91 @@ export const IndividualDPRCreation: React.FC = () => {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex-1 overflow-auto p-0 bg-gray-100 relative">
+                  <CardContent className="flex-1 min-h-0 overflow-hidden p-0 bg-gray-100 relative flex flex-col">
+                    {previewHitCount > 0 && (
+                      <div className="absolute top-3 right-3 z-20 flex flex-col gap-1 no-print">
+                        {previewHitIndex > 0 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 bg-white/95 shadow"
+                            onClick={() => goToPreviewHit(previewHitIndex - 1)}
+                            title="Previous changed place"
+                          >
+                            <ChevronUp className="h-4 w-4 mr-1" />
+                            Up
+                          </Button>
+                        )}
+                        {previewHitIndex < previewHitCount - 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 bg-white/95 shadow"
+                            onClick={() => goToPreviewHit(previewHitIndex + 1)}
+                            title="Next changed place"
+                          >
+                            <ChevronDown className="h-4 w-4 mr-1" />
+                            Down
+                          </Button>
+                        )}
+                        <span className="text-[10px] text-center text-gray-600 bg-white/90 rounded px-1 py-0.5 shadow">
+                          {previewHitIndex + 1}/{previewHitCount}
+                        </span>
+                      </div>
+                    )}
+                    {/*
+                      Use CSS zoom (affects layout) instead of transform scale.
+                      Transform left layout at full size → broken vertical scroll + horizontal drift.
+                    */}
                     <div
-                      id="dpr-preview-container"
-                      className="w-full h-full overflow-auto"
-                      style={{
-                        transform: `scale(${previewZoom})`,
-                        transformOrigin: 'top left',
-                        width: `${100 / previewZoom}%`,
-                        height: `${100 / previewZoom}%`,
-                      }}
+                      id="dpr-preview-scroll"
+                      className="w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
                     >
-                      <div id="dpr-preview" className="bg-white mx-auto shadow-lg" style={{ minHeight: '100%', width: '21cm', padding: '2rem' }}>
-                        <ClusterDPRDocumentView
-                          dpr={{
-                            content: {
-                              english: {
-                                clusterData: clusterPayload,
-                                ...data.generatedDPR?.sections,
+                      <div
+                        id="dpr-preview-container"
+                        className="py-4"
+                        style={{ zoom: previewZoom } as React.CSSProperties}
+                      >
+                        <div
+                          id="dpr-preview"
+                          className="bg-white mx-auto shadow-lg"
+                          style={{ minHeight: '100%', width: '21cm', padding: '2rem' }}
+                        >
+                          <ClusterDPRDocumentView
+                            trackFieldHits
+                            dpr={{
+                              content: {
+                                english: {
+                                  clusterData: clusterPayload,
+                                  ...data.generatedDPR?.sections,
+                                },
                               },
-                            },
-                            metadata: {
-                              clusterData: clusterPayload,
-                              isIndividualDPR: true,
-                            },
-                          }}
-                          project={project || {
-                            _id: data.projectId,
-                            id: data.projectId,
-                            projectName: data.step1?.clusterName,
-                            projectType: 'cluster',
-                            stepData: clusterPayload,
-                          }}
-                          viewLanguage={viewLanguage}
-                          onSectionClick={(stepNumber: number) => {
-                            if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          onDataChange={(field, value) => {
-                            if (field === 'financialStatements') {
-                              setStepData(15, { ...(data.step15 || {}), financialStatements: value });
-                            }
-                          }}
-                        />
+                              metadata: {
+                                clusterData: clusterPayload,
+                                isIndividualDPR: true,
+                              },
+                            }}
+                            project={project || {
+                              _id: data.projectId,
+                              id: data.projectId,
+                              projectName: data.step1?.clusterName,
+                              projectType: 'cluster',
+                              stepData: clusterPayload,
+                            }}
+                            viewLanguage={viewLanguage}
+                            onSectionClick={(stepNumber: number) => {
+                              if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            onDataChange={(field, value) => {
+                              if (field === 'financialStatements') {
+                                setStepData(15, { ...(data.step15 || {}), financialStatements: value });
+                              }
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </CardContent>

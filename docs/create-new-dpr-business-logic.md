@@ -201,6 +201,14 @@ Empty / notSure activity does not invent a sector.
 - **Fill all steps with AI** (`fillAllStepsWithAi`) walks visible steps (skips 18), respects hidden capex for MUDRA Shishu/Kishore, and infers scheme extras.  
 - User must still review before generate.
 
+### Live preview scroll-to-field hits
+
+On **Create New Latest DPR** only (`IndividualDPRCreation` split/preview pane):
+
+- When step / `schemeExtras` values change (typing, AI apply, fill-all), the live `ClusterDPRDocumentView` scrolls to the **first** tagged occurrence of those fields (`data-dpr-field`).
+- If the same change appears in **multiple** places, **Up** / **Down** buttons cycle hits in document order; **Up** hides on the first hit, **Down** hides on the last.
+- Cluster create and saved DPR preview pages do not use this navigator.
+
 ---
 
 ## 9. State ownership
@@ -229,6 +237,7 @@ Form: `IndividualDPRForm.tsx`
 | `client/src/lib/individualDpr/schemeBriefs/*` | Brochure content EN/TE |
 | `client/src/lib/individualDpr/prefillFromVentureMatch.ts` | VM → step prefill |
 | `client/src/lib/individualDpr/toClusterPayload.ts` | Adapter to cluster APIs |
+| `client/src/lib/individualDpr/previewFieldHits.ts` | Live preview field-diff + scroll helpers |
 | `client/src/lib/ventureMatch/schemes.ts` | Scheme codes listed in dropdown |
 | `client/src/lib/ventureMatch/mapToDpr.ts` | Handoff peek/save (shared with Scheme Finder) |
 

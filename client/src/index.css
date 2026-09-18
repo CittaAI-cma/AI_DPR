@@ -145,3 +145,16 @@
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
+
+/* Live DPR preview: field change hit highlight */
+.dpr-field-hit {
+  scroll-margin: 80px;
+}
+.dpr-field-hit-active {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  background-color: rgba(37, 99, 235, 0.12);
+  border-radius: 2px;
+  transition: background-color 0.2s ease, outline-color 0.2s ease;
+}
+

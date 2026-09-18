@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { EditableFinancialTable } from './EditableFinancialTable';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
+import { fieldHitNode } from '@/lib/individualDpr/previewFieldHits';
 
 interface ClusterDPRDocumentViewProps {
   dpr: any;
@@ -20,11 +21,23 @@ interface ClusterDPRDocumentViewProps {
   viewLanguage: 'english' | 'telugu';
   onSectionClick?: (stepNumber: number) => void;
   onDataChange?: (field: string, value: any) => void; // Callback to update store when financial data changes
+  /** When true, wrap displayed field values with data-dpr-field for live-preview scroll hits */
+  trackFieldHits?: boolean;
 }
 
-export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ dpr, project, viewLanguage, onSectionClick, onDataChange }) => {
+export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
+  dpr,
+  project,
+  viewLanguage,
+  onSectionClick,
+  onDataChange,
+  trackFieldHits = false,
+}) => {
   // Get store functions to update data
   const { data: storeData, setStepData } = useClusterDPRStore();
+
+  const fieldHit = (path: string, children: React.ReactNode) =>
+    fieldHitNode(trackFieldHits, path, children);
 
   // Extract cluster data from multiple possible locations
   const clusterData =
@@ -1732,7 +1745,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 Establishment of Common Facility Centre for
               </h2>
               <h2 className="text-3xl font-bold text-center uppercase" style={{ color: '#059669', letterSpacing: '0.05em' }}>
-                {s1.clusterName || 'CLUSTER NAME'}
+                {fieldHit('step1.clusterName', s1.clusterName || 'CLUSTER NAME')}
               </h2>
               <p className="text-lg font-semibold text-center items-center px-32" style={{ color: '#1F2937' }}>
                 under 'Micro Cluster Development Programme'
@@ -1789,8 +1802,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 </p>
                 <div>
                   <p className="text-sm" style={{ color: '#1F2937' }}>
-                    {s1.clusterName + ", " || 'Cluster Name'}
-                    {s1.location || 'Location'}
+                    {fieldHit('step1.clusterName', s1.clusterName || 'Cluster Name')}
+                    {s1.clusterName ? ', ' : null}
+                    {fieldHit('step1.location', s1.location || 'Location')}
                   </p>
                 </div>
               </div>
@@ -2293,14 +2307,14 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
           {renderTable(
             ['Particulars', 'Details'],
             [
-              ['Name of the cluster', `${s1.clusterName || 'N/A'}, ${s1.district || 'N/A'} District`],
-              ['Location & Spread of the cluster', s1.geographicalSpread || s1.location || 'N/A'],
-              ['Product range', s1.majorProducts || 'N/A'],
+              ['Name of the cluster', <>{fieldHit('step1.clusterName', s1.clusterName || 'N/A')}, {fieldHit('step1.district', s1.district || 'N/A')} District</>],
+              ['Location & Spread of the cluster', fieldHit('step1.geographicalSpread', s1.geographicalSpread || s1.location || 'N/A')],
+              ['Product range', fieldHit('step1.majorProducts', s1.majorProducts || 'N/A')],
               ['Existing cluster scenario', 'See table below'],
-              ['Existing employment in the Cluster', `${(s1.employmentPerUnit?.lessThan5 || 0) + (s1.employmentPerUnit?.between5And10 || 0) + (s1.employmentPerUnit?.moreThan10 || 0)} workers (Male workers: ${s1.employmentPerUnit?.male || 0}, Female workers: ${s1.employmentPerUnit?.female || 0})`],
-              ['Name of the SPV', s11.spvName || 'N/A'],
-              ['Legal Status', s11.legalStatus || 'N/A'],
-              ['Number of SPV members(Micro unit holders)', `${(s11.memberUnits?.length || 0)} member units`],
+              ['Existing employment in the Cluster', fieldHit('step1.employmentPerUnit', `${(s1.employmentPerUnit?.lessThan5 || 0) + (s1.employmentPerUnit?.between5And10 || 0) + (s1.employmentPerUnit?.moreThan10 || 0)} workers (Male workers: ${s1.employmentPerUnit?.male || 0}, Female workers: ${s1.employmentPerUnit?.female || 0})`)],
+              ['Name of the SPV', fieldHit('step11.spvName', s11.spvName || 'N/A')],
+              ['Legal Status', fieldHit('step11.legalStatus', s11.legalStatus || 'N/A')],
+              ['Number of SPV members(Micro unit holders)', fieldHit('step11.memberUnits', `${(s11.memberUnits?.length || 0)} member units`)],
             ]
           )}
         </div>
@@ -2325,25 +2339,25 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 if (s1.enterpriseCount?.micro && s1.enterpriseCount.micro > 0) {
                   rows.push([
                     'Micro Enterprises',
-                    s1.enterpriseCount.micro.toString(),
-                    s4.productionCapacity || s14.annualProductionVolume ? `${s14.annualProductionVolume || 'N/A'}` : 'N/A',
-                    s1.turnoverPerUnit ? `₹${((s1.turnoverPerUnit * s1.enterpriseCount.micro)).toFixed(2)} Lakhs` : 'N/A'
+                    fieldHit('step1.enterpriseCount.micro', s1.enterpriseCount.micro.toString()),
+                    s4.productionCapacity || s14.annualProductionVolume ? fieldHit('step14.annualProductionVolume', `${s14.annualProductionVolume || 'N/A'}`) : 'N/A',
+                    s1.turnoverPerUnit ? fieldHit('step1.turnoverPerUnit', `₹${((s1.turnoverPerUnit * s1.enterpriseCount.micro)).toFixed(2)} Lakhs`) : 'N/A'
                   ]);
                 }
                 if (s1.enterpriseCount?.small && s1.enterpriseCount.small > 0) {
                   rows.push([
                     'Small Enterprises',
-                    s1.enterpriseCount.small.toString(),
+                    fieldHit('step1.enterpriseCount.small', s1.enterpriseCount.small.toString()),
                     'N/A',
-                    s1.turnoverPerUnit ? `₹${((s1.turnoverPerUnit * s1.enterpriseCount.small)).toFixed(2)} Lakhs` : 'N/A'
+                    s1.turnoverPerUnit ? fieldHit('step1.turnoverPerUnit', `₹${((s1.turnoverPerUnit * s1.enterpriseCount.small)).toFixed(2)} Lakhs`) : 'N/A'
                   ]);
                 }
                 if (s1.enterpriseCount?.medium && s1.enterpriseCount.medium > 0) {
                   rows.push([
                     'Medium Enterprises',
-                    s1.enterpriseCount.medium.toString(),
+                    fieldHit('step1.enterpriseCount.medium', s1.enterpriseCount.medium.toString()),
                     'N/A',
-                    s1.turnoverPerUnit ? `₹${((s1.turnoverPerUnit * s1.enterpriseCount.medium)).toFixed(2)} Lakhs` : 'N/A'
+                    s1.turnoverPerUnit ? fieldHit('step1.turnoverPerUnit', `₹${((s1.turnoverPerUnit * s1.enterpriseCount.medium)).toFixed(2)} Lakhs`) : 'N/A'
                   ]);
                 }
 
@@ -2373,7 +2387,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
             {s7.technologyGaps && (
               <div className="mb-4">
                 <p className="text-sm text-justify leading-relaxed" style={{ color: '#1F2937' }}>
-                  <strong>Technology:</strong> {s7.technologyGaps}
+                  <strong>Technology:</strong> {fieldHit('step7.technologyGaps', s7.technologyGaps)}
                 </p>
               </div>
             )}
@@ -2390,21 +2404,21 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
             {s7.infrastructureGaps && (
               <div className="mb-4">
                 <p className="text-sm text-justify leading-relaxed" style={{ color: '#1F2937' }}>
-                  <strong>Infrastructure:</strong> {s7.infrastructureGaps}
+                  <strong>Infrastructure:</strong> {fieldHit('step7.infrastructureGaps', s7.infrastructureGaps)}
                 </p>
               </div>
             )}
             {s7.skillGaps && (
               <div className="mb-4">
                 <p className="text-sm text-justify leading-relaxed" style={{ color: '#1F2937' }}>
-                  <strong>Skill:</strong> {s7.skillGaps}
+                  <strong>Skill:</strong> {fieldHit('step7.skillGaps', s7.skillGaps)}
                 </p>
               </div>
             )}
             {s7.marketingGaps && (
               <div className="mb-4">
                 <p className="text-sm text-justify leading-relaxed" style={{ color: '#1F2937' }}>
-                  <strong>Marketing:</strong> {s7.marketingGaps}
+                  <strong>Marketing:</strong> {fieldHit('step7.marketingGaps', s7.marketingGaps)}
                 </p>
               </div>
             )}
@@ -2421,7 +2435,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
             {s7.financialGaps && (
               <div className="mb-4">
                 <p className="text-sm text-justify leading-relaxed" style={{ color: '#1F2937' }}>
-                  <strong>Finance:</strong> {s7.financialGaps}
+                  <strong>Finance:</strong> {fieldHit('step7.financialGaps', s7.financialGaps)}
                 </p>
               </div>
             )}
@@ -2430,7 +2444,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
           <div className="my-6">
             <h4 className="text-lg font-bold mb-3" style={{ color: '#1F2937' }}>Project Rationale</h4>
             <p className="text-sm text-justify leading-relaxed" style={{ color: '#1F2937' }}>
-              {s7.justificationForIntervention || 'N/A'}
+              {fieldHit('step7.justificationForIntervention', s7.justificationForIntervention || 'N/A')}
             </p>
           </div>
         </div>
@@ -2444,12 +2458,12 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
             <h4 className="text-lg font-bold mb-3" style={{ color: '#1F2937' }}>Proposed Interventions</h4>
             {s9.interventionType && (
               <p className="text-sm mb-2" style={{ color: '#1F2937' }}>
-                <strong>Intervention Type:</strong> {s9.interventionType}
+                <strong>Intervention Type:</strong> {fieldHit('step9.interventionType', s9.interventionType)}
               </p>
             )}
             {s9.description ? (
               <p className="text-sm text-justify leading-relaxed" style={{ color: '#1F2937' }}>
-                {s9.description}
+                {fieldHit('step9.description', s9.description)}
               </p>
             ) : (
               <p className="text-sm text-gray-500" style={{ color: '#1F2937' }}>N/A</p>
@@ -2493,12 +2507,12 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 {renderTable(
                   ['Parameter', 'Details'],
                   [
-                    ['Cluster Name', s1.clusterName || 'N/A'],
-                    ['District', s1.district || 'N/A'],
-                    ['Location', s1.location || 'N/A'],
-                    ['Geographical Spread', s1.geographicalSpread || 'N/A'],
-                    ['Nature of Business', s1.natureOfBusiness || 'N/A'],
-                    ['Major Products', s1.majorProducts || 'N/A'],
+                    ['Cluster Name', fieldHit('step1.clusterName', s1.clusterName || 'N/A')],
+                    ['District', fieldHit('step1.district', s1.district || 'N/A')],
+                    ['Location', fieldHit('step1.location', s1.location || 'N/A')],
+                    ['Geographical Spread', fieldHit('step1.geographicalSpread', s1.geographicalSpread || 'N/A')],
+                    ['Nature of Business', fieldHit('step1.natureOfBusiness', s1.natureOfBusiness || 'N/A')],
+                    ['Major Products', fieldHit('step1.majorProducts', s1.majorProducts || 'N/A')],
                   ]
                 )}
               </div>
@@ -2507,9 +2521,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 {renderTable(
                   ['Category', 'Count'],
                   [
-                    ['Micro Enterprises', s1.enterpriseCount?.micro || 0],
-                    ['Small Enterprises', s1.enterpriseCount?.small || 0],
-                    ['Medium Enterprises', s1.enterpriseCount?.medium || 0],
+                    ['Micro Enterprises', fieldHit('step1.enterpriseCount.micro', s1.enterpriseCount?.micro || 0)],
+                    ['Small Enterprises', fieldHit('step1.enterpriseCount.small', s1.enterpriseCount?.small || 0)],
+                    ['Medium Enterprises', fieldHit('step1.enterpriseCount.medium', s1.enterpriseCount?.medium || 0)],
                     ['Total Enterprises', (s1.enterpriseCount?.micro || 0) + (s1.enterpriseCount?.small || 0) + (s1.enterpriseCount?.medium || 0)],
                   ]
                 )}
@@ -2519,11 +2533,11 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 {renderTable(
                   ['Category', 'Count'],
                   [
-                    ['Units with < 5 employees', s1.employmentPerUnit?.lessThan5 || 0],
-                    ['Units with 5-10 employees', s1.employmentPerUnit?.between5And10 || 0],
-                    ['Units with > 10 employees', s1.employmentPerUnit?.moreThan10 || 0],
-                    ['Male Workers', s1.employmentPerUnit?.male || 0],
-                    ['Female Workers', s1.employmentPerUnit?.female || 0],
+                    ['Units with < 5 employees', fieldHit('step1.employmentPerUnit.lessThan5', s1.employmentPerUnit?.lessThan5 || 0)],
+                    ['Units with 5-10 employees', fieldHit('step1.employmentPerUnit.between5And10', s1.employmentPerUnit?.between5And10 || 0)],
+                    ['Units with > 10 employees', fieldHit('step1.employmentPerUnit.moreThan10', s1.employmentPerUnit?.moreThan10 || 0)],
+                    ['Male Workers', fieldHit('step1.employmentPerUnit.male', s1.employmentPerUnit?.male || 0)],
+                    ['Female Workers', fieldHit('step1.employmentPerUnit.female', s1.employmentPerUnit?.female || 0)],
                   ]
                 )}
               </div>
@@ -2532,10 +2546,10 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 {renderTable(
                   ['Indicator', 'Value'],
                   [
-                    ['Average Investment per Unit', s1.investmentPerUnit ? `₹${s1.investmentPerUnit.toFixed(2)} Lakhs` : 'N/A'],
-                    ['Average Turnover per Unit', s1.turnoverPerUnit ? `₹${s1.turnoverPerUnit.toFixed(2)} Lakhs` : 'N/A'],
-                    ['Market Served - Domestic', s1.marketServed?.domestic ? `${s1.marketServed.domestic}%` : 'N/A'],
-                    ['Market Served - Export', s1.marketServed?.export ? `${s1.marketServed.export}%` : 'N/A'],
+                    ['Average Investment per Unit', fieldHit('step1.investmentPerUnit', s1.investmentPerUnit ? `₹${s1.investmentPerUnit.toFixed(2)} Lakhs` : 'N/A')],
+                    ['Average Turnover per Unit', fieldHit('step1.turnoverPerUnit', s1.turnoverPerUnit ? `₹${s1.turnoverPerUnit.toFixed(2)} Lakhs` : 'N/A')],
+                    ['Market Served - Domestic', fieldHit('step1.marketServed.domestic', s1.marketServed?.domestic ? `${s1.marketServed.domestic}%` : 'N/A')],
+                    ['Market Served - Export', fieldHit('step1.marketServed.export', s1.marketServed?.export ? `${s1.marketServed.export}%` : 'N/A')],
                   ]
                 )}
               </div>
@@ -2555,9 +2569,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
             </div>
           ) : (
             <div className="text-sm leading-relaxed space-y-4">
-              <p><strong>1.1 Sector/Industry Type:</strong> {s2.sectorType || 'N/A'}</p>
+              <p><strong>1.1 Sector/Industry Type:</strong> {fieldHit('step2.sectorType', s2.sectorType || 'N/A')}</p>
               <p><strong>1.2 Sector Description:</strong></p>
-              <p className="text-justify">{s2.sectorDescription || 'N/A'}</p>
+              <p className="text-justify">{fieldHit('step2.sectorDescription', s2.sectorDescription || 'N/A')}</p>
             </div>
           )}
         </div>
@@ -2569,9 +2583,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
           {/* {renderSectionTitle('1. INTRODUCTION (Continued)', 2)} */}
           <div className="text-sm leading-relaxed space-y-4">
             <p><strong>1.3 National Importance:</strong></p>
-            <p className="text-justify">{s2.nationalImportance || 'N/A'}</p>
+            <p className="text-justify">{fieldHit('step2.nationalImportance', s2.nationalImportance || 'N/A')}</p>
             <p><strong>1.4 State-level Importance:</strong></p>
-            <p className="text-justify">{s2.stateLevelImportance || 'N/A'}</p>
+            <p className="text-justify">{fieldHit('step2.stateLevelImportance', s2.stateLevelImportance || 'N/A')}</p>
           </div>
         </div>
       )}
@@ -2664,8 +2678,8 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                   {renderTable(
                     ['Parameter', 'Details'],
                     [
-                      ['Availability', s3.rawMaterialAvailability || 'N/A'],
-                      ['Quantity', s3.rawMaterialQuantity || 'N/A'],
+                      ['Availability', fieldHit('step3.rawMaterialAvailability', s3.rawMaterialAvailability || 'N/A')],
+                      ['Quantity', fieldHit('step3.rawMaterialQuantity', s3.rawMaterialQuantity || 'N/A')],
                     ]
                   )}
                 </div>
@@ -2713,9 +2727,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                   {renderTable(
                     ['Mode', 'Details'],
                     [
-                      ['Road', s3.connectivity?.road || 'N/A'],
-                      ['Rail', s3.connectivity?.rail || 'N/A'],
-                      ['Port', s3.connectivity?.port || 'N/A'],
+                      ['Road', fieldHit('step3.connectivity.road', s3.connectivity?.road || 'N/A')],
+                      ['Rail', fieldHit('step3.connectivity.rail', s3.connectivity?.rail || 'N/A')],
+                      ['Port', fieldHit('step3.connectivity.port', s3.connectivity?.port || 'N/A')],
                     ]
                   )}
                 </div>
@@ -2761,8 +2775,8 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 ['Parameter', 'Details'],
                 [
                   ['No. of Units', (s1.enterpriseCount?.micro || 0) + (s1.enterpriseCount?.small || 0) + (s1.enterpriseCount?.medium || 0)],
-                  ['Production Capacity', s4.productionCapacity || 'N/A'],
-                  ['Technology Level', s4.technologyLevel || 'N/A'],
+                  ['Production Capacity', fieldHit('step4.productionCapacity', s4.productionCapacity || 'N/A')],
+                  ['Technology Level', fieldHit('step4.technologyLevel', s4.technologyLevel || 'N/A')],
                 ]
               )}
             </div>
@@ -2800,9 +2814,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
               {renderTable(
                 ['Parameter', 'Details'],
                 [
-                  ['Year of Establishment', s4.yearOfEstablishment || 'N/A'],
-                  ['Type of Units', s4.typeOfUnits || 'N/A'],
-                  ['Present Activities', s4.presentActivities || 'N/A'],
+                  ['Year of Establishment', fieldHit('step4.yearOfEstablishment', s4.yearOfEstablishment || 'N/A')],
+                  ['Type of Units', fieldHit('step4.typeOfUnits', s4.typeOfUnits || 'N/A')],
+                  ['Present Activities', fieldHit('step4.presentActivities', s4.presentActivities || 'N/A')],
                 ]
               )}
             </div>
@@ -3075,9 +3089,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
           {renderTable(
             ['Area', 'Existing Gap'],
             [
-              ['Technology', enhancedContent['gapAnalysis-tech'] || s7.technologyGaps || 'N/A'],
-              ['Infrastructure', enhancedContent['gapAnalysis-infra'] || s7.infrastructureGaps || 'N/A'],
-              ['Skill', enhancedContent['gapAnalysis-skill'] || s7.skillGaps || 'N/A'],
+              ['Technology', enhancedContent['gapAnalysis-tech'] || fieldHit('step7.technologyGaps', s7.technologyGaps || 'N/A')],
+              ['Infrastructure', enhancedContent['gapAnalysis-infra'] || fieldHit('step7.infrastructureGaps', s7.infrastructureGaps || 'N/A')],
+              ['Skill', enhancedContent['gapAnalysis-skill'] || fieldHit('step7.skillGaps', s7.skillGaps || 'N/A')],
             ]
           )}
         </div>,
@@ -3091,13 +3105,13 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
           {renderTable(
             ['Area', 'Existing Gap'],
             [
-              ['Marketing', enhancedContent['gapAnalysis-marketing'] || s7.marketingGaps || 'N/A'],
-              ['Finance', enhancedContent['gapAnalysis-finance'] || s7.financialGaps || 'N/A'],
+              ['Marketing', enhancedContent['gapAnalysis-marketing'] || fieldHit('step7.marketingGaps', s7.marketingGaps || 'N/A')],
+              ['Finance', enhancedContent['gapAnalysis-finance'] || fieldHit('step7.financialGaps', s7.financialGaps || 'N/A')],
             ]
           )}
           <div className="my-6">
             <h3 className="text-xl font-semibold mb-3">Justification for Intervention</h3>
-            <p className="text-sm text-justify leading-relaxed">{s7.justificationForIntervention || 'N/A'}</p>
+            <p className="text-sm text-justify leading-relaxed">{fieldHit('step7.justificationForIntervention', s7.justificationForIntervention || 'N/A')}</p>
           </div>
         </div>,
         { borderStyle: 'double' }
@@ -3117,10 +3131,10 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                   {renderTable(
                     ['Parameter', 'Details'],
                     [
-                      ['CFC Name', s10.name || 'N/A'],
-                      ['Location', s10.location || 'N/A'],
-                      ['Land Area', s10.landDetails || 'N/A'],
-                      ['Civil Works / Built-up Area', s10.civilWorks || 'N/A'],
+                      ['CFC Name', fieldHit('step10.name', s10.name || 'N/A')],
+                      ['Location', fieldHit('step10.location', s10.location || 'N/A')],
+                      ['Land Area', fieldHit('step10.landDetails', s10.landDetails || 'N/A')],
+                      ['Civil Works / Built-up Area', fieldHit('step10.civilWorks', s10.civilWorks || 'N/A')],
                     ]
                   )}
                 </div>
@@ -3135,11 +3149,11 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
               <div className="space-y-6 text-sm">
                 <div>
                   <h3 className="text-xl font-semibold mb-3">7.2 Plant & Machinery</h3>
-                  <p className="text-justify leading-relaxed">{s10.plantAndMachinery || 'N/A'}</p>
+                  <p className="text-justify leading-relaxed">{fieldHit('step10.plantAndMachinery', s10.plantAndMachinery || 'N/A')}</p>
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3">7.3 Manufacturing Process</h3>
-                  <p className="text-justify leading-relaxed">{s10.manufacturingProcess || 'N/A'}</p>
+                  <p className="text-justify leading-relaxed">{fieldHit('step10.manufacturingProcess', s10.manufacturingProcess || 'N/A')}</p>
                 </div>
               </div>
             </div>
@@ -3152,16 +3166,16 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
               <div className="-mt-6 text-sm">
                 <div>
                   <h3 className="text-xl font-semibold mb-3">7.4 Capacity</h3>
-                  <p>{s10.capacity || 'N/A'}</p>
+                  <p>{fieldHit('step10.capacity', s10.capacity || 'N/A')}</p>
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold mb-3">7.5 Requirements</h3>
                   {renderTable(
                     ['Requirement', 'Details'],
                     [
-                      ['Power Requirements', s10.powerRequirements || 'N/A'],
-                      ['Water Requirements', s10.waterRequirements || 'N/A'],
-                      ['Manpower Requirements', s10.manpowerRequirements || 'N/A'],
+                      ['Power Requirements', fieldHit('step10.powerRequirements', s10.powerRequirements || 'N/A')],
+                      ['Water Requirements', fieldHit('step10.waterRequirements', s10.waterRequirements || 'N/A')],
+                      ['Manpower Requirements', fieldHit('step10.manpowerRequirements', s10.manpowerRequirements || 'N/A')],
                     ]
                   )}
                 </div>
@@ -3219,9 +3233,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                   {renderTable(
                     ['Parameter', 'Details'],
                     [
-                      ['Name', s11.spvName || 'N/A'],
-                      ['Legal Status', s11.legalStatus || 'N/A'],
-                      ['Year of Incorporation', s11.yearOfIncorporation || 'N/A'],
+                      ['Name', fieldHit('step11.spvName', s11.spvName || 'N/A')],
+                      ['Legal Status', fieldHit('step11.legalStatus', s11.legalStatus || 'N/A')],
+                      ['Year of Incorporation', fieldHit('step11.yearOfIncorporation', s11.yearOfIncorporation || 'N/A')],
                       ['Members', (s11.memberUnits?.length || 0) + ' member units'],
                     ]
                   )}
@@ -3487,8 +3501,8 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                 {renderTable(
                   ['Parameter', 'Value'],
                   [
-                    ['Annual Production Volume', s14.annualProductionVolume ? `${s14.annualProductionVolume.toLocaleString('en-IN')} units` : 'N/A'],
-                    ['Annual Sales Realization', s14.annualSalesRealization ? `₹${s14.annualSalesRealization.toFixed(2)} Lakhs` : 'N/A'],
+                    ['Annual Production Volume', fieldHit('step14.annualProductionVolume', s14.annualProductionVolume ? `${s14.annualProductionVolume.toLocaleString('en-IN')} units` : 'N/A')],
+                    ['Annual Sales Realization', fieldHit('step14.annualSalesRealization', s14.annualSalesRealization ? `₹${s14.annualSalesRealization.toFixed(2)} Lakhs` : 'N/A')],
                   ]
                 )}
               </div>
@@ -3537,9 +3551,9 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                     {renderTable(
                       ['Indicator', 'Value'],
                       [
-                        ['Break-even Point', s15.breakEvenPoint ? `${s15.breakEvenPoint}%` : 'N/A'],
-                        ['IRR', s15.irr ? `${s15.irr}%` : 'N/A'],
-                        ['NPV', s15.npv ? `₹${s15.npv.toFixed(2)} Lakhs` : 'N/A'],
+                        ['Break-even Point', fieldHit('step15.breakEvenPoint', s15.breakEvenPoint ? `${s15.breakEvenPoint}%` : 'N/A')],
+                        ['IRR', fieldHit('step15.irr', s15.irr ? `${s15.irr}%` : 'N/A')],
+                        ['NPV', fieldHit('step15.npv', s15.npv ? `₹${s15.npv.toFixed(2)} Lakhs` : 'N/A')],
                       ],
                       'Financial Indicators Summary',
                       undefined
@@ -3553,7 +3567,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
                   {s15.sensitivityAnalysis && (
                     <div>
                       <h3 className="text-xl font-semibold mb-3">10.5 Sensitivity Analysis</h3>
-                      <p className="text-justify leading-relaxed">{s15.sensitivityAnalysis}</p>
+                      <p className="text-justify leading-relaxed">{fieldHit('step15.sensitivityAnalysis', s15.sensitivityAnalysis)}</p>
                     </div>
                   )}
                 </>
@@ -3593,7 +3607,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
               {s16.startDate && (
                 <div>
                   <h3 className="text-xl font-semibold mb-3" style={{ color: '#1F2937' }}>10.5.1 Project Start Date</h3>
-                  <p className="text-justify leading-relaxed">{s16.startDate}</p>
+                  <p className="text-justify leading-relaxed">{fieldHit('step16.startDate', s16.startDate)}</p>
                 </div>
               )}
               {s16.milestones && s16.milestones.length > 0 && (
@@ -3613,7 +3627,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
               {s16.totalImplementationPeriod && (
                 <div>
                   <h3 className="text-xl font-semibold mb-3" style={{ color: '#1F2937' }}>10.5.3 Total Implementation Period</h3>
-                  <p className="text-justify leading-relaxed">{s16.totalImplementationPeriod}</p>
+                  <p className="text-justify leading-relaxed">{fieldHit('step16.totalImplementationPeriod', s16.totalImplementationPeriod)}</p>
                 </div>
               )}
             </div>
@@ -3649,7 +3663,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({ 
           {renderTable(
             ['Parameter', 'Value'],
             [
-              ['Employment', s17.employmentGeneration || 0],
+              ['Employment', fieldHit('step17.employmentGeneration', s17.employmentGeneration || 0)],
               ['Turnover', `₹${(s17.turnoverGrowth || 0).toFixed(2)} Lakhs`],
               ['Export Growth', `${s17.exportGrowth || 0}%`],
               ['Income Enhancement', `${s17.incomeEnhancement || 0}%`],
