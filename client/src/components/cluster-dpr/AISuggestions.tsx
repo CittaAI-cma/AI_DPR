@@ -42,6 +42,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   const [hasGenerated, setHasGenerated] = useState(false);
   const schemeExtraFields = extraFieldsForScheme(isIndividualDPR ? data?.matchedSchemeCode : null);
   const [applyingAll, setApplyingAll] = useState(false);
+  const [applyingFields, setApplyingFields] = useState<Set<string>>(new Set());
 
   // For Step 1, we'll show AI suggestions but exclude certain fields (clusterName, location, district)
   // These are basic identifiers that users should enter manually
