@@ -65,6 +65,14 @@ import {
   SCLCSS_UNIT_STAGE_OPTIONS,
   sclcssIndicativeGrantLakhs,
 } from '@/lib/individualDpr/sclcssQuestions';
+import {
+  AP_TECH_PREMISES_OPTIONS,
+  AP_TECH_SIZE_OPTIONS,
+  AP_TECH_YES_NO_OPTIONS,
+  apTechIndicativeGrantLakhs,
+  apTechSubsidyCapLakhs,
+  apTechSubsidyPercent,
+} from '@/lib/individualDpr/apTechUpgradeQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
@@ -93,7 +101,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const isStandup = schemeCode === 'STANDUP';
   const isPmfme = schemeCode === 'PMFME';
   const isSclcss = schemeCode === 'SCLCSS';
-  const isLeanUnit = isPmegp || isPmegp2nd || isMudra || isStandup || isPmfme || isSclcss;
+  const isApTech = schemeCode === 'AP_TECH_UPGRADE';
+  const isLeanUnit =
+    isPmegp || isPmegp2nd || isMudra || isStandup || isPmfme || isSclcss || isApTech;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -956,6 +966,112 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
+        {isApTech && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('AP Technology Upgradation — eligibility')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'Spec: docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md — brownfield FCI; mutually exclusive with new-unit EDP capital subsidy'
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Enterprise size')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.enterpriseSize || ''}
+                  onChange={(e) => updateExtras({ enterpriseSize: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {AP_TECH_SIZE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('Special category (wholly owned, AP domicile)?')}
+                </label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.specialCategory || ''}
+                  onChange={(e) => updateExtras({ specialCategory: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {AP_TECH_YES_NO_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('AP domicile confirmed?')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.apDomicile || ''}
+                  onChange={(e) => updateExtras({ apDomicile: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {AP_TECH_YES_NO_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Years in operation')}</label>
+                <Input
+                  type="number"
+                  value={extras.yearsInOperation || ''}
+                  onChange={(e) => updateExtras({ yearsInOperation: e.target.value })}
+                  placeholder={tf('e.g. 5')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('Latest annual turnover (₹ Lakhs)')}
+                </label>
+                <Input
+                  type="number"
+                  value={extras.existingTurnover || ''}
+                  onChange={(e) => updateExtras({ existingTurnover: e.target.value })}
+                  placeholder={tf('e.g. 45')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur full name')}</label>
+                <Input
+                  value={extras.entrepreneurName || ''}
+                  onChange={(e) => updateExtras({ entrepreneurName: e.target.value })}
+                  placeholder={tf('Full name as in Aadhaar')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
+                <Input
+                  type="number"
+                  value={extras.entrepreneurAge || ''}
+                  onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
+                  placeholder={tf('e.g. 38')}
+                />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              {tf('Indicative tech-upgrade subsidy')}:{' '}
+              {apTechSubsidyPercent(extras.enterpriseSize, extras.specialCategory)}% {tf('of FCI')},{' '}
+              {tf('cap')} ₹
+              {apTechSubsidyCapLakhs(extras.enterpriseSize, extras.specialCategory).toLocaleString(
+                'en-IN'
+              )}{' '}
+              {tf('L')} · {extras.enterpriseSize || '—'} / special {extras.specialCategory || '—'}.
+            </p>
+          </div>
+        )}
+
         {isMudra && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('MUDRA — PMMY category & applicant')}</h3>
@@ -1093,7 +1209,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
 
         {extraFieldNames.length > 0 &&
-          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP', 'SCLCSS'].includes(
+          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP', 'SCLCSS', 'AP_TECH_UPGRADE'].includes(
             schemeCode || ''
           ) && (
             <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
@@ -1151,7 +1267,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
 
-        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss) && (
+        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech) && (
           <div>
             <label className="block text-sm font-medium mb-2">{tf('Process of manufacture')}</label>
             <textarea
@@ -1159,8 +1275,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               value={extras.processOfManufacture || ''}
               onChange={(e) => updateExtras({ processOfManufacture: e.target.value })}
               placeholder={
-                isSclcss
-                  ? tf('Process after new plant & machinery (if manufacturing)')
+                isApTech || isSclcss
+                  ? tf('Process after new plant & machinery (manufacturing)')
                   : isPmegp2nd
                     ? tf('Process after upgrade / modernisation')
                     : isPmfme
@@ -1172,7 +1288,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
         )}
-        {(isPmegp2nd || isSclcss) && (
+        {(isPmegp2nd || isSclcss || isApTech) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">{tf('Existing technology')}</label>
@@ -1190,12 +1306,27 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 value={extras.proposedTech || ''}
                 onChange={(e) => updateExtras({ proposedTech: e.target.value })}
                 placeholder={
-                  isSclcss
-                    ? tf('New P&M / equipment with tech specs (subsidy base)')
-                    : tf('Machinery / process being added')
+                  isApTech
+                    ? tf('New / upgraded P&M with tech specs (FCI base)')
+                    : isSclcss
+                      ? tf('New P&M / equipment with tech specs (subsidy base)')
+                      : tf('Machinery / process being added')
                 }
               />
             </div>
+          </div>
+        )}
+        {isApTech && (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {tf('Expected productivity / quality / cost gain')}
+            </label>
+            <textarea
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={extras.productivityGain || ''}
+              onChange={(e) => updateExtras({ productivityGain: e.target.value })}
+              placeholder={tf('Why DIC should support this upgrade')}
+            />
           </div>
         )}
 
@@ -1456,7 +1587,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             value={stepData.productionCapacity || extras.installedCapacity || ''}
             onChange={(e) => {
               handleInputChange('productionCapacity', e.target.value);
-              if (isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss)
+              if (isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech)
                 updateExtras({ installedCapacity: e.target.value });
             }}
             placeholder={
@@ -1466,7 +1597,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             }
           />
         </div>
-        {isPmegp2nd && (
+        {(isPmegp2nd || isApTech) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               {tf('Existing capacity (before upgrade)')}
@@ -1478,7 +1609,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
         )}
-        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss) && (
+        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               {tf('Capacity utilisation Year 1 (%)')}
@@ -2044,7 +2175,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
         {isLeanUnit ? (
           <div className="space-y-4">
-            {(isMudra || isStandup || isPmfme || isSclcss) && (
+            {(isMudra || isStandup || isPmfme || isSclcss || isApTech) && (
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Premises — owned / rented')}</label>
                 <select
@@ -2053,13 +2184,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   onChange={(e) => updateExtras({ premisesType: e.target.value })}
                 >
                   <option value="">{tf('Select')}</option>
-                  {(isSclcss
-                    ? SCLCSS_PREMISES_OPTIONS
-                    : isPmfme
-                      ? PMFME_PREMISES_OPTIONS
-                      : isStandup
-                        ? STANDUP_PREMISES_OPTIONS
-                        : MUDRA_PREMISES_OPTIONS
+                  {(isApTech
+                    ? AP_TECH_PREMISES_OPTIONS
+                    : isSclcss
+                      ? SCLCSS_PREMISES_OPTIONS
+                      : isPmfme
+                        ? PMFME_PREMISES_OPTIONS
+                        : isStandup
+                          ? STANDUP_PREMISES_OPTIONS
+                          : MUDRA_PREMISES_OPTIONS
                   ).map((o) => (
                     <option key={o.value} value={o.value}>
                       {tf(o.label)}
@@ -2075,7 +2208,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <Input
                 value={extras.powerRequirement || stepData.powerRequirements || ''}
                 onChange={(e) => {
-                  if (isPmegp || isPmegp2nd || isPmfme || isSclcss)
+                  if (isPmegp || isPmegp2nd || isPmfme || isSclcss || isApTech)
                     updateExtras({ powerRequirement: e.target.value });
                   handleInputChange('powerRequirements', e.target.value);
                 }}
@@ -2437,7 +2570,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 ? 'Own contribution (₹ Lakhs) — typically 10% general / 5% special'
                 : isPmegp2nd
                   ? 'Own contribution (₹ Lakhs) — 10% for all categories'
-                  : isMudra || isStandup || isPmfme || isSclcss
+                  : isMudra || isStandup || isPmfme || isSclcss || isApTech
                     ? 'Own contribution (₹ Lakhs)'
                     : 'Promoter contribution / equity (₹ Lakhs)'
             )}
@@ -2463,7 +2596,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                         ? 'PMFME capital grant (₹ Lakhs) — 35%, cap ₹10 L'
                         : isSclcss
                           ? 'SCLCSS capital subsidy (₹ Lakhs) — 25%, cap ₹25 L'
-                          : 'Government Grant (₹ Lakhs)'
+                          : isApTech
+                            ? 'AP tech-upgrade subsidy (₹ Lakhs) — % of FCI by size'
+                            : 'Government Grant (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -2479,7 +2614,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 ? 'Bank term loan + / or WC (₹ Lakhs)'
                 : isStandup
                   ? 'Bank composite loan TL + WC (₹ Lakhs)'
-                  : isSclcss
+                  : isSclcss || isApTech
                     ? 'Bank term loan for P&M (₹ Lakhs)'
                     : 'Bank Loan (₹ Lakhs)'
             )}
@@ -2568,6 +2703,30 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             ≈ ₹
             {sclcssIndicativeGrantLakhs(getStepData(12)?.machinery || 0).toLocaleString('en-IN')}{' '}
             {tf('Lakhs')} · {extras.sclcssCategory || '—'} / stake {extras.controllingStakePercent || '—'}%.
+          </p>
+        )}
+        {isApTech && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'AP tech-upgrade subsidy on upgrade FCI — mutually exclusive with new-unit EDP capital subsidy; total incentives ≤ 75% FCI. Indicative'
+            )}{' '}
+            ≈ ₹
+            {apTechIndicativeGrantLakhs(
+              (getStepData(12)?.land || 0) +
+                (getStepData(12)?.building || 0) +
+                (getStepData(12)?.machinery || 0) +
+                (getStepData(12)?.utilitiesAndInfrastructure || 0) +
+                (getStepData(12)?.preliminaryAndPreOperative || 0) +
+                (getStepData(12)?.workingCapitalMargin || 0),
+              extras.enterpriseSize,
+              extras.specialCategory
+            ).toLocaleString('en-IN')}{' '}
+            {tf('Lakhs')} (
+            {apTechSubsidyPercent(extras.enterpriseSize, extras.specialCategory)}% / {tf('cap')} ₹
+            {apTechSubsidyCapLakhs(extras.enterpriseSize, extras.specialCategory).toLocaleString(
+              'en-IN'
+            )}{' '}
+            {tf('L')}).
           </p>
         )}
         <div className="border-t pt-4">

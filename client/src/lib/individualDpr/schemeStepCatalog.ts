@@ -173,6 +173,26 @@ export const SCLCSS_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
+/**
+ * AP Technology Upgradation — 13 consecutive steps (MSME-EDP 4.0 brownfield FCI).
+ * Spec: docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md
+ */
+export const AP_TECH_UPGRADE_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & AP eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Technology upgrade story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Upgrade project cost (FCI)', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
 /** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
 const FULL_MINUS_LATE: SchemeStepDef[] = catalog(
   VANILLA_STEPS.filter((s) => ![15, 16, 17].includes(s.contentStep)).map((s) => ({
@@ -213,6 +233,7 @@ export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   PMFME: PMFME_STEPS,
   PMEGP_2ND: PMEGP_2ND_STEPS,
   SCLCSS: SCLCSS_STEPS,
+  AP_TECH_UPGRADE: AP_TECH_UPGRADE_STEPS,
   ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),
   ...Object.fromEntries([...SHORT_WC_CODES].map((c) => [c, SHORT_WC_STEPS])),
   ...Object.fromEntries([...FULL_MINUS_LATE_CODES].map((c) => [c, FULL_MINUS_LATE])),

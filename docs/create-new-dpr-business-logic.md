@@ -138,7 +138,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `STANDUP` | Own 13-step bank-unit pack — see [docs/schemes/STANDUP/standup.md](./schemes/STANDUP/standup.md), `standupQuestions.ts`, `STANDUP_STEPS` (woman/SC/ST, ≥51% stake, ≥10% own, composite TL+WC, competitors + schedule). |
 | `PMEGP_2ND` | Own 14-step upgrade pack — see [docs/schemes/PMEGP_2ND/pmegp2nd.md](./schemes/PMEGP_2ND/pmegp2nd.md), `pmegp2ndQuestions.ts`, `PMEGP_2ND_STEPS` (prior PMEGP/REGP/MUDRA, uniform 15% MM / 10% own, brownfield only). |
 | `SCLCSS` | Own 13-step tech-upgrade pack — see [docs/schemes/SCLCSS/sclcss.md](./schemes/SCLCSS/sclcss.md), `sclcssQuestions.ts`, `SCLCSS_STEPS` (SC/ST ≥51%, existing vs proposed tech, 25% subsidy cap ₹25 L). |
-| `AP_TECH_UPGRADE` | `existingTech`, `proposedTech` |
+| `AP_TECH_UPGRADE` | Own 13-step brownfield pack — see [docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md](./schemes/AP_TECH_UPGRADE/apTechUpgrade.md), `apTechUpgradeQuestions.ts`, `AP_TECH_UPGRADE_STEPS` (MSME-EDP 4.0 para 6.4: 20%/40%/30% of FCI by size & special category). |
 | `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
 | `ZED` / `LEAN` / `MSME_IPR` / `PMS` / … | short-pack fields (see `SCHEME_EXTRA_FIELDS`) |
 | Cluster / CTA schemes (`MSE_CDP`, `SFURTI`, `AP_CDP`, `APICF`, `CHAMPIONS`, `ESDP`, `NTCEC`) | **Excluded** from Create New Latest DPR picker (`isIndividualPickerScheme`) |

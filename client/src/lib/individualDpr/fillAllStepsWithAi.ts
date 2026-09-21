@@ -37,6 +37,14 @@ export function normalizeExtraValue(field: string, value: any): any {
   }
   if (field === 'sectorBand') return /service|trad|business/i.test(text) ? 'service' : 'manufacturing';
   if (field === 'sclcssCategory') return /st\b|tribe/i.test(text) ? 'st' : 'sc';
+  if (field === 'enterpriseSize') {
+    if (/medium/i.test(text)) return 'medium';
+    if (/small/i.test(text)) return 'small';
+    return 'micro';
+  }
+  if (field === 'specialCategory' || field === 'apDomicile') {
+    return /\bno\b/i.test(text) ? 'no' : 'yes';
+  }
   if (field === 'apiicPark') return /yes|apiic|park/i.test(text) && !/\bno\b/i.test(text) ? 'yes' : /no/i.test(text) ? 'no' : 'yes';
   return text;
 }
@@ -82,6 +90,15 @@ function inferMissingExtras(
     if (!next.unitStage) next.unitStage = /new|greenfield|first/i.test(hint) ? 'new' : 'existing';
     if (!next.controllingStakePercent) next.controllingStakePercent = '51';
     if (!next.udyamStatus) next.udyamStatus = 'Udyam ready / applied';
+  }
+  if (schemeCode === 'AP_TECH_UPGRADE') {
+    if (!next.enterpriseSize) {
+      next.enterpriseSize = /medium/i.test(hint) ? 'medium' : /small/i.test(hint) ? 'small' : 'micro';
+    }
+    if (!next.specialCategory) {
+      next.specialCategory = /woman|sc|st|bc|pwd|transgender|minority/i.test(hint) ? 'yes' : 'no';
+    }
+    if (!next.apDomicile) next.apDomicile = 'yes';
   }
   if (schemeCode === 'AP_EDP' && !next.apiicPark) {
     next.apiicPark = /apiic|industrial park/i.test(hint) ? 'yes' : 'no';

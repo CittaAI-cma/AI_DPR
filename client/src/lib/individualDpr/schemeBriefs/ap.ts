@@ -126,30 +126,45 @@ export const AP_BRIEFS: Record<string, SchemeBrief> = {
     code: 'AP_TECH_UPGRADE',
     title: L('AP Technology Upgradation Subsidy', 'AP టెక్నాలజీ అప్‌గ్రేడేషన్ సబ్సిడీ'),
     intro: L(
-      'Under AP MSME-EDP 4.0, existing manufacturing units can seek a technology-upgradation / modernisation incentive on eligible plant and machinery. The policy treats this as mutually exclusive from new-unit capital subsidy. Scheme Finder summarises the typical rate as 20% for upgrading machines in an existing unit — confirm the live percentage and cap with GM-DIC.',
-      'AP MSME-EDP 4.0 కింద ఉన్న తయారీ యూనిట్లు అర్హ ప్లాంట్ మరియు యంత్రాలపై టెక్నాలజీ అప్‌గ్రేడ్ ప్రోత్సాహకం పొందవచ్చు. కొత్త-యూనిట్ క్యాపిటల్ సబ్సిడీకి ఇది విరుద్ధం. స్కీమ్ ఫైండర్ సాధారణ రేటును 20%గా చూపుతుంది — GM-DICతో నిర్ధారించండి.'
+      'Under AP MSME-EDP 4.0 (para 6.4), existing units seeking expansion / diversification / modernisation can claim a technology-upgradation incentive on eligible FCI. Create New Latest DPR builds a 13-step pack — see docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md. Mutually exclusive from new-unit capital subsidy. Confirm live % and caps with GM-DIC.',
+      'AP MSME-EDP 4.0 (పేరా 6.4) కింద ఉన్న యూనిట్ల విస్తరణ / డైవర్సిఫికేషన్ / ఆధునీకరణకు FCIపై టెక్ అప్‌గ్రేడ్ ప్రోత్సాహకం. Create New Latest DPR 13-దశల ప్యాక్ ఇస్తుంది. కొత్త-యూనిట్ క్యాపిటల్ సబ్సిడీకి విరుద్ధం. GM-DICతో నిర్ధారించండి.'
     ),
     benefits: [
-      L('Subsidy towards new / upgraded machinery in an existing manufacturing unit (Scheme Finder: about 20% of eligible machine cost).', 'ఉన్న తయారీ యూనిట్‌లో కొత్త / అప్‌గ్రేడ్ యంత్రాల సబ్సిడీ (స్కీమ్ ఫైండర్: అర్హ యంత్ర ఖర్చులో సుమారు 20%).'),
-      L('Paid after installation and verification, not as an advance.', 'ఇన్‌స్టాలేషన్ మరియు ధృవీకరణ తర్వాత చెల్లింపు, అడ్వాన్స్ కాదు.'),
+      L(
+        'General category: about 20% of FCI (illustrative caps — micro ₹20 L, small ₹2 Cr, medium ₹5 Cr) in annual instalments after CoD / first invoice.',
+        'సాధారణ వర్గం: FCIలో సుమారు 20% (సూచన పైపరిధి — సూక్ష్మ ₹20 లక్షలు, చిన్న ₹2 కోట్లు, మధ్య ₹5 కోట్లు), CoD / మొదటి ఇన్వాయిస్ తర్వాత విడతలు.'
+      ),
+      L(
+        'Special category (wholly owned women/BC/SC/ST/minority/PwD/transgender with AP domicile): higher rates in the amendment table (e.g. micro/small 40%, medium 30%) with higher caps.',
+        'ప్రత్యేక వర్గం (AP నివాసం ఉన్న పూర్తి యాజమాన్య మహిళ/BC/SC/ST/మైనారిటీ/వికలాంగ/ట్రాన్స్‌జెండర్): సవరణ పట్టికలో అధిక రేట్లు (ఉదా. సూక్ష్మ/చిన్న 40%, మధ్య 30%).'
+      ),
+      L('Paid after installation / CoD verification — not as an advance. Combined incentives ≤ 75% of FCI.', 'ఇన్‌స్టాలేషన్ / CoD ధృవీకరణ తర్వాత చెల్లింపు. మొత్తం ప్రోత్సాహకాలు FCIలో 75%కి పరిమితం.'),
     ],
     eligibility: [
-      L('Existing (brownfield) or restarting manufacturing unit in Andhra Pradesh.', 'ఆంధ్రప్రదేశ్‌లో ఉన్న (బ్రౌన్‌ఫీల్డ్) లేదా మళ్లీ మొదలుపెట్టే తయారీ యూనిట్.'),
-      L('AP domicile, registered firm, unit located in AP.', 'AP నివాసం, నమోదైన సంస్థ, యూనిట్ APలో.'),
+      L('Existing (brownfield) or restarting manufacturing unit in Andhra Pradesh (Scheme Finder).', 'ఆంధ్రప్రదేశ్‌లో ఉన్న (బ్రౌన్‌ఫీల్డ్) లేదా మళ్లీ మొదలుపెట్టే తయారీ యూనిట్.'),
+      L('AP domicile, registered firm, unit located in AP. Expansion / diversification / tech upgrade — not greenfield capital subsidy.', 'AP నివాసం, నమోదైన సంస్థ. విస్తరణ / టెక్ అప్‌గ్రేడ్ — కొత్త-యూనిట్ క్యాపిటల్ సబ్సిడీ కాదు.'),
       L('Cannot stack this with the new-unit EDP capital subsidy on the same FCI.', 'అదే FCIపై కొత్త-యూనిట్ EDP క్యాపిటల్ సబ్సిడీతో కలపలేరు.'),
     ],
     howToApply: [
-      L('Apply through GM-DIC / AP MSME One incentives after placing orders for eligible new machinery.', 'అర్హ కొత్త యంత్రాల ఆర్డర్ల తర్వాత GM-DIC / AP MSME One ఇన్సెంటివ్స్ ద్వారా దరఖాస్తు చేయండి.'),
-      L('This DPR should emphasise the upgrade, old vs new machines, and productivity gain.', 'ఈ DPRలో అప్‌గ్రేడ్, పాత vs కొత్త యంత్రాలు, ఉత్పాదకత పెరుగుదల నొక్కి చెప్పండి.'),
+      L('Apply through GM-DIC / AP MSME One / Single Desk after placing orders for eligible new machinery.', 'అర్హ కొత్త యంత్రాల ఆర్డర్ల తర్వాత GM-DIC / AP MSME One / సింగిల్ డెస్క్ ద్వారా దరఖాస్తు చేయండి.'),
+      L('Create New Latest DPR with AP Technology Upgradation selected builds the 13-step upgrade pack.', 'AP Technology Upgradation ఎంచుకుంటే Create New Latest DPR 13-దశల అప్‌గ్రేడ్ ప్యాక్ ఇస్తుంది.'),
+      L('Emphasise old vs new machines, FCI, and productivity gain.', 'పాత vs కొత్త యంత్రాలు, FCI, ఉత్పాదకత పెరుగుదల నొక్కి చెప్పండి.'),
     ],
     documents: [
-      L('Existing Udyam / PMT, old machinery list, new quotations / invoices', 'ఉన్న ఉద్యమ్ / PMT, పాత యంత్రాల జాబితా, కొత్త కోటేషన్లు / ఇన్వాయిసులు'),
-      L('Bank term-loan sanction if the upgrade is credit-linked', 'అప్‌గ్రేడ్ క్రెడిట్-లింక్డ్ అయితే బ్యాంకు మంజూరు'),
+      L('Existing Udyam, old machinery list, new quotations / invoices', 'ఉన్న ఉద్యమ్, పాత యంత్రాల జాబితా, కొత్త కోటేషన్లు / ఇన్వాయిసులు'),
+      L('CA FCI statement, AP domicile proof; bank term-loan sanction if credit-linked', 'CA FCI, AP నివాస రుజువు; క్రెడిట్-లింక్డ్ అయితే బ్యాంకు మంజూరు'),
     ],
     faqs: [
       {
         q: L('I am starting a brand-new factory. Can I use this?', 'కొత్త ఫ్యాక్టరీ మొదలుపెడుతున్నాను. ఇది వాడవచ్చా?'),
         a: L('No. Use AP EDP 4.0 or AP CMEP for greenfield. This line is for upgrading an existing unit.', 'కాదు. గ్రీన్‌ఫీల్డ్‌కు AP EDP 4.0 లేదా AP CMEP. ఇది ఉన్న యూనిట్ అప్‌గ్రేడ్‌కు.'),
+      },
+      {
+        q: L('Is this the same as central SCLCSS?', 'ఇది కేంద్ర SCLCSSేనా?'),
+        a: L(
+          'No. SCLCSS is central SC/ST-only capital subsidy on P&M. This is an Andhra Pradesh MSME-EDP 4.0 FCI incentive for expansion units (all eligible categories, with a special-category boost).',
+          'కాదు. SCLCSS కేంద్ర SC/ST P&M సబ్సిడీ. ఇది AP MSME-EDP 4.0 FCI ప్రోత్సాహకం (ప్రత్యేక వర్గ బూస్ట్ ఉంది).'
+        ),
       },
     ],
     quickInfo: {

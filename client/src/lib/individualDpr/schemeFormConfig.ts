@@ -6,6 +6,7 @@ import { MUDRA_EXTRA_FIELDS, MUDRA_IMPACT_BULLETS } from '@/lib/individualDpr/mu
 import { STANDUP_EXTRA_FIELDS, STANDUP_IMPACT_BULLETS } from '@/lib/individualDpr/standupQuestions';
 import { PMFME_EXTRA_FIELDS, PMFME_IMPACT_BULLETS } from '@/lib/individualDpr/pmfmeQuestions';
 import { SCLCSS_EXTRA_FIELDS, SCLCSS_IMPACT_BULLETS } from '@/lib/individualDpr/sclcssQuestions';
+import { AP_TECH_EXTRA_FIELDS, AP_TECH_IMPACT_BULLETS } from '@/lib/individualDpr/apTechUpgradeQuestions';
 import {
   getSchemeSteps,
   getStepDef,
@@ -30,7 +31,7 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   STANDUP: [...STANDUP_EXTRA_FIELDS],
   PMEGP_2ND: [...PMEGP_2ND_EXTRA_FIELDS],
   SCLCSS: [...SCLCSS_EXTRA_FIELDS],
-  AP_TECH_UPGRADE: ['existingTech', 'proposedTech'],
+  AP_TECH_UPGRADE: [...AP_TECH_EXTRA_FIELDS],
   MSE_GIFT: ['energyBaselineKwh', 'expectedSaving'],
   ZED: ['zedCurrentLevel', 'zedTargetLevel'],
   LEAN: ['processBottleneck'],
@@ -222,6 +223,24 @@ export function getStep18Uploads(
       { id: 'cfeCfo', label: 'Single Desk Pollution Clearances (CFE/CFO)' },
       { id: 'caFciStatement', label: 'CA-certified FCI Statement' },
     ];
+  }
+  if (code === 'AP_TECH_UPGRADE') {
+    const uploads: UploadField[] = [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'machineryQuotations', label: 'New Machinery Quotations / Invoices' },
+      { id: 'oldMachineryList', label: 'List of Existing Machinery' },
+      { id: 'caFciStatement', label: 'CA Statement of Upgrade FCI' },
+      { id: 'apDomicileProof', label: 'AP Domicile Proof' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+      { id: 'termLoanSanction', label: 'Term Loan Sanction (if credit-linked)' },
+    ];
+    if (schemeExtras?.specialCategory === 'yes') {
+      uploads.push({
+        id: 'specialCategoryProof',
+        label: 'Special-category Ownership Proof (women / SC/ST / BC / PwD / etc.)',
+      });
+    }
+    return uploads;
   }
   if (code === 'MUDRA') {
     const uploads: UploadField[] = [
@@ -417,6 +436,13 @@ export function getSchemeImpact(code: string | null): {
         'Step 12 keeps land / building / P&M (FCI).',
         'Step 18: land/shed, CFE/CFO, CA FCI statement.',
       ],
+      firstChangedStep: 1,
+    };
+  }
+  if (code === 'AP_TECH_UPGRADE') {
+    return {
+      title: 'AP Technology Upgradation',
+      bullets: [...AP_TECH_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }
