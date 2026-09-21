@@ -1,5 +1,6 @@
 import { AISuggestionsService } from '@/services/aiSuggestions.service';
-import { extraFieldsForScheme, VISHWAKARMA_CRAFTS, getVisibleSteps, hideComplexCapex } from '@/lib/individualDpr/schemeFormConfig';
+import { extraFieldsForScheme, VISHWAKARMA_CRAFTS, hideComplexCapex } from '@/lib/individualDpr/schemeFormConfig';
+import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { suggestionToFieldValue } from '@/lib/dprAiFieldNormalize';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
@@ -70,24 +71,28 @@ export type FillAllResult = {
 };
 
 function excludeForStep(
-  step: number,
+  contentStep: number,
   schemeCode: string | null,
   budget?: Budget
 ): string[] {
-  if (step === 1) return [...IDENTITY_FIELDS];
-  if (step === 12 && hideComplexCapex(schemeCode, budget)) {
+  if (contentStep === 1) return [...IDENTITY_FIELDS];
+  if (contentStep === 12 && hideComplexCapex(schemeCode, budget)) {
     return ['land', 'building', 'utilitiesAndInfrastructure', 'preliminaryAndPreOperative'];
   }
   return [];
 }
 
-function previousStepsPayload(data: Record<string, any>, beforeStep: number, schemeCode: string | null) {
+function previousStepsPayload(
+  data: Record<string, any>,
+  beforeContentSteps: number[],
+  schemeCode: string | null
+) {
   const previous: Record<string, any> = {
     _isIndividualDPR: true,
     ...(schemeCode ? { _schemeCode: schemeCode } : {}),
   };
-  for (let i = 1; i < beforeStep; i++) {
-    const key = `step${i}`;
+  for (const contentStep of beforeContentSteps) {
+    const key = `step${contentStep}`;
     if (data[key] && typeof data[key] === 'object') previous[key] = data[key];
   }
   return previous;
@@ -112,33 +117,37 @@ export async function fillAllStepsWithAi(options: {
     }
   });
 
-  const steps = getVisibleSteps(schemeCode).filter((s) => s !== 18);
+  const catalog = getSchemeSteps(schemeCode).filter((s) => s.id !== 'uploads' && s.contentStep !== 18);
   const filledSteps: number[] = [];
   const failedSteps: number[] = [];
 
-  for (let index = 0; index < steps.length; index++) {
-    const step = steps[index];
-    onProgress?.({ step, index: index + 1, total: steps.length });
+  for (let index = 0; index < catalog.length; index++) {
+    const def = catalog[index];
+    const contentStep = def.contentStep;
+    onProgress?.({ step: def.n, index: index + 1, total: catalog.length });
 
-    const currentStepData = { ...(getStepData(step) || data[`step${step}`] || {}) };
-    const previous = previousStepsPayload(data, step, schemeCode);
-    const exclude = excludeForStep(step, schemeCode, answers?.budget);
+    const currentStepData = {
+      ...(getStepData(contentStep) || data[`step${contentStep}`] || {}),
+    };
+    const priorContent = catalog.slice(0, index).map((s) => s.contentStep);
+    const previous = previousStepsPayload(data, priorContent, schemeCode);
+    const exclude = excludeForStep(contentStep, schemeCode, answers?.budget);
 
     try {
       const suggestions = await AISuggestionsService.getSuggestionsForStep(
-        step,
+        contentStep,
         currentStepData,
         previous,
         exclude
       );
 
       if (!suggestions?.length) {
-        if (step === 1 && extraFieldNames.length && setSchemeExtras) {
+        if (contentStep === 1 && extraFieldNames.length && setSchemeExtras) {
           extras = inferMissingExtras(schemeCode, currentStepData, extras);
           setSchemeExtras(extras);
           data = { ...data, schemeExtras: extras };
         }
-        failedSteps.push(step);
+        failedSteps.push(def.n);
         continue;
       }
 
@@ -168,12 +177,12 @@ export async function fillAllStepsWithAi(options: {
         applied += 1;
       }
 
-      if (applied === 0 && !(step === 1 && extraFieldNames.length)) {
-        failedSteps.push(step);
+      if (applied === 0 && !(contentStep === 1 && extraFieldNames.length)) {
+        failedSteps.push(def.n);
         continue;
       }
 
-      if (step === 1 && extraFieldNames.length) {
+      if (contentStep === 1 && extraFieldNames.length) {
         extras = inferMissingExtras(schemeCode, nextStepData, extras);
         extrasChanged = true;
         extraFieldNames.forEach((field) => {
@@ -183,20 +192,20 @@ export async function fillAllStepsWithAi(options: {
       }
 
       if (applied === 0) {
-        failedSteps.push(step);
+        failedSteps.push(def.n);
         continue;
       }
 
-      setStepData(step, nextStepData);
-      data = { ...data, [`step${step}`]: nextStepData };
+      setStepData(contentStep, nextStepData);
+      data = { ...data, [`step${contentStep}`]: nextStepData };
       if (extrasChanged && setSchemeExtras) {
         setSchemeExtras(extras);
         data = { ...data, schemeExtras: extras };
       }
-      filledSteps.push(step);
+      filledSteps.push(def.n);
     } catch (error) {
-      console.error(`AI fill failed for step ${step}:`, error);
-      failedSteps.push(step);
+      console.error(`AI fill failed for step ${def.n} (content ${contentStep}):`, error);
+      failedSteps.push(def.n);
     }
   }
 

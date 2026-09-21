@@ -18,7 +18,16 @@ import {
   nayakWorkingCapital,
   showDscr,
   isMudraShishuKishore,
+  getContentStep,
 } from '@/lib/individualDpr/schemeFormConfig';
+import {
+  PMEGP_AGENCY_OPTIONS,
+  PMEGP_AREA_OPTIONS,
+  PMEGP_CATEGORY_OPTIONS,
+  PMEGP_EDUCATION_OPTIONS,
+  pmegpOwnPercent,
+  pmegpSubsidyPercent,
+} from '@/lib/individualDpr/pmegpQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
@@ -40,6 +49,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const { t } = useTranslation();
   const schemeCode = data.matchedSchemeCode || null;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
+  /** Store / AI / PDF bucket for this scheme's local step. */
+  const contentStep = getContentStep(currentStep, schemeCode);
   const extras = data.schemeExtras || {};
   const updateExtras = (patch: Record<string, any>) => {
     const current = useIndividualDPRStore.getState().data.schemeExtras || {};
@@ -53,14 +64,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     contextHint: 'This is an individual entrepreneur unit (one firm), not a cluster or SPV.',
   };
   const aiExclude =
-    currentStep === 1
+    contentStep === 1
       ? ['clusterName', 'location', 'district']
-      : hideComplexCapex(schemeCode, data.ventureMatchAnswers?.budget) && currentStep === 12
+      : hideComplexCapex(schemeCode, data.ventureMatchAnswers?.budget) && contentStep === 12
         ? ['land', 'building', 'utilitiesAndInfrastructure', 'preliminaryAndPreOperative']
         : [];
-  // Read step data directly from store to ensure reactivity
-  // This will trigger re-renders when data is loaded from database
-  const stepDataKey = `step${currentStep}` as keyof typeof data;
+  // Read step data from the content bucket (scheme-local UI step may differ)
+  const stepDataKey = `step${contentStep}` as keyof typeof data;
   const stepData = (data[stepDataKey] as any) || {};
 
   // State for Step 18 file uploads (must be at top level due to React hooks rules)
@@ -88,7 +98,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
   // Helper function to render label with info icon
   const renderLabel = (fieldName: string, label: string, required: boolean = false) => {
-    const stepKey = `step${currentStep}`;
+    const stepKey = `step${contentStep}`;
     const stepDescriptions = FIELD_DESCRIPTIONS[stepKey] || {};
     const description = stepDescriptions[fieldName];
 
@@ -131,11 +141,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       updateExtras({ [field]: normalizeExtraValue(field, value) });
       return;
     }
-    const latestStepData = getStepData(currentStep) || {};
+    const latestStepData = getStepData(contentStep) || {};
     let nextValue = value;
     if (field === 'startDate' || field === 'endDate') nextValue = toDateInputValue(value) || value;
     if (field === 'milestones') nextValue = normalizeMilestones(value);
-    setStepData(currentStep, {
+    setStepData(contentStep, {
       ...latestStepData,
       [field]: nextValue,
     });
@@ -184,7 +194,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const handleCommaSeparatedChange = (field: string, value: string) => {
     // Convert comma-separated string to array
     const arrayValue = normalizeToArray(value);
-    setStepData(currentStep, {
+    setStepData(contentStep, {
       ...stepData,
       [field]: arrayValue,
     });
@@ -192,7 +202,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
   const handleArrayAdd = (field: string, newItem: any) => {
     const currentArray = Array.isArray(stepData[field]) ? stepData[field] : [];
-    setStepData(currentStep, {
+    setStepData(contentStep, {
       ...stepData,
       [field]: [...currentArray, newItem],
     });
@@ -200,7 +210,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
   const handleArrayRemove = (field: string, index: number) => {
     const currentArray = Array.isArray(stepData[field]) ? stepData[field] : [];
-    setStepData(currentStep, {
+    setStepData(contentStep, {
       ...stepData,
       [field]: currentArray.filter((_: any, i: number) => i !== index),
     });
@@ -208,7 +218,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
   const handleArrayUpdate = (field: string, index: number, updatedItem: any) => {
     const currentArray = Array.isArray(stepData[field]) ? stepData[field] : [];
-    setStepData(currentStep, {
+    setStepData(contentStep, {
       ...stepData,
       [field]: currentArray.map((item: any, i: number) =>
         i === index ? { ...item, ...updatedItem } : item
@@ -217,7 +227,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   };
 
   // Step 1: Executive Summary
-  if (currentStep === 1) {
+  if (contentStep === 1) {
     const stepDescriptions = FIELD_DESCRIPTIONS.step1 || {};
 
     return (
@@ -444,8 +454,122 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
+        {schemeCode === 'PMEGP' && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('PMEGP — entrepreneur & subsidy inputs')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'These fields drive margin-money % (category × rural/urban). Spec: docs/schemes/PMEGP/pmegp.md'
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Category')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.pmegpCategory || ''}
+                  onChange={(e) => {
+                    const pmegpCategory = e.target.value;
+                    updateExtras({
+                      pmegpCategory,
+                      pmegpSubsidyPercent: String(
+                        pmegpSubsidyPercent(pmegpCategory, extras.pmegpArea)
+                      ),
+                      pmegpOwnPercent: String(pmegpOwnPercent(pmegpCategory)),
+                    });
+                  }}
+                >
+                  <option value="">{tf('Select category')}</option>
+                  {PMEGP_CATEGORY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Area (rural / urban)')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.pmegpArea || ''}
+                  onChange={(e) => {
+                    const pmegpArea = e.target.value;
+                    updateExtras({
+                      pmegpArea,
+                      pmegpSubsidyPercent: String(
+                        pmegpSubsidyPercent(extras.pmegpCategory, pmegpArea)
+                      ),
+                    });
+                  }}
+                >
+                  <option value="">{tf('Select area')}</option>
+                  {PMEGP_AREA_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Implementing agency')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.pmegpAgency || ''}
+                  onChange={(e) => updateExtras({ pmegpAgency: e.target.value })}
+                >
+                  <option value="">{tf('Select agency')}</option>
+                  {PMEGP_AGENCY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Education')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.educationStatus || ''}
+                  onChange={(e) => updateExtras({ educationStatus: e.target.value })}
+                >
+                  <option value="">{tf('Select education')}</option>
+                  {PMEGP_EDUCATION_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur full name')}</label>
+                <Input
+                  value={extras.entrepreneurName || ''}
+                  onChange={(e) => updateExtras({ entrepreneurName: e.target.value })}
+                  placeholder={tf('Full name as in Aadhaar')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
+                <Input
+                  type="number"
+                  value={extras.entrepreneurAge || ''}
+                  onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
+                  placeholder={tf('Must be 18 or older')}
+                />
+              </div>
+            </div>
+            {(extras.pmegpCategory || extras.pmegpArea) && (
+              <p className="text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+                {tf('Indicative margin money')}:{' '}
+                {pmegpSubsidyPercent(extras.pmegpCategory, extras.pmegpArea)}% · {tf('Own contribution')}:{' '}
+                {pmegpOwnPercent(extras.pmegpCategory)}%
+              </p>
+            )}
+          </div>
+        )}
+
         {extraFieldNames.length > 0 &&
-          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP'].includes(schemeCode || '') && (
+          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP'].includes(schemeCode || '') && (
             <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
               <h3 className="text-lg font-semibold">{tf('Scheme-specific details')}</h3>
               {extraFieldNames.map((field) => (
@@ -464,7 +588,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -475,13 +599,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 2: Introduction & Sector Overview
-  if (currentStep === 2) {
+  if (contentStep === 2) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -497,15 +621,33 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
 
         <div>
-          {renderLabel('sectorDescription', 'Sector Description', true)}
+          {renderLabel('sectorDescription', schemeCode === 'PMEGP' ? 'Introduction — why this unit' : 'Sector Description', true)}
           <textarea
             className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.sectorDescription || ''}
             onChange={(e) => handleInputChange('sectorDescription', e.target.value)}
-            placeholder={tf("Describe the sector in detail")}
+            placeholder={
+              schemeCode === 'PMEGP'
+                ? tf('Short intro: product, local demand, why this unit')
+                : tf('Describe the sector in detail')
+            }
           />
         </div>
 
+        {schemeCode === 'PMEGP' && (
+          <div>
+            <label className="block text-sm font-medium mb-2">{tf('Process of manufacture')}</label>
+            <textarea
+              className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={extras.processOfManufacture || ''}
+              onChange={(e) => updateExtras({ processOfManufacture: e.target.value })}
+              placeholder={tf('Step-by-step process (as in KVIC bakery / curd profiles)')}
+            />
+          </div>
+        )}
+
+        {schemeCode !== 'PMEGP' && (
+          <>
         <div>
           {renderLabel('nationalImportance', 'National Importance')}
           <textarea
@@ -525,6 +667,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             placeholder={tf("Describe state-level importance")}
           />
         </div>
+          </>
+        )}
 
         <div>
           {renderLabel('keyProducts', 'Key Products')}
@@ -565,13 +709,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 3: District & Regional Profile
-  if (currentStep === 3) {
+  if (contentStep === 3) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -683,13 +827,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 4: Cluster Profile
-  if (currentStep === 4) {
+  if (contentStep === 4) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -731,13 +875,41 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
         <div>
-          {renderLabel('productionCapacity', 'Production Capacity')}
+          {renderLabel('productionCapacity', schemeCode === 'PMEGP' ? 'Installed capacity' : 'Production Capacity')}
           <Input
-            value={stepData.productionCapacity || ''}
-            onChange={(e) => handleInputChange('productionCapacity', e.target.value)}
-            placeholder={tf("Enter production capacity")}
+            value={stepData.productionCapacity || extras.installedCapacity || ''}
+            onChange={(e) => {
+              handleInputChange('productionCapacity', e.target.value);
+              if (schemeCode === 'PMEGP') updateExtras({ installedCapacity: e.target.value });
+            }}
+            placeholder={
+              schemeCode === 'PMEGP'
+                ? tf('e.g. 50 kg/hour or 1000 units/month')
+                : tf('Enter production capacity')
+            }
           />
         </div>
+        {schemeCode === 'PMEGP' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Capacity utilisation Year 1 (%)')}</label>
+              <Input
+                type="number"
+                value={extras.capacityUtilisationY1 || ''}
+                onChange={(e) => updateExtras({ capacityUtilisationY1: e.target.value })}
+                placeholder={tf('e.g. 60')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Power requirement (HP / kW)')}</label>
+              <Input
+                value={extras.powerRequirement || ''}
+                onChange={(e) => updateExtras({ powerRequirement: e.target.value })}
+                placeholder={tf('e.g. 8 kW')}
+              />
+            </div>
+          </div>
+        )}
         <div>
           {renderLabel('technologyLevel', 'Technology Level')}
           <Input
@@ -761,13 +933,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 5: Value Chain Details
-  if (currentStep === 5) {
+  if (contentStep === 5) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -917,13 +1089,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 6: Market Assessment
-  if (currentStep === 6) {
+  if (contentStep === 6) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -988,13 +1160,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 7: Gap Analysis
-  if (currentStep === 7) {
+  if (contentStep === 7) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1059,13 +1231,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 8: SWOT Analysis
-  if (currentStep === 8) {
+  if (contentStep === 8) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1116,13 +1288,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 9: Proposed Interventions
-  if (currentStep === 9) {
+  if (contentStep === 9) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1175,13 +1347,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 10: Common Facility Centre (CFC) Details
-  if (currentStep === 10) {
+  if (contentStep === 10) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1280,13 +1452,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 11: SPV Details
-  if (currentStep === 11) {
+  if (contentStep === 11) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1374,8 +1546,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             }
             onChange={(e) => {
               const names = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
-              const latest = getStepData(currentStep) || {};
-              setStepData(currentStep, {
+              const latest = getStepData(contentStep) || {};
+              setStepData(contentStep, {
                 ...latest,
                 owners: e.target.value,
                 boardOfDirectors: names.map((name) => ({ name, designation: 'Owner' })),
@@ -1389,7 +1561,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 12: Project Cost Details
-  if (currentStep === 12) {
+  if (contentStep === 12) {
     const simpleCapex = hideComplexCapex(schemeCode, data.ventureMatchAnswers?.budget);
     const keepFci = schemeCode === 'AP_EDP';
     const showHeavy = keepFci || !simpleCapex;
@@ -1405,7 +1577,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1493,7 +1665,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 13: Means of Finance
-  if (currentStep === 13) {
+  if (contentStep === 13) {
     const total = (stepData.spvContribution || 0) +
       (stepData.governmentGrant || 0) +
       (stepData.bankLoan || 0) +
@@ -1504,7 +1676,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1512,7 +1684,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            {renderLabel('spvContribution', 'Promoter contribution / equity (₹ Lakhs)')}
+            {renderLabel(
+              'spvContribution',
+              schemeCode === 'PMEGP'
+                ? 'Own contribution (₹ Lakhs) — typically 10% general / 5% special'
+                : 'Promoter contribution / equity (₹ Lakhs)'
+            )}
             <Input
               type="number"
               value={stepData.spvContribution || ''}
@@ -1521,7 +1698,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
           <div>
-            {renderLabel('governmentGrant', 'Government Grant (₹ Lakhs)')}
+            {renderLabel(
+              'governmentGrant',
+              schemeCode === 'PMEGP'
+                ? 'PMEGP margin money / subsidy (₹ Lakhs)'
+                : 'Government Grant (₹ Lakhs)'
+            )}
             <Input
               type="number"
               value={stepData.governmentGrant || ''}
@@ -1530,7 +1712,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
           <div>
-            {renderLabel('bankLoan', 'Bank Loan (₹ Lakhs)')}
+            {renderLabel(
+              'bankLoan',
+              schemeCode === 'PMEGP' ? 'Bank term loan + WC (₹ Lakhs)' : 'Bank Loan (₹ Lakhs)'
+            )}
             <Input
               type="number"
               value={stepData.bankLoan || ''}
@@ -1548,6 +1733,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
         </div>
+        {schemeCode === 'PMEGP' && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'Own + margin money + bank (+ other) must equal total project cost. Indicative subsidy'
+            )}
+            : {pmegpSubsidyPercent(extras.pmegpCategory, extras.pmegpArea)}% (
+            {extras.pmegpCategory || '—'} / {extras.pmegpArea || '—'}).
+          </p>
+        )}
         <div className="border-t pt-4">
           <div className="bg-primary/10 p-4 rounded-lg">
             <div className="flex items-center justify-between">
@@ -1561,13 +1755,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 14: Operating Cost & Revenue
-  if (currentStep === 14) {
+  if (contentStep === 14) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1652,7 +1846,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 15: Financial Viability
-  if (currentStep === 15) {
+  if (contentStep === 15) {
     const step12 = data.step12 || {};
     const step13 = data.step13 || {};
     const step14 = data.step14 || {};
@@ -1694,7 +1888,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1776,7 +1970,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 16: Implementation
-  if (currentStep === 16) {
+  if (contentStep === 16) {
     const milestoneRows = normalizeMilestones(stepData.milestones).length
       ? normalizeMilestones(stepData.milestones)
       : [
@@ -1790,7 +1984,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1850,13 +2044,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 17: Expected impact
-  if (currentStep === 17) {
+  if (contentStep === 17) {
     return (
       <div className="space-y-6">
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
-          currentStep={currentStep}
+          currentStep={contentStep}
           currentStepData={stepData}
           onApplySuggestion={(field, content) => {
             handleInputChange(field, content);
@@ -1867,17 +2061,34 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('employmentGeneration', 'Direct employment (count)')}
             <Input
               type="number"
-              value={stepData.employmentGeneration || ''}
-              onChange={(e) => handleInputChange('employmentGeneration', parseInt(e.target.value) || 0)}
+              value={stepData.employmentGeneration || extras.directEmployment || ''}
+              onChange={(e) => {
+                const v = parseInt(e.target.value) || 0;
+                handleInputChange('employmentGeneration', v);
+                if (schemeCode === 'PMEGP') updateExtras({ directEmployment: String(v) });
+              }}
             />
           </div>
           <div>
-            {renderLabel('turnoverGrowth', 'Expected annual turnover (₹ Lakhs)')}
-            <Input
-              type="number"
-              value={stepData.turnoverGrowth || ''}
-              onChange={(e) => handleInputChange('turnoverGrowth', parseFloat(e.target.value) || 0)}
-            />
+            {schemeCode === 'PMEGP' ? (
+              <>
+                <label className="block text-sm font-medium mb-2">{tf('Indirect employment (count)')}</label>
+                <Input
+                  type="number"
+                  value={extras.indirectEmployment || ''}
+                  onChange={(e) => updateExtras({ indirectEmployment: e.target.value })}
+                />
+              </>
+            ) : (
+              <>
+                {renderLabel('turnoverGrowth', 'Expected annual turnover (₹ Lakhs)')}
+                <Input
+                  type="number"
+                  value={stepData.turnoverGrowth || ''}
+                  onChange={(e) => handleInputChange('turnoverGrowth', parseFloat(e.target.value) || 0)}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -1885,7 +2096,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   }
 
   // Step 18: Uploads
-  if (currentStep === 18) {
+  if (contentStep === 18) {
     const handleFileChange = async (field: string, file: File | null) => {
       if (file) {
         setUploadingFiles((prev) => ({ ...prev, [field]: true }));

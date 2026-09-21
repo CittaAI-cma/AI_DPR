@@ -12,7 +12,7 @@ Related doc: [Scheme Finder (Venture Match) business logic](./venture-match-busi
 
 ## 1. Purpose
 
-Create New Latest DPR is an **18-step** (sometimes fewer) form that builds a **single-unit / individual enterprise** Detailed Project Report. It reuses the cluster DPR APIs and document preview by adapting the payload (`toClusterPayload`), and can overlay a **matched scheme** so fields, uploads, and hidden steps change.
+Create New Latest DPR builds a **single-unit / individual enterprise** Detailed Project Report. **Each scheme owns its own consecutive step list** (Step 1…N) via `schemeStepCatalog.ts` — not a shared 18-step skeleton with “hidden” gaps. Vanilla uses 18 steps; PMEGP uses 14; short packs (ZED etc.) use 5; etc. It reuses cluster DPR APIs and document preview via `toClusterPayload`, and applies scheme-specific fields / uploads.
 
 Users can:
 
@@ -104,15 +104,19 @@ Base skeleton: **steps 1–18** (`getStepTitle` / i18n `individualDpr.steps.*`).
 | 17 | Expected impact |
 | 18 | Document uploads |
 
-### Hidden steps by scheme
+### Per-scheme step catalogs
 
-| Scheme | Hidden steps |
-|--------|----------------|
-| `VISHWAKARMA` | 15, 16, 17 → **15 visible steps** |
-| `SVANIDHI` | 15, 16, 17 |
-| All others / vanilla | none |
+Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows consecutive **Step 1…N** for the selected scheme. Internally each step maps to a `contentStep` store/AI/PDF bucket so generation stays compatible.
 
-`getVisibleSteps(code)` drives the step strip and next/prev navigation.
+| Scheme | Step count (UI) | Notes |
+|--------|-----------------|--------|
+| Vanilla / most full schemes | 18 | `VANILLA_STEPS` |
+| `PMEGP` | **14** | Bank-unit catalog — see [pmegp.md](./schemes/PMEGP/pmegp.md) |
+| `VISHWAKARMA` / `SVANIDHI` / `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
+| `ZED` / `LEAN` / `MSME_IPR` / `PMS` / `SCST_HUB` | 5 | Short cert / consulting pack |
+| `ECLGS` | 7 | Working-capital pack |
+
+`getVisibleSteps(code)` returns `[1..N]` for that scheme and drives the step strip and next/prev navigation.
 
 ---
 
@@ -128,13 +132,14 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `SVANIDHI` | `covOrLor`, `upiQr` |
 | `PMFME` | `fssai` (yes / planned) |
 | `AP_EDP` | `apiicPark` (land-rebate hint) |
+| `PMEGP` | Full bank-unit set — see [docs/schemes/PMEGP/pmegp.md](./schemes/PMEGP/pmegp.md), `pmegpQuestions.ts`, and `PMEGP_STEPS` (14 consecutive steps: category, rural/urban, agency, entrepreneur, process, capacity, margin-money %). |
 | `PMEGP_2ND` | `priorScheme`, `priorSanctionAmount`, `firstSubsidyYear` |
 | `SCLCSS` / `AP_TECH_UPGRADE` | `existingTech`, `proposedTech` |
 | `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
-| `ZED` / `LEAN` / `MSME_IPR` / `PMS` / … | short-overlay fields (see `SCHEME_EXTRA_FIELDS`) |
+| `ZED` / `LEAN` / `MSME_IPR` / `PMS` / … | short-pack fields (see `SCHEME_EXTRA_FIELDS`) |
 | Cluster / CTA schemes (`MSE_CDP`, `SFURTI`, `AP_CDP`, `APICF`, `CHAMPIONS`, `ESDP`, `NTCEC`) | **Excluded** from Create New Latest DPR picker (`isIndividualPickerScheme`) |
 
-**Policy:** Do not implement general `CLCSS` — use `SCLCSS` (SC/ST only) + `AP_TECH_UPGRADE` for general category. Short overlays hide most bank P&L steps via `getHiddenSteps`.
+**Policy:** Do not implement general `CLCSS` — use `SCLCSS` (SC/ST only) + `AP_TECH_UPGRADE` for general category. Each scheme defines its own step catalog in `schemeStepCatalog.ts` (not hide-from-18). PMEGP uses the KVIC unit DPR question set in `docs/schemes/PMEGP/pmegp.md`.
 
 AI suggestions / fill-all pass `_schemeCode` and can infer missing extras.
 
@@ -209,7 +214,7 @@ Data packs:
 ## 8. AI assist
 
 - Per-step **AISuggestions** (shared with cluster), scoped with `_schemeCode` when individual.  
-- **Fill all steps with AI** (`fillAllStepsWithAi`) walks visible steps (skips 18), respects hidden capex for MUDRA Shishu/Kishore, and infers scheme extras.  
+- **Fill all steps with AI** (`fillAllStepsWithAi`) walks the scheme catalog (skips uploads), uses each step’s `contentStep` for AI/store, respects hidden capex for MUDRA Shishu/Kishore, and infers scheme extras.  
 - User must still review before generate.
 
 ### Live preview scroll-to-field hits

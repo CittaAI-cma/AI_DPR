@@ -98,7 +98,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     ],
     howToApply: [
       L('Apply online on the KVIC PMEGP portal (kviconline.gov.in) choosing KVIC, KVIB, or DIC as the implementing agency.', 'KVIC PMEGP పోర్టల్ (kviconline.gov.in)లో KVIC, KVIB లేదా DICని అమలు సంస్థగా ఎంచుకుని ఆన్‌లైన్ దరఖాస్తు చేయండి.'),
-      L('Attach a DPR, quotations, and KYC. This form is meant to produce that DPR.', 'DPR, కోటేషన్లు, KYC జత చేయండి. ఈ ఫారమ్ అదే DPRని రూపొందించడానికి.'),
+      L('Attach a bank-style unit DPR (not a cluster CFC), quotations, and KYC. Create New Latest DPR with PMEGP selected builds that structure — see docs/schemes/PMEGP/pmegp.md.', 'బ్యాంకు-శైలి యూనిట్ DPR (క్లస్టర్ CFC కాదు), కోటేషన్లు, KYC జత చేయండి. PMEGP ఎంచుకుని Create New Latest DPR అదే నిర్మాణం ఇస్తుంది.'),
       L('The agency forwards a recommended case to a bank for appraisal and sanction.', 'సంస్థ సిఫారసు చేసిన కేసును బ్యాంకుకు పంపి మంజూరు చేయిస్తుంది.'),
       L('After the unit is set up and verified, subsidy is parked as a term deposit (back-ended) with the bank.', 'యూనిట్ ఏర్పాటు, ధృవీకరణ తర్వాత సబ్సిడీ బ్యాంకులో టర్మ్ డిపాజిట్‌గా (బ్యాక్-ఎండెడ్) ఉంచబడుతుంది.'),
     ],
@@ -127,8 +127,8 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       {
         q: L('Where did this summary come from?', 'ఈ సారాంశం ఎక్కడి నుంది?'),
         a: L(
-          'Subsidy rates follow the AP MSME One PMEGP page. Project-cost ceilings follow current KVIC guidelines where they differ from the older portal listing.',
-          'సబ్సిడీ రేట్లు AP MSME One PMEGP పేజీ నుండి. ప్రాజెక్ట్ పైపరిధి పాత పోర్టల్ జాబితాకు భిన్నంగా ఉంటే ప్రస్తుత KVIC మార్గదర్శకాలు.'
+          'Subsidy rates follow the AP MSME One PMEGP page. Project-cost ceilings follow current KVIC guidelines. The Create New Latest DPR question set follows KVIC common project profiles (bakery, curd, aluminium, etc.) and the official PMEGP Excel DPR layout.',
+          'సబ్సిడీ రేట్లు AP MSME One PMEGP పేజీ నుండి. ప్రాజెక్ట్ పైపరిధి ప్రస్తుత KVIC మార్గదర్శకాలు. Create New Latest DPR ప్రశ్నలు KVIC కామన్ ప్రాజెక్ట్ ప్రొఫైల్స్ మరియు అధికారిక PMEGP Excel DPR లేఅవుట్ ప్రకారం.'
         ),
       },
     ],

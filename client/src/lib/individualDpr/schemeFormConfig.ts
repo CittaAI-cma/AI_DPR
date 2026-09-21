@@ -1,5 +1,11 @@
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 import { isIndividualPickerScheme, SCHEMES } from '@/lib/ventureMatch/schemes';
+import { PMEGP_EXTRA_FIELDS, PMEGP_IMPACT_BULLETS } from '@/lib/individualDpr/pmegpQuestions';
+import {
+  getSchemeSteps,
+  getStepDef,
+  localToContent,
+} from '@/lib/individualDpr/schemeStepCatalog';
 
 export const SCHEME_OPTIONS = [
   { code: '', label: 'Vanilla bank term loan (standard individual DPR)' },
@@ -14,6 +20,7 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   SVANIDHI: ['covOrLor', 'upiQr'],
   PMFME: ['fssai'],
   AP_EDP: ['apiicPark'],
+  PMEGP: [...PMEGP_EXTRA_FIELDS],
   PMEGP_2ND: ['priorScheme', 'priorSanctionAmount', 'firstSubsidyYear'],
   SCLCSS: ['existingTech', 'proposedTech'],
   AP_TECH_UPGRADE: ['existingTech', 'proposedTech'],
@@ -77,28 +84,12 @@ const DEFAULT_UPLOADS: UploadField[] = [
 
 const SHISHU_KISHORE: Budget[] = ['under2L', '2to5L'];
 
-const SHORT_CERT_MARKETING = new Set(['ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB']);
-const SHORT_WC = new Set(['ECLGS']);
-
 export function isMudraShishuKishore(code: string | null, budget?: Budget): boolean {
   return code === 'MUDRA' && !!budget && SHISHU_KISHORE.includes(budget);
 }
 
 export function isMudraTarunPlus(code: string | null, budget?: Budget): boolean {
   return code === 'MUDRA' && (budget === '50Lto1Cr' || budget === '1to10Cr' || budget === 'above10Cr');
-}
-
-export function getHiddenSteps(code: string | null): number[] {
-  if (code === 'VISHWAKARMA' || code === 'SVANIDHI' || code === 'NHDP' || code === 'ASPIRE') {
-    return [15, 16, 17];
-  }
-  if (code && SHORT_CERT_MARKETING.has(code)) {
-    return [2, 3, 5, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17];
-  }
-  if (code && SHORT_WC.has(code)) {
-    return [2, 3, 5, 6, 7, 8, 9, 10, 15, 16, 17];
-  }
-  return [];
 }
 
 export function hideComplexCapex(code: string | null, budget?: Budget): boolean {
@@ -127,33 +118,25 @@ export function showPmegpEducationGate(
   return false;
 }
 
+/** Consecutive local steps 1..N for this scheme (not a shared 18 with gaps). */
 export function getVisibleSteps(code: string | null): number[] {
-  const hidden = new Set(getHiddenSteps(code));
-  return Array.from({ length: 18 }, (_, i) => i + 1).filter((s) => !hidden.has(s));
+  return getSchemeSteps(code).map((s) => s.n);
 }
 
-export function getStepTitle(step: number): string {
-  const titles: Record<number, string> = {
-    1: 'Step 1: Your unit – basic details',
-    2: 'Step 2: Sector overview',
-    3: 'Step 3: District & location',
-    4: 'Step 4: Your unit profile',
-    5: 'Step 5: Value chain',
-    6: 'Step 6: Market',
-    7: 'Step 7: Gaps',
-    8: 'Step 8: SWOT',
-    9: 'Step 9: What you plan to do',
-    10: 'Step 10: Workplace / shed / unit',
-    11: 'Step 11: Applicant / firm',
-    12: 'Step 12: Project cost',
-    13: 'Step 13: Means of finance',
-    14: 'Step 14: Operating cost & sales',
-    15: 'Step 15: Financial viability',
-    16: 'Step 16: Implementation schedule',
-    17: 'Step 17: Expected impact',
-    18: 'Step 18: Document uploads',
-  };
-  return titles[step] || `Step ${step}`;
+export function getStepTitle(localStep: number, schemeCode?: string | null): string {
+  const def = getStepDef(schemeCode, localStep);
+  if (def) return def.title;
+  return `Step ${localStep}`;
+}
+
+/** Map UI local step → store/AI content bucket. */
+export function getContentStep(localStep: number, schemeCode?: string | null): number {
+  return localToContent(schemeCode, localStep);
+}
+
+/** @deprecated Prefer getSchemeSteps — kept for any leftover callers. */
+export function getHiddenSteps(_code: string | null): number[] {
+  return [];
 }
 
 export function getStep18Uploads(
@@ -179,8 +162,11 @@ export function getStep18Uploads(
   }
   if (code === 'PMEGP' || code === 'PMEGP_2ND') {
     const uploads: UploadField[] = [
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
       { id: 'machineryQuotations', label: 'Machinery Quotations' },
-      { id: 'buildingEstimates', label: 'Building Estimate' },
+      { id: 'buildingEstimates', label: 'Building / Workshed Estimate' },
+      { id: 'bankPassbook', label: 'Bank Passbook / Cancelled Cheque' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate (or application)' },
     ];
     if (code === 'PMEGP_2ND') {
       uploads.push(
@@ -190,7 +176,7 @@ export function getStep18Uploads(
     }
     const owner = answers?.owner || [];
     if (owner.some((o) => ['sc', 'st', 'bc'].includes(o))) {
-      uploads.push({ id: 'casteCertificate', label: 'Caste Certificate' });
+      uploads.push({ id: 'casteCertificate', label: 'Caste / Special-category Certificate' });
     }
     return uploads;
   }
@@ -291,9 +277,9 @@ export function getSchemeImpact(code: string | null): {
     return {
       title: 'PM Vishwakarma',
       bullets: [
-        'Step list drops 15, 16, 17 (15 steps instead of 18).',
+        'Own 15-step pack (steps numbered 1–15 consecutively).',
         'Step 1 adds craft + current/new tools (₹15,000 voucher).',
-        'Step 18 uploads: Aadhaar, passbook, ration card.',
+        'Final step uploads: Aadhaar, passbook, ration card.',
       ],
       firstChangedStep: 1,
     };
@@ -302,9 +288,9 @@ export function getSchemeImpact(code: string | null): {
     return {
       title: 'PM SVANidhi',
       bullets: [
-        'Step list drops 15, 16, 17.',
+        'Own 15-step pack (1–15 consecutively).',
         'Step 1 adds CoV vs LoR and UPI QR.',
-        'Step 18 upload: CoV or Letter of Recommendation.',
+        'Final step upload: CoV or Letter of Recommendation.',
       ],
       firstChangedStep: 1,
     };
@@ -313,7 +299,7 @@ export function getSchemeImpact(code: string | null): {
     return {
       title: 'PMFME',
       bullets: [
-        'Steps 1–17 stay the same length.',
+        'Full 18-step individual DPR with FSSAI overlay on step 1.',
         'Step 1 adds FSSAI yes/planned.',
         'Step 18 uploads: quotations, premises lease, draft FSSAI.',
       ],
@@ -323,19 +309,15 @@ export function getSchemeImpact(code: string | null): {
   if (code === 'PMEGP') {
     return {
       title: 'PMEGP',
-      bullets: [
-        'Core questions on steps 1–17 do not change.',
-        'Step 18 uploads: machinery quotes, building estimate (caste cert if SC/ST/BC from VentureMatch).',
-        '8th-pass upload appears on step 18 if project cost is above the PMEGP education gate.',
-      ],
-      firstChangedStep: 18,
+      bullets: [...PMEGP_IMPACT_BULLETS],
+      firstChangedStep: 1,
     };
   }
   if (code === 'PMEGP_2ND') {
     return {
       title: '2nd PMEGP Loan',
       bullets: [
-        'Full 18-step upgrade DPR (not a new-unit story).',
+        'Full upgrade DPR (not a new-unit story).',
         'Step 1: prior scheme, sanction amount, first subsidy year.',
         'Step 18: prior sanction letter, CA existing investment, quotations.',
       ],
@@ -357,9 +339,9 @@ export function getSchemeImpact(code: string | null): {
     return {
       title: 'ECLGS',
       bullets: [
-        'Short working-capital pack — not a greenfield capex DPR.',
-        'Hides civil / Gantt / impact steps.',
-        'Step 18: Udyam, GST/ITR, bank statements, existing sanction.',
+        'Own 7-step working-capital pack (numbered 1–7).',
+        'Not a greenfield capex / Gantt DPR.',
+        'Final step: Udyam, GST/ITR, bank statements, existing sanction.',
       ],
       firstChangedStep: 1,
     };
@@ -368,8 +350,8 @@ export function getSchemeImpact(code: string | null): {
     return {
       title: code,
       bullets: [
-        'Short overlay — not an 18-step bank P&L.',
-        'Only unit identity, profile, applicant, and scheme-specific fields stay visible.',
+        'Own 5-step short pack (numbered 1–5) — not an 18-step bank P&L.',
+        'Unit identity, profile, market, applicant, uploads only.',
         'Use this pack for certification / consulting / fair support.',
       ],
       firstChangedStep: 1,

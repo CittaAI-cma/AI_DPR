@@ -14,7 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { toClusterPayload } from '@/lib/individualDpr/toClusterPayload';
-import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS } from '@/lib/individualDpr/schemeFormConfig';
+import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
+import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
 import { SchemePickerGrid } from '@/components/individual-dpr/SchemePickerGrid';
@@ -53,10 +54,11 @@ export const IndividualDPRCreation: React.FC = () => {
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
 
   const currentStep = data.currentStep || 1;
-  const visibleSteps = getVisibleSteps(data.matchedSchemeCode || null);
-  const lastVisible = visibleSteps[visibleSteps.length - 1] || 18;
+  const schemeCode = data.matchedSchemeCode || null;
+  const visibleSteps = getVisibleSteps(schemeCode);
+  const lastVisible = visibleSteps[visibleSteps.length - 1] || getSchemeStepCount(schemeCode);
   const stepOrdinal = Math.max(1, visibleSteps.indexOf(currentStep) + 1);
-  const schemeImpact = getSchemeImpact(data.matchedSchemeCode || null);
+  const schemeImpact = getSchemeImpact(schemeCode);
   const clusterPayload = toClusterPayload(data);
 
   const prevPayloadRef = useRef<any>(null);
@@ -197,10 +199,12 @@ export const IndividualDPRCreation: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Remap legacy content-step numbers (e.g. 12) to scheme-local consecutive steps (e.g. PMEGP step 8)
     if (!visibleSteps.includes(currentStep) && visibleSteps.length) {
-      setCurrentStep(visibleSteps[0]);
+      const mapped = contentToLocal(schemeCode, currentStep);
+      setCurrentStep(mapped && visibleSteps.includes(mapped) ? mapped : visibleSteps[0]);
     }
-  }, [data.matchedSchemeCode]);
+  }, [schemeCode]);
 
   const saveToDatabase = useCallback(async () => {
     try {
@@ -296,9 +300,10 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   };
 
-  const getStepCompletion = (step: number): boolean => {
-    const stepData = data[`step${step}`];
-    return !!stepData;
+  const getStepCompletion = (localStep: number): boolean => {
+    const content = getContentStep(localStep, schemeCode);
+    const stepData = data[`step${content}`];
+    return !!stepData && typeof stepData === 'object' && Object.keys(stepData).length > 0;
   };
 
   const handlePickScheme = (code: string | null) => {
@@ -333,11 +338,11 @@ export const IndividualDPRCreation: React.FC = () => {
       ? t('individualDpr.picker.headerHint', { defaultValue: 'Select a scheme to continue' })
       : setupPhase === 'brief'
         ? t('individualDpr.picker.briefHint', { defaultValue: 'Review the scheme, then continue to the form' })
-        : `${t('individualDpr.stepOf', { current: stepOrdinal, total: visibleSteps.length })}${
-            visibleSteps.length !== 18
-              ? ` ${t('individualDpr.hiddenForScheme', { count: 18 - visibleSteps.length })}`
-              : ''
-          }`;
+        : t('individualDpr.stepOf', {
+            current: stepOrdinal,
+            total: visibleSteps.length,
+            defaultValue: `Step ${stepOrdinal} of ${visibleSteps.length}`,
+          });
 
   return (
     <Layout>
@@ -537,7 +542,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 ) : (
                   <Card>
                     <CardHeader>
-                      <CardTitle>{t(`individualDpr.steps.${currentStep}`, { defaultValue: getStepTitle(currentStep) })}</CardTitle>
+                      <CardTitle>{t(`individualDpr.steps.${currentStep}`, { defaultValue: getStepTitle(currentStep, data.matchedSchemeCode) })}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <IndividualDPRForm
