@@ -447,7 +447,8 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     ],
     howToApply: [
       L('Apply through a Scheduled Commercial Bank branch, or seek handholding on standupmitra.in (SIDBI).', 'షెడ్యూల్డ్ కమర్షియల్ బ్యాంకు శాఖ ద్వారా, లేదా standupmitra.in (SIDBI)లో సహాయం పొందండి.'),
-      L('This DPR is the project report the bank will appraise.', 'ఈ DPRనే బ్యాంకు ప్రాజెక్ట్ రిపోర్ట్‌గా పరిశీలిస్తుంది.'),
+      L('Create New Latest DPR with Stand-Up India selected builds a 13-step bank-unit pack — see docs/schemes/STANDUP/standup.md.', 'Stand-Up India ఎంచుకుంటే Create New Latest DPR 13-దశల బ్యాంకు-యూనిట్ ప్యాక్ ఇస్తుంది.'),
+      L('This DPR is the project report the bank will appraise (machinery, capacity, P&L for tenor, buyers, competitors).', 'ఈ DPRనే బ్యాంకు ప్రాజెక్ట్ రిపోర్ట్‌గా పరిశీలిస్తుంది.'),
     ],
     documents: [
       L('KYC, caste certificate (if SC/ST), proof of 51% ownership for firms', 'KYC, కుల ధృవపత్రం (SC/ST అయితే), సంస్థల్లో 51% యాజమాన్యం'),
@@ -459,6 +460,13 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
         a: L(
           'Not under Stand-Up India. The borrower (or 51% controlling stake) must be a woman, SC, or ST.',
           'స్టాండ్-అప్ ఇండియా కింద కాదు. ఋణగ్రహీత (లేదా 51% నియంత్రణ) మహిళ, SC లేదా ST అయి ఉండాలి.'
+        ),
+      },
+      {
+        q: L('Is this a capital-subsidy scheme like PMEGP?', 'ఇది PMEGP లాంటి క్యాపిటల్ సబ్సిడీ పథకమా?'),
+        a: L(
+          'No. Stand-Up India is a composite bank loan (term + WC). Own contribution must be at least 10% of project cost. Other eligible subsidies may converge, but the product itself is credit, not margin money.',
+          'కాదు. Stand-Up India కాంపోజిట్ బ్యాంకు రుణం (టర్మ్ + WC). స్వంత వాటా కనీసం 10%. ఇతర సబ్సిడీలు కలిపి పొందవచ్చు; ఉత్పత్తి స్వయంగా మార్జిన్ మనీ కాదు.'
         ),
       },
     ],

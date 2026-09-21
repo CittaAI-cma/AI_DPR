@@ -91,6 +91,26 @@ export const MUDRA_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
+/**
+ * Stand-Up India bank-unit pack — 13 consecutive steps (₹10 L–₹1 Cr composite).
+ * Spec: docs/schemes/STANDUP/standup.md
+ */
+export const STANDUP_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Business activity & process', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
+  { id: 'market', title: 'Market, buyers & competition', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
 /** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
 const FULL_MINUS_LATE: SchemeStepDef[] = catalog(
   VANILLA_STEPS.filter((s) => ![15, 16, 17].includes(s.contentStep)).map((s) => ({
@@ -127,6 +147,7 @@ const FULL_MINUS_LATE_CODES = new Set(['VISHWAKARMA', 'SVANIDHI', 'NHDP', 'ASPIR
 export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   PMEGP: PMEGP_STEPS,
   MUDRA: MUDRA_STEPS,
+  STANDUP: STANDUP_STEPS,
   PMEGP_2ND: VANILLA_STEPS,
   ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),
   ...Object.fromEntries([...SHORT_WC_CODES].map((c) => [c, SHORT_WC_STEPS])),

@@ -2,6 +2,7 @@ import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 import { isIndividualPickerScheme, SCHEMES } from '@/lib/ventureMatch/schemes';
 import { PMEGP_EXTRA_FIELDS, PMEGP_IMPACT_BULLETS } from '@/lib/individualDpr/pmegpQuestions';
 import { MUDRA_EXTRA_FIELDS, MUDRA_IMPACT_BULLETS } from '@/lib/individualDpr/mudraQuestions';
+import { STANDUP_EXTRA_FIELDS, STANDUP_IMPACT_BULLETS } from '@/lib/individualDpr/standupQuestions';
 import {
   getSchemeSteps,
   getStepDef,
@@ -23,6 +24,7 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   AP_EDP: ['apiicPark'],
   PMEGP: [...PMEGP_EXTRA_FIELDS],
   MUDRA: [...MUDRA_EXTRA_FIELDS],
+  STANDUP: [...STANDUP_EXTRA_FIELDS],
   PMEGP_2ND: ['priorScheme', 'priorSanctionAmount', 'firstSubsidyYear'],
   SCLCSS: ['existingTech', 'proposedTech'],
   AP_TECH_UPGRADE: ['existingTech', 'proposedTech'],
@@ -218,6 +220,24 @@ export function getStep18Uploads(
     }
     return uploads;
   }
+  if (code === 'STANDUP') {
+    const uploads: UploadField[] = [
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+      { id: 'machineryQuotations', label: 'Machinery Quotations' },
+      { id: 'buildingEstimates', label: 'Building Estimate / Premises Lease' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate (or application)' },
+      { id: 'bankPassbook', label: 'Bank Passbook / Cancelled Cheque' },
+    ];
+    const cat = schemeExtras?.standupCategory;
+    if (cat === 'sc' || cat === 'st') {
+      uploads.push({ id: 'casteCertificate', label: 'Caste Certificate (SC / ST)' });
+    }
+    uploads.push({
+      id: 'ownershipProof',
+      label: '51% Controlling Stake Proof (if not sole proprietor)',
+    });
+    return uploads;
+  }
   if (code === 'ECLGS') {
     return [
       { id: 'udyamCertificate', label: 'Udyam Certificate' },
@@ -372,6 +392,13 @@ export function getSchemeImpact(code: string | null): {
     return {
       title: 'MUDRA',
       bullets: [...MUDRA_IMPACT_BULLETS],
+      firstChangedStep: 1,
+    };
+  }
+  if (code === 'STANDUP') {
+    return {
+      title: 'Stand-Up India',
+      bullets: [...STANDUP_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }

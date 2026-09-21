@@ -32,6 +32,11 @@ import {
   MUDRA_LOAN_PURPOSE_OPTIONS,
   MUDRA_PREMISES_OPTIONS,
 } from '@/lib/individualDpr/mudraQuestions';
+import {
+  STANDUP_CATEGORY_OPTIONS,
+  STANDUP_MIN_OWN_PERCENT,
+  STANDUP_PREMISES_OPTIONS,
+} from '@/lib/individualDpr/standupQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
@@ -56,7 +61,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const schemeCode = data.matchedSchemeCode || null;
   const isPmegp = schemeCode === 'PMEGP';
   const isMudra = schemeCode === 'MUDRA';
-  const isLeanUnit = isPmegp || isMudra;
+  const isStandup = schemeCode === 'STANDUP';
+  const isLeanUnit = isPmegp || isMudra || isStandup;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -662,8 +668,77 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
+        {isStandup && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('Stand-Up India — eligibility')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'Spec: docs/schemes/STANDUP/standup.md — woman / SC / ST, greenfield, ≥10% own, ₹10 L–₹1 Cr'
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Eligible category')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.standupCategory || ''}
+                  onChange={(e) => updateExtras({ standupCategory: e.target.value })}
+                >
+                  <option value="">{tf('Select category')}</option>
+                  {STANDUP_CATEGORY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('Composite loan sought (₹ Lakhs)')}
+                </label>
+                <Input
+                  type="number"
+                  value={extras.loanAmountSought || ''}
+                  onChange={(e) => updateExtras({ loanAmountSought: e.target.value })}
+                  placeholder={tf('Above 10 and up to 100')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur full name')}</label>
+                <Input
+                  value={extras.entrepreneurName || ''}
+                  onChange={(e) => updateExtras({ entrepreneurName: e.target.value })}
+                  placeholder={tf('Full name as in Aadhaar')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
+                <Input
+                  type="number"
+                  value={extras.entrepreneurAge || ''}
+                  onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
+                  placeholder={tf('Must be 18 or older')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('Controlling stake % (if not sole prop)')}
+                </label>
+                <Input
+                  type="number"
+                  value={extras.controllingStakePercent || ''}
+                  onChange={(e) => updateExtras({ controllingStakePercent: e.target.value })}
+                  placeholder={tf('Must be ≥ 51 for firms')}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {extraFieldNames.length > 0 &&
-          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'MUDRA'].includes(schemeCode || '') && (
+          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'MUDRA', 'STANDUP'].includes(
+            schemeCode || ''
+          ) && (
             <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
               <h3 className="text-lg font-semibold">{tf('Scheme-specific details')}</h3>
               {extraFieldNames.map((field) => (
@@ -719,14 +794,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
 
-        {schemeCode === 'PMEGP' && (
+        {(isPmegp || isStandup) && (
           <div>
             <label className="block text-sm font-medium mb-2">{tf('Process of manufacture')}</label>
             <textarea
               className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={extras.processOfManufacture || ''}
               onChange={(e) => updateExtras({ processOfManufacture: e.target.value })}
-              placeholder={tf('Step-by-step process (as in KVIC bakery / curd profiles)')}
+              placeholder={
+                isStandup
+                  ? tf('Process of manufacture / service delivery (bank checklist)')
+                  : tf('Step-by-step process (as in KVIC bakery / curd profiles)')
+              }
             />
           </div>
         )}
@@ -988,7 +1067,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             value={stepData.productionCapacity || extras.installedCapacity || ''}
             onChange={(e) => {
               handleInputChange('productionCapacity', e.target.value);
-              if (isPmegp) updateExtras({ installedCapacity: e.target.value });
+              if (isPmegp || isStandup) updateExtras({ installedCapacity: e.target.value });
             }}
             placeholder={
               isLeanUnit
@@ -997,7 +1076,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             }
           />
         </div>
-        {isPmegp && (
+        {(isPmegp || isStandup) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               {tf('Capacity utilisation Year 1 (%)')}
@@ -1235,6 +1314,20 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             placeholder={tf('Describe existing demand')}
           />
         </div>
+        {isStandup && (
+          <div>
+            {renderLabel(
+              'competitorAnalysis',
+              'Major competitors + your strengths / weaknesses'
+            )}
+            <textarea
+              className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={stepData.competitorAnalysis || ''}
+              onChange={(e) => handleInputChange('competitorAnalysis', e.target.value)}
+              placeholder={tf('Bank checklist — competitors and how you win')}
+            />
+          </div>
+        )}
         {!isLeanUnit && (
           <>
         <div>
@@ -1525,7 +1618,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
         {isLeanUnit ? (
           <div className="space-y-4">
-            {isMudra && (
+            {(isMudra || isStandup) && (
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Premises — owned / rented')}</label>
                 <select
@@ -1534,7 +1627,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   onChange={(e) => updateExtras({ premisesType: e.target.value })}
                 >
                   <option value="">{tf('Select')}</option>
-                  {MUDRA_PREMISES_OPTIONS.map((o) => (
+                  {(isStandup ? STANDUP_PREMISES_OPTIONS : MUDRA_PREMISES_OPTIONS).map((o) => (
                     <option key={o.value} value={o.value}>
                       {tf(o.label)}
                     </option>
@@ -1908,7 +2001,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'spvContribution',
               isPmegp
                 ? 'Own contribution (₹ Lakhs) — typically 10% general / 5% special'
-                : isMudra
+                : isMudra || isStandup
                   ? 'Own contribution (₹ Lakhs)'
                   : 'Promoter contribution / equity (₹ Lakhs)'
             )}
@@ -1926,7 +2019,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 ? 'PMEGP margin money / subsidy (₹ Lakhs)'
                 : isMudra
                   ? 'Government grant (₹ Lakhs) — usually 0 for MUDRA'
-                  : 'Government Grant (₹ Lakhs)'
+                  : isStandup
+                    ? 'Other subsidy / grant if converging (₹ Lakhs) — else 0'
+                    : 'Government Grant (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -1938,7 +2033,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <div>
             {renderLabel(
               'bankLoan',
-              isPmegp || isMudra ? 'Bank term loan + / or WC (₹ Lakhs)' : 'Bank Loan (₹ Lakhs)'
+              isPmegp || isMudra
+                ? 'Bank term loan + / or WC (₹ Lakhs)'
+                : isStandup
+                  ? 'Bank composite loan TL + WC (₹ Lakhs)'
+                  : 'Bank Loan (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -1972,6 +2071,14 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'MUDRA is not a subsidy scheme. Own + bank (+ other) should equal total project cost. Category'
             )}
             : {extras.mudraCategory || '—'}.
+          </p>
+        )}
+        {isStandup && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'Own contribution must be at least 10% of project cost. Own + bank (+ grant/other) = total. Category'
+            )}
+            : {extras.standupCategory || '—'} · {tf('Min own')} {STANDUP_MIN_OWN_PERCENT}%.
           </p>
         )}
         <div className="border-t pt-4">

@@ -135,6 +135,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `AP_EDP` | `apiicPark` (land-rebate hint) |
 | `PMEGP` | Full bank-unit set — see [docs/schemes/PMEGP/pmegp.md](./schemes/PMEGP/pmegp.md), `pmegpQuestions.ts`, and `PMEGP_STEPS` (14 consecutive steps: category, rural/urban, agency, entrepreneur, process, capacity, margin-money %). |
 | `MUDRA` | Own 12-step PMMY pack — see [docs/schemes/MUDRA/mudra.md](./schemes/MUDRA/mudra.md), `mudraQuestions.ts`, `MUDRA_STEPS` (Shishu/Kishore/Tarun/Tarun Plus, own+bank MoF, shop proof uploads). |
+| `STANDUP` | Own 13-step bank-unit pack — see [docs/schemes/STANDUP/standup.md](./schemes/STANDUP/standup.md), `standupQuestions.ts`, `STANDUP_STEPS` (woman/SC/ST, ≥51% stake, ≥10% own, composite TL+WC, competitors + schedule). |
 | `PMEGP_2ND` | `priorScheme`, `priorSanctionAmount`, `firstSubsidyYear` |
 | `SCLCSS` / `AP_TECH_UPGRADE` | `existingTech`, `proposedTech` |
 | `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
