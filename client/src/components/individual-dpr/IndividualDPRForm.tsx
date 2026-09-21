@@ -413,54 +413,55 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-              {tf('Unit / Project Name *')}
-              {stepDescriptions.unitName && (
-                <InfoTooltip content={tf(stepDescriptions.unitName)} />
-              )}
-              {!stepDescriptions.unitName && stepDescriptions.clusterName && (
-                <InfoTooltip content={tf(stepDescriptions.clusterName)} />
-              )}
-            </label>
-            <div className="flex gap-2">
-              <Input
-                className="flex-1"
-                value={getUnitName(stepData)}
-                onChange={(e) => handleInputChange('unitName', e.target.value)}
-                placeholder={tf('Enter unit or project name')}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-1.5 shrink-0"
-                onClick={() => {
-                  const nature = String(stepData.natureOfBusiness || '').trim();
-                  const products = String(stepData.majorProducts || '').trim();
-                  if (!nature || !products) {
-                    toast.error(
-                      tf(
-                        'Fill Nature of Business and Major Products first, then suggest a title'
-                      )
-                    );
-                    return;
-                  }
-                  const suggested = suggestUnitTitle(stepData, data.schemeExtras);
-                  handleInputChange('unitName', suggested);
-                  toast.success(tf('Title suggested'));
-                }}
-              >
-                <Wand2 className="h-4 w-4" />
-                {tf('Suggest title')}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1.5">
-              {tf(
-                'This name appears in green on the DPR cover. Suggest title needs Nature of Business and Major Products.'
-              )}
-            </p>
+        <div>
+          <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+            {tf('Unit / Project Name *')}
+            {stepDescriptions.unitName && (
+              <InfoTooltip content={tf(stepDescriptions.unitName)} />
+            )}
+            {!stepDescriptions.unitName && stepDescriptions.clusterName && (
+              <InfoTooltip content={tf(stepDescriptions.clusterName)} />
+            )}
+          </label>
+          <Input
+            value={getUnitName(stepData)}
+            onChange={(e) => handleInputChange('unitName', e.target.value)}
+            placeholder={tf('Enter unit or project name')}
+          />
+          <div className="mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => {
+                const nature = String(stepData.natureOfBusiness || '').trim();
+                const products = String(stepData.majorProducts || '').trim();
+                if (!nature || !products) {
+                  toast.error(
+                    tf(
+                      'Fill Nature of Business and Major Products first, then suggest a title'
+                    )
+                  );
+                  return;
+                }
+                const suggested = suggestUnitTitle(stepData, data.schemeExtras);
+                handleInputChange('unitName', suggested);
+                toast.success(tf('Title suggested'));
+              }}
+            >
+              <Wand2 className="h-4 w-4" />
+              {tf('Suggest title')}
+            </Button>
           </div>
+          <p className="text-xs text-muted-foreground mt-1.5">
+            {tf(
+              'Short cover name from Nature of Business + Major Products (not a full paragraph).'
+            )}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
               {tf('District *')}
@@ -474,20 +475,19 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               placeholder={tf("Enter district")}
             />
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-            {tf('Location *')}
-            {stepDescriptions.location && (
-              <InfoTooltip content={tf(stepDescriptions.location)} />
-            )}
-          </label>
-          <Input
-            value={stepData.location || ''}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            placeholder={tf("Village / town / industrial park")}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+              {tf('Location *')}
+              {stepDescriptions.location && (
+                <InfoTooltip content={tf(stepDescriptions.location)} />
+              )}
+            </label>
+            <Input
+              value={stepData.location || ''}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              placeholder={tf("Village / town / industrial park")}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

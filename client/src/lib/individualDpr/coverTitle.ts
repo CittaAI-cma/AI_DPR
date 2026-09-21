@@ -9,6 +9,10 @@ const UPGRADE_SCHEMES = new Set([
   'MSE_SPICE',
 ]);
 
+/** Hard cap for cover / form unit titles (words + chars). */
+const TITLE_MAX_WORDS = 8;
+const TITLE_MAX_CHARS = 56;
+
 export interface CoverTitleInput {
   clusterName?: string;
   unitName?: string;
@@ -61,49 +65,88 @@ export function getIndividualCoverLines(
   };
 }
 
+/** Pull a short label out of AI/user prose (first clause, trimmed). */
+function shortPhrase(raw: string, maxWords = 5, maxChars = 36): string {
+  let s = String(raw || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!s) return '';
+
+  // First sentence / clause only
+  s = s.split(/[.\n;|]+/)[0]?.trim() || s;
+  // Drop leading boilerplate from AI paragraphs
+  s = s.replace(
+    /^(the\s+)?(proposed\s+|new\s+|existing\s+)?(unit|enterprise|project|business|firm|applicant|venture)\s+(is\s+|will\s+be\s+)?(engaged\s+in|involves?|deals\s+in|about|for|to\s+)?\s*/i,
+    ''
+  );
+  s = s.replace(/^(manufacturing|production|processing|trading|sale|sales)\s+of\s+/i, '');
+  s = s.replace(/^(focused\s+on|speciali[sz]ing\s+in|mainly|primarily)\s+/i, '');
+
+  const words = s.split(/\s+/).filter(Boolean);
+  s = words.slice(0, maxWords).join(' ');
+  if (s.length > maxChars) {
+    s = s.slice(0, maxChars).replace(/\s+\S*$/, '').trim();
+  }
+  return s.replace(/[,:]+$/, '').trim();
+}
+
+function titleCaseWords(s: string): string {
+  return s
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => {
+      if (/^[A-Z0-9]{2,5}$/.test(w)) return w; // keep acronyms
+      if (w === '—' || w === '-') return w;
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
+function clampTitle(s: string): string {
+  let out = s.replace(/\s+/g, ' ').trim();
+  const words = out.split(/\s+/);
+  if (words.length > TITLE_MAX_WORDS) {
+    out = words.slice(0, TITLE_MAX_WORDS).join(' ');
+  }
+  if (out.length > TITLE_MAX_CHARS) {
+    out = out.slice(0, TITLE_MAX_CHARS).replace(/\s+\S*$/, '').trim();
+  }
+  return out.replace(/[—,-]+$/, '').trim();
+}
+
 /**
- * Deterministic unit / project title suggestion for step 1.
- * Requires nature of business + major products (caller should gate).
+ * Deterministic short unit / project title for step 1.
+ * Uses nature of business + major products only (not full paragraphs).
  */
 export function suggestUnitTitle(
   step1: CoverTitleInput,
   schemeExtras?: { craft?: string } | null
 ): string {
-  const craft = (schemeExtras?.craft || step1.craft || '').trim();
-  const nature = (step1.natureOfBusiness || '').trim();
-  const products = (step1.majorProducts || '').trim();
-  const place = (step1.district || step1.location || '').trim();
+  const craft = shortPhrase(schemeExtras?.craft || step1.craft || '', 3, 24);
+  const nature = shortPhrase(step1.natureOfBusiness || '', 5, 32);
+  const productsRaw = String(step1.majorProducts || '').trim();
+  const firstProduct = shortPhrase(productsRaw.split(/[,;/]/)[0] || '', 4, 28);
 
-  const firstProduct = products.split(/[,;/]/)[0].trim();
   let core = '';
 
   if (nature && firstProduct) {
-    const natureHasUnit = /unit|enterprise|project|works|factory|plant/i.test(nature);
-    const productAlreadyInNature = nature.toLowerCase().includes(firstProduct.toLowerCase());
-    if (productAlreadyInNature) {
-      core = natureHasUnit ? nature : `${nature} Unit`;
+    const natureLower = nature.toLowerCase();
+    const productLower = firstProduct.toLowerCase();
+    if (natureLower.includes(productLower) || productLower.includes(natureLower)) {
+      core = /unit|enterprise|works|factory|plant$/i.test(nature) ? nature : `${nature} Unit`;
     } else {
-      core = natureHasUnit ? `${nature} (${firstProduct})` : `${nature} — ${firstProduct} Unit`;
+      // Prefer product-led short name: "Pickles Food Processing Unit"
+      core = `${firstProduct} ${nature} Unit`.replace(/\s+Unit\s+Unit$/i, ' Unit');
     }
   } else if (craft) {
-    core = `${craft} Unit`;
+    core = /unit$/i.test(craft) ? craft : `${craft} Unit`;
   } else if (nature) {
-    core = /unit|enterprise|project|works|factory|plant/i.test(nature) ? nature : `${nature} Unit`;
+    core = /unit|enterprise|works|factory|plant$/i.test(nature) ? nature : `${nature} Unit`;
   } else if (firstProduct) {
     core = `${firstProduct} Unit`;
   } else {
     core = 'MSME Unit';
   }
 
-  core = core
-    .split(/\s+/)
-    .map((w) => (w === w.toUpperCase() && w.length <= 5 ? w : w.charAt(0).toUpperCase() + w.slice(1)))
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  if (place && !core.toLowerCase().includes(place.toLowerCase())) {
-    return `${core}, ${place}`;
-  }
-  return core;
+  return clampTitle(titleCaseWords(core));
 }
