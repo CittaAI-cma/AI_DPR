@@ -388,8 +388,8 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     code: 'VISHWAKARMA',
     title: L('PM Vishwakarma', 'పీఎం విశ్వకర్మ'),
     intro: L(
-      'A Central Sector scheme (Ministry of MSME) for traditional artisans and craftspeople who work with hands and tools in 18 notified trades. It combines recognition, skill training, a toolkit e-voucher, and collateral-free enterprise loans at a concessional 5% interest.',
-      '18 నోటిఫైడ్ వృత్తుల్లో చేతులు/పనిముట్లతో పనిచేసే సాంప్రదాయ కళాకారులకు కేంద్ర పథకం (MSME మంత్రిత్వ శాఖ). గుర్తింపు, నైపుణ్య శిక్షణ, టూల్‌కిట్ ఈ-వోచర్, 5% వడ్డీతో కొలేటరల్-రహిత రుణం.'
+      'A Central Sector scheme (Ministry of MSME) for traditional artisans and craftspeople who work with hands and tools in 18 notified trades. It combines recognition, skill training, a toolkit e-voucher, and collateral-free enterprise loans at a concessional 5% interest. Create New Latest DPR builds a 12-step artisan pack — see docs/schemes/VISHWAKARMA/vishwakarma.md.',
+      '18 నోటిఫైడ్ వృత్తుల్లో చేతులు/పనిముట్లతో పనిచేసే సాంప్రదాయ కళాకారులకు కేంద్ర పథకం (MSME మంత్రిత్వ శాఖ). గుర్తింపు, నైపుణ్య శిక్షణ, టూల్‌కిట్ ఈ-వోచర్, 5% వడ్డీతో కొలేటరల్-రహిత రుణం. Create New Latest DPR 12-దశల ప్యాక్ ఇస్తుంది.'
     ),
     benefits: [
       L('PM Vishwakarma certificate and ID card.', 'పీఎం విశ్వకర్మ సర్టిఫికేట్ మరియు ఐడి కార్డు.'),
@@ -412,6 +412,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     howToApply: [
       L('Enrol through a Common Service Centre with Aadhaar biometric authentication.', 'ఆధార్ బయోమెట్రిక్‌తో కామన్ సర్వీస్ సెంటర్ ద్వారా నమోదు.'),
       L('After verification, complete skill assessment and basic training before the first loan tranche.', 'ధృవీకరణ తర్వాత మొదటి రుణ విడతకు ముందు నైపుణ్య అంచనా మరియు ప్రాథమిక శిక్షణ పూర్తి చేయండి.'),
+      L('Create New Latest DPR with PM Vishwakarma selected builds a 12-step artisan pack — see docs/schemes/VISHWAKARMA/vishwakarma.md.', 'PM Vishwakarma ఎంచుకుంటే Create New Latest DPR 12-దశల కళాకార ప్యాక్ ఇస్తుంది.'),
     ],
     documents: [
       L('Aadhaar (biometric at CSC)', 'ఆధార్ (CSCలో బయోమెట్రిక్)'),

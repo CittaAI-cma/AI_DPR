@@ -113,7 +113,8 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 | Vanilla / most full schemes | 18 | `VANILLA_STEPS` |
 | `PMEGP` | **14** | Bank-unit catalog — see [pmegp.md](./schemes/PMEGP/pmegp.md) |
 | `MUDRA` | **12** | PMMY bank-unit catalog — see [mudra.md](./schemes/MUDRA/mudra.md) |
-| `VISHWAKARMA` / `SVANIDHI` / `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
+| `VISHWAKARMA` | **12** | Artisan toolkit + training + enterprise loan — see [vishwakarma.md](./schemes/VISHWAKARMA/vishwakarma.md) |
+| `SVANIDHI` / `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
 | `ZED` / `LEAN` / `MSME_IPR` / `PMS` / `SCST_HUB` | 5 | Short cert / consulting pack |
 | `ECLGS` | 7 | Working-capital pack |
 
@@ -129,7 +130,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 
 | Scheme | Extra fields |
 |--------|----------------|
-| `VISHWAKARMA` | `craft`, `currentTools`, `newTools` (craft list = 18 Vishwakarma trades) |
+| `VISHWAKARMA` | Own 12-step artisan pack — see [docs/schemes/VISHWAKARMA/vishwakarma.md](./schemes/VISHWAKARMA/vishwakarma.md), `vishwakarmaQuestions.ts`, `VISHWAKARMA_STEPS` (18 trades; toolkit ₹15k; tranche ₹1 L / ₹2 L at 5%). |
 | `SVANIDHI` | `covOrLor`, `upiQr` |
 | `PMFME` | Own 14-step food-unit pack — see [docs/schemes/PMFME/pmfme.md](./schemes/PMFME/pmfme.md), `pmfmeQuestions.ts`, `PMFME_STEPS` (NIFTEM model structure: FSSAI, new/existing, ODOP, RM sources, 35% grant cap ₹10 L). |
 | `AP_EDP` | `apiicPark` (land-rebate hint) |
@@ -171,7 +172,7 @@ If scheme is `PMEGP` or `PMEGP_2ND` and project cost (lakhs) exceeds:
 
 | Scheme | Uploads |
 |--------|---------|
-| `VISHWAKARMA` | Aadhaar, savings passbook, ration card |
+| `VISHWAKARMA` | Aadhaar, savings passbook, ration card, certificate/ID (if issued), toolkit quote |
 | `SVANIDHI` | CoV or LoR |
 | `PMFME` | Machinery quotes, premises lease, draft FSSAI |
 | `PMEGP` | Machinery quotes, building estimate; + caste certificate if VM owner has sc/st/bc |

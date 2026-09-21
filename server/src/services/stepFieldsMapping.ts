@@ -316,7 +316,7 @@ export function getStepFieldsMapping(
 }
 
 const VISHWAKARMA_CRAFT_OPTIONS =
-  'Carpenter (Suthar); Boat Maker; Armourer; Blacksmith; Hammer and Tool Kit Maker; Locksmith; Sculptor; Stone breaker / Stone carver; Goldsmith; Potter; Sculptor (metal/stone/wood); Cobbler / Shoemaker; Mason; Basket/Mat/Broom Maker / Coir Weaver; Doll & Toy Maker; Barber; Garland Maker; Washerman; Tailor; Fishing Net Maker';
+  'Carpenter (Suthar/Badhai); Boat Maker; Armourer; Blacksmith (Lohar); Hammer and Tool Kit Maker; Locksmith; Goldsmith (Sonar); Potter (Kumhaar); Sculptor (Moortikar, stone carver) / Stone breaker; Cobbler (Charmkar) / Shoesmith / Footwear artisan; Mason (Rajmistri); Basket/Mat/Broom Maker / Coir Weaver; Doll & Toy Maker (Traditional); Barber (Naai); Garland maker (Malakaar); Washerman (Dhobi); Tailor (Darzi); Fishing Net Maker';
 
 export function getIndividualSchemeExtraFields(
   schemeCode?: string | null
@@ -330,6 +330,21 @@ export function getIndividualSchemeExtraFields(
       },
       { name: 'currentTools', type: 'text', label: 'Current tools the artisan uses today' },
       { name: 'newTools', type: 'text', label: 'New tools to buy with the ₹15,000 Vishwakarma voucher' },
+      {
+        name: 'trainingStage',
+        type: 'shortText',
+        label: 'Training stage: reply only "notStarted", "basicDone", or "advancedDone"',
+      },
+      {
+        name: 'loanTranche',
+        type: 'shortText',
+        label: 'Loan tranche sought: reply only "noneYet", "first", or "second"',
+      },
+      {
+        name: 'priorSelfEmploymentLoan',
+        type: 'shortText',
+        label: 'Similar self-employment loan in last 5 years? Reply only "yes" or "no"',
+      },
     ];
   }
   if (schemeCode === 'SVANIDHI') {

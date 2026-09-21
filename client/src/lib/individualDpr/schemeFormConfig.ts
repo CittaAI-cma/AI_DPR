@@ -8,10 +8,17 @@ import { PMFME_EXTRA_FIELDS, PMFME_IMPACT_BULLETS } from '@/lib/individualDpr/pm
 import { SCLCSS_EXTRA_FIELDS, SCLCSS_IMPACT_BULLETS } from '@/lib/individualDpr/sclcssQuestions';
 import { AP_TECH_EXTRA_FIELDS, AP_TECH_IMPACT_BULLETS } from '@/lib/individualDpr/apTechUpgradeQuestions';
 import {
+  VISHWAKARMA_CRAFTS,
+  VISHWAKARMA_EXTRA_FIELDS,
+  VISHWAKARMA_IMPACT_BULLETS,
+} from '@/lib/individualDpr/vishwakarmaQuestions';
+import {
   getSchemeSteps,
   getStepDef,
   localToContent,
 } from '@/lib/individualDpr/schemeStepCatalog';
+
+export { VISHWAKARMA_CRAFTS };
 
 export const SCHEME_OPTIONS = [
   { code: '', label: 'Vanilla bank term loan (standard individual DPR)' },
@@ -22,7 +29,7 @@ export const SCHEME_OPTIONS = [
 ];
 
 export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
-  VISHWAKARMA: ['craft', 'currentTools', 'newTools'],
+  VISHWAKARMA: [...VISHWAKARMA_EXTRA_FIELDS],
   SVANIDHI: ['covOrLor', 'upiQr'],
   PMFME: [...PMFME_EXTRA_FIELDS],
   AP_EDP: ['apiicPark'],
@@ -58,29 +65,6 @@ export function isSchemeExtraField(field: string, schemeCode?: string | null): b
   return extraFieldsForScheme(schemeCode).includes(field);
 }
 
-export const VISHWAKARMA_CRAFTS = [
-  'Carpenter (Suthar)',
-  'Boat Maker',
-  'Armourer',
-  'Blacksmith',
-  'Hammer and Tool Kit Maker',
-  'Locksmith',
-  'Sculptor',
-  'Stone breaker / Stone carver',
-  'Goldsmith',
-  'Potter',
-  'Sculptor (metal/stone/wood)',
-  'Cobbler / Shoemaker',
-  'Mason',
-  'Basket/Mat/Broom Maker / Coir Weaver',
-  'Doll & Toy Maker',
-  'Barber',
-  'Garland Maker',
-  'Washerman',
-  'Tailor',
-  'Fishing Net Maker',
-];
-
 export type UploadField = { id: string; label: string };
 
 const DEFAULT_UPLOADS: UploadField[] = [
@@ -101,7 +85,7 @@ export function isMudraTarunPlus(code: string | null, budget?: Budget): boolean 
 }
 
 export function hideComplexCapex(code: string | null, budget?: Budget): boolean {
-  return isMudraShishuKishore(code, budget);
+  return code === 'VISHWAKARMA' || isMudraShishuKishore(code, budget);
 }
 
 export function showDscr(bankLoanLakhs: number): boolean {
@@ -157,6 +141,8 @@ export function getStep18Uploads(
       { id: 'aadhaarPan', label: 'Aadhaar' },
       { id: 'bankPassbook', label: 'Savings Bank Passbook' },
       { id: 'rationCard', label: 'Ration Card (family verification)' },
+      { id: 'pmVishwakarmaId', label: 'PM Vishwakarma Certificate / ID (if issued)' },
+      { id: 'toolkitQuotation', label: 'Toolkit List / Designated-centre Quote' },
     ];
   }
   if (code === 'SVANIDHI') {
@@ -345,11 +331,7 @@ export function getSchemeImpact(code: string | null): {
   if (code === 'VISHWAKARMA') {
     return {
       title: 'PM Vishwakarma',
-      bullets: [
-        'Own 15-step pack (steps numbered 1–15 consecutively).',
-        'Step 1 adds craft + current/new tools (₹15,000 voucher).',
-        'Final step uploads: Aadhaar, passbook, ration card.',
-      ],
+      bullets: [...VISHWAKARMA_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }

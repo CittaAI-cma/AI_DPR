@@ -193,6 +193,25 @@ export const AP_TECH_UPGRADE_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
+/**
+ * PM Vishwakarma — 12 consecutive steps (artisan toolkit + training + enterprise loan).
+ * Spec: docs/schemes/VISHWAKARMA/vishwakarma.md
+ */
+export const VISHWAKARMA_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & craft eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Trade story & process', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Craft profile', contentStep: 4 },
+  { id: 'market', title: 'Market & sales assumptions', contentStep: 6 },
+  { id: 'shed', title: 'Workplace / premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost (tools + WC)', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
 /** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
 const FULL_MINUS_LATE: SchemeStepDef[] = catalog(
   VANILLA_STEPS.filter((s) => ![15, 16, 17].includes(s.contentStep)).map((s) => ({
@@ -223,7 +242,7 @@ const SHORT_WC_STEPS: SchemeStepDef[] = catalog([
 
 const SHORT_CERT_CODES = new Set(['ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB']);
 const SHORT_WC_CODES = new Set(['ECLGS']);
-const FULL_MINUS_LATE_CODES = new Set(['VISHWAKARMA', 'SVANIDHI', 'NHDP', 'ASPIRE']);
+const FULL_MINUS_LATE_CODES = new Set(['SVANIDHI', 'NHDP', 'ASPIRE']);
 
 /** Scheme code → catalog. Missing codes fall back to vanilla. */
 export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
@@ -234,6 +253,7 @@ export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   PMEGP_2ND: PMEGP_2ND_STEPS,
   SCLCSS: SCLCSS_STEPS,
   AP_TECH_UPGRADE: AP_TECH_UPGRADE_STEPS,
+  VISHWAKARMA: VISHWAKARMA_STEPS,
   ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),
   ...Object.fromEntries([...SHORT_WC_CODES].map((c) => [c, SHORT_WC_STEPS])),
   ...Object.fromEntries([...FULL_MINUS_LATE_CODES].map((c) => [c, FULL_MINUS_LATE])),

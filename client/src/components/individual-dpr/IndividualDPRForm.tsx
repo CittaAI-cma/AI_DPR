@@ -9,7 +9,6 @@ import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { FIELD_DESCRIPTIONS } from '@/data/fieldDescriptions';
 import {
-  VISHWAKARMA_CRAFTS,
   extraFieldsForScheme,
   hideComplexCapex,
   getStep18Uploads,
@@ -19,6 +18,16 @@ import {
   isMudraShishuKishore,
   getContentStep,
 } from '@/lib/individualDpr/schemeFormConfig';
+import {
+  VISHWAKARMA_CRAFTS,
+  VISHWAKARMA_INTEREST_PERCENT,
+  VISHWAKARMA_TOOLKIT_LAKHS,
+  VISHWAKARMA_TRAINING_OPTIONS,
+  VISHWAKARMA_TRANCHE_OPTIONS,
+  VISHWAKARMA_WORKPLACE_OPTIONS,
+  VISHWAKARMA_YES_NO_OPTIONS,
+  vishwakarmaTrancheCapLakhs,
+} from '@/lib/individualDpr/vishwakarmaQuestions';
 import {
   PMEGP_AGENCY_OPTIONS,
   PMEGP_AREA_OPTIONS,
@@ -102,8 +111,16 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const isPmfme = schemeCode === 'PMFME';
   const isSclcss = schemeCode === 'SCLCSS';
   const isApTech = schemeCode === 'AP_TECH_UPGRADE';
+  const isVishwakarma = schemeCode === 'VISHWAKARMA';
   const isLeanUnit =
-    isPmegp || isPmegp2nd || isMudra || isStandup || isPmfme || isSclcss || isApTech;
+    isPmegp ||
+    isPmegp2nd ||
+    isMudra ||
+    isStandup ||
+    isPmfme ||
+    isSclcss ||
+    isApTech ||
+    isVishwakarma;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -433,40 +450,131 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </Button>
         </div>
 
-        {schemeCode === 'VISHWAKARMA' && (
+        {isVishwakarma && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">{tf("PM Vishwakarma details")}</h3>
-            <div>
-              <label className="block text-sm font-medium mb-2">{tf("Craft / trade")}</label>
-              <select
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={extras.craft || stepData.craft || ''}
-                onChange={(e) => updateExtras({ craft: e.target.value })}
-              >
-                <option value="">{tf("Select your craft")}</option>
-                {VISHWAKARMA_CRAFTS.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+            <h3 className="text-lg font-semibold">{tf('PM Vishwakarma — craft & eligibility')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'Spec: docs/schemes/VISHWAKARMA/vishwakarma.md — 18 trades; toolkit ₹15,000; loan ₹1 L then ₹2 L at 5%'
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Craft / trade (18 notified)')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.craft || ''}
+                  onChange={(e) => updateExtras({ craft: e.target.value })}
+                >
+                  <option value="">{tf('Select your craft')}</option>
+                  {VISHWAKARMA_CRAFTS.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Training stage')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.trainingStage || ''}
+                  onChange={(e) => updateExtras({ trainingStage: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {VISHWAKARMA_TRAINING_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Enterprise loan tranche')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.loanTranche || ''}
+                  onChange={(e) => updateExtras({ loanTranche: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {VISHWAKARMA_TRANCHE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('Similar self-employment loan in last 5 years?')}
+                </label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.priorSelfEmploymentLoan || ''}
+                  onChange={(e) => updateExtras({ priorSelfEmploymentLoan: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {VISHWAKARMA_YES_NO_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur full name')}</label>
+                <Input
+                  value={extras.entrepreneurName || ''}
+                  onChange={(e) => updateExtras({ entrepreneurName: e.target.value })}
+                  placeholder={tf('Full name as in Aadhaar')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Age (≥ 18)')}</label>
+                <Input
+                  type="number"
+                  value={extras.entrepreneurAge || ''}
+                  onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
+                  placeholder={tf('e.g. 32')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Years practising this craft')}</label>
+                <Input
+                  type="number"
+                  value={extras.experienceYears || ''}
+                  onChange={(e) => updateExtras({ experienceYears: e.target.value })}
+                  placeholder={tf('e.g. 8')}
+                />
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">{tf("Current tools")}</label>
+              <label className="block text-sm font-medium mb-2">{tf('Current tools')}</label>
               <textarea
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={extras.currentTools || stepData.currentTools || ''}
+                value={extras.currentTools || ''}
                 onChange={(e) => updateExtras({ currentTools: e.target.value })}
-                placeholder={tf("Tools you use today")}
+                placeholder={tf('Tools you use today')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">{tf("New tools needed (₹15,000 voucher)")}</label>
+              <label className="block text-sm font-medium mb-2">
+                {tf('New tools needed (₹15,000 toolkit voucher)')}
+              </label>
               <textarea
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={extras.newTools || stepData.newTools || ''}
+                value={extras.newTools || ''}
                 onChange={(e) => updateExtras({ newTools: e.target.value })}
-                placeholder={tf("Tools you want to buy with the voucher")}
+                placeholder={tf('Tools to buy with the e-voucher at a designated centre')}
               />
             </div>
+            <p className="text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              {tf('Indicative support')}: {tf('toolkit')} ₹
+              {(VISHWAKARMA_TOOLKIT_LAKHS * 100000).toLocaleString('en-IN')} · {tf('loan cap')} ₹
+              {(vishwakarmaTrancheCapLakhs(extras.loanTranche) * 100000 || 0).toLocaleString('en-IN')}{' '}
+              · {VISHWAKARMA_INTEREST_PERCENT}% {tf('interest')} · {extras.craft || '—'} /{' '}
+              {extras.trainingStage || '—'}
+            </p>
           </div>
         )}
 
@@ -1267,7 +1375,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
 
-        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech) && (
+        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech || isVishwakarma) && (
           <div>
             <label className="block text-sm font-medium mb-2">{tf('Process of manufacture')}</label>
             <textarea
@@ -1275,7 +1383,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               value={extras.processOfManufacture || ''}
               onChange={(e) => updateExtras({ processOfManufacture: e.target.value })}
               placeholder={
-                isApTech || isSclcss
+                isVishwakarma
+                  ? tf('How you make / deliver the craft product or service (step by step)')
+                  : isApTech || isSclcss
                   ? tf('Process after new plant & machinery (manufacturing)')
                   : isPmegp2nd
                     ? tf('Process after upgrade / modernisation')
@@ -2175,16 +2285,24 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
         {isLeanUnit ? (
           <div className="space-y-4">
-            {(isMudra || isStandup || isPmfme || isSclcss || isApTech) && (
+            {(isMudra || isStandup || isPmfme || isSclcss || isApTech || isVishwakarma) && (
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Premises — owned / rented')}</label>
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={extras.premisesType || ''}
-                  onChange={(e) => updateExtras({ premisesType: e.target.value })}
+                  value={extras.workplaceType || extras.premisesType || ''}
+                  onChange={(e) =>
+                    updateExtras(
+                      isVishwakarma
+                        ? { workplaceType: e.target.value }
+                        : { premisesType: e.target.value }
+                    )
+                  }
                 >
                   <option value="">{tf('Select')}</option>
-                  {(isApTech
+                  {(isVishwakarma
+                    ? VISHWAKARMA_WORKPLACE_OPTIONS
+                    : isApTech
                     ? AP_TECH_PREMISES_OPTIONS
                     : isSclcss
                       ? SCLCSS_PREMISES_OPTIONS
@@ -2208,7 +2326,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <Input
                 value={extras.powerRequirement || stepData.powerRequirements || ''}
                 onChange={(e) => {
-                  if (isPmegp || isPmegp2nd || isPmfme || isSclcss || isApTech)
+                  if (isPmegp || isPmegp2nd || isPmfme || isSclcss || isApTech || isVishwakarma)
                     updateExtras({ powerRequirement: e.target.value });
                   handleInputChange('powerRequirements', e.target.value);
                 }}
@@ -2570,7 +2688,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 ? 'Own contribution (₹ Lakhs) — typically 10% general / 5% special'
                 : isPmegp2nd
                   ? 'Own contribution (₹ Lakhs) — 10% for all categories'
-                  : isMudra || isStandup || isPmfme || isSclcss || isApTech
+                  : isMudra || isStandup || isPmfme || isSclcss || isApTech || isVishwakarma
                     ? 'Own contribution (₹ Lakhs)'
                     : 'Promoter contribution / equity (₹ Lakhs)'
             )}
@@ -2598,7 +2716,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                           ? 'SCLCSS capital subsidy (₹ Lakhs) — 25%, cap ₹25 L'
                           : isApTech
                             ? 'AP tech-upgrade subsidy (₹ Lakhs) — % of FCI by size'
-                            : 'Government Grant (₹ Lakhs)'
+                            : isVishwakarma
+                              ? 'Toolkit e-voucher (₹ Lakhs) — usually 0.15'
+                              : 'Government Grant (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -2616,7 +2736,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   ? 'Bank composite loan TL + WC (₹ Lakhs)'
                   : isSclcss || isApTech
                     ? 'Bank term loan for P&M (₹ Lakhs)'
-                    : 'Bank Loan (₹ Lakhs)'
+                    : isVishwakarma
+                      ? 'Enterprise development loan tranche (₹ Lakhs)'
+                      : 'Bank Loan (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -2727,6 +2849,16 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'en-IN'
             )}{' '}
             {tf('L')}).
+          </p>
+        )}
+        {isVishwakarma && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'Own + toolkit voucher (usually 0.15 L) + enterprise loan tranche (+ other) = total. Interest'
+            )}{' '}
+            {VISHWAKARMA_INTEREST_PERCENT}% · {tf('tranche cap')} ₹
+            {vishwakarmaTrancheCapLakhs(extras.loanTranche).toLocaleString('en-IN')} {tf('L')} ·{' '}
+            {extras.craft || '—'} / {extras.loanTranche || '—'}.
           </p>
         )}
         <div className="border-t pt-4">

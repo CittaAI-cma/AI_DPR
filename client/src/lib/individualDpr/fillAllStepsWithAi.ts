@@ -45,6 +45,25 @@ export function normalizeExtraValue(field: string, value: any): any {
   if (field === 'specialCategory' || field === 'apDomicile') {
     return /\bno\b/i.test(text) ? 'no' : 'yes';
   }
+  if (field === 'priorSelfEmploymentLoan') {
+    return /\byes\b|availed|taken/i.test(text) ? 'yes' : 'no';
+  }
+  if (field === 'trainingStage') {
+    if (/advanced/i.test(text)) return 'advancedDone';
+    if (/basic|complet/i.test(text)) return 'basicDone';
+    return 'notStarted';
+  }
+  if (field === 'loanTranche') {
+    if (/second|2nd|₹?\s*2/i.test(text)) return 'second';
+    if (/first|1st|₹?\s*1/i.test(text)) return 'first';
+    return 'noneYet';
+  }
+  if (field === 'workplaceType') {
+    if (/rent/i.test(text)) return 'rentedShop';
+    if (/own|shed/i.test(text)) return 'ownShop';
+    if (/other/i.test(text)) return 'other';
+    return 'home';
+  }
   if (field === 'apiicPark') return /yes|apiic|park/i.test(text) && !/\bno\b/i.test(text) ? 'yes' : /no/i.test(text) ? 'no' : 'yes';
   return text;
 }
@@ -67,6 +86,10 @@ function inferMissingExtras(
     if (!next.newTools) {
       next.newTools = `Upgraded ${craft.toLowerCase()} tools and kit items to be bought with the ₹15,000 PM Vishwakarma toolkit voucher.`;
     }
+    if (!next.trainingStage) next.trainingStage = 'notStarted';
+    if (!next.loanTranche) next.loanTranche = 'noneYet';
+    if (!next.priorSelfEmploymentLoan) next.priorSelfEmploymentLoan = 'no';
+    if (!next.workplaceType) next.workplaceType = 'home';
   }
   if (schemeCode === 'SVANIDHI') {
     if (!next.covOrLor) next.covOrLor = 'cov';
