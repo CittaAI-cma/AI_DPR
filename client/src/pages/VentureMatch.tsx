@@ -12,7 +12,11 @@ import {
 } from '@/components/venture-match/VentureMatchHelpBubble';
 import { VentureMatchResults } from '@/components/venture-match/VentureMatchResults';
 import { VentureMatchStepExclusions } from '@/components/venture-match/VentureMatchStepExclusions';
-import { QUESTIONS, STORAGE_KEY } from '@/lib/ventureMatch/questions';
+import {
+  getVisibleQuestions,
+  pruneInvisibleAnswers,
+  STORAGE_KEY,
+} from '@/lib/ventureMatch/questions';
 import { evaluate, excludedSchemes, remainingCount } from '@/lib/ventureMatch/evaluate';
 import { saveHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { OWNER_EXCLUSIVE_TAGS, OwnerTag, QuestionId, VentureMatchAnswers } from '@/lib/ventureMatch/types';
@@ -41,7 +45,8 @@ export const VentureMatch: React.FC = () => {
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as SavedProgress;
-        setAnswers(parsed.answers || {});
+        const pruned = pruneInvisibleAnswers(parsed.answers || {});
+        setAnswers(pruned);
         setStep(parsed.step || 0);
         setDone(!!parsed.done);
       } catch {
@@ -61,7 +66,16 @@ export const VentureMatch: React.FC = () => {
     setHelpOpen(false);
   }, [step]);
 
-  const question = QUESTIONS[step];
+  const visible = useMemo(() => getVisibleQuestions(answers), [answers]);
+
+  useEffect(() => {
+    if (done) return;
+    if (step > visible.length - 1 && visible.length > 0) {
+      setStep(visible.length - 1);
+    }
+  }, [visible.length, step, done]);
+
+  const question = visible[step];
   const result = useMemo(() => evaluate(answers), [answers]);
   const remaining = remainingCount(answers, question?.id);
   const stepExcluded = useMemo(
@@ -70,12 +84,13 @@ export const VentureMatch: React.FC = () => {
   );
 
   const goNext = (nextAnswers: VentureMatchAnswers) => {
-    if (step >= QUESTIONS.length - 1) {
-      setAnswers(nextAnswers);
+    const pruned = pruneInvisibleAnswers(nextAnswers);
+    const nextVisible = getVisibleQuestions(pruned);
+    setAnswers(pruned);
+    if (step >= nextVisible.length - 1) {
       setDone(true);
       return;
     }
-    setAnswers(nextAnswers);
     setStep(step + 1);
   };
 
@@ -100,16 +115,20 @@ export const VentureMatch: React.FC = () => {
     if (question.multi) {
       const current = new Set(answers.owner || []);
       if (isExclusiveOwner(optionId)) {
-        setAnswers({
-          ...answers,
-          owner: current.has(optionId as OwnerTag) ? [] : [optionId as OwnerTag],
-        });
+        setAnswers(
+          pruneInvisibleAnswers({
+            ...answers,
+            owner: current.has(optionId as OwnerTag) ? [] : [optionId as OwnerTag],
+          })
+        );
         return;
       }
       OWNER_EXCLUSIVE_TAGS.forEach((tag) => current.delete(tag));
       if (current.has(optionId as OwnerTag)) current.delete(optionId as OwnerTag);
       else current.add(optionId as OwnerTag);
-      setAnswers({ ...answers, owner: Array.from(current) as OwnerTag[] });
+      setAnswers(
+        pruneInvisibleAnswers({ ...answers, owner: Array.from(current) as OwnerTag[] })
+      );
       return;
     }
 
@@ -119,7 +138,10 @@ export const VentureMatch: React.FC = () => {
 
   const handleOwnerContinue = () => {
     if (!answers.owner?.length) return;
-    if (step >= QUESTIONS.length - 1) {
+    const pruned = pruneInvisibleAnswers(answers);
+    const nextVisible = getVisibleQuestions(pruned);
+    setAnswers(pruned);
+    if (step >= nextVisible.length - 1) {
       setDone(true);
       return;
     }
@@ -129,7 +151,8 @@ export const VentureMatch: React.FC = () => {
   const handleBack = () => {
     if (done) {
       setDone(false);
-      setStep(QUESTIONS.length - 1);
+      const last = Math.max(0, getVisibleQuestions(answers).length - 1);
+      setStep(last);
       return;
     }
     if (step > 0) setStep(step - 1);
@@ -151,6 +174,11 @@ export const VentureMatch: React.FC = () => {
   const handleCreateDpr = () => {
     saveHandoff(answers, result.matches);
     navigate('/individual-dpr/create?new=true');
+  };
+
+  const handleClusterDpr = () => {
+    saveHandoff(answers, result.matches);
+    navigate('/cluster-dpr/create');
   };
 
   const selected = question ? answers[question.id as QuestionId] : undefined;
@@ -180,6 +208,7 @@ export const VentureMatch: React.FC = () => {
             result={result}
             onCreateDpr={handleCreateDpr}
             onCreateDprForScheme={handleCreateDprForScheme}
+            onOpenClusterDpr={handleClusterDpr}
             onRestart={handleRestart}
           />
         ) : (
@@ -188,7 +217,7 @@ export const VentureMatch: React.FC = () => {
               <VentureMatchCard
                 question={question}
                 index={step}
-                total={QUESTIONS.length}
+                total={visible.length}
                 selected={selected as string | string[] | undefined}
                 remaining={remaining}
                 onSelect={handleSelect}

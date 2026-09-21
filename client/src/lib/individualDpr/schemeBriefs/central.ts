@@ -599,4 +599,303 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     },
     sourceUrl: 'https://www.dgft.gov.in',
   },
+  PMEGP_2ND: {
+    code: 'PMEGP_2ND',
+    title: L(
+      '2nd Loan for Up-gradation of Existing PMEGP / REGP / MUDRA Units',
+      'ఇప్పటికే ఉన్న PMEGP / REGP / MUDRA యూనిట్ల 2వ లోన్'
+    ),
+    intro: L(
+      'This is a brownfield upgrade loan for units that already received PMEGP, REGP, or MUDRA assistance and have performed well. It is not for brand-new (greenfield) units — use first PMEGP for those. Confirm live ceilings with KVIC / DIC (manufacturing upgrade can go up to about ₹1 crore under notified guidelines).',
+      'ఇది ఇప్పటికే PMEGP / REGP / MUDRA సహాయం పొంది బాగా పనిచేసిన యూనిట్లకు బ్రౌన్‌ఫీల్డ్ అప్‌గ్రేడ్ లోన్. కొత్త (గ్రీన్‌ఫీల్డ్) యూనిట్లకు కాదు — వాటికి మొదటి PMEGP వాడండి.'
+    ),
+    benefits: [
+      L('Credit-linked support to upgrade an existing assisted micro unit.', 'ఇప్పటికే సహాయం పొందిన సూక్ష్మ యూనిట్ అప్‌గ్రేడ్‌కు క్రెడిట్-లింక్డ్ సహాయం.'),
+      L('Focus on incremental machinery / civil, not a full greenfield land story.', 'పూర్తి కొత్త ల్యాండ్ కథ కాకుండా అదనపు యంత్రాలు / సివిల్‌పై దృష్టి.'),
+    ],
+    eligibility: [
+      L('Existing PMEGP / REGP / MUDRA unit; prior subsidy loan repaid / performing.', 'ఇప్పటికే ఉన్న PMEGP / REGP / MUDRA యూనిట్; మునుపటి సబ్సిడీ లోన్ చెల్లింపు / పనితీరు.'),
+      L('Must not be a brand-new greenfield application.', 'కొత్త గ్రీన్‌ఫీల్డ్ దరఖాస్తు కాకూడదు.'),
+    ],
+    howToApply: [
+      L('Prepare this upgrade DPR with prior sanction proof and new quotations.', 'మునుపటి సాంక్షన్ రుజువు, కొత్త కోటేషన్లతో ఈ అప్‌గ్రేడ్ DPR తయారు చేయండి.'),
+      L('Apply through KVIC / KVIB / DIC with your bank.', 'KVIC / KVIB / DIC మరియు బ్యాంకు ద్వారా దరఖాస్తు చేయండి.'),
+    ],
+    documents: [
+      L('Prior sanction letter, CA certificate of existing investment, quotations', 'మునుపటి సాంక్షన్ లేఖ, ఉన్న పెట్టుబడి CA సర్టిఫికేట్, కోటేషన్లు'),
+    ],
+    faqs: [
+      {
+        q: L('Can a new unit apply?', 'కొత్త యూనిట్ దరఖాస్తు చేయవచ్చా?'),
+        a: L('No. New units use first PMEGP. This code hard-fails greenfield in Scheme Finder.', 'కాదు. కొత్త యూనిట్లు మొదటి PMEGP వాడాలి.'),
+      },
+    ],
+    quickInfo: {
+      ministry: KVIC,
+      category: L('Upgrade loan / subsidy', 'అప్‌గ్రేడ్ లోన్ / సబ్సిడీ'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: 'https://www.kviconline.gov.in',
+  },
+  SCLCSS: {
+    code: 'SCLCSS',
+    title: L(
+      'Special Credit Linked Capital Subsidy Scheme (SCLCSS) for SC/ST MSEs',
+      'SC/ST MSEలకు ప్రత్యేక క్రెడిట్ లింక్డ్ క్యాపిటల్ సబ్సిడీ (SCLCSS)'
+    ),
+    intro: L(
+      'General CLCSS closed on 31 March 2020. SCLCSS remains the active central credit-linked capital subsidy for technology upgradation — strictly for SC/ST-owned MSEs (indicative 25% up to ₹25 lakh). General-category promoters should use AP Technology Upgradation Subsidy instead.',
+      'సాధారణ CLCSS 31 మార్చి 2020న ముగిసింది. టెక్ అప్‌గ్రేడ్‌కు కేంద్ర క్రెడిట్-లింక్డ్ క్యాపిటల్ సబ్సిడీ SCLCSS మాత్రమే — SC/ST యజమానులకు మాత్రమే. సాధారణ వర్గం AP Technology Upgradation వాడాలి.'
+    ),
+    benefits: [
+      L('Capital subsidy on institutional term loan for eligible technology upgrade.', 'అర్హ టెక్నాలజీ అప్‌గ్రేడ్‌పై టర్మ్ లోన్‌కు క్యాపిటల్ సబ్సిడీ.'),
+    ],
+    eligibility: [
+      L('SC or ST ownership (51%+), existing MSE, Udyam, brownfield tech upgrade.', 'SC లేదా ST యాజమాన్యం (51%+), ఇప్పటికే ఉన్న MSE, ఉద్యమ్, బ్రౌన్‌ఫీల్డ్ టెక్ అప్‌గ్రేడ్.'),
+    ],
+    howToApply: [
+      L('Prepare a full bank DPR with caste certificate and machinery tech specs.', 'జాతి సర్టిఫికేట్, యంత్రాల టెక్ స్పెక్‌లతో పూర్తి బ్యాంకు DPR తయారు చేయండి.'),
+    ],
+    documents: [
+      L('Caste certificate, Udyam, quotations, term-loan sanction, CA FCI', 'జాతి సర్టిఫికేట్, ఉద్యమ్, కోటేషన్లు, టర్మ్ లోన్ సాంక్షన్, CA FCI'),
+    ],
+    faqs: [
+      {
+        q: L('I am general category — can I use this?', 'నేను సాధారణ వర్గం — వాడవచ్చా?'),
+        a: L('No. Use AP Technology Upgradation Subsidy (20%) under MSME-EDP 4.0.', 'కాదు. AP Technology Upgradation (20%) వాడండి.'),
+      },
+    ],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Capital subsidy (SC/ST)', 'క్యాపిటల్ సబ్సిడీ (SC/ST)'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: 'https://www.dcmsme.gov.in',
+  },
+  ECLGS: {
+    code: 'ECLGS',
+    title: L('Emergency Credit Line Guarantee Scheme (ECLGS)', 'అత్యవసర క్రెడిట్ లైన్ గ్యారంటీ (ECLGS)'),
+    intro: L(
+      'ECLGS is additional working-capital / liquidity guarantee for existing MSMEs — not a greenfield plant DPR. This app uses a short WC pack.',
+      'ECLGS ఇప్పటికే ఉన్న MSMEలకు అదనపు వర్కింగ్ క్యాపిటల్ గ్యారంటీ — కొత్త ప్లాంట్ DPR కాదు.'
+    ),
+    benefits: [L('Guarantee cover on additional WC / liquidity.', 'అదనపు WC / లిక్విడిటీపై గ్యారంటీ.')],
+    eligibility: [
+      L('Existing unit with Udyam; not a brand-new idea-only applicant.', 'ఉద్యమ్ ఉన్న ఇప్పటికే ఉన్న యూనిట్.'),
+    ],
+    howToApply: [L('Approach your existing bank with turnover proof and this short pack.', 'టర్నోవర్ రుజువు, ఈ చిన్న ప్యాక్‌తో మీ బ్యాంకును సంప్రదించండి.')],
+    documents: [L('Udyam, GST/ITR, bank statements, existing sanction, CA turnover', 'ఉద్యమ్, GST/ITR, బ్యాంకు స్టేట్‌మెంట్లు, ఉన్న సాంక్షన్, CA టర్నోవర్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Guarantee / WC', 'గ్యారంటీ / WC'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  ZED: {
+    code: 'ZED',
+    title: L('Sustainable ZED Certification', 'ZED సర్టిఫికేషన్'),
+    intro: L(
+      'ZED is a quality certification track, not a bank term loan. This app prepares a short certification assistance note — not a 5-year P&L.',
+      'ZED నాణ్యత సర్టిఫికేషన్ — బ్యాంకు టర్మ్ లోన్ కాదు. ఈ యాప్ చిన్న సర్టిఫికేషన్ నోట్ తయారు చేస్తుంది.'
+    ),
+    benefits: [L('Assessment and certification pathway (Bronze / Silver / Gold).', 'అసెస్‌మెంట్ మరియు సర్టిఫికేషన్ మార్గం.')],
+    eligibility: [L('Registered MSE with Udyam (or willing).', 'ఉద్యమ్ ఉన్న / తీసుకోవాలనుకునే MSE.')],
+    howToApply: [L('Complete the short ZED pack and register on the ZED portal / through DIC.', 'చిన్న ZED ప్యాక్ పూర్తి చేసి ZED పోర్టల్ / DIC ద్వారా నమోదు చేయండి.')],
+    documents: [L('Udyam, Aadhaar/PAN', 'ఉద్యమ్, ఆధార్/పాన్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Certification', 'సర్టిఫికేషన్'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: 'https://zed.msme.gov.in',
+  },
+  LEAN: {
+    code: 'LEAN',
+    title: L('Competitive LEAN', 'Competitive LEAN'),
+    intro: L(
+      'LEAN is process-improvement consulting for existing units — short pack, not a full bank DPR.',
+      'LEAN ఇప్పటికే ఉన్న యూనిట్ల ప్రాసెస్ మెరుగుదల — చిన్న ప్యాక్, పూర్తి బ్యాంకు DPR కాదు.'
+    ),
+    benefits: [L('Consultant-led shop-floor improvement.', 'కన్సల్టెంట్ నేతృత్వంలో షాప్-ఫ్లోర్ మెరుగుదల.')],
+    eligibility: [L('Brownfield manufacturing or food unit with Udyam.', 'ఉద్యమ్ ఉన్న బ్రౌన్‌ఫీల్డ్ తయారీ / ఆహార యూనిట్.')],
+    howToApply: [L('Prepare the short LEAN pack and approach the implementing agency / DIC.', 'చిన్న LEAN ప్యాక్‌తో అమలు సంస్థ / DICని సంప్రదించండి.')],
+    documents: [L('Udyam', 'ఉద్యమ్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Consulting', 'కన్సల్టింగ్'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  MSME_IPR: {
+    code: 'MSME_IPR',
+    title: L('MSME Innovative — IPR / Design / Incubation', 'MSME Innovative — IPR / డిజైన్'),
+    intro: L('Short IP filing pack — not a plant-and-machinery term-loan DPR.', 'చిన్న IP ఫైలింగ్ ప్యాక్ — ప్లాంట్ టర్మ్ లోన్ DPR కాదు.'),
+    benefits: [L('Support toward patent / design / trademark / GI filings.', 'పేటెంట్ / డిజైన్ / ట్రేడ్‌మార్క్ / GI ఫైలింగ్ సహాయం.')],
+    eligibility: [L('Knowledge, manufacturing, or food unit with Udyam.', 'నాలెడ్జ్ / తయారీ / ఆహార యూనిట్ + ఉద్యమ్.')],
+    howToApply: [L('Complete the short IP pack and apply via the MSME Innovative portal / DIC.', 'చిన్న IP ప్యాక్‌తో MSME Innovative పోర్టల్ / DIC ద్వారా దరఖాస్తు చేయండి.')],
+    documents: [L('Udyam, draft specification or TM search', 'ఉద్యమ్, డ్రాఫ్ట్ స్పెసిఫికేషన్ / TM సెర్చ్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('IPR support', 'IPR సహాయం'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  PMS: {
+    code: 'PMS',
+    title: L('Procurement and Marketing Scheme (PMS)', 'ప్రొక్యూర్‌మెంట్ అండ్ మార్కెటింగ్ స్కీమ్ (PMS)'),
+    intro: L(
+      'Marketing / trade-fair annex — not a plant DPR. Use a second CTA if you also need a term loan.',
+      'మార్కెటింగ్ / ట్రేడ్ ఫెయిర్ అనెక్స్ — ప్లాంట్ DPR కాదు.'
+    ),
+    benefits: [L('Support toward fair participation / stall costs as per live guidelines.', 'ఫెయిర్ / స్టాల్ ఖర్చు సహాయం (ప్రస్తుత మార్గదర్శకాల ప్రకారం).')],
+    eligibility: [L('Udyam-registered unit seeking marketing fair support.', 'మార్కెటింగ్ ఫెయిర్ సహాయం కోరే ఉద్యమ్ యూనిట్.')],
+    howToApply: [L('Fill the short fair annex and apply through the implementing agency.', 'చిన్న ఫెయిర్ అనెక్స్‌తో అమలు సంస్థ ద్వారా దరఖాస్తు చేయండి.')],
+    documents: [L('Udyam', 'ఉద్యమ్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Marketing', 'మార్కెటింగ్'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  MSE_GIFT: {
+    code: 'MSE_GIFT',
+    title: L('MSE-GIFT (green investment)', 'MSE-GIFT (గ్రీన్ ఇన్వెస్ట్‌మెంట్)'),
+    intro: L(
+      'Full bank-style DPR for green / energy-efficient capex on an existing unit.',
+      'ఇప్పటికే ఉన్న యూనిట్‌పై గ్రీన్ / ఎనర్జీ-ఎఫిషియెంట్ క్యాపెక్స్‌కు పూర్తి బ్యాంకు-శైలి DPR.'
+    ),
+    benefits: [L('Financing support aligned to green / EE machinery upgrade.', 'గ్రీన్ / EE యంత్రాల అప్‌గ్రేడ్ ఫైనాన్స్.')],
+    eligibility: [L('Brownfield mfg/food with tech-upgrade intent and Udyam.', 'టెక్ అప్‌గ్రేడ్ ఉద్దేశంతో బ్రౌన్‌ఫీల్డ్ తయారీ/ఆహారం + ఉద్యమ్.')],
+    howToApply: [L('Complete the 18-step upgrade DPR with energy baseline and EE quotations.', 'ఎనర్జీ బేస్‌లైన్, EE కోటేషన్లతో 18-దశల DPR పూర్తి చేయండి.')],
+    documents: [L('Energy bill, EE quotations, Udyam', 'ఎనర్జీ బిల్లు, EE కోటేషన్లు, ఉద్యమ్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Green finance', 'గ్రీన్ ఫైనాన్స్'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  CVY: {
+    code: 'CVY',
+    title: L('Coir Vikas Yojana', 'కొయిర్ వికాస్ యోజన'),
+    intro: L('Coir Board linked unit-level support. Confirm live guidelines before locking cost.', 'కొయిర్ బోర్డు లింక్డ్ యూనిట్ సహాయం. ఖర్చు ఖాయం చేసే ముందు ప్రస్తుత మార్గదర్శకాలు నిర్ధారించండి.'),
+    benefits: [L('Subsidy / credit support for coir product lines as notified.', 'కొయిర్ ఉత్పత్తులకు నోటిఫైడ్ సబ్సిడీ / క్రెడిట్.')],
+    eligibility: [L('Coir sector flag; craft or manufacturing activity.', 'కొయిర్ రంగం; క్రాఫ్ట్ లేదా తయారీ.')],
+    howToApply: [L('Prepare full DPR with Coir Board registration status and quotations.', 'కొయిర్ బోర్డు నమోదు స్థితి, కోటేషన్లతో పూర్తి DPR తయారు చేయండి.')],
+    documents: [L('Coir Board docs, quotations, Udyam', 'కొయిర్ బోర్డు పత్రాలు, కోటేషన్లు, ఉద్యమ్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Sectoral (coir)', 'రంగం (కొయిర్)'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  NHDP: {
+    code: 'NHDP',
+    title: L('National Handloom Development Programme', 'జాతీయ చేనేత అభివృద్ధి కార్యక్రమం'),
+    intro: L('Weaver / handloom overlay. May drop heavy P&L steps like Vishwakarma.', 'నేతగాడు / చేనేత ఓవర్‌లే. Vishwakarmaలా భారీ P&L దశలు తగ్గవచ్చు.'),
+    benefits: [L('Handloom development support as per live ministry guidelines.', 'ప్రస్తుత మంత్రిత్వ మార్గదర్శకాల ప్రకారం చేనేత సహాయం.')],
+    eligibility: [L('Handloom sector + craft activity.', 'చేనేత రంగం + క్రాఫ్ట్.')],
+    howToApply: [L('Complete the weaver overlay and apply through the handloom agency.', 'నేతగాడు ఓవర్‌లేతో చేనేత సంస్థ ద్వారా దరఖాస్తు చేయండి.')],
+    documents: [L('Weaver ID, Aadhaar, passbook', 'నేతగాడి ID, ఆధార్, పాస్‌బుక్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Sectoral (handloom)', 'రంగం (చేనేత)'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  PTUAS: {
+    code: 'PTUAS',
+    title: L('PTUAS (pharma technology upgrade)', 'PTUAS (ఫార్మా టెక్ అప్‌గ్రేడ్)'),
+    intro: L(
+      'Unit-level pharma technology upgrade — distinct from APICF cluster common facilities.',
+      'యూనిట్-స్థాయి ఫార్మా టెక్ అప్‌గ్రేడ్ — APICF క్లస్టర్ కామన్ ఫెసిలిటీస్ కాదు.'
+    ),
+    benefits: [L('Assistance for technology upgradation in pharma units.', 'ఫార్మా యూనిట్ల టెక్ అప్‌గ్రేడ్ సహాయం.')],
+    eligibility: [L('Pharma sector, brownfield, tech upgrade, Udyam.', 'ఫార్మా రంగం, బ్రౌన్‌ఫీల్డ్, టెక్ అప్‌గ్రేడ్, ఉద్యమ్.')],
+    howToApply: [L('Full 18-step upgrade DPR with licence and pollution consent uploads.', 'లైసెన్స్, పొల్యూషన్ కన్సెంట్‌తో పూర్తి 18-దశల DPR.')],
+    documents: [L('Manufacturing licence, pollution consent, quotations, CA FCI, Udyam', 'మాన్యుఫాక్చరింగ్ లైసెన్స్, పొల్యూషన్ కన్సెంట్, కోటేషన్లు, CA FCI, ఉద్యమ్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Pharma upgrade', 'ఫార్మా అప్‌గ్రేడ్'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  PMPDS: {
+    code: 'PMPDS',
+    title: L('PMPDS (pharma & medical devices)', 'PMPDS (ఫార్మా & మెడికల్ డివైసెస్)'),
+    intro: L('Promotion / development support for pharma and medical devices — confirm live GO.', 'ఫార్మా / మెడికల్ డివైసెస్ ప్రమోషన్ — ప్రస్తుత GO నిర్ధారించండి.'),
+    benefits: [L('Sector promotion support as notified.', 'నోటిఫైడ్ రంగ ప్రమోషన్ సహాయం.')],
+    eligibility: [L('Pharma / medical devices manufacturing.', 'ఫార్మా / మెడికల్ డివైసెస్ తయారీ.')],
+    howToApply: [L('Use full DPR if capex; otherwise promotional short pack via agency.', 'క్యాపెక్స్ ఉంటే పూర్తి DPR; లేకపోతే సంస్థ ద్వారా చిన్న ప్యాక్.')],
+    documents: [L('Product licence, Udyam, quotations', 'ఉత్పత్తి లైసెన్స్, ఉద్యమ్, కోటేషన్లు')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Pharma promotion', 'ఫార్మా ప్రమోషన్'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  ASPIRE: {
+    code: 'ASPIRE',
+    title: L('ASPIRE', 'ASPIRE'),
+    intro: L('Rural innovation / livelihood incubator track — shorter financials.', 'గ్రామీణ ఇన్నోవేషన్ / జీవనోపాధి — చిన్న ఆర్థికాలు.'),
+    benefits: [L('Incubation / livelihood support as per live guidelines.', 'ఇన్క్యుబేషన్ / జీవనోపాధి సహాయం.')],
+    eligibility: [L('Idea or greenfield; not above ₹10 Cr factory scale.', 'ఆలోచన లేదా గ్రీన్‌ఫీల్డ్; ₹10 కోట్ల పైన కాదు.')],
+    howToApply: [L('Prepare the shorter livelihood DPR and approach the Aspire agency / DIC.', 'చిన్న జీవనోపాధి DPRతో Aspire సంస్థ / DICని సంప్రదించండి.')],
+    documents: [L('Rural address proof, concept note', 'గ్రామీణ చిరునామా రుజువు, కాన్సెప్ట్ నోట్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Innovation / livelihood', 'ఇన్నోవేషన్ / జీవనోపాధి'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
+  SCST_HUB: {
+    code: 'SCST_HUB',
+    title: L('National SC/ST Hub', 'జాతీయ SC/ST హబ్'),
+    intro: L('Procurement-readiness pack for SC/ST MSEs — not a term loan by itself.', 'SC/ST MSEల సేకరణ సిద్ధత ప్యాక్ — టర్మ్ లోన్ కాదు.'),
+    benefits: [L('Market access / procurement facilitation for SC/ST enterprises.', 'SC/ST సంస్థలకు సేకరణ / మార్కెట్ యాక్సెస్.')],
+    eligibility: [L('SC/ST ownership + procurement interest + Udyam.', 'SC/ST యాజమాన్యం + సేకరణ ఆసక్తి + ఉద్యమ్.')],
+    howToApply: [L('Complete the short procurement pack and register with the Hub / DIC.', 'చిన్న సేకరణ ప్యాక్‌తో హబ్ / DICలో నమోదు చేయండి.')],
+    documents: [L('Caste certificate, Udyam, cancelled cheque', 'జాతి సర్టిఫికేట్, ఉద్యమ్, క్యాన్సిల్డ్ చెక్')],
+    faqs: [],
+    quickInfo: {
+      ministry: MSME_MIN,
+      category: L('Procurement support', 'సేకరణ సహాయం'),
+      type: CENTRAL,
+      status: ACTIVE,
+    },
+    sourceUrl: '',
+  },
 };

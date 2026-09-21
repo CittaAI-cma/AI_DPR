@@ -74,6 +74,7 @@ export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
         name: scheme.name,
         kind: scheme.kind,
         benefit: scheme.benefit(answers),
+        dprRoute: scheme.dprRoute || 'full',
         ...(scheme.code === 'AP_CMEP' ? { boosted: cmepBoosted(answers) } : {}),
       });
     }

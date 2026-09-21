@@ -5,6 +5,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  ExternalLink,
   HelpCircle,
   FolderPlus,
   Sparkles,
@@ -12,13 +13,14 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { CriterionStatus, EvaluateResult, SchemeCriterion } from '@/lib/ventureMatch/types';
+import { CriterionStatus, EvaluateResult, SchemeCriterion, SchemeMatch } from '@/lib/ventureMatch/types';
 import { cn } from '@/lib/utils';
 
 interface VentureMatchResultsProps {
   result: EvaluateResult;
   onCreateDpr: () => void;
   onCreateDprForScheme: (schemeCode: string) => void;
+  onOpenClusterDpr?: () => void;
   onRestart: () => void;
 }
 
@@ -49,10 +51,48 @@ function CriterionRow({ item }: { item: SchemeCriterion }) {
   );
 }
 
+function MatchAction({
+  scheme,
+  onCreateDprForScheme,
+  onOpenClusterDpr,
+}: {
+  scheme: SchemeMatch;
+  onCreateDprForScheme: (schemeCode: string) => void;
+  onOpenClusterDpr?: () => void;
+}) {
+  const { t } = useTranslation();
+  const route = scheme.dprRoute || 'full';
+
+  if (route === 'cluster') {
+    return (
+      <Button className="mt-3 gap-2" size="sm" onClick={() => onOpenClusterDpr?.()}>
+        <FolderPlus className="h-4 w-4" />
+        {t('ventureMatch.openClusterDpr')}
+      </Button>
+    );
+  }
+
+  if (route === 'cta' || route === 'none') {
+    return (
+      <p className="mt-3 text-sm text-muted-foreground">{t('ventureMatch.ctaOnlyHint')}</p>
+    );
+  }
+
+  return (
+    <Button className="mt-3 gap-2" size="sm" onClick={() => onCreateDprForScheme(scheme.code)}>
+      <FolderPlus className="h-4 w-4" />
+      {route === 'short'
+        ? t('ventureMatch.generateShortPack')
+        : t('ventureMatch.generateDprForMatch')}
+    </Button>
+  );
+}
+
 export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
   result,
   onCreateDpr,
   onCreateDprForScheme,
+  onOpenClusterDpr,
   onRestart,
 }) => {
   const { t } = useTranslation();
@@ -104,13 +144,22 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
               <CardContent className="pt-5 pb-5">
                 <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Award className="h-5 w-5 text-primary" />
+                    {scheme.dprRoute === 'cluster' ? (
+                      <ExternalLink className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Award className="h-5 w-5 text-primary" />
+                    )}
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">
                       {t(`ventureMatch.schemes.${scheme.code}.name`, { defaultValue: scheme.name })}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">{t(scheme.benefit)}</p>
+                    {scheme.dprRoute === 'cluster' && (
+                      <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                        {t('ventureMatch.clusterRedirectHint')}
+                      </p>
+                    )}
                     {scheme.code === 'AP_CMEP' && scheme.boosted && (
                       <div className="mt-3 rounded-[10px] border border-amber-300 bg-amber-50 px-3 py-2">
                         <p className="text-sm font-semibold text-amber-900">
@@ -121,14 +170,11 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                         </p>
                       </div>
                     )}
-                    <Button
-                      className="mt-3 gap-2"
-                      size="sm"
-                      onClick={() => onCreateDprForScheme(scheme.code)}
-                    >
-                      <FolderPlus className="h-4 w-4" />
-                      {t('ventureMatch.generateDprForMatch')}
-                    </Button>
+                    <MatchAction
+                      scheme={scheme}
+                      onCreateDprForScheme={onCreateDprForScheme}
+                      onOpenClusterDpr={onOpenClusterDpr}
+                    />
                   </div>
                 </div>
               </CardContent>

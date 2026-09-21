@@ -12,9 +12,11 @@ Related doc: [Create New Latest DPR business logic](./create-new-dpr-business-lo
 
 ## 1. Purpose
 
-Scheme Finder asks **14 fixed questions** and ranks which of **16 MSME schemes** (15 original + AP CMEP) still fit. Matching runs **on the client** (deterministic rules). An optional hybrid help chat can suggest an option using AP-oriented chips first, then an LLM fallback.
+Scheme Finder asks a **dynamic set of questions** (base 14 + up to 5 conditional) and ranks which MSME schemes still fit. Matching runs **on the client** (deterministic rules). An optional hybrid help chat can suggest an option using AP-oriented chips first, then an LLM fallback.
 
-It does **not** create the DPR itself. It hands answers + matches into **Create New Latest DPR** (Individual DPR).
+It does **not** create the DPR itself. It hands answers + matches into **Create New Latest DPR** (Individual DPR), or redirects **cluster** matches to Cluster DPR.
+
+**Rev 2 (AP MSME One integration):** Conditional questions `supportType`, `upgradeIntent`, `qualityGoal`, `sectorFlag`, `procurementInterest`; new scheme codes including `PMEGP_2ND`, `SCLCSS` (not general CLCSS), short overlays (`ZED`/`LEAN`/`PMS`/…), CTA-only (`CHAMPIONS`/`ESDP`/`NTCEC`), and cluster CTAs (`MSE_CDP`/`SFURTI`/`AP_CDP`/`APICF`). See [ap-msme-one-schemes-gap.pdf](./ap-msme-one-schemes-gap.pdf).
 
 ---
 
@@ -22,9 +24,11 @@ It does **not** create the DPR itself. It hands answers + matches into **Create 
 
 | Step | What happens |
 |------|----------------|
-| User finishes the 14 questions | `evaluate(answers)` builds `matches` + `excluded` |
-| **Generate DPR for this Match** (per scheme card) | `saveHandoff(answers, matches)` → navigate to `/individual-dpr/create?new=true&scheme=<CODE>` |
-| **Create DPR** (generic button) | Same handoff → `/individual-dpr/create?new=true` (no scheme query; user can pick later) |
+| User finishes visible questions | `evaluate(answers)` builds `matches` + `excluded` (each match has `dprRoute`) |
+| **Generate DPR for this Match** (`full` / `short`) | `saveHandoff` → `/individual-dpr/create?new=true&scheme=<CODE>` |
+| **Open Cluster DPR** (`dprRoute=cluster`) | Navigate to `/cluster-dpr/create` |
+| CTA-only matches | No individual DPR button — helpdesk / training hint only |
+| **Create DPR** (generic button) | Same handoff → `/individual-dpr/create?new=true` |
 | Handoff storage | `localStorage` key `venture-match-handoff` (`HANDOFF_KEY`) |
 | Progress storage | `localStorage` key `venture-match-progress` (`STORAGE_KEY`) — wizard resume only |
 

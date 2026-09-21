@@ -782,7 +782,13 @@ export const HELP_GUIDES: Record<QuestionId, QuestionHelpGuide> = {
 };
 
 export function getHelpGuide(questionId: QuestionId): QuestionHelpGuide {
-  return HELP_GUIDES[questionId];
+  return (
+    HELP_GUIDES[questionId] || {
+      questionId,
+      apRuleNotes: 'Answer based on what you need from government support.',
+      clarifyingQuestions: [],
+    }
+  );
 }
 
 export function labelForReply(reply: HelpReply, lang: HelpLang): string {

@@ -413,6 +413,23 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
+        {extraFieldNames.length > 0 &&
+          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP'].includes(schemeCode || '') && (
+            <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+              <h3 className="text-lg font-semibold">{tf('Scheme-specific details')}</h3>
+              {extraFieldNames.map((field) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium mb-2">{tf(field)}</label>
+                  <Input
+                    value={String(extras[field] ?? stepData[field] ?? '')}
+                    onChange={(e) => updateExtras({ [field]: e.target.value })}
+                    placeholder={tf(field)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}

@@ -98,9 +98,21 @@
   <h1>AP MSME One schemes — gap analysis and integration design</h1>
   <p class="meta">
     Source: live catalog at <strong>https://apmsmeone.ap.gov.in/schemes</strong> (31 entries in portal JS bundle) &nbsp;·&nbsp;
-    App catalog: <code>client/src/lib/ventureMatch/schemes.ts</code> (16 matcher schemes) &nbsp;·&nbsp;
-    Date: 18 Sep 2026
+    App catalog: <code>client/src/lib/ventureMatch/schemes.ts</code> &nbsp;·&nbsp;
+    Date: 18 Sep 2026 &nbsp;·&nbsp;
+    <strong>Rev 2 — official errata applied</strong> (SCLCSS, PMEGP_2ND, Stand-Up caution, conditional questions)
   </p>
+
+  <div class="ok">
+    <p><strong>Official execution contract (errata):</strong> Build against this checklist, not the original Rev&nbsp;1 CLCSS proposal.</p>
+    <ul>
+      <li><strong>CLCSS rename:</strong> Replace generic <code>CLCSS</code> with <code>SCLCSS</code> (SC/ST-owned MSEs only, 25% up to ₹25 Lakh). Route general-category tech upgrade to existing <code>AP_TECH_UPGRADE</code> (20% under AP MSME-EDP 4.0).</li>
+      <li><strong>PMEGP_2ND:</strong> Require <code>stage = brownfield</code> (or restart) + <code>upgradeIntent = secondPmegpLoan</code>; <em>hard-fail</em> on <code>greenfield</code>.</li>
+      <li><strong>Non-DPR CTAs:</strong> <code>CHAMPIONS</code>, <code>ESDP</code>, <code>ATI</code>, <code>NTCEC</code> — no 18-step P&amp;L.</li>
+      <li><strong>Cluster routing:</strong> <code>MSECDP</code>, <code>SFURTI</code>, <code>APCDP</code>, <code>APICF</code> → <code>/cluster-dpr/create</code>.</li>
+      <li><strong>Question gating:</strong> Show <code>upgradeIntent</code>, <code>qualityGoal</code>, <code>sectorFlag</code>, <code>procurementInterest</code> only when prior answers unlock them.</li>
+    </ul>
+  </div>
 
   <div class="box">
     <p><strong>Decision for Create New Latest DPR:</strong> do not add cluster / common-facility schemes to the individual scheme-card picker. Route those users to Cluster DPR. Integrate the remaining missing <em>unit-level</em> schemes into Scheme Finder scoring and into Create New Latest DPR overlays (full 18-step bank DPR, short overlay, or no-DPR redirect).</p>
@@ -152,7 +164,7 @@
       <tr><td>18</td><td><code>IPR</code></td><td>Innovative – Incubation, Design, IPR</td><td>technology</td><td>Short overlay</td><td><span class="tag tag-miss">Missing</span></td></tr>
       <tr><td>19</td><td><code>LEAN</code></td><td>Competitive LEAN</td><td>technology</td><td>Short overlay</td><td><span class="tag tag-miss">Missing</span></td></tr>
       <tr><td>20</td><td><code>ZED</code></td><td>Sustainable ZED Certification</td><td>technology</td><td>Short overlay</td><td><span class="tag tag-miss">Missing</span></td></tr>
-      <tr><td>21</td><td><code>CLCSS</code></td><td>Credit Linked Capital Subsidy (CLCSS / TUS)</td><td>technology</td><td>Individual (upgrade DPR)</td><td><span class="tag tag-miss">Missing</span></td></tr>
+      <tr><td>21</td><td><code>CLCSS</code></td><td>Portal label: Credit Linked Capital Subsidy — <strong>implement as SCLCSS only</strong> (general CLCSS closed 31.03.2020)</td><td>technology</td><td>Individual (SC/ST upgrade DPR)</td><td><span class="tag tag-miss">Missing → SCLCSS</span></td></tr>
       <tr><td>22</td><td><code>PTUAS</code></td><td>Pharmaceutical Technology Upgradation Assistance</td><td>technology</td><td>Individual (pharma)</td><td><span class="tag tag-miss">Missing</span></td></tr>
       <tr><td>23</td><td><code>NTCEC</code></td><td>New Technology Centres and Extension Centres</td><td>technology</td><td>Service request</td><td><span class="tag tag-miss">Missing</span></td></tr>
       <tr><td>24</td><td><code>MSEGIFT</code></td><td>MSE Green Investment and Financing for Transformation</td><td>sustainability</td><td>Individual (green capex)</td><td><span class="tag tag-miss">Missing</span></td></tr>
@@ -223,8 +235,8 @@
       </tr>
       <tr>
         <td>SUPI</td><td><code>STANDUP</code></td>
-        <td>SC/ST or woman + greenfield + ₹10L–₹1Cr-ish.</td>
-        <td>Default 18-step overlay.</td>
+        <td>SC/ST or woman + greenfield + verified ₹10L–₹1Cr band. <strong>Do not invent post-Mar-2025 ceilings</strong> until revamp guidelines are notified.</td>
+        <td>Default 18-step overlay; brief must say confirm with bank / DFS.</td>
       </tr>
       <tr>
         <td>PMVK</td><td><code>VISHWAKARMA</code></td>
@@ -262,7 +274,7 @@
       <tr><td><code>SVANIDHI</code></td><td>PM SVANidhi</td><td>Street vendors; CoV/LoR overlay already built.</td></tr>
       <tr><td><code>AP_EDP</code></td><td>AP MSME-EDP 4.0</td><td>State industrial policy overlay (APIIC park, FCI, CFE/CFO).</td></tr>
       <tr><td><code>AP_FPP</code></td><td>AP Food Processing Policy 4.0</td><td>State food-processing incentives beyond PMFME.</td></tr>
-      <tr><td><code>AP_TECH_UPGRADE</code></td><td>AP Technology Upgradation Subsidy</td><td>State tech-upgrade; pairs with CLCSS when added.</td></tr>
+      <tr><td><code>AP_TECH_UPGRADE</code></td><td>AP Technology Upgradation Subsidy</td><td>State 20% tech-upgrade for expansion under MSME-EDP 4.0 — <strong>primary path for general-category</strong> tech upgrade (not revived CLCSS).</td></tr>
       <tr><td><code>OBMMS</code></td><td>AP welfare corporation self-employment loans</td><td>Caste / welfare-corp channel.</td></tr>
       <tr><td><code>AP_PARKS</code></td><td>AP MSME-PARKS land rebate</td><td>Land/plot incentive, not a term loan.</td></tr>
       <tr><td><code>EPM_NIRYAT</code></td><td>EPM Niryat Protsahan</td><td>Export promotion; complements TEAM/ONDC.</td></tr>
@@ -303,39 +315,44 @@
   </ul>
 
   <div class="page-break"></div>
-  <h2>7. Shared questions to add once (not per-scheme sprawl)</h2>
-  <p>Add a small number of Scheme Finder questions so the 18 missing schemes can be scored without a 40-question wizard. Recommended insertions after <code>stage</code> / <code>market</code>:</p>
+  <h2>7. Shared questions to add once (conditional — not all at once)</h2>
+  <p>Add a small number of Scheme Finder questions so the missing schemes can be scored without a 40-question wizard. <strong>Strict gating</strong> prevents questionnaire fatigue:</p>
   <table>
-    <thead><tr><th>New question ID</th><th>Options (summary)</th><th>Unlocks</th></tr></thead>
+    <thead><tr><th>New question ID</th><th>When shown</th><th>Options (summary)</th><th>Unlocks</th></tr></thead>
     <tbody>
       <tr>
         <td><code>supportType</code></td>
+        <td>Always (after <code>stage</code>)</td>
         <td>loanOrSubsidy, guarantee, certification, training, marketingFair, clusterCfc, notSure</td>
-        <td>Filters ESDP/ATI/ZED/LEAN/PMS vs bank DPR vs Cluster DPR.</td>
+        <td>Filters ESDP/ZED/LEAN/PMS vs bank DPR vs Cluster DPR.</td>
       </tr>
       <tr>
         <td><code>upgradeIntent</code></td>
-        <td>newUnit, expandSameLine, techUpgrade, secondPmegpLoan, workingCapitalOnly, notSure</td>
-        <td>2nd PMEGP loan, CLCSS, ECLGS, PTUAS, AP tech upgrade.</td>
+        <td><strong>Only if</strong> <code>stage</code> = brownfield or restart</td>
+        <td>expandSameLine, techUpgrade, secondPmegpLoan, workingCapitalOnly, notSure</td>
+        <td>2nd PMEGP, SCLCSS, ECLGS, PTUAS, AP tech upgrade.</td>
       </tr>
       <tr>
-        <td><code>qualityGoal</code> (optional / skip if supportType ≠ certification)</td>
+        <td><code>qualityGoal</code></td>
+        <td><strong>Only if</strong> <code>supportType</code> = certification</td>
         <td>zed, lean, ipr, none, notSure</td>
-        <td>ZED, LEAN, IPR, Champions.</td>
+        <td>ZED, LEAN, IPR.</td>
       </tr>
       <tr>
-        <td><code>sectorFlag</code> (only if activity is mfg / craft / food)</td>
-        <td>none, pharma, coir, handloom, foodAlreadyCovered, notSure</td>
-        <td>PTUAS, PMPDS, CVY, NHDP. Food already uses <code>activity=food</code> → PMFME.</td>
+        <td><code>sectorFlag</code></td>
+        <td><strong>Only if</strong> <code>activity</code> = mfg, craft, or food</td>
+        <td>none, pharma, coir, handloom, notSure</td>
+        <td>PTUAS, PMPDS, CVY, NHDP.</td>
       </tr>
       <tr>
-        <td><code>procurementInterest</code> (if owner includes sc/st)</td>
+        <td><code>procurementInterest</code></td>
+        <td><strong>Only if</strong> <code>owner</code> includes sc or st</td>
         <td>yes, no, notSure</td>
         <td>National SC/ST Hub vs ordinary credit.</td>
       </tr>
     </tbody>
   </table>
-  <p>Handoff to Create New Latest DPR must pass these new fields in <code>ventureMatchAnswers</code> so overlays and uploads can branch.</p>
+  <p>Handoff to Create New Latest DPR must pass these new fields in <code>ventureMatchAnswers</code> so overlays and uploads can branch. Clear skipped answers when the user goes back and changes a gating answer.</p>
 
   <h2>8. Missing schemes — how Scheme Finder and Create New Latest DPR change</h2>
   <p>Each card below is the integration spec. Codes in backticks are proposed app codes.</p>
@@ -348,8 +365,9 @@
     <p><strong>Scheme Finder</strong></p>
     <ul>
       <li>Require <code>stage</code> = brownfield (or restart with prior unit).</li>
-      <li>Require <code>upgradeIntent</code> = secondPmegpLoan (or techUpgrade + priorSubsidy repaid).</li>
-      <li>Fail if <code>stage</code> = greenfield / idea (that is first PMEGP).</li>
+      <li>Require <code>upgradeIntent</code> = secondPmegpLoan.</li>
+      <li><strong>Hard-fail</strong> if <code>stage</code> = greenfield or idea (that is first PMEGP only).</li>
+      <li>Prefer <code>priorSubsidy</code> = repaid (existing assisted unit fully repaid).</li>
       <li>Reuse PMEGP owner / education / rural location scoring; do not double-count as a new unit.</li>
     </ul>
     <p><strong>Create New Latest DPR</strong></p>
@@ -381,22 +399,27 @@
   </div>
 
   <div class="card">
-    <h3>CLCSS / TUS — proposed <code>CLCSS</code></h3>
-    <p>Capital subsidy on institutional loan for technology upgradation (brownfield machinery).</p>
+    <h3>SCLCSS (not general CLCSS) — proposed <code>SCLCSS</code></h3>
+    <div class="warn" style="margin-top:0">
+      <p><strong>Policy:</strong> General CLCSS / TUS closed permanently on <strong>31 March 2020</strong>. The only active central credit-linked capital subsidy for technology upgradation is <strong>SCLCSS</strong> — strictly for <strong>SC/ST-owned MSEs</strong>, indicative 25% capital subsidy up to ₹25 Lakh. Do <em>not</em> implement a generic <code>CLCSS</code> code.</p>
+      <p>General-category brownfield tech upgrade → existing state scheme <code>AP_TECH_UPGRADE</code> (20%).</p>
+    </div>
     <p><strong>Scheme Finder</strong></p>
     <ul>
-      <li><code>stage</code> brownfield; <code>upgradeIntent</code> = techUpgrade.</li>
+      <li><code>stage</code> brownfield or restart; <code>upgradeIntent</code> = techUpgrade.</li>
+      <li><code>owner</code> includes <code>sc</code> or <code>st</code> (hard requirement).</li>
       <li><code>activity</code> mfg / food / craft (not pure vending).</li>
-      <li>Budget typically machinery-sized (₹10L–₹ several Cr) — fail <code>under2L</code> unless quotes exist.</li>
+      <li>Budget typically machinery-sized — fail <code>under2L</code> unless quotes exist.</li>
+      <li>If owner is general / not SC-ST and wants tech upgrade → match <code>AP_TECH_UPGRADE</code> instead (when AP domicile rules pass).</li>
     </ul>
     <p><strong>Create New Latest DPR</strong></p>
     <ul>
-      <li>Full 18-step bank DPR is appropriate (term loan + subsidy).</li>
-      <li>Step 1 extras: existing vs proposed technology, industry list / eligible machinery class.</li>
+      <li>Full 18-step bank DPR is appropriate (term loan + capital subsidy).</li>
+      <li>Step 1 extras: existing vs proposed technology, SC/ST ownership proof reminder.</li>
       <li>Step 12: plant &amp; machinery dominant; land/building optional.</li>
-      <li>Step 13: term loan + CLCSS subsidy line + promoter margin.</li>
-      <li>Step 18: machinery quotations with tech specs, existing Udyam, term-loan sanction (or in-principle), CA certificate of existing FCI.</li>
-      <li>Can share overlay patterns with existing <code>AP_TECH_UPGRADE</code>.</li>
+      <li>Step 13: term loan + SCLCSS subsidy line + promoter margin.</li>
+      <li>Step 18: caste certificate, machinery quotations with tech specs, existing Udyam, term-loan sanction (or in-principle), CA certificate of existing FCI.</li>
+      <li>Share overlay patterns with existing <code>AP_TECH_UPGRADE</code> where possible.</li>
     </ul>
   </div>
 
@@ -455,7 +478,7 @@
   <div class="card">
     <h3>MSE-GIFT — proposed <code>MSE_GIFT</code></h3>
     <p><strong>Scheme Finder:</strong> brownfield mfg/food; upgradeIntent = techUpgrade; optional “green machinery” chip.</p>
-    <p><strong>Create New Latest DPR:</strong> same skeleton as CLCSS but extras: energy baseline (kWh), old vs new machine, expected saving. Step 18: energy bill, quotations for EE equipment, Udyam. Can sit beside <code>MSE_SPICE</code>.</p>
+    <p><strong>Create New Latest DPR:</strong> same skeleton as SCLCSS / AP tech upgrade but extras: energy baseline (kWh), old vs new machine, expected saving. Step 18: energy bill, quotations for EE equipment, Udyam. Can sit beside <code>MSE_SPICE</code>.</p>
   </div>
 
   <h3>8.5 Market and sector-specific</h3>
@@ -499,15 +522,15 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td><code>PMEGP_2ND</code></td><td>2nd Loan (PMEGP)</td><td>brownfield + secondPmegpLoan</td><td>Full 18, upgrade copy + prior-subsidy docs</td><td>Yes</td></tr>
+      <tr><td><code>PMEGP_2ND</code></td><td>2nd Loan (PMEGP)</td><td>brownfield + secondPmegpLoan; fail greenfield</td><td>Full 18, upgrade copy + prior-subsidy docs</td><td>Yes</td></tr>
       <tr><td><code>ECLGS</code></td><td>ECLGS</td><td>brownfield + WC only</td><td>Short WC pack (steps 1,4,11,13,14,18)</td><td>Yes (short)</td></tr>
-      <tr><td><code>CLCSS</code></td><td>CLCSS/TUS</td><td>brownfield + techUpgrade</td><td>Full 18, P&amp;M-heavy</td><td>Yes</td></tr>
+      <tr><td><code>SCLCSS</code></td><td>Portal CLCSS → SCLCSS only</td><td>SC/ST + brownfield + techUpgrade</td><td>Full 18, P&amp;M-heavy + caste cert</td><td>Yes</td></tr>
       <tr><td><code>ZED</code></td><td>ZED</td><td>certification / zed</td><td>Certification note</td><td>Yes (short)</td></tr>
       <tr><td><code>LEAN</code></td><td>LEAN</td><td>certification / lean</td><td>Process-improvement pack</td><td>Yes (short)</td></tr>
       <tr><td><code>MSME_IPR</code></td><td>IPR</td><td>ipr</td><td>IP filing pack</td><td>Yes (short)</td></tr>
       <tr><td><code>CHAMPIONS</code></td><td>CHMPS</td><td>not loan</td><td>No DPR — helpdesk CTA</td><td>No</td></tr>
       <tr><td><code>ESDP</code></td><td>ESDP</td><td>training</td><td>No DPR — batch interest</td><td>No</td></tr>
-      <tr><td><code>ATI</code></td><td>ATI</td><td>institution only</td><td>Out of scope</td><td>No</td></tr>
+      <tr><td><code>ATI</code></td><td>ATI</td><td>institution only</td><td>Out of scope (hide from citizen matcher)</td><td>No</td></tr>
       <tr><td><code>SCST_HUB</code></td><td>SCSTHUB</td><td>sc/st + procurement</td><td>Procurement pack; bank DPR only if also credit-match</td><td>Optional</td></tr>
       <tr><td><code>NTCEC</code></td><td>NTCEC</td><td>training / tooling</td><td>Service request</td><td>No</td></tr>
       <tr><td><code>ASPIRE</code></td><td>ASPIRE</td><td>rural / incubator</td><td>Shorter livelihood DPR</td><td>Yes</td></tr>
@@ -523,13 +546,21 @@
   <h2>10. Recommended implementation order</h2>
   <ol>
     <li><strong>Guardrails:</strong> keep 4 cluster schemes off the individual picker; add Cluster DPR CTAs in Scheme Finder for MSE-CDP / SFURTI / APCDP / APICF.</li>
-    <li><strong>Matcher questions:</strong> add <code>supportType</code> and <code>upgradeIntent</code> first (unblocks 2nd PMEGP, CLCSS, ECLGS, ZED/LEAN filter).</li>
-    <li><strong>Highest-value DPR overlays:</strong> <code>PMEGP_2ND</code>, <code>CLCSS</code> (align with AP_TECH_UPGRADE), <code>MSE_GIFT</code>.</li>
-    <li><strong>Short packs:</strong> ZED, LEAN, PMS (stop sending these users through 18 empty bank steps).</li>
+    <li><strong>Matcher questions:</strong> add <code>supportType</code> always; gate <code>upgradeIntent</code> / <code>qualityGoal</code> / <code>sectorFlag</code> / <code>procurementInterest</code> (unblocks 2nd PMEGP, SCLCSS, ECLGS, ZED/LEAN filter).</li>
+    <li><strong>Highest-value DPR overlays:</strong> <code>PMEGP_2ND</code>, <code>SCLCSS</code> (SC/ST only; general → <code>AP_TECH_UPGRADE</code>), <code>MSE_GIFT</code>.</li>
+    <li><strong>Short packs:</strong> ZED, LEAN, PMS, ECLGS (stop sending these users through 18 empty bank steps).</li>
     <li><strong>Sector extras:</strong> CVY, NHDP, PTUAS / PMPDS.</li>
-    <li><strong>Non-DPR CTAs:</strong> ESDP, Champions, NTCEC, ATI (hide ATI from citizen matcher).</li>
-    <li>For each new code: SchemeRule in <code>schemes.ts</code>, brief in <code>schemeBriefs/*</code>, extras/uploads/hidden steps in <code>schemeFormConfig.ts</code>, picker card, and updates to both business-logic markdown files.</li>
+    <li><strong>Non-DPR CTAs:</strong> ESDP, Champions, NTCEC; hide ATI from citizen matcher.</li>
+    <li>For each new code: SchemeRule in <code>schemes.ts</code>, brief in <code>schemeBriefs/*</code>, extras/uploads/hidden steps in <code>schemeFormConfig.ts</code>, picker card (if DPR shape allows), and updates to both business-logic markdown files.</li>
   </ol>
+
+  <h2>10a. Policy pitfalls (do not regress)</h2>
+  <ul>
+    <li>Do not revive general <strong>CLCSS</strong> as an app code.</li>
+    <li>Do not allow <code>PMEGP_2ND</code> on greenfield / idea stage.</li>
+    <li>Do not quote unverified Stand-Up India ceilings after the original window ended (Mar 2025) until new guidelines are published.</li>
+    <li>Do not force ZED / LEAN / IPR / PMS / ESDP / Champions / NTCEC through a full bank P&amp;L.</li>
+  </ul>
 
   <h2>11. Files that would change when integrating</h2>
   <table>
@@ -556,8 +587,8 @@
   </ul>
 
   <footer class="note">
-    AI_DRP · AP MSME One gap analysis · Source catalog extracted from apmsmeone.ap.gov.in schemes bundle ·
-    App baseline: 16 Scheme Finder codes in ventureMatch/schemes.ts ·
+    AI_DRP · AP MSME One gap analysis · Rev 2 (errata: SCLCSS, PMEGP_2ND, Stand-Up caution, conditional questions) ·
+    Source catalog extracted from apmsmeone.ap.gov.in schemes bundle ·
     Related: docs/venture-match-business-logic.md, docs/create-new-dpr-business-logic.md
   </footer>
 </body>

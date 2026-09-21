@@ -29,7 +29,7 @@ Users can:
 | Entry from Scheme Finder | VM → DPR | `saveHandoff` then navigate to `/individual-dpr/create?new=true` or `...?scheme=<CODE>` |
 | Handoff key | shared | `localStorage` `venture-match-handoff` |
 | On `?new=true` load | DPR reads VM | `peekHandoff()` → `setVentureMatchAnswers`, optional `setMatchedSchemeCode` from query, `prefillFromVentureMatch(answers)` |
-| Scheme list | shared catalog | Dropdown options = `SCHEMES` from `ventureMatch/schemes.ts` (+ empty vanilla option) |
+| Scheme list | shared catalog | Dropdown / picker = `SCHEMES` filtered by `isIndividualPickerScheme` (+ empty vanilla option) |
 | Runtime use of VM answers | DPR reads VM | Step 18 uploads / PMEGP caste cert / MUDRA Tarun Plus / MUDRA Shishu–Kishore / PMEGP education gate use `data.ventureMatchAnswers` |
 | Form impact copy | DPR only | `getSchemeImpact(code)` explains how the **form** changes — not eligibility matching |
 | Scheme brochure | DPR only | `SchemeBriefPanel` + `schemeBriefs/*` — Benefits / Eligibility / How to Apply / Documents / FAQs (EN/TE) |
@@ -128,7 +128,13 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `SVANIDHI` | `covOrLor`, `upiQr` |
 | `PMFME` | `fssai` (yes / planned) |
 | `AP_EDP` | `apiicPark` (land-rebate hint) |
-| Other schemes | no step-1 extras in v1 |
+| `PMEGP_2ND` | `priorScheme`, `priorSanctionAmount`, `firstSubsidyYear` |
+| `SCLCSS` / `AP_TECH_UPGRADE` | `existingTech`, `proposedTech` |
+| `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
+| `ZED` / `LEAN` / `MSME_IPR` / `PMS` / … | short-overlay fields (see `SCHEME_EXTRA_FIELDS`) |
+| Cluster / CTA schemes (`MSE_CDP`, `SFURTI`, `AP_CDP`, `APICF`, `CHAMPIONS`, `ESDP`, `NTCEC`) | **Excluded** from Create New Latest DPR picker (`isIndividualPickerScheme`) |
+
+**Policy:** Do not implement general `CLCSS` — use `SCLCSS` (SC/ST only) + `AP_TECH_UPGRADE` for general category. Short overlays hide most bank P&L steps via `getHiddenSteps`.
 
 AI suggestions / fill-all pass `_schemeCode` and can infer missing extras.
 
@@ -145,7 +151,7 @@ Shown when bank loan (lakhs) &gt; 0 (`showDscr`).
 
 ### PMEGP education gate (upload)
 
-If scheme is `PMEGP` and project cost (lakhs) exceeds:
+If scheme is `PMEGP` or `PMEGP_2ND` and project cost (lakhs) exceeds:
 
 - Manufacturing-like activity (`mfg` / `food` / `craft`) → **&gt; 10**  
 - Service-like (`service` / `knowledge` / `trade` / `vending` / `mixed`) → **&gt; 5**  

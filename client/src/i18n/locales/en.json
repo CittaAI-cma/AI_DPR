@@ -679,20 +679,109 @@
       "kickoff": "I will ask short questions based on Andhra Pradesh scheme rules, then match you to an option.",
       "languageToggle": "Chat language",
       "starters": {
-        "activity": ["Making / processing", "Buying and selling", "Giving a service", "Only farming crops"],
-        "stage": ["Yes, already running", "Not started yet", "Not sure"],
-        "budget": ["Yes, I have a rough cost", "No money needed", "Not calculated yet"],
-        "legal": ["Yes, registered", "No firm yet", "SHG / coop / trust / FPO", "Not decided yet"],
-        "owner": ["Someone holds 51%+", "Equal split (no 51%)", "Ownership not decided", "Not sure"],
-        "domicile": ["Yes, I live in AP", "No, another state", "Not sure"],
-        "location": ["Yes, in Andhra Pradesh", "Outside Andhra Pradesh", "Location not decided"],
-        "riceCard": ["Yes, White Rice Card", "No White Rice Card", "Not sure"],
-        "age": ["Below 18", "18 to 20", "21 to 50", "51 to 60"],
-        "education": ["Yes, 8th or higher", "Below 8th class", "Not sure"],
-        "udyam": ["Yes, I have Udyam", "No, not yet", "Not sure what Udyam is"],
-        "priorSubsidy": ["Yes", "No", "Not sure"],
-        "govtFamily": ["Yes", "No", "Not sure"],
-        "market": ["Already selling", "Not selling yet", "Not sure"]
+        "activity": [
+          "Making / processing",
+          "Buying and selling",
+          "Giving a service",
+          "Only farming crops"
+        ],
+        "stage": [
+          "Yes, already running",
+          "Not started yet",
+          "Not sure"
+        ],
+        "budget": [
+          "Yes, I have a rough cost",
+          "No money needed",
+          "Not calculated yet"
+        ],
+        "legal": [
+          "Yes, registered",
+          "No firm yet",
+          "SHG / coop / trust / FPO",
+          "Not decided yet"
+        ],
+        "owner": [
+          "Someone holds 51%+",
+          "Equal split (no 51%)",
+          "Ownership not decided",
+          "Not sure"
+        ],
+        "domicile": [
+          "Yes, I live in AP",
+          "No, another state",
+          "Not sure"
+        ],
+        "location": [
+          "Yes, in Andhra Pradesh",
+          "Outside Andhra Pradesh",
+          "Location not decided"
+        ],
+        "riceCard": [
+          "Yes, White Rice Card",
+          "No White Rice Card",
+          "Not sure"
+        ],
+        "age": [
+          "Below 18",
+          "18 to 20",
+          "21 to 50",
+          "51 to 60"
+        ],
+        "education": [
+          "Yes, 8th or higher",
+          "Below 8th class",
+          "Not sure"
+        ],
+        "udyam": [
+          "Yes, I have Udyam",
+          "No, not yet",
+          "Not sure what Udyam is"
+        ],
+        "priorSubsidy": [
+          "Yes",
+          "No",
+          "Not sure"
+        ],
+        "govtFamily": [
+          "Yes",
+          "No",
+          "Not sure"
+        ],
+        "market": [
+          "Already selling",
+          "Not selling yet",
+          "Not sure"
+        ],
+        "supportType": [
+          "Loan or subsidy",
+          "Training",
+          "Certification",
+          "Not sure"
+        ],
+        "upgradeIntent": [
+          "Upgrade machines",
+          "2nd PMEGP",
+          "Working capital",
+          "Expand same line"
+        ],
+        "qualityGoal": [
+          "ZED",
+          "LEAN",
+          "IPR",
+          "Not sure"
+        ],
+        "sectorFlag": [
+          "Pharma",
+          "Coir",
+          "Handloom",
+          "None"
+        ],
+        "procurementInterest": [
+          "Yes",
+          "No",
+          "Not sure"
+        ]
       }
     },
     "criteria": {
@@ -737,7 +826,34 @@
       "export": "For selling goods to other countries",
       "cmepActivity": "AP CMEP is strictly for Manufacturing or Knowledge Economy ventures.",
       "cmepDomicile": "AP CMEP requires Andhra Pradesh local domicile.",
-      "cmepCredit": "AP CMEP requires a bank-linked credit loan."
+      "cmepCredit": "AP CMEP requires a bank-linked credit loan.",
+      "secondPmegpLoan": "Must be applying for a 2nd PMEGP upgrade loan (existing assisted unit)",
+      "workingCapitalOnly": "Must need working capital / guarantee top-up, not a new plant",
+      "techUpgrade": "Must be upgrading technology or expanding the same line",
+      "scStOwner": "Main owner must be SC or ST (51%+)",
+      "mfgFoodCraft": "Must be manufacturing, food processing, or craft",
+      "budgetAbove2L": "Project cost should be above about ₹2 lakh",
+      "certificationSupport": "Looking for quality / certification support",
+      "zedGoal": "Must target ZED certification",
+      "leanGoal": "Must target LEAN consulting",
+      "iprGoal": "Must target IPR / design / incubation support",
+      "mfgOrFood": "Must be manufacturing or food processing",
+      "knowledgeMfgFood": "Must be knowledge, manufacturing, or food",
+      "notBankLoan": "Not primarily a bank term-loan application",
+      "trainingSupport": "Looking for training / skill development",
+      "procurementInterest": "Interested in government procurement / GeM",
+      "trainingOrTech": "Looking for training or technology centre support",
+      "ruralPreferred": "Rural / home-based location preferred",
+      "ideaOrGreenfield": "Must be an idea or new unit",
+      "notAbove10Cr": "Project must not be above ₹10 crore factory scale",
+      "marketingFair": "Looking for trade fair / marketing support",
+      "existingPreferred": "Existing unit preferred (not only an idea)",
+      "coirSector": "Must be a coir product line",
+      "handloomSector": "Must be handloom / weaving",
+      "pharmaSector": "Must be pharma / medical devices",
+      "craftOrMfg": "Must be craft or manufacturing",
+      "clusterCfc": "Looking for multi-unit / CFC cluster support",
+      "priorSubsidyRepaid": "Prior subsidy loan should be fully repaid"
     },
     "ownershipHint": {
       "title": "Think about putting the business in your wife’s or mother’s name",
@@ -795,6 +911,69 @@
       },
       "EPM_NIRYAT": {
         "name": "EPM Niryat Protsahan (export support)"
+      },
+      "PMEGP_2ND": {
+        "name": "2nd PMEGP / REGP / MUDRA upgrade loan"
+      },
+      "ECLGS": {
+        "name": "ECLGS (emergency credit line guarantee)"
+      },
+      "SCLCSS": {
+        "name": "SCLCSS (SC/ST technology capital subsidy)"
+      },
+      "ZED": {
+        "name": "ZED Certification"
+      },
+      "LEAN": {
+        "name": "Competitive LEAN"
+      },
+      "MSME_IPR": {
+        "name": "MSME Innovative (IPR / design)"
+      },
+      "CHAMPIONS": {
+        "name": "MSME Champions"
+      },
+      "ESDP": {
+        "name": "ESDP (skill / entrepreneurship training)"
+      },
+      "SCST_HUB": {
+        "name": "National SC/ST Hub"
+      },
+      "NTCEC": {
+        "name": "MSME Technology Centres / Extension Centres"
+      },
+      "ASPIRE": {
+        "name": "ASPIRE (rural innovation / livelihood)"
+      },
+      "MSE_GIFT": {
+        "name": "MSE-GIFT (green investment)"
+      },
+      "PMS": {
+        "name": "Procurement & Marketing Scheme (PMS)"
+      },
+      "CVY": {
+        "name": "Coir Vikas Yojana"
+      },
+      "NHDP": {
+        "name": "National Handloom Development Programme"
+      },
+      "PTUAS": {
+        "name": "PTUAS (pharma technology upgrade)"
+      },
+      "PMPDS": {
+        "name": "PMPDS (pharma & medical devices)"
+      },
+      "MSE_CDP": {
+        "name": "MSE-CDP (cluster / CFC)"
+      },
+      "SFURTI": {
+        "name": "SFURTI (traditional industry clusters)"
+      },
+      "AP_CDP": {
+        "name": "AP Cluster Development Programme"
+      },
+      "APICF": {
+        "name": "APICF (pharma common facilities)"
       }
     },
     "benefits": {
@@ -805,7 +984,7 @@
       "pmegpUrbanSpecial": "25% subsidy (city area, special category)",
       "pmegpRural": "25% subsidy (village area)",
       "pmegpUrban": "15% subsidy (city area)",
-      "standup": "Bank loan from ₹10 lakh to ₹1 crore for SC, ST, or women-owned new units",
+      "standup": "Bank loan from ₹10 lakh to ₹1 crore for SC, ST, or women-owned new units (confirm live DFS / bank guidelines — original Stand-Up India window ended Mar 2025)",
       "mudra": "Loan without extra property as security, up to ₹20 lakh",
       "cgtmseWomen": "Up to 90% loan guarantee for women-owned units",
       "cgtmse": "Loan guarantee without extra property as security",
@@ -820,7 +999,28 @@
       "obmms": "Subsidy on a self-employment loan from the AP welfare corporation",
       "apParks": "75% rebate on land cost in APIIC industrial parks",
       "rampTeam": "Free help to start selling on ONDC",
-      "epmNiryat": "2.75% interest support on export loans"
+      "epmNiryat": "2.75% interest support on export loans",
+      "pmegp2nd": "Upgrade loan / subsidy for existing PMEGP, REGP, or MUDRA units",
+      "eclgs": "Additional working-capital guarantee for existing MSMEs",
+      "sclcss": "25% capital subsidy (up to ₹25 lakh) for SC/ST-owned MSE technology upgrade",
+      "zed": "Support to assess and certify under ZED (Bronze / Silver / Gold)",
+      "lean": "LEAN consulting support for existing manufacturing / food units",
+      "msmeIpr": "Support for patents, designs, trademarks, and incubation",
+      "champions": "Helpdesk for delayed payments, public procurement, and MSME issues",
+      "esdp": "Entrepreneurship and skill development training batches",
+      "scstHub": "Procurement readiness and market access for SC/ST MSEs",
+      "ntcec": "Tooling, training, and job-work at MSME Technology Centres",
+      "aspire": "Rural innovation / livelihood and incubator-linked support",
+      "mseGift": "Green / energy-efficient machinery financing support",
+      "pms": "Trade fair stall and marketing reimbursement support",
+      "cvy": "Coir Board linked subsidy / credit support",
+      "nhdp": "Handloom weaver development support",
+      "ptuas": "Pharma technology upgradation assistance (unit-level)",
+      "pmpds": "Pharma and medical devices promotion / development support",
+      "mseCdp": "Multi-unit CFC / cluster infrastructure — use Cluster DPR",
+      "sfurti": "Traditional industry cluster regeneration — use Cluster DPR",
+      "apCdp": "State cluster development — use Cluster DPR",
+      "apicf": "Pharma common facilities cluster — use Cluster DPR"
     },
     "questions": {
       "activity": {
@@ -990,8 +1190,67 @@
           "notSellingYet": "Not selling yet",
           "notSure": "Not sure"
         }
+      },
+      "supportType": {
+        "label": "What kind of help do you need?",
+        "title": "What support are you looking for first?",
+        "options": {
+          "loanOrSubsidy": "Bank loan or capital subsidy",
+          "guarantee": "Loan guarantee / extra working capital cover",
+          "certification": "Quality certification or consulting (ZED / LEAN / IPR)",
+          "training": "Training or skill programme",
+          "marketingFair": "Trade fair / marketing support",
+          "clusterCfc": "Common facility / multi-unit cluster project",
+          "notSure": "Not sure yet"
+        }
+      },
+      "upgradeIntent": {
+        "label": "What is the upgrade for?",
+        "title": "For your existing unit, what do you want to do?",
+        "options": {
+          "expandSameLine": "Expand capacity in the same line",
+          "techUpgrade": "Upgrade machines / technology",
+          "secondPmegpLoan": "2nd PMEGP loan on an existing assisted unit",
+          "workingCapitalOnly": "Only working capital / liquidity",
+          "notSure": "Not sure"
+        }
+      },
+      "qualityGoal": {
+        "label": "Which quality track?",
+        "title": "Which certification or consulting track fits?",
+        "options": {
+          "zed": "ZED certification",
+          "lean": "LEAN consulting",
+          "ipr": "IPR / design / incubation",
+          "none": "None of these",
+          "notSure": "Not sure"
+        }
+      },
+      "sectorFlag": {
+        "label": "Special sector?",
+        "title": "Is your unit in one of these special sectors?",
+        "options": {
+          "none": "No special sector",
+          "pharma": "Pharma / medical devices",
+          "coir": "Coir",
+          "handloom": "Handloom / weaving",
+          "notSure": "Not sure"
+        }
+      },
+      "procurementInterest": {
+        "label": "Government procurement?",
+        "title": "Are you interested in selling to government / GeM?",
+        "options": {
+          "yes": "Yes",
+          "no": "No",
+          "notSure": "Not sure"
+        }
       }
-    }
+    },
+    "openClusterDpr": "Open Cluster DPR",
+    "generateShortPack": "Prepare short pack for this match",
+    "ctaOnlyHint": "This is a service / helpdesk programme — not a bank DPR. Contact DIC / Champions portal / ESDP batch as applicable.",
+    "clusterRedirectHint": "This is a multi-unit / CFC cluster scheme. Use Cluster DPR, not the individual 18-step form."
   },
   "clusterDpr": {
     "title": "Cluster DPR Creation",

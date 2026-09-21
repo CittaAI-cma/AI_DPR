@@ -524,6 +524,17 @@ export const SCHEMES: SchemeRule[] = [
         test: (a) => passIf(a.stage, ['brownfield', 'restart']),
       },
       {
+        id: 'upgradeIntent',
+        questionId: 'upgradeIntent',
+        labelKey: 'ventureMatch.criteria.techUpgrade',
+        test: (a) => {
+          if (!a.upgradeIntent) return 'unknown';
+          return a.upgradeIntent === 'techUpgrade' || a.upgradeIntent === 'expandSameLine'
+            ? 'pass'
+            : 'fail';
+        },
+      },
+      {
         id: 'domicile',
         questionId: 'domicile',
         labelKey: 'ventureMatch.criteria.apDomicile',
@@ -737,4 +748,738 @@ export const SCHEMES: SchemeRule[] = [
       },
     ],
   },
+  {
+    code: 'PMEGP_2ND',
+    name: '2nd Loan for Up-gradation of Existing PMEGP / REGP / MUDRA Units',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.pmegp2nd',
+    criteria: [
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.brownfield',
+        test: (a) => {
+          if (!a.stage) return 'unknown';
+          if (a.stage === 'greenfield' || a.stage === 'idea') return 'fail';
+          return passIf(a.stage, ['brownfield', 'restart']);
+        },
+      },
+      {
+        id: 'upgradeIntent',
+        questionId: 'upgradeIntent',
+        labelKey: 'ventureMatch.criteria.secondPmegpLoan',
+        test: (a) => {
+          if (!a.upgradeIntent) return 'unknown';
+          return a.upgradeIntent === 'secondPmegpLoan' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalPmegp',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetRequired',
+        test: (a) => passIf(a.budget, NUMERIC_BUDGETS),
+      },
+      {
+        id: 'priorSubsidy',
+        questionId: 'priorSubsidy',
+        labelKey: 'ventureMatch.criteria.priorSubsidyRepaid',
+        test: (a) => {
+          if (!a.priorSubsidy) return 'unknown';
+          return a.priorSubsidy === 'repaid' ? 'pass' : a.priorSubsidy === 'outstanding' ? 'fail' : 'unknown';
+        },
+      },
+    ],
+  },
+  {
+    code: 'ECLGS',
+    name: 'Emergency Credit Line Guarantee Scheme (ECLGS)',
+    kind: 'guarantee',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.eclgs',
+    criteria: [
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.brownfield',
+        test: (a) => {
+          if (!a.stage) return 'unknown';
+          if (a.stage === 'greenfield' || a.stage === 'idea') return 'fail';
+          return passIf(a.stage, ['brownfield', 'restart']);
+        },
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+      {
+        id: 'upgradeIntent',
+        questionId: 'upgradeIntent',
+        labelKey: 'ventureMatch.criteria.workingCapitalOnly',
+        test: (a) => {
+          if (!a.upgradeIntent && a.supportType !== 'guarantee') return 'unknown';
+          if (a.upgradeIntent === 'workingCapitalOnly' || a.supportType === 'guarantee') return 'pass';
+          if (a.upgradeIntent) return 'fail';
+          return 'unknown';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+    ],
+  },
+  {
+    code: 'SCLCSS',
+    name: 'Special Credit Linked Capital Subsidy Scheme (SCLCSS) for SC/ST MSEs',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.sclcss',
+    criteria: [
+      {
+        id: 'owner',
+        questionId: 'owner',
+        labelKey: 'ventureMatch.criteria.scStOwner',
+        test: (a) =>
+          requireValue(owners(a), (tags) => tags.some((o) => o === 'sc' || o === 'st')),
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.brownfield',
+        test: (a) => passIf(a.stage, ['brownfield', 'restart']),
+      },
+      {
+        id: 'upgradeIntent',
+        questionId: 'upgradeIntent',
+        labelKey: 'ventureMatch.criteria.techUpgrade',
+        test: (a) => {
+          if (!a.upgradeIntent) return 'unknown';
+          return a.upgradeIntent === 'techUpgrade' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.mfgFoodCraft',
+        test: (a) => passIf(a.activity, MFG_LIKE),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.budgetAbove2L',
+        test: (a) => {
+          if (!a.budget) return 'unknown';
+          if (a.budget === 'under2L' || a.budget === 'none' || a.budget === 'notSure') return 'fail';
+          return passIf(a.budget, NUMERIC_BUDGETS);
+        },
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'ZED',
+    name: 'Sustainable ZED Certification',
+    kind: 'support',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.zed',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.certificationSupport',
+        test: (a) => {
+          if (!a.supportType && !a.qualityGoal) return 'unknown';
+          if (a.supportType === 'certification' || a.qualityGoal === 'zed') return 'pass';
+          if (a.qualityGoal && a.qualityGoal !== 'zed') return 'fail';
+          if (a.supportType && a.supportType !== 'certification') return 'fail';
+          return 'unknown';
+        },
+      },
+      {
+        id: 'qualityGoal',
+        questionId: 'qualityGoal',
+        labelKey: 'ventureMatch.criteria.zedGoal',
+        test: (a) => {
+          if (!a.qualityGoal) return 'unknown';
+          return a.qualityGoal === 'zed' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+    ],
+  },
+  {
+    code: 'LEAN',
+    name: 'Competitive LEAN',
+    kind: 'support',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.lean',
+    criteria: [
+      {
+        id: 'qualityGoal',
+        questionId: 'qualityGoal',
+        labelKey: 'ventureMatch.criteria.leanGoal',
+        test: (a) => {
+          if (!a.qualityGoal) return 'unknown';
+          return a.qualityGoal === 'lean' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.brownfield',
+        test: (a) => passIf(a.stage, ['brownfield', 'restart']),
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.mfgOrFood',
+        test: (a) => passIf(a.activity, ['mfg', 'food']),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'MSME_IPR',
+    name: 'MSME Innovative — Incubation, Design & IPR',
+    kind: 'support',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.msmeIpr',
+    criteria: [
+      {
+        id: 'qualityGoal',
+        questionId: 'qualityGoal',
+        labelKey: 'ventureMatch.criteria.iprGoal',
+        test: (a) => {
+          if (!a.qualityGoal) return 'unknown';
+          return a.qualityGoal === 'ipr' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.knowledgeMfgFood',
+        test: (a) => passIf(a.activity, ['knowledge', 'mfg', 'food']),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'CHAMPIONS',
+    name: 'MSME Champions Scheme',
+    kind: 'support',
+    dprRoute: 'cta',
+    benefit: () => 'ventureMatch.benefits.champions',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.notBankLoan',
+        test: (a) => {
+          if (!a.supportType) return 'unknown';
+          return a.supportType === 'loanOrSubsidy' ? 'fail' : 'pass';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+    ],
+  },
+  {
+    code: 'ESDP',
+    name: 'Entrepreneurship and Skill Development Programme (ESDP)',
+    kind: 'support',
+    dprRoute: 'cta',
+    benefit: () => 'ventureMatch.benefits.esdp',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.trainingSupport',
+        test: (a) => {
+          if (!a.supportType) return 'unknown';
+          return a.supportType === 'training' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'age',
+        questionId: 'age',
+        labelKey: 'ventureMatch.criteria.age18',
+        test: (a) => passIf(a.age, AGE_18_PLUS),
+      },
+    ],
+  },
+  {
+    code: 'SCST_HUB',
+    name: 'National SC/ST Hub',
+    kind: 'support',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.scstHub',
+    criteria: [
+      {
+        id: 'owner',
+        questionId: 'owner',
+        labelKey: 'ventureMatch.criteria.scStOwner',
+        test: (a) =>
+          requireValue(owners(a), (tags) => tags.some((o) => o === 'sc' || o === 'st')),
+      },
+      {
+        id: 'procurementInterest',
+        questionId: 'procurementInterest',
+        labelKey: 'ventureMatch.criteria.procurementInterest',
+        test: (a) => {
+          if (!a.procurementInterest) return 'unknown';
+          return a.procurementInterest === 'yes' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'NTCEC',
+    name: 'New Technology Centres and Extension Centres',
+    kind: 'support',
+    dprRoute: 'cta',
+    benefit: () => 'ventureMatch.benefits.ntcec',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.trainingOrTech',
+        test: (a) => {
+          if (!a.supportType && !a.upgradeIntent) return 'unknown';
+          if (
+            a.supportType === 'training' ||
+            a.upgradeIntent === 'techUpgrade'
+          )
+            return 'pass';
+          if (a.supportType === 'loanOrSubsidy') return 'fail';
+          return 'unknown';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.manufacturing',
+        test: (a) => passIf(a.activity, ['mfg']),
+      },
+    ],
+  },
+  {
+    code: 'ASPIRE',
+    name: 'ASPIRE — Promotion of Innovation, Rural Industries and Entrepreneurship',
+    kind: 'support',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.aspire',
+    criteria: [
+      {
+        id: 'location',
+        questionId: 'location',
+        labelKey: 'ventureMatch.criteria.ruralPreferred',
+        test: (a) => {
+          if (!a.location) return 'unknown';
+          if (a.location === 'rural' || a.location === 'home') return 'pass';
+          return 'unknown';
+        },
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.ideaOrGreenfield',
+        test: (a) => passIf(a.stage, ['idea', 'greenfield']),
+      },
+      {
+        id: 'budget',
+        questionId: 'budget',
+        labelKey: 'ventureMatch.criteria.notAbove10Cr',
+        test: (a) => {
+          if (!a.budget) return 'unknown';
+          return a.budget === 'above10Cr' ? 'fail' : 'pass';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.enterpriseActivity',
+        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
+      },
+    ],
+  },
+  {
+    code: 'MSE_GIFT',
+    name: 'MSE Green Investment and Financing for Transformation (MSE-GIFT)',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.mseGift',
+    criteria: [
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.brownfield',
+        test: (a) => passIf(a.stage, ['brownfield', 'restart']),
+      },
+      {
+        id: 'upgradeIntent',
+        questionId: 'upgradeIntent',
+        labelKey: 'ventureMatch.criteria.techUpgrade',
+        test: (a) => {
+          if (!a.upgradeIntent) return 'unknown';
+          return a.upgradeIntent === 'techUpgrade' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.mfgOrFood',
+        test: (a) => passIf(a.activity, ['mfg', 'food']),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'PMS',
+    name: 'Procurement and Marketing Scheme (PMS)',
+    kind: 'support',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.pms',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.marketingFair',
+        test: (a) => {
+          if (!a.supportType) return 'unknown';
+          return a.supportType === 'marketingFair' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.existingPreferred',
+        test: (a) => {
+          if (!a.stage) return 'unknown';
+          if (a.stage === 'idea') return 'fail';
+          return 'pass';
+        },
+      },
+    ],
+  },
+  {
+    code: 'CVY',
+    name: 'Coir Vikas Yojana',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.cvy',
+    criteria: [
+      {
+        id: 'sectorFlag',
+        questionId: 'sectorFlag',
+        labelKey: 'ventureMatch.criteria.coirSector',
+        test: (a) => {
+          if (!a.sectorFlag) return 'unknown';
+          return a.sectorFlag === 'coir' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.craftOrMfg',
+        test: (a) => passIf(a.activity, ['craft', 'mfg']),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, [...FIRM_LEGAL, 'otherEntity'] as Legal[]),
+      },
+    ],
+  },
+  {
+    code: 'NHDP',
+    name: 'National Handloom Development Programme (NHDP)',
+    kind: 'subsidy',
+    dprRoute: 'short',
+    benefit: () => 'ventureMatch.benefits.nhdp',
+    criteria: [
+      {
+        id: 'sectorFlag',
+        questionId: 'sectorFlag',
+        labelKey: 'ventureMatch.criteria.handloomSector',
+        test: (a) => {
+          if (!a.sectorFlag) return 'unknown';
+          return a.sectorFlag === 'handloom' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.craft',
+        test: (a) => passIf(a.activity, ['craft']),
+      },
+    ],
+  },
+  {
+    code: 'PTUAS',
+    name: 'Pharmaceutical Technology Upgradation Assistance Scheme (PTUAS)',
+    kind: 'subsidy',
+    benefit: () => 'ventureMatch.benefits.ptuas',
+    criteria: [
+      {
+        id: 'sectorFlag',
+        questionId: 'sectorFlag',
+        labelKey: 'ventureMatch.criteria.pharmaSector',
+        test: (a) => {
+          if (!a.sectorFlag) return 'unknown';
+          return a.sectorFlag === 'pharma' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'stage',
+        questionId: 'stage',
+        labelKey: 'ventureMatch.criteria.brownfield',
+        test: (a) => passIf(a.stage, ['brownfield', 'restart']),
+      },
+      {
+        id: 'upgradeIntent',
+        questionId: 'upgradeIntent',
+        labelKey: 'ventureMatch.criteria.techUpgrade',
+        test: (a) => {
+          if (!a.upgradeIntent) return 'unknown';
+          return a.upgradeIntent === 'techUpgrade' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.manufacturing',
+        test: (a) => passIf(a.activity, ['mfg']),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+      {
+        id: 'udyam',
+        questionId: 'udyam',
+        labelKey: 'ventureMatch.criteria.udyam',
+        test: (a) => passIf(a.udyam, UDYAM_READY),
+      },
+    ],
+  },
+  {
+    code: 'PMPDS',
+    name: 'Pharmaceutical & Medical Devices Promotion and Development Scheme (PMPDS)',
+    kind: 'support',
+    benefit: () => 'ventureMatch.benefits.pmpds',
+    criteria: [
+      {
+        id: 'sectorFlag',
+        questionId: 'sectorFlag',
+        labelKey: 'ventureMatch.criteria.pharmaSector',
+        test: (a) => {
+          if (!a.sectorFlag) return 'unknown';
+          return a.sectorFlag === 'pharma' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.manufacturing',
+        test: (a) => passIf(a.activity, ['mfg']),
+      },
+      {
+        id: 'legal',
+        questionId: 'legal',
+        labelKey: 'ventureMatch.criteria.legalRegistered',
+        test: (a) => passIf(a.legal, FIRM_LEGAL),
+      },
+    ],
+  },
+  {
+    code: 'MSE_CDP',
+    name: 'Micro & Small Enterprises Cluster Development Programme (MSE-CDP)',
+    kind: 'support',
+    dprRoute: 'cluster',
+    benefit: () => 'ventureMatch.benefits.mseCdp',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.clusterCfc',
+        test: (a) => {
+          if (!a.supportType) return 'unknown';
+          return a.supportType === 'clusterCfc' ? 'pass' : 'fail';
+        },
+      },
+    ],
+  },
+  {
+    code: 'SFURTI',
+    name: 'Scheme of Fund for Regeneration of Traditional Industries (SFURTI)',
+    kind: 'support',
+    dprRoute: 'cluster',
+    benefit: () => 'ventureMatch.benefits.sfurti',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.clusterCfc',
+        test: (a) => {
+          if (!a.supportType) return 'unknown';
+          return a.supportType === 'clusterCfc' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'activity',
+        questionId: 'activity',
+        labelKey: 'ventureMatch.criteria.craft',
+        test: (a) => {
+          if (!a.activity) return 'unknown';
+          return a.activity === 'craft' ? 'pass' : 'unknown';
+        },
+      },
+    ],
+  },
+  {
+    code: 'AP_CDP',
+    name: 'Andhra Pradesh Cluster Development Programme (APCDP)',
+    kind: 'support',
+    dprRoute: 'cluster',
+    benefit: () => 'ventureMatch.benefits.apCdp',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.clusterCfc',
+        test: (a) => {
+          if (!a.supportType) return 'unknown';
+          return a.supportType === 'clusterCfc' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'domicile',
+        questionId: 'domicile',
+        labelKey: 'ventureMatch.criteria.apDomicile',
+        test: (a) => passIf(a.domicile, ['ap', 'planningAp']),
+      },
+    ],
+  },
+  {
+    code: 'APICF',
+    name: 'Assistance to Pharmaceutical Industry for Common Facilities (APICF)',
+    kind: 'support',
+    dprRoute: 'cluster',
+    benefit: () => 'ventureMatch.benefits.apicf',
+    criteria: [
+      {
+        id: 'supportType',
+        questionId: 'supportType',
+        labelKey: 'ventureMatch.criteria.clusterCfc',
+        test: (a) => {
+          if (!a.supportType) return 'unknown';
+          return a.supportType === 'clusterCfc' ? 'pass' : 'fail';
+        },
+      },
+      {
+        id: 'sectorFlag',
+        questionId: 'sectorFlag',
+        labelKey: 'ventureMatch.criteria.pharmaSector',
+        test: (a) => {
+          if (!a.sectorFlag) return 'unknown';
+          return a.sectorFlag === 'pharma' ? 'pass' : 'fail';
+        },
+      },
+    ],
+  },
 ];
+
+/** Schemes that belong on Create New Latest DPR picker (exclude cluster / pure CTAs). */
+export function isIndividualPickerScheme(code: string): boolean {
+  const scheme = SCHEMES.find((s) => s.code === code);
+  if (!scheme) return true;
+  const route = scheme.dprRoute || 'full';
+  return route === 'full' || route === 'short';
+}

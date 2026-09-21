@@ -1,9 +1,12 @@
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
-import { SCHEMES } from '@/lib/ventureMatch/schemes';
+import { isIndividualPickerScheme, SCHEMES } from '@/lib/ventureMatch/schemes';
 
 export const SCHEME_OPTIONS = [
   { code: '', label: 'Vanilla bank term loan (standard individual DPR)' },
-  ...SCHEMES.map((s) => ({ code: s.code, label: s.name })),
+  ...SCHEMES.filter((s) => isIndividualPickerScheme(s.code)).map((s) => ({
+    code: s.code,
+    label: s.name,
+  })),
 ];
 
 export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
@@ -11,6 +14,21 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   SVANIDHI: ['covOrLor', 'upiQr'],
   PMFME: ['fssai'],
   AP_EDP: ['apiicPark'],
+  PMEGP_2ND: ['priorScheme', 'priorSanctionAmount', 'firstSubsidyYear'],
+  SCLCSS: ['existingTech', 'proposedTech'],
+  AP_TECH_UPGRADE: ['existingTech', 'proposedTech'],
+  MSE_GIFT: ['energyBaselineKwh', 'expectedSaving'],
+  ZED: ['zedCurrentLevel', 'zedTargetLevel'],
+  LEAN: ['processBottleneck'],
+  MSME_IPR: ['ipType', 'filingStage'],
+  PMS: ['eventName', 'stallSize'],
+  CVY: ['coirProductLine', 'coirBoardStatus'],
+  NHDP: ['loomType', 'weaverId'],
+  PTUAS: ['gmpStatus', 'productLicence'],
+  PMPDS: ['deviceOrFormulation'],
+  SCST_HUB: ['gemExperience'],
+  ASPIRE: ['incubatorName'],
+  ECLGS: ['existingLimit', 'additionalWcSought'],
 };
 
 export function extraFieldsForScheme(schemeCode: string | null | undefined): string[] {
@@ -59,6 +77,9 @@ const DEFAULT_UPLOADS: UploadField[] = [
 
 const SHISHU_KISHORE: Budget[] = ['under2L', '2to5L'];
 
+const SHORT_CERT_MARKETING = new Set(['ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB']);
+const SHORT_WC = new Set(['ECLGS']);
+
 export function isMudraShishuKishore(code: string | null, budget?: Budget): boolean {
   return code === 'MUDRA' && !!budget && SHISHU_KISHORE.includes(budget);
 }
@@ -68,7 +89,15 @@ export function isMudraTarunPlus(code: string | null, budget?: Budget): boolean 
 }
 
 export function getHiddenSteps(code: string | null): number[] {
-  if (code === 'VISHWAKARMA' || code === 'SVANIDHI') return [15, 16, 17];
+  if (code === 'VISHWAKARMA' || code === 'SVANIDHI' || code === 'NHDP' || code === 'ASPIRE') {
+    return [15, 16, 17];
+  }
+  if (code && SHORT_CERT_MARKETING.has(code)) {
+    return [2, 3, 5, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17];
+  }
+  if (code && SHORT_WC.has(code)) {
+    return [2, 3, 5, 6, 7, 8, 9, 10, 15, 16, 17];
+  }
   return [];
 }
 
@@ -85,9 +114,14 @@ export function showPmegpEducationGate(
   activity: string | undefined,
   totalCostLakhs: number
 ): boolean {
-  if (code !== 'PMEGP') return false;
+  if (code !== 'PMEGP' && code !== 'PMEGP_2ND') return false;
   const mfg = activity === 'mfg' || activity === 'food' || activity === 'craft';
-  const service = activity === 'service' || activity === 'knowledge' || activity === 'trade' || activity === 'vending' || activity === 'mixed';
+  const service =
+    activity === 'service' ||
+    activity === 'knowledge' ||
+    activity === 'trade' ||
+    activity === 'vending' ||
+    activity === 'mixed';
   if (mfg && totalCostLakhs > 10) return true;
   if (service && totalCostLakhs > 5) return true;
   return false;
@@ -143,16 +177,31 @@ export function getStep18Uploads(
       { id: 'fssaiDraft', label: 'Draft FSSAI Registration' },
     ];
   }
-  if (code === 'PMEGP') {
+  if (code === 'PMEGP' || code === 'PMEGP_2ND') {
     const uploads: UploadField[] = [
       { id: 'machineryQuotations', label: 'Machinery Quotations' },
       { id: 'buildingEstimates', label: 'Building Estimate' },
     ];
+    if (code === 'PMEGP_2ND') {
+      uploads.push(
+        { id: 'priorSanctionLetter', label: 'Prior PMEGP / REGP / MUDRA Sanction Letter' },
+        { id: 'caExistingInvestment', label: 'CA Certificate of Existing Investment' }
+      );
+    }
     const owner = answers?.owner || [];
     if (owner.some((o) => ['sc', 'st', 'bc'].includes(o))) {
       uploads.push({ id: 'casteCertificate', label: 'Caste Certificate' });
     }
     return uploads;
+  }
+  if (code === 'SCLCSS') {
+    return [
+      { id: 'casteCertificate', label: 'SC / ST Caste Certificate' },
+      { id: 'machineryQuotations', label: 'Machinery Quotations (tech specs)' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'caExistingInvestment', label: 'CA Certificate of Existing FCI' },
+      { id: 'termLoanSanction', label: 'Term Loan Sanction / In-principle' },
+    ];
   }
   if (code === 'AP_EDP') {
     return [
@@ -171,6 +220,64 @@ export function getStep18Uploads(
       uploads.push({ id: 'mudraClosure', label: 'Previous Mudra Loan Repayment / Closure Certificate' });
     }
     return uploads;
+  }
+  if (code === 'ECLGS') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'gstItr', label: 'GST Returns / ITR' },
+      { id: 'bankStatements', label: 'Bank Statements' },
+      { id: 'existingSanction', label: 'Existing Sanction Letter' },
+      { id: 'caTurnover', label: 'CA Turnover Certificate' },
+    ];
+  }
+  if (code === 'ZED' || code === 'LEAN' || code === 'MSME_IPR') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+    ];
+  }
+  if (code === 'PMS') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'fairPhotos', label: 'Previous Fair Photos (optional)' },
+    ];
+  }
+  if (code === 'MSE_GIFT') {
+    return [
+      { id: 'energyBill', label: 'Recent Energy Bill' },
+      { id: 'machineryQuotations', label: 'EE Equipment Quotations' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+    ];
+  }
+  if (code === 'CVY') {
+    return [
+      { id: 'coirBoardDocs', label: 'Coir Board Documents' },
+      { id: 'machineryQuotations', label: 'Machinery Quotations' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+    ];
+  }
+  if (code === 'NHDP') {
+    return [
+      { id: 'weaverId', label: 'Weaver ID / Handloom Corp Membership' },
+      { id: 'aadhaarPan', label: 'Aadhaar' },
+      { id: 'bankPassbook', label: 'Bank Passbook' },
+    ];
+  }
+  if (code === 'PTUAS' || code === 'PMPDS') {
+    return [
+      { id: 'manufacturingLicence', label: 'Manufacturing / Product Licence' },
+      { id: 'pollutionConsent', label: 'Pollution Consent' },
+      { id: 'machineryQuotations', label: 'Machinery Quotations' },
+      { id: 'caFciStatement', label: 'CA FCI Statement' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+    ];
+  }
+  if (code === 'SCST_HUB') {
+    return [
+      { id: 'casteCertificate', label: 'Caste Certificate' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'cancelledCheque', label: 'Cancelled Cheque' },
+    ];
   }
   return DEFAULT_UPLOADS;
 }
@@ -222,6 +329,50 @@ export function getSchemeImpact(code: string | null): {
         '8th-pass upload appears on step 18 if project cost is above the PMEGP education gate.',
       ],
       firstChangedStep: 18,
+    };
+  }
+  if (code === 'PMEGP_2ND') {
+    return {
+      title: '2nd PMEGP Loan',
+      bullets: [
+        'Full 18-step upgrade DPR (not a new-unit story).',
+        'Step 1: prior scheme, sanction amount, first subsidy year.',
+        'Step 18: prior sanction letter, CA existing investment, quotations.',
+      ],
+      firstChangedStep: 1,
+    };
+  }
+  if (code === 'SCLCSS') {
+    return {
+      title: 'SCLCSS (SC/ST only)',
+      bullets: [
+        'Full 18-step tech-upgrade DPR. General CLCSS is discontinued — use AP Technology Upgradation for non-SC/ST.',
+        'Step 1: existing vs proposed technology.',
+        'Step 18: caste certificate, tech quotations, Udyam, term-loan sanction.',
+      ],
+      firstChangedStep: 1,
+    };
+  }
+  if (code === 'ECLGS') {
+    return {
+      title: 'ECLGS',
+      bullets: [
+        'Short working-capital pack — not a greenfield capex DPR.',
+        'Hides civil / Gantt / impact steps.',
+        'Step 18: Udyam, GST/ITR, bank statements, existing sanction.',
+      ],
+      firstChangedStep: 1,
+    };
+  }
+  if (code === 'ZED' || code === 'LEAN' || code === 'MSME_IPR' || code === 'PMS') {
+    return {
+      title: code,
+      bullets: [
+        'Short overlay — not an 18-step bank P&L.',
+        'Only unit identity, profile, applicant, and scheme-specific fields stay visible.',
+        'Use this pack for certification / consulting / fair support.',
+      ],
+      firstChangedStep: 1,
     };
   }
   if (code === 'MUDRA') {
