@@ -350,7 +350,18 @@ export function getIndividualSchemeExtraFields(
   if (schemeCode === 'SVANIDHI') {
     return [
       { name: 'covOrLor', type: 'shortText', label: 'Vending proof: reply only "cov" or "lor"' },
-      { name: 'upiQr', type: 'shortText', label: 'UPI ID or QR details for the vendor' },
+      { name: 'upiQr', type: 'shortText', label: 'UPI ID linked to the vendor bank account' },
+      {
+        name: 'loanTranche',
+        type: 'shortText',
+        label: 'Loan tranche: reply only "first", "second", or "third"',
+      },
+      {
+        name: 'vendingType',
+        type: 'shortText',
+        label: 'Pitch type: footpath / cart / stall / market / moving / other',
+      },
+      { name: 'dailySales', type: 'shortText', label: 'Approx daily sales in rupees (number only)' },
     ];
   }
   if (schemeCode === 'PMFME') {

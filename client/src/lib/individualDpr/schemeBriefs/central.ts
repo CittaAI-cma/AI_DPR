@@ -335,8 +335,8 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     code: 'SVANIDHI',
     title: L("PM Street Vendor's AtmaNirbhar Nidhi (PM SVANidhi)", 'ప్రధానమంత్రి స్ట్రీట్ వెండర్ ఆత్మనిర్భర్ నిధి (PM SVANidhi)'),
     intro: L(
-      'A Ministry of Housing & Urban Affairs micro-credit scheme for urban (and peri-urban) street vendors. Collateral-free working-capital loans in three tranches, plus interest subsidy and digital-payment incentives.',
-      'పట్టణ (మరియు పెరి-అర్బన్) వీధి వ్యాపారులకు గృహనిర్మాణం మరియు పట్టణ వ్యవహారాల మంత్రిత్వ శాఖ సూక్ష్మ-రుణ పథకం. మూడు విడతల్లో కొలేటరల్-రహిత వర్కింగ్ క్యాపిటల్, వడ్డీ సబ్సిడీ, డిజిటల్ చెల్లింపు ప్రోత్సాహకాలు.'
+      'A Ministry of Housing & Urban Affairs micro-credit scheme for urban (and peri-urban) street vendors. Collateral-free working-capital loans in three tranches, plus interest subsidy and digital-payment incentives. Create New Latest DPR builds a 10-step vendor pack — see docs/schemes/SVANIDHI/svanidhi.md.',
+      'పట్టణ (మరియు పెరి-అర్బన్) వీధి వ్యాపారులకు గృహనిర్మాణం మరియు పట్టణ వ్యవహారాల మంత్రిత్వ శాఖ సూక్ష్మ-రుణ పథకం. మూడు విడతల్లో కొలేటరల్-రహిత వర్కింగ్ క్యాపిటల్, వడ్డీ సబ్సిడీ, డిజిటల్ చెల్లింపు ప్రోత్సాహకాలు. Create New Latest DPR 10-దశల ప్యాక్ ఇస్తుంది.'
     ),
     benefits: [
       L(
@@ -360,6 +360,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     howToApply: [
       L('Apply on pmsvanidhi.mohua.gov.in, the mobile app, ULB / Block office, or an authorised CSC.', 'pmsvanidhi.mohua.gov.in, మొబైల్ యాప్, ULB / బ్లాక్ కార్యాలయం లేదా అధీకృత CSCలో దరఖాస్తు చేయండి.'),
       L('Without CoV/ID, file an LoR-cum-loan application on the same portal for ULB/Block verification.', 'CoV/ID లేకపోతే అదే పోర్టల్‌లో LoR-కమ్-లోన్ దరఖాస్తు చేసి ULB/బ్లాక్ ధృవీకరణ పొందండి.'),
+      L('Create New Latest DPR with PM SVANidhi selected builds a 10-step vendor pack — see docs/schemes/SVANIDHI/svanidhi.md.', 'PM SVANidhi ఎంచుకుంటే Create New Latest DPR 10-దశల వెండర్ ప్యాక్ ఇస్తుంది.'),
     ],
     documents: [
       L('Certificate of Vending or Letter of Recommendation (portal-issued)', 'వెండింగ్ సర్టిఫికేట్ లేదా సిఫారసు పత్రం (పోర్టల్ జారీ)'),

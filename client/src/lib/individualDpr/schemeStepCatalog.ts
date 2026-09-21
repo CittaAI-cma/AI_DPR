@@ -212,6 +212,23 @@ export const VISHWAKARMA_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
+/**
+ * PM SVANidhi — 10 consecutive steps (street-vendor WC micro-credit).
+ * Spec: docs/schemes/SVANIDHI/svanidhi.md
+ */
+export const SVANIDHI_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & vending eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Vending activity', contentStep: 2 },
+  { id: 'location', title: 'Location / pitch', contentStep: 3 },
+  { id: 'unit', title: 'Vendor profile', contentStep: 4 },
+  { id: 'market', title: 'Market & daily sales', contentStep: 6 },
+  { id: 'shed', title: 'Pitch / workplace', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant', contentStep: 11 },
+  { id: 'cost', title: 'Working capital need', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
 /** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
 const FULL_MINUS_LATE: SchemeStepDef[] = catalog(
   VANILLA_STEPS.filter((s) => ![15, 16, 17].includes(s.contentStep)).map((s) => ({
@@ -242,7 +259,7 @@ const SHORT_WC_STEPS: SchemeStepDef[] = catalog([
 
 const SHORT_CERT_CODES = new Set(['ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB']);
 const SHORT_WC_CODES = new Set(['ECLGS']);
-const FULL_MINUS_LATE_CODES = new Set(['SVANIDHI', 'NHDP', 'ASPIRE']);
+const FULL_MINUS_LATE_CODES = new Set(['NHDP', 'ASPIRE']);
 
 /** Scheme code → catalog. Missing codes fall back to vanilla. */
 export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
@@ -254,6 +271,7 @@ export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   SCLCSS: SCLCSS_STEPS,
   AP_TECH_UPGRADE: AP_TECH_UPGRADE_STEPS,
   VISHWAKARMA: VISHWAKARMA_STEPS,
+  SVANIDHI: SVANIDHI_STEPS,
   ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),
   ...Object.fromEntries([...SHORT_WC_CODES].map((c) => [c, SHORT_WC_STEPS])),
   ...Object.fromEntries([...FULL_MINUS_LATE_CODES].map((c) => [c, FULL_MINUS_LATE])),

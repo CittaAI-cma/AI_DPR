@@ -54,13 +54,30 @@ export function normalizeExtraValue(field: string, value: any): any {
     return 'notStarted';
   }
   if (field === 'loanTranche') {
-    if (/second|2nd|₹?\s*2/i.test(text)) return 'second';
-    if (/first|1st|₹?\s*1/i.test(text)) return 'first';
-    return 'noneYet';
+    if (/third|3rd|₹?\s*50/i.test(text)) return 'third';
+    if (/second|2nd|₹?\s*25|₹?\s*2\s*l/i.test(text)) return 'second';
+    if (/none|not yet|await/i.test(text)) return 'noneYet';
+    if (/first|1st|₹?\s*15|₹?\s*1\s*l/i.test(text)) return 'first';
+    return 'first';
+  }
+  if (field === 'vendingType') {
+    if (/cart|thela/i.test(text)) return 'cart';
+    if (/stall|kiosk/i.test(text)) return 'stall';
+    if (/market/i.test(text)) return 'market';
+    if (/mov|hawk|door/i.test(text)) return 'moving';
+    if (/other/i.test(text)) return 'other';
+    return 'footpath';
   }
   if (field === 'workplaceType') {
     if (/rent/i.test(text)) return 'rentedShop';
     if (/own|shed/i.test(text)) return 'ownShop';
+    if (/cart|stall|foot|market|mov/i.test(text)) {
+      if (/cart|thela/i.test(text)) return 'cart';
+      if (/stall/i.test(text)) return 'stall';
+      if (/market/i.test(text)) return 'market';
+      if (/mov|hawk/i.test(text)) return 'moving';
+      return 'footpath';
+    }
     if (/other/i.test(text)) return 'other';
     return 'home';
   }
@@ -93,7 +110,10 @@ function inferMissingExtras(
   }
   if (schemeCode === 'SVANIDHI') {
     if (!next.covOrLor) next.covOrLor = 'cov';
-    if (!next.upiQr) next.upiQr = 'UPI QR to be linked to the vendor bank account.';
+    if (!next.upiQr) next.upiQr = 'UPI ID to be linked to the vendor savings bank account.';
+    if (!next.loanTranche) next.loanTranche = 'first';
+    if (!next.vendingType) next.vendingType = 'footpath';
+    if (!next.workplaceType) next.workplaceType = next.vendingType;
   }
   if (schemeCode === 'PMFME') {
     if (!next.fssai) next.fssai = 'planned';

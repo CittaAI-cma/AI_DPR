@@ -114,7 +114,8 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 | `PMEGP` | **14** | Bank-unit catalog — see [pmegp.md](./schemes/PMEGP/pmegp.md) |
 | `MUDRA` | **12** | PMMY bank-unit catalog — see [mudra.md](./schemes/MUDRA/mudra.md) |
 | `VISHWAKARMA` | **12** | Artisan toolkit + training + enterprise loan — see [vishwakarma.md](./schemes/VISHWAKARMA/vishwakarma.md) |
-| `SVANIDHI` / `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
+| `SVANIDHI` | **10** | Street-vendor WC micro-credit — see [svanidhi.md](./schemes/SVANIDHI/svanidhi.md) |
+| `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
 | `ZED` / `LEAN` / `MSME_IPR` / `PMS` / `SCST_HUB` | 5 | Short cert / consulting pack |
 | `ECLGS` | 7 | Working-capital pack |
 
@@ -131,7 +132,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | Scheme | Extra fields |
 |--------|----------------|
 | `VISHWAKARMA` | Own 12-step artisan pack — see [docs/schemes/VISHWAKARMA/vishwakarma.md](./schemes/VISHWAKARMA/vishwakarma.md), `vishwakarmaQuestions.ts`, `VISHWAKARMA_STEPS` (18 trades; toolkit ₹15k; tranche ₹1 L / ₹2 L at 5%). |
-| `SVANIDHI` | `covOrLor`, `upiQr` |
+| `SVANIDHI` | Own 10-step street-vendor pack — see [docs/schemes/SVANIDHI/svanidhi.md](./schemes/SVANIDHI/svanidhi.md), `svanidhiQuestions.ts`, `SVANIDHI_STEPS` (CoV/LoR + UPI; WC ₹15k / ₹25k / ₹50k; 7% interest subsidy). |
 | `PMFME` | Own 14-step food-unit pack — see [docs/schemes/PMFME/pmfme.md](./schemes/PMFME/pmfme.md), `pmfmeQuestions.ts`, `PMFME_STEPS` (NIFTEM model structure: FSSAI, new/existing, ODOP, RM sources, 35% grant cap ₹10 L). |
 | `AP_EDP` | `apiicPark` (land-rebate hint) |
 | `PMEGP` | Full bank-unit set — see [docs/schemes/PMEGP/pmegp.md](./schemes/PMEGP/pmegp.md), `pmegpQuestions.ts`, and `PMEGP_STEPS` (14 consecutive steps: category, rural/urban, agency, entrepreneur, process, capacity, margin-money %). |
@@ -173,7 +174,7 @@ If scheme is `PMEGP` or `PMEGP_2ND` and project cost (lakhs) exceeds:
 | Scheme | Uploads |
 |--------|---------|
 | `VISHWAKARMA` | Aadhaar, savings passbook, ration card, certificate/ID (if issued), toolkit quote |
-| `SVANIDHI` | CoV or LoR |
+| `SVANIDHI` | CoV/LoR, Aadhaar, passbook, UPI proof |
 | `PMFME` | Machinery quotes, premises lease, draft FSSAI |
 | `PMEGP` | Machinery quotes, building estimate; + caste certificate if VM owner has sc/st/bc |
 | `AP_EDP` | Land/shed allotment, CFE/CFO, CA FCI statement |

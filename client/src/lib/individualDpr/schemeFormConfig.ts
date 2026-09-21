@@ -13,6 +13,10 @@ import {
   VISHWAKARMA_IMPACT_BULLETS,
 } from '@/lib/individualDpr/vishwakarmaQuestions';
 import {
+  SVANIDHI_EXTRA_FIELDS,
+  SVANIDHI_IMPACT_BULLETS,
+} from '@/lib/individualDpr/svanidhiQuestions';
+import {
   getSchemeSteps,
   getStepDef,
   localToContent,
@@ -30,7 +34,7 @@ export const SCHEME_OPTIONS = [
 
 export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   VISHWAKARMA: [...VISHWAKARMA_EXTRA_FIELDS],
-  SVANIDHI: ['covOrLor', 'upiQr'],
+  SVANIDHI: [...SVANIDHI_EXTRA_FIELDS],
   PMFME: [...PMFME_EXTRA_FIELDS],
   AP_EDP: ['apiicPark'],
   PMEGP: [...PMEGP_EXTRA_FIELDS],
@@ -85,7 +89,9 @@ export function isMudraTarunPlus(code: string | null, budget?: Budget): boolean 
 }
 
 export function hideComplexCapex(code: string | null, budget?: Budget): boolean {
-  return code === 'VISHWAKARMA' || isMudraShishuKishore(code, budget);
+  return (
+    code === 'VISHWAKARMA' || code === 'SVANIDHI' || isMudraShishuKishore(code, budget)
+  );
 }
 
 export function showDscr(bankLoanLakhs: number): boolean {
@@ -146,7 +152,12 @@ export function getStep18Uploads(
     ];
   }
   if (code === 'SVANIDHI') {
-    return [{ id: 'covOrLor', label: 'Certificate of Vending (CoV) or Letter of Recommendation' }];
+    return [
+      { id: 'covOrLor', label: 'Certificate of Vending / Vendor ID or Portal LoR' },
+      { id: 'aadhaarPan', label: 'Aadhaar' },
+      { id: 'bankPassbook', label: 'Savings Bank Passbook / Statement' },
+      { id: 'upiProof', label: 'UPI ID / QR Screenshot (linked to same account)' },
+    ];
   }
   if (code === 'PMFME') {
     const uploads: UploadField[] = [
@@ -338,11 +349,7 @@ export function getSchemeImpact(code: string | null): {
   if (code === 'SVANIDHI') {
     return {
       title: 'PM SVANidhi',
-      bullets: [
-        'Own 15-step pack (1–15 consecutively).',
-        'Step 1 adds CoV vs LoR and UPI QR.',
-        'Final step upload: CoV or Letter of Recommendation.',
-      ],
+      bullets: [...SVANIDHI_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }
