@@ -678,25 +678,42 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       'SC/ST MSEలకు ప్రత్యేక క్రెడిట్ లింక్డ్ క్యాపిటల్ సబ్సిడీ (SCLCSS)'
     ),
     intro: L(
-      'General CLCSS closed on 31 March 2020. SCLCSS remains the active central credit-linked capital subsidy for technology upgradation — strictly for SC/ST-owned MSEs (indicative 25% up to ₹25 lakh). General-category promoters should use AP Technology Upgradation Subsidy instead.',
-      'సాధారణ CLCSS 31 మార్చి 2020న ముగిసింది. టెక్ అప్‌గ్రేడ్‌కు కేంద్ర క్రెడిట్-లింక్డ్ క్యాపిటల్ సబ్సిడీ SCLCSS మాత్రమే — SC/ST యజమానులకు మాత్రమే. సాధారణ వర్గం AP Technology Upgradation వాడాలి.'
+      'General CLCSS closed on 31 March 2020. SCLCSS (under National SC-ST Hub) remains the active central credit-linked capital subsidy for new plant & machinery — strictly for SC/ST-owned MSEs (25% up to ₹25 lakh, no sector tech list). Create New Latest DPR builds a 13-step pack — see docs/schemes/SCLCSS/sclcss.md. General-category promoters should use AP Technology Upgradation Subsidy instead.',
+      'సాధారణ CLCSS 31 మార్చి 2020న ముగిసింది. NSSH కింద SCLCSS — SC/ST MSEలకు కొత్త ప్లాంట్ & మెషినరీపై 25% (పైపరిధి ₹25 లక్షలు). Create New Latest DPR 13-దశల ప్యాక్ ఇస్తుంది. సాధారణ వర్గం AP Technology Upgradation వాడాలి.'
     ),
     benefits: [
-      L('Capital subsidy on institutional term loan for eligible technology upgrade.', 'అర్హ టెక్నాలజీ అప్‌గ్రేడ్‌పై టర్మ్ లోన్‌కు క్యాపిటల్ సబ్సిడీ.'),
+      L(
+        '25% capital subsidy on institutional term loan for new plant & machinery / equipment, ceiling ₹25 lakh.',
+        'కొత్త ప్లాంట్ & యంత్రాల / పరికరాల టర్మ్ లోన్‌పై 25% క్యాపిటల్ సబ్సిడీ, పైపరిధి ₹25 లక్షలు.'
+      ),
+      L('No sector-specific approved-technology list (unlike old general CLCSS).', 'పాత CLCSS లాంటి సెక్టార్ టెక్ జాబితా లేదు.'),
+      L('Manufacturing and service MSEs; supports new units and expansion of existing ones.', 'తయారీ మరియు సేవా MSEలు; కొత్త యూనిట్లు మరియు ఉన్నవాటి విస్తరణ.'),
     ],
     eligibility: [
-      L('SC or ST ownership (51%+), existing MSE, Udyam, brownfield tech upgrade.', 'SC లేదా ST యాజమాన్యం (51%+), ఇప్పటికే ఉన్న MSE, ఉద్యమ్, బ్రౌన్‌ఫీల్డ్ టెక్ అప్‌గ్రేడ్.'),
+      L('SC or ST ownership — proprietor, or ≥51% partners / promoters.', 'SC లేదా ST యాజమాన్యం — ఏకస్వామ్యం, లేదా ≥51% భాగస్వాములు / ప్రమోటర్లు.'),
+      L('Micro or Small enterprise with valid Udyam; new plant & machinery only (not second-hand).', 'ఉద్యమ్ ఉన్న సూక్ష్మ/చిన్న యూనిట్; కొత్త యంత్రాలు మాత్రమే.'),
+      L('Scheme Finder emphasises tech-upgrade / brownfield intent for matching.', 'స్కీమ్ ఫైండర్ టెక్ అప్‌గ్రేడ్ / బ్రౌన్‌ఫీల్డ్ ఉద్దేశాన్ని చూస్తుంది.'),
     ],
     howToApply: [
-      L('Prepare a full bank DPR with caste certificate and machinery tech specs.', 'జాతి సర్టిఫికేట్, యంత్రాల టెక్ స్పెక్‌లతో పూర్తి బ్యాంకు DPR తయారు చేయండి.'),
+      L('Take a term loan from a PLI / bank for eligible P&M, then submit SCLCSS claim docs to that bank.', 'అర్హ P&Mకు బ్యాంకు టర్మ్ లోన్ తీసుకుని, ఆ బ్యాంకుకే SCLCSS క్లెయిమ్ డాక్స్ ఇవ్వండి.'),
+      L('Nodal banks / SIDBI / NABARD upload claims on the MIS portal.', 'నోడల్ బ్యాంకులు / SIDBI / NABARD MIS పోర్టల్‌లో క్లెయిమ్ అప్‌లోడ్ చేస్తాయి.'),
+      L('Create New Latest DPR with SCLCSS selected builds the 13-step bank pack.', 'SCLCSS ఎంచుకుంటే Create New Latest DPR 13-దశల బ్యాంకు ప్యాక్ ఇస్తుంది.'),
     ],
     documents: [
-      L('Caste certificate, Udyam, quotations, term-loan sanction, CA FCI', 'జాతి సర్టిఫికేట్, ఉద్యమ్, కోటేషన్లు, టర్మ్ లోన్ సాంక్షన్, CA FCI'),
+      L('Caste certificate, 51% shareholding proof, Udyam, quotations / invoices', 'జాతి సర్టిఫికేట్, 51% వాటా రుజువు, ఉద్యమ్, కోటేషన్లు / ఇన్‌వాయిస్‌లు'),
+      L('Term-loan sanction, CA FCI (existing units), PAN / KYC', 'టర్మ్ లోన్ సాంక్షన్, CA FCI (ఉన్న యూనిట్లు), పాన్ / KYC'),
     ],
     faqs: [
       {
         q: L('I am general category — can I use this?', 'నేను సాధారణ వర్గం — వాడవచ్చా?'),
         a: L('No. Use AP Technology Upgradation Subsidy (20%) under MSME-EDP 4.0.', 'కాదు. AP Technology Upgradation (20%) వాడండి.'),
+      },
+      {
+        q: L('Is this the same as old CLCSS?', 'ఇది పాత CLCSSేనా?'),
+        a: L(
+          'No. General CLCSS closed. SCLCSS is the SC/ST-only NSSH component with a flat 25% / ₹25 lakh cap and no sector tech list.',
+          'కాదు. సాధారణ CLCSS ముగిసింది. SCLCSS SC/ST-only; 25% / ₹25 లక్షలు; సెక్టార్ టెక్ జాబితా లేదు.'
+        ),
       },
     ],
     quickInfo: {
@@ -705,7 +722,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: 'https://www.dcmsme.gov.in',
+    sourceUrl: 'https://www.scsthub.in/content/special-credit-linked-capital-subsidy-scheme',
   },
   ECLGS: {
     code: 'ECLGS',

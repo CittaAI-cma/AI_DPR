@@ -36,6 +36,7 @@ export function normalizeExtraValue(field: string, value: any): any {
     return /\bno\b/i.test(text) ? 'no' : 'yes';
   }
   if (field === 'sectorBand') return /service|trad|business/i.test(text) ? 'service' : 'manufacturing';
+  if (field === 'sclcssCategory') return /st\b|tribe/i.test(text) ? 'st' : 'sc';
   if (field === 'apiicPark') return /yes|apiic|park/i.test(text) && !/\bno\b/i.test(text) ? 'yes' : /no/i.test(text) ? 'no' : 'yes';
   return text;
 }
@@ -75,6 +76,12 @@ function inferMissingExtras(
     if (!next.nerHill) next.nerHill = 'no';
     if (!next.sectorBand) next.sectorBand = /service|trad|shop/i.test(hint) ? 'service' : 'manufacturing';
     if (!next.pmegpAgency) next.pmegpAgency = 'DIC';
+  }
+  if (schemeCode === 'SCLCSS') {
+    if (!next.sclcssCategory) next.sclcssCategory = /st\b|tribe/i.test(hint) ? 'st' : 'sc';
+    if (!next.unitStage) next.unitStage = /new|greenfield|first/i.test(hint) ? 'new' : 'existing';
+    if (!next.controllingStakePercent) next.controllingStakePercent = '51';
+    if (!next.udyamStatus) next.udyamStatus = 'Udyam ready / applied';
   }
   if (schemeCode === 'AP_EDP' && !next.apiicPark) {
     next.apiicPark = /apiic|industrial park/i.test(hint) ? 'yes' : 'no';

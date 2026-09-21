@@ -5,6 +5,7 @@ import { PMEGP_2ND_EXTRA_FIELDS, PMEGP_2ND_IMPACT_BULLETS } from '@/lib/individu
 import { MUDRA_EXTRA_FIELDS, MUDRA_IMPACT_BULLETS } from '@/lib/individualDpr/mudraQuestions';
 import { STANDUP_EXTRA_FIELDS, STANDUP_IMPACT_BULLETS } from '@/lib/individualDpr/standupQuestions';
 import { PMFME_EXTRA_FIELDS, PMFME_IMPACT_BULLETS } from '@/lib/individualDpr/pmfmeQuestions';
+import { SCLCSS_EXTRA_FIELDS, SCLCSS_IMPACT_BULLETS } from '@/lib/individualDpr/sclcssQuestions';
 import {
   getSchemeSteps,
   getStepDef,
@@ -28,7 +29,7 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   MUDRA: [...MUDRA_EXTRA_FIELDS],
   STANDUP: [...STANDUP_EXTRA_FIELDS],
   PMEGP_2ND: [...PMEGP_2ND_EXTRA_FIELDS],
-  SCLCSS: ['existingTech', 'proposedTech'],
+  SCLCSS: [...SCLCSS_EXTRA_FIELDS],
   AP_TECH_UPGRADE: ['existingTech', 'proposedTech'],
   MSE_GIFT: ['energyBaselineKwh', 'expectedSaving'],
   ZED: ['zedCurrentLevel', 'zedTargetLevel'],
@@ -199,13 +200,21 @@ export function getStep18Uploads(
     return uploads;
   }
   if (code === 'SCLCSS') {
-    return [
+    const uploads: UploadField[] = [
       { id: 'casteCertificate', label: 'SC / ST Caste Certificate' },
       { id: 'machineryQuotations', label: 'Machinery Quotations (tech specs)' },
       { id: 'udyamCertificate', label: 'Udyam Certificate' },
-      { id: 'caExistingInvestment', label: 'CA Certificate of Existing FCI' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
       { id: 'termLoanSanction', label: 'Term Loan Sanction / In-principle' },
     ];
+    if (schemeExtras?.unitStage !== 'new') {
+      uploads.push({ id: 'caExistingInvestment', label: 'CA Certificate of Existing FCI' });
+    }
+    uploads.push({
+      id: 'ownershipProof',
+      label: '51% SC/ST Shareholding Proof (if not sole proprietor)',
+    });
+    return uploads;
   }
   if (code === 'AP_EDP') {
     return [
@@ -360,11 +369,7 @@ export function getSchemeImpact(code: string | null): {
   if (code === 'SCLCSS') {
     return {
       title: 'SCLCSS (SC/ST only)',
-      bullets: [
-        'Full 18-step tech-upgrade DPR. General CLCSS is discontinued — use AP Technology Upgradation for non-SC/ST.',
-        'Step 1: existing vs proposed technology.',
-        'Step 18: caste certificate, tech quotations, Udyam, term-loan sanction.',
-      ],
+      bullets: [...SCLCSS_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }

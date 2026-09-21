@@ -56,6 +56,15 @@ import {
   pmegp2ndIndicativeMmLakhs,
   pmegp2ndSubsidyPercent,
 } from '@/lib/individualDpr/pmegp2ndQuestions';
+import {
+  SCLCSS_CATEGORY_OPTIONS,
+  SCLCSS_MIN_STAKE_PERCENT,
+  SCLCSS_PREMISES_OPTIONS,
+  SCLCSS_SUBSIDY_CAP_LAKHS,
+  SCLCSS_SUBSIDY_PERCENT,
+  SCLCSS_UNIT_STAGE_OPTIONS,
+  sclcssIndicativeGrantLakhs,
+} from '@/lib/individualDpr/sclcssQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
@@ -83,7 +92,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const isMudra = schemeCode === 'MUDRA';
   const isStandup = schemeCode === 'STANDUP';
   const isPmfme = schemeCode === 'PMFME';
-  const isLeanUnit = isPmegp || isPmegp2nd || isMudra || isStandup || isPmfme;
+  const isSclcss = schemeCode === 'SCLCSS';
+  const isLeanUnit = isPmegp || isPmegp2nd || isMudra || isStandup || isPmfme || isSclcss;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -862,6 +872,90 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
+        {isSclcss && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('SCLCSS — SC/ST capital subsidy')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'Spec: docs/schemes/SCLCSS/sclcss.md — 25% on new P&M, cap ₹25 L; SC/ST ≥51%; not general CLCSS'
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('SC / ST category')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.sclcssCategory || ''}
+                  onChange={(e) => updateExtras({ sclcssCategory: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {SCLCSS_CATEGORY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Unit stage')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.unitStage || ''}
+                  onChange={(e) => updateExtras({ unitStage: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {SCLCSS_UNIT_STAGE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('SC/ST controlling stake % (if not sole prop)')}
+                </label>
+                <Input
+                  type="number"
+                  value={extras.controllingStakePercent || ''}
+                  onChange={(e) => updateExtras({ controllingStakePercent: e.target.value })}
+                  placeholder={tf(`Must be ≥ ${SCLCSS_MIN_STAKE_PERCENT} for firms`)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Udyam status / number')}</label>
+                <Input
+                  value={extras.udyamStatus || ''}
+                  onChange={(e) => updateExtras({ udyamStatus: e.target.value })}
+                  placeholder={tf('Udyam number or “applied / ready”')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur full name')}</label>
+                <Input
+                  value={extras.entrepreneurName || ''}
+                  onChange={(e) => updateExtras({ entrepreneurName: e.target.value })}
+                  placeholder={tf('Full name as in Aadhaar')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
+                <Input
+                  type="number"
+                  value={extras.entrepreneurAge || ''}
+                  onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
+                  placeholder={tf('e.g. 35')}
+                />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              {tf('Indicative capital subsidy')}: {SCLCSS_SUBSIDY_PERCENT}% {tf('capped at')} ₹
+              {SCLCSS_SUBSIDY_CAP_LAKHS} {tf('L')} · {extras.sclcssCategory || '—'} /{' '}
+              {extras.unitStage || '—'}
+            </p>
+          </div>
+        )}
+
         {isMudra && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('MUDRA — PMMY category & applicant')}</h3>
@@ -999,7 +1093,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
 
         {extraFieldNames.length > 0 &&
-          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP'].includes(
+          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP', 'SCLCSS'].includes(
             schemeCode || ''
           ) && (
             <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
@@ -1057,7 +1151,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
 
-        {(isPmegp || isPmegp2nd || isStandup || isPmfme) && (
+        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss) && (
           <div>
             <label className="block text-sm font-medium mb-2">{tf('Process of manufacture')}</label>
             <textarea
@@ -1065,18 +1159,20 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               value={extras.processOfManufacture || ''}
               onChange={(e) => updateExtras({ processOfManufacture: e.target.value })}
               placeholder={
-                isPmegp2nd
-                  ? tf('Process after upgrade / modernisation')
-                  : isPmfme
-                    ? tf('Food processing / value-addition steps (as in NIFTEM model DPRs)')
-                    : isStandup
-                      ? tf('Process of manufacture / service delivery (bank checklist)')
-                      : tf('Step-by-step process (as in KVIC bakery / curd profiles)')
+                isSclcss
+                  ? tf('Process after new plant & machinery (if manufacturing)')
+                  : isPmegp2nd
+                    ? tf('Process after upgrade / modernisation')
+                    : isPmfme
+                      ? tf('Food processing / value-addition steps (as in NIFTEM model DPRs)')
+                      : isStandup
+                        ? tf('Process of manufacture / service delivery (bank checklist)')
+                        : tf('Step-by-step process (as in KVIC bakery / curd profiles)')
               }
             />
           </div>
         )}
-        {isPmegp2nd && (
+        {(isPmegp2nd || isSclcss) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">{tf('Existing technology')}</label>
@@ -1093,7 +1189,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={extras.proposedTech || ''}
                 onChange={(e) => updateExtras({ proposedTech: e.target.value })}
-                placeholder={tf('Machinery / process being added')}
+                placeholder={
+                  isSclcss
+                    ? tf('New P&M / equipment with tech specs (subsidy base)')
+                    : tf('Machinery / process being added')
+                }
               />
             </div>
           </div>
@@ -1356,7 +1456,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             value={stepData.productionCapacity || extras.installedCapacity || ''}
             onChange={(e) => {
               handleInputChange('productionCapacity', e.target.value);
-              if (isPmegp || isPmegp2nd || isStandup || isPmfme)
+              if (isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss)
                 updateExtras({ installedCapacity: e.target.value });
             }}
             placeholder={
@@ -1378,7 +1478,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
         )}
-        {(isPmegp || isPmegp2nd || isStandup || isPmfme) && (
+        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               {tf('Capacity utilisation Year 1 (%)')}
@@ -1944,7 +2044,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
         {isLeanUnit ? (
           <div className="space-y-4">
-            {(isMudra || isStandup || isPmfme) && (
+            {(isMudra || isStandup || isPmfme || isSclcss) && (
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Premises — owned / rented')}</label>
                 <select
@@ -1953,11 +2053,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   onChange={(e) => updateExtras({ premisesType: e.target.value })}
                 >
                   <option value="">{tf('Select')}</option>
-                  {(isPmfme
-                    ? PMFME_PREMISES_OPTIONS
-                    : isStandup
-                      ? STANDUP_PREMISES_OPTIONS
-                      : MUDRA_PREMISES_OPTIONS
+                  {(isSclcss
+                    ? SCLCSS_PREMISES_OPTIONS
+                    : isPmfme
+                      ? PMFME_PREMISES_OPTIONS
+                      : isStandup
+                        ? STANDUP_PREMISES_OPTIONS
+                        : MUDRA_PREMISES_OPTIONS
                   ).map((o) => (
                     <option key={o.value} value={o.value}>
                       {tf(o.label)}
@@ -1973,7 +2075,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <Input
                 value={extras.powerRequirement || stepData.powerRequirements || ''}
                 onChange={(e) => {
-                  if (isPmegp || isPmegp2nd || isPmfme) updateExtras({ powerRequirement: e.target.value });
+                  if (isPmegp || isPmegp2nd || isPmfme || isSclcss)
+                    updateExtras({ powerRequirement: e.target.value });
                   handleInputChange('powerRequirements', e.target.value);
                 }}
                 placeholder={tf('e.g. 8 kW')}
@@ -2334,7 +2437,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 ? 'Own contribution (₹ Lakhs) — typically 10% general / 5% special'
                 : isPmegp2nd
                   ? 'Own contribution (₹ Lakhs) — 10% for all categories'
-                  : isMudra || isStandup || isPmfme
+                  : isMudra || isStandup || isPmfme || isSclcss
                     ? 'Own contribution (₹ Lakhs)'
                     : 'Promoter contribution / equity (₹ Lakhs)'
             )}
@@ -2358,7 +2461,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                       ? 'Other subsidy / grant if converging (₹ Lakhs) — else 0'
                       : isPmfme
                         ? 'PMFME capital grant (₹ Lakhs) — 35%, cap ₹10 L'
-                        : 'Government Grant (₹ Lakhs)'
+                        : isSclcss
+                          ? 'SCLCSS capital subsidy (₹ Lakhs) — 25%, cap ₹25 L'
+                          : 'Government Grant (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -2374,7 +2479,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 ? 'Bank term loan + / or WC (₹ Lakhs)'
                 : isStandup
                   ? 'Bank composite loan TL + WC (₹ Lakhs)'
-                  : 'Bank Loan (₹ Lakhs)'
+                  : isSclcss
+                    ? 'Bank term loan for P&M (₹ Lakhs)'
+                    : 'Bank Loan (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -2451,6 +2558,16 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 (getStepData(12)?.workingCapitalMargin || 0)
             ).toLocaleString('en-IN')}{' '}
             {tf('Lakhs')} · {extras.unitStage || '—'} / ODOP {extras.odopAligned || '—'}.
+          </p>
+        )}
+        {isSclcss && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'SCLCSS is 25% capital subsidy on eligible new P&M (cap ₹25 L), not PMEGP margin money. Indicative on machinery field'
+            )}{' '}
+            ≈ ₹
+            {sclcssIndicativeGrantLakhs(getStepData(12)?.machinery || 0).toLocaleString('en-IN')}{' '}
+            {tf('Lakhs')} · {extras.sclcssCategory || '—'} / stake {extras.controllingStakePercent || '—'}%.
           </p>
         )}
         <div className="border-t pt-4">
