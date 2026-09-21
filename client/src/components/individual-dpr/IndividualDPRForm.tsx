@@ -114,6 +114,25 @@ import { MSME_IPR_STAGE_OPTIONS, MSME_IPR_TYPE_OPTIONS } from '@/lib/individualD
 import { SCST_HUB_CATEGORY_OPTIONS, SCST_HUB_GEM_OPTIONS } from '@/lib/individualDpr/scstHubQuestions';
 import { ASPIRE_PREMISES_OPTIONS } from '@/lib/individualDpr/aspireQuestions';
 import { NHDP_LOOM_OPTIONS, NHDP_PREMISES_OPTIONS } from '@/lib/individualDpr/nhdpQuestions';
+import { CVY_BOARD_STATUS_OPTIONS, CVY_PREMISES_OPTIONS } from '@/lib/individualDpr/cvyQuestions';
+import { PTUAS_GMP_OPTIONS } from '@/lib/individualDpr/ptuasQuestions';
+import { PMPDS_FOCUS_OPTIONS } from '@/lib/individualDpr/pmpdsQuestions';
+import { CGTMSE_PURPOSE_OPTIONS, CGTMSE_WOMEN_OPTIONS } from '@/lib/individualDpr/cgtmseQuestions';
+import {
+  AP_FPP_PREMISES_OPTIONS,
+  AP_FPP_SIZE_OPTIONS,
+  AP_FPP_YES_NO,
+} from '@/lib/individualDpr/apFppQuestions';
+import {
+  AP_CMEP_ACTIVITY_OPTIONS,
+  AP_CMEP_BOOSTER_OPTIONS,
+  AP_CMEP_YES_NO,
+} from '@/lib/individualDpr/apCmepQuestions';
+import { OBMMS_CORP_OPTIONS, OBMMS_YES_NO } from '@/lib/individualDpr/obmmsQuestions';
+import { MSE_SPICE_SECTOR_OPTIONS } from '@/lib/individualDpr/mseSpiceQuestions';
+import { AP_PARKS_REBATE_OPTIONS, AP_PARKS_YES_NO } from '@/lib/individualDpr/apParksQuestions';
+import { RAMP_TEAM_ONDC_OPTIONS } from '@/lib/individualDpr/rampTeamQuestions';
+import { EPM_NIRYAT_CREDIT_OPTIONS } from '@/lib/individualDpr/epmNiryatQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
@@ -154,6 +173,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const isScstHub = schemeCode === 'SCST_HUB';
   const isAspire = schemeCode === 'ASPIRE';
   const isNhdp = schemeCode === 'NHDP';
+  const isCvy = schemeCode === 'CVY';
+  const isMseGift = schemeCode === 'MSE_GIFT';
+  const isPtuas = schemeCode === 'PTUAS';
+  const isPmpds = schemeCode === 'PMPDS';
+  const isCgtmse = schemeCode === 'CGTMSE';
+  const isApFpp = schemeCode === 'AP_FPP';
+  const isApCmep = schemeCode === 'AP_CMEP';
+  const isObmms = schemeCode === 'OBMMS';
+  const isMseSpice = schemeCode === 'MSE_SPICE';
+  const isApParks = schemeCode === 'AP_PARKS';
+  const isRampTeam = schemeCode === 'RAMP_TEAM';
+  const isEpmNiryat = schemeCode === 'EPM_NIRYAT';
   const isLeanUnit =
     isPmegp ||
     isPmegp2nd ||
@@ -172,7 +203,19 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     isPms ||
     isScstHub ||
     isAspire ||
-    isNhdp;
+    isNhdp ||
+    isCvy ||
+    isMseGift ||
+    isPtuas ||
+    isPmpds ||
+    isCgtmse ||
+    isApFpp ||
+    isApCmep ||
+    isObmms ||
+    isMseSpice ||
+    isApParks ||
+    isRampTeam ||
+    isEpmNiryat;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -1238,6 +1281,432 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
+        
+        {isCvy && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('CVY — coir unit')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/CVY/cvy.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Coir product line')}</label>
+                <Input value={extras.coirProductLine || ''} onChange={(e) => updateExtras({ coirProductLine: e.target.value })} placeholder={tf('e.g. coir fibre, pith, mats')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Coir Board status')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.coirBoardStatus || ''} onChange={(e) => updateExtras({ coirBoardStatus: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {CVY_BOARD_STATUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Premises')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.premisesType || ''} onChange={(e) => updateExtras({ premisesType: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {CVY_PREMISES_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isMseGift && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('MSE-GIFT — green / EE')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/MSE_GIFT/mseGift.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Energy baseline (kWh / month)')}</label>
+                <Input type="number" value={extras.energyBaselineKwh || ''} onChange={(e) => updateExtras({ energyBaselineKwh: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Expected saving (%)')}</label>
+                <Input type="number" value={extras.expectedSaving || ''} onChange={(e) => updateExtras({ expectedSaving: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('EE equipment focus')}</label>
+                <Input value={extras.eeEquipment || ''} onChange={(e) => updateExtras({ eeEquipment: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPtuas && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('PTUAS — pharma upgrade')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/PTUAS/ptuas.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('GMP status')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.gmpStatus || ''} onChange={(e) => updateExtras({ gmpStatus: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {PTUAS_GMP_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Product licence')}</label>
+                <Input value={extras.productLicence || ''} onChange={(e) => updateExtras({ productLicence: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Existing tech')}</label>
+                <Input value={extras.existingTech || ''} onChange={(e) => updateExtras({ existingTech: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Proposed tech')}</label>
+                <Input value={extras.proposedTech || ''} onChange={(e) => updateExtras({ proposedTech: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPmpds && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('PMPDS — promotion')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/PMPDS/pmpds.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Focus')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.deviceOrFormulation || ''} onChange={(e) => updateExtras({ deviceOrFormulation: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {PMPDS_FOCUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Promotion / development need')}</label>
+              <textarea className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.promotionNeed || ''} onChange={(e) => updateExtras({ promotionNeed: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        {isCgtmse && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('CGTMSE — credit guarantee (MUDRA-adjacent)')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/CGTMSE/cgtmse.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Loan purpose')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.loanPurpose || ''} onChange={(e) => updateExtras({ loanPurpose: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {CGTMSE_PURPOSE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Women-owned')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.womenOwned || ''} onChange={(e) => updateExtras({ womenOwned: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {CGTMSE_WOMEN_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Proposed limit (₹ Lakhs)')}</label>
+                <Input type="number" value={extras.proposedLimit || ''} onChange={(e) => updateExtras({ proposedLimit: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isApFpp && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('AP FPP 4.0 — food processing')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/AP_FPP/apFpp.md — do not double-claim with AP_EDP')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Enterprise size')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.enterpriseSize || ''} onChange={(e) => updateExtras({ enterpriseSize: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_FPP_SIZE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Special category')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.specialCategory || ''} onChange={(e) => updateExtras({ specialCategory: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_FPP_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('FPO / SHG')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.fpoShg || ''} onChange={(e) => updateExtras({ fpoShg: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_FPP_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('AP domicile')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.apDomicile || ''} onChange={(e) => updateExtras({ apDomicile: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_FPP_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Premises')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.premisesType || ''} onChange={(e) => updateExtras({ premisesType: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_FPP_PREMISES_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isApCmep && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('AP CMEP — credit-linked')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/AP_CMEP/apCmep.md — bank loan required')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Activity band')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.activityBand || ''} onChange={(e) => updateExtras({ activityBand: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_CMEP_ACTIVITY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Booster category')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.boosterCategory || ''} onChange={(e) => updateExtras({ boosterCategory: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_CMEP_BOOSTER_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('AP domicile')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.apDomicile || ''} onChange={(e) => updateExtras({ apDomicile: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_CMEP_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isObmms && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('OBMMS — welfare self-employment')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/OBMMS/obmms.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Welfare corporation')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.welfareCorporation || ''} onChange={(e) => updateExtras({ welfareCorporation: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {OBMMS_CORP_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('White rice card')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.whiteRiceCard || ''} onChange={(e) => updateExtras({ whiteRiceCard: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {OBMMS_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Activity / trade')}</label>
+                <Input value={extras.activityTrade || ''} onChange={(e) => updateExtras({ activityTrade: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Age')}</label>
+                <Input type="number" value={extras.entrepreneurAge || ''} onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isMseSpice && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('MSE-SPICE — circular economy')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/MSE_SPICE/mseSpice.md — 25% P&M cap ₹12.5 L')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Circular sector')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.circularSector || ''} onChange={(e) => updateExtras({ circularSector: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {MSE_SPICE_SECTOR_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Existing unit years')}</label>
+                <Input type="number" value={extras.existingUnitYears || ''} onChange={(e) => updateExtras({ existingUnitYears: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Proposed P&M cost (₹ Lakhs)')}</label>
+                <Input type="number" value={extras.proposedPmCost || ''} onChange={(e) => updateExtras({ proposedPmCost: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isApParks && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('AP MSME-PARKS — land rebate')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/AP_PARKS/apParks.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('APIIC / park name')}</label>
+                <Input value={extras.apiicParkName || ''} onChange={(e) => updateExtras({ apiicParkName: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Plot area')}</label>
+                <Input value={extras.plotArea || ''} onChange={(e) => updateExtras({ plotArea: e.target.value })} placeholder={tf('e.g. 500 sq.yd')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Land rebate claim')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.landRebateClaim || ''} onChange={(e) => updateExtras({ landRebateClaim: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_PARKS_REBATE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('AP domicile')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.apDomicile || ''} onChange={(e) => updateExtras({ apDomicile: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_PARKS_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isRampTeam && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('RAMP TEAM — ONDC')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/RAMP_TEAM/rampTeam.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('ONDC readiness')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.ondcReady || ''} onChange={(e) => updateExtras({ ondcReady: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {RAMP_TEAM_ONDC_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Catalogue SKUs (approx)')}</label>
+                <Input type="number" value={extras.catalogueSkus || ''} onChange={(e) => updateExtras({ catalogueSkus: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Product list note')}</label>
+              <textarea className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.productListNote || ''} onChange={(e) => updateExtras({ productListNote: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        {isEpmNiryat && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('EPM Niryat — export credit')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/EPM_NIRYAT/epmNiryat.md — 2.75% interest subvention')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Export markets')}</label>
+                <Input value={extras.exportMarkets || ''} onChange={(e) => updateExtras({ exportMarkets: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('HSN lines')}</label>
+                <Input value={extras.hsnLines || ''} onChange={(e) => updateExtras({ hsnLines: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Pre / post shipment')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.prePostShipment || ''} onChange={(e) => updateExtras({ prePostShipment: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {EPM_NIRYAT_CREDIT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Export credit sought (₹ Lakhs)')}</label>
+                <Input type="number" value={extras.exportCreditSought || ''} onChange={(e) => updateExtras({ exportCreditSought: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {schemeCode === 'PMEGP' && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PMEGP — entrepreneur & subsidy inputs')}</h3>
@@ -1848,7 +2317,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
 
         {extraFieldNames.length > 0 &&
-          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP', 'SCLCSS', 'AP_TECH_UPGRADE', 'ECLGS', 'ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB', 'ASPIRE', 'NHDP'].includes(
+          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP', 'SCLCSS', 'AP_TECH_UPGRADE', 'ECLGS', 'ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB', 'ASPIRE', 'NHDP', 'CVY', 'MSE_GIFT', 'PTUAS', 'PMPDS', 'CGTMSE', 'AP_FPP', 'AP_CMEP', 'OBMMS', 'MSE_SPICE', 'AP_PARKS', 'RAMP_TEAM', 'EPM_NIRYAT'].includes(
             schemeCode || ''
           ) && (
             <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
@@ -3502,6 +3971,31 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}{' '}
             ≈ ₹{eclgsIndicativeQuantumLakhs(extras.peakWcOutstanding).toLocaleString('en-IN')}{' '}
             {tf('L')} · sought {extras.additionalWcSought || '—'} · ROI cap {ECLGS_INTEREST_CAP_PERCENT}%.
+          </p>
+        )}
+        {isCgtmse && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'CGTMSE is a bank-side guarantee (MUDRA-adjacent) — governmentGrant usually 0. Own + bank = project cost. Women-owned may get higher cover %.'
+            )}{' '}
+            · {extras.loanPurpose || '—'} · {extras.womenOwned === 'yes' ? tf('women-owned') : tf('general')} ·{' '}
+            {tf('proposed')} {extras.proposedLimit || '—'} {tf('L')}.
+          </p>
+        )}
+        {isEpmNiryat && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'EPM Niryat is 2.75% interest subvention on eligible export credit — not a capital grant. Keep governmentGrant at 0; bank loan ≈ export credit sought.'
+            )}{' '}
+            · {extras.prePostShipment || '—'} · {extras.exportCreditSought || '—'} {tf('L')}.
+          </p>
+        )}
+        {isMseSpice && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'MSE-SPICE: governmentGrant ≈ 25% of new P&M (cap ₹12.5 L). Second-hand machinery ineligible. Brownfield only.'
+            )}{' '}
+            · {extras.circularSector || '—'} · P&M {extras.proposedPmCost || '—'} {tf('L')}.
           </p>
         )}
         <div className="border-t pt-4">

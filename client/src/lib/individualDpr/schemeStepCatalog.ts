@@ -357,6 +357,226 @@ export const NHDP_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
+
+/**
+ * Coir Vikas Yojana — 12 consecutive steps.
+ * Spec: docs/schemes/CVY/cvy.md
+ */
+export const CVY_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Business / activity story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Market & sales', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * MSE-GIFT (green investment) — 12 consecutive steps.
+ * Spec: docs/schemes/MSE_GIFT/mseGift.md
+ */
+export const MSE_GIFT_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Business / activity story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Market & sales', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * PTUAS (pharma technology upgrade) — 13 consecutive steps.
+ * Spec: docs/schemes/PTUAS/ptuas.md
+ */
+export const PTUAS_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Upgrade / process story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises & utilities', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Upgrade project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * PMPDS (pharma & medical devices) — 5 consecutive steps.
+ * Spec: docs/schemes/PMPDS/pmpds.md
+ */
+export const PMPDS_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & scheme inputs', contentStep: 1 },
+  { id: 'unit', title: 'Unit / product profile', contentStep: 4 },
+  { id: 'market', title: 'Market / need', contentStep: 6 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * CGTMSE (credit guarantee) — 12 consecutive steps.
+ * Spec: docs/schemes/CGTMSE/cgtmse.md
+ */
+export const CGTMSE_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Business / activity story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Market & sales', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * AP Food Processing Policy 4.0 — 13 consecutive steps.
+ * Spec: docs/schemes/AP_FPP/apFpp.md
+ */
+export const AP_FPP_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Upgrade / process story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises & utilities', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Upgrade project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * AP CMEP — 13 consecutive steps.
+ * Spec: docs/schemes/AP_CMEP/apCmep.md
+ */
+export const AP_CMEP_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Upgrade / process story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises & utilities', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Upgrade project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * AP OBMMS welfare self-employment — 10 consecutive steps.
+ * Spec: docs/schemes/OBMMS/obmms.md
+ */
+export const OBMMS_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Activity story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant', contentStep: 11 },
+  { id: 'cost', title: 'Project / land cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * RAMP MSE-SPICE — 12 consecutive steps.
+ * Spec: docs/schemes/MSE_SPICE/mseSpice.md
+ */
+export const MSE_SPICE_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Business / activity story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Market & sales', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * AP MSME-PARKS land rebate — 10 consecutive steps.
+ * Spec: docs/schemes/AP_PARKS/apParks.md
+ */
+export const AP_PARKS_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Activity story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant', contentStep: 11 },
+  { id: 'cost', title: 'Project / land cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * RAMP TEAM (ONDC) — 5 consecutive steps.
+ * Spec: docs/schemes/RAMP_TEAM/rampTeam.md
+ */
+export const RAMP_TEAM_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & scheme inputs', contentStep: 1 },
+  { id: 'unit', title: 'Unit / product profile', contentStep: 4 },
+  { id: 'market', title: 'Market / need', contentStep: 6 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+
+/**
+ * EPM Niryat Protsahan — 7 consecutive steps.
+ * Spec: docs/schemes/EPM_NIRYAT/epmNiryat.md
+ */
+export const EPM_NIRYAT_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
+  { id: 'unit', title: 'Unit / export profile', contentStep: 4 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Export credit / WC need', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating & export sales', contentStep: 14 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
 /** Scheme code → catalog. Missing codes fall back to vanilla. */
 export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   PMEGP: PMEGP_STEPS,
@@ -377,6 +597,18 @@ export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   SCST_HUB: SCST_HUB_STEPS,
   ASPIRE: ASPIRE_STEPS,
   NHDP: NHDP_STEPS,
+  CVY: CVY_STEPS,
+  MSE_GIFT: MSE_GIFT_STEPS,
+  PTUAS: PTUAS_STEPS,
+  PMPDS: PMPDS_STEPS,
+  CGTMSE: CGTMSE_STEPS,
+  AP_FPP: AP_FPP_STEPS,
+  AP_CMEP: AP_CMEP_STEPS,
+  OBMMS: OBMMS_STEPS,
+  MSE_SPICE: MSE_SPICE_STEPS,
+  AP_PARKS: AP_PARKS_STEPS,
+  RAMP_TEAM: RAMP_TEAM_STEPS,
+  EPM_NIRYAT: EPM_NIRYAT_STEPS,
 };
 
 export function getSchemeSteps(schemeCode?: string | null): SchemeStepDef[] {

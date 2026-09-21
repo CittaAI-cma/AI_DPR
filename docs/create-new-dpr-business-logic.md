@@ -124,6 +124,18 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 | `SCST_HUB` | **5** | Procurement readiness — see [scstHub.md](./schemes/SCST_HUB/scstHub.md) |
 | `ASPIRE` | **10** | Rural innovation / livelihood — see [aspire.md](./schemes/ASPIRE/aspire.md) |
 | `NHDP` | **10** | Weaver / handloom — see [nhdp.md](./schemes/NHDP/nhdp.md) |
+| `CVY` | **12** | Coir unit — see [cvy.md](./schemes/CVY/cvy.md) |
+| `MSE_GIFT` | **12** | Green / EE upgrade — see [mseGift.md](./schemes/MSE_GIFT/mseGift.md) |
+| `PTUAS` | **13** | Pharma tech upgrade — see [ptuas.md](./schemes/PTUAS/ptuas.md) |
+| `PMPDS` | **5** | Pharma/device promotion — see [pmpds.md](./schemes/PMPDS/pmpds.md) |
+| `CGTMSE` | **12** | Credit guarantee (MUDRA-adjacent) — see [cgtmse.md](./schemes/CGTMSE/cgtmse.md) |
+| `AP_FPP` | **13** | Food processing FCI — see [apFpp.md](./schemes/AP_FPP/apFpp.md) |
+| `AP_CMEP` | **13** | Credit-linked greenfield — see [apCmep.md](./schemes/AP_CMEP/apCmep.md) |
+| `OBMMS` | **10** | Welfare self-employment — see [obmms.md](./schemes/OBMMS/obmms.md) |
+| `MSE_SPICE` | **12** | Circular P&M (25% / ₹12.5 L) — see [mseSpice.md](./schemes/MSE_SPICE/mseSpice.md) |
+| `AP_PARKS` | **10** | APIIC land rebate — see [apParks.md](./schemes/AP_PARKS/apParks.md) |
+| `RAMP_TEAM` | **5** | ONDC market access — see [rampTeam.md](./schemes/RAMP_TEAM/rampTeam.md) |
+| `EPM_NIRYAT` | **7** | Export interest subvention — see [epmNiryat.md](./schemes/EPM_NIRYAT/epmNiryat.md) |
 
 `getVisibleSteps(code)` returns `[1..N]` for that scheme and drives the step strip and next/prev navigation.
 
@@ -147,7 +159,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `PMEGP_2ND` | Own 14-step upgrade pack — see [docs/schemes/PMEGP_2ND/pmegp2nd.md](./schemes/PMEGP_2ND/pmegp2nd.md), `pmegp2ndQuestions.ts`, `PMEGP_2ND_STEPS` (prior PMEGP/REGP/MUDRA, uniform 15% MM / 10% own, brownfield only). |
 | `SCLCSS` | Own 13-step tech-upgrade pack — see [docs/schemes/SCLCSS/sclcss.md](./schemes/SCLCSS/sclcss.md), `sclcssQuestions.ts`, `SCLCSS_STEPS` (SC/ST ≥51%, existing vs proposed tech, 25% subsidy cap ₹25 L). |
 | `AP_TECH_UPGRADE` | Own 13-step brownfield pack — see [docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md](./schemes/AP_TECH_UPGRADE/apTechUpgrade.md), `apTechUpgradeQuestions.ts`, `AP_TECH_UPGRADE_STEPS` (MSME-EDP 4.0 para 6.4: 20%/40%/30% of FCI by size & special category). |
-| `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
+| `MSE_GIFT` | Own 12-step green pack — see [docs/schemes/MSE_GIFT/mseGift.md](./schemes/MSE_GIFT/mseGift.md), `mseGiftQuestions.ts`, `MSE_GIFT_STEPS`. |
 | `ZED` | Own 5-step certification pack — see [docs/schemes/ZED/zed.md](./schemes/ZED/zed.md), `zedQuestions.ts`, `ZED_STEPS`. |
 | `LEAN` | Own 5-step consulting pack — see [docs/schemes/LEAN/lean.md](./schemes/LEAN/lean.md), `leanQuestions.ts`, `LEAN_STEPS`. |
 | `MSME_IPR` | Own 5-step IP pack — see [docs/schemes/MSME_IPR/msmeIpr.md](./schemes/MSME_IPR/msmeIpr.md), `msmeIprQuestions.ts`, `MSME_IPR_STEPS`. |
@@ -156,8 +168,17 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `SCST_HUB` | Own 5-step procurement pack — see [docs/schemes/SCST_HUB/scstHub.md](./schemes/SCST_HUB/scstHub.md), `scstHubQuestions.ts`, `SCST_HUB_STEPS`. |
 | `ASPIRE` | Own 10-step livelihood pack — see [docs/schemes/ASPIRE/aspire.md](./schemes/ASPIRE/aspire.md), `aspireQuestions.ts`, `ASPIRE_STEPS`. |
 | `NHDP` | Own 10-step weaver pack — see [docs/schemes/NHDP/nhdp.md](./schemes/NHDP/nhdp.md), `nhdpQuestions.ts`, `NHDP_STEPS`. |
-| `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
-| `CVY` / `PTUAS` / `PMPDS` / … | short-pack fields (see `SCHEME_EXTRA_FIELDS`) |
+| `CVY` | Own 12-step coir pack — see [docs/schemes/CVY/cvy.md](./schemes/CVY/cvy.md), `cvyQuestions.ts`, `CVY_STEPS`. |
+| `PTUAS` | Own 13-step pharma upgrade — see [docs/schemes/PTUAS/ptuas.md](./schemes/PTUAS/ptuas.md), `ptuasQuestions.ts`, `PTUAS_STEPS`. |
+| `PMPDS` | Own 5-step promotion pack — see [docs/schemes/PMPDS/pmpds.md](./schemes/PMPDS/pmpds.md), `pmpdsQuestions.ts`, `PMPDS_STEPS`. |
+| `CGTMSE` | Own 12-step bank pack (MUDRA-adjacent guarantee) — see [docs/schemes/CGTMSE/cgtmse.md](./schemes/CGTMSE/cgtmse.md), `cgtmseQuestions.ts`, `CGTMSE_STEPS`. |
+| `AP_FPP` | Own 13-step food FCI pack — see [docs/schemes/AP_FPP/apFpp.md](./schemes/AP_FPP/apFpp.md), `apFppQuestions.ts`, `AP_FPP_STEPS` (do not double-claim with `AP_EDP`). |
+| `AP_CMEP` | Own 13-step credit-linked greenfield — see [docs/schemes/AP_CMEP/apCmep.md](./schemes/AP_CMEP/apCmep.md), `apCmepQuestions.ts`, `AP_CMEP_STEPS`. |
+| `OBMMS` | Own 10-step welfare self-employment — see [docs/schemes/OBMMS/obmms.md](./schemes/OBMMS/obmms.md), `obmmsQuestions.ts`, `OBMMS_STEPS`. |
+| `MSE_SPICE` | Own 12-step circular P&M — see [docs/schemes/MSE_SPICE/mseSpice.md](./schemes/MSE_SPICE/mseSpice.md), `mseSpiceQuestions.ts`, `MSE_SPICE_STEPS`. |
+| `AP_PARKS` | Own 10-step park land rebate — see [docs/schemes/AP_PARKS/apParks.md](./schemes/AP_PARKS/apParks.md), `apParksQuestions.ts`, `AP_PARKS_STEPS`. |
+| `RAMP_TEAM` | Own 5-step ONDC pack — see [docs/schemes/RAMP_TEAM/rampTeam.md](./schemes/RAMP_TEAM/rampTeam.md), `rampTeamQuestions.ts`, `RAMP_TEAM_STEPS`. |
+| `EPM_NIRYAT` | Own 7-step export credit — see [docs/schemes/EPM_NIRYAT/epmNiryat.md](./schemes/EPM_NIRYAT/epmNiryat.md), `epmNiryatQuestions.ts`, `EPM_NIRYAT_STEPS`. |
 | Cluster / CTA schemes (`MSE_CDP`, `SFURTI`, `AP_CDP`, `APICF`, `CHAMPIONS`, `ESDP`, `NTCEC`) | **Excluded** from Create New Latest DPR picker (`isIndividualPickerScheme`) |
 
 **Policy:** Do not implement general `CLCSS` — use `SCLCSS` (SC/ST only) + `AP_TECH_UPGRADE` for general category. Each scheme defines its own step catalog in `schemeStepCatalog.ts` (not hide-from-18). PMEGP uses the KVIC unit DPR question set in `docs/schemes/PMEGP/pmegp.md`.

@@ -225,6 +225,89 @@ function inferMissingExtras(
     if (!next.loomType) next.loomType = 'frame';
     if (!next.weaverId) next.weaverId = 'Weaver ID / handloom corp membership to be filled';
   }
+  if (schemeCode === 'CVY') {
+    if (!next.coirBoardStatus) next.coirBoardStatus = 'applied';
+    if (!next.coirProductLine) next.coirProductLine = 'Coir fibre / products (to be specified)';
+  }
+  if (schemeCode === 'MSE_GIFT') {
+    if (!next.expectedSaving) next.expectedSaving = '15';
+    if (!next.eeEquipment) next.eeEquipment = 'Energy-efficient process / utility equipment';
+  }
+  if (schemeCode === 'PTUAS') {
+    if (!next.gmpStatus) next.gmpStatus = 'partial';
+  }
+  if (schemeCode === 'PMPDS' && !next.deviceOrFormulation) {
+    next.deviceOrFormulation = /device/i.test(hint) ? 'device' : 'formulation';
+  }
+  if (schemeCode === 'CGTMSE') {
+    if (!next.loanPurpose) next.loanPurpose = 'composite';
+    if (!next.womenOwned) next.womenOwned = /woman|women/i.test(hint) ? 'yes' : 'no';
+  }
+  if (schemeCode === 'AP_FPP') {
+    if (!next.enterpriseSize) {
+      next.enterpriseSize = /medium/i.test(hint) ? 'medium' : /small/i.test(hint) ? 'small' : 'micro';
+    }
+    if (!next.specialCategory) {
+      next.specialCategory = /woman|sc|st|bc|pwd|fpo|shg/i.test(hint) ? 'yes' : 'no';
+    }
+    if (!next.apDomicile) next.apDomicile = 'yes';
+    if (!next.fpoShg) next.fpoShg = /fpo|shg/i.test(hint) ? 'yes' : 'no';
+  }
+  if (schemeCode === 'AP_CMEP') {
+    if (!next.activityBand) {
+      next.activityBand = /knowledge|service|it\b|software/i.test(hint) ? 'knowledge' : 'manufacturing';
+    }
+    if (!next.boosterCategory) {
+      next.boosterCategory = /woman/i.test(hint)
+        ? 'woman'
+        : /pwd|disabled/i.test(hint)
+          ? 'pwd'
+          : /ex[- ]?service/i.test(hint)
+            ? 'exServiceman'
+            : /transgender/i.test(hint)
+              ? 'transgender'
+              : 'none';
+    }
+    if (!next.apDomicile) next.apDomicile = 'yes';
+  }
+  if (schemeCode === 'OBMMS') {
+    if (!next.welfareCorporation) {
+      next.welfareCorporation = /\bst\b|tribe/i.test(hint)
+        ? 'st'
+        : /\bbc\b/i.test(hint)
+          ? 'bc'
+          : /kapu/i.test(hint)
+            ? 'kapu'
+            : /minority/i.test(hint)
+              ? 'minority'
+              : 'sc';
+    }
+    if (!next.whiteRiceCard) next.whiteRiceCard = 'yes';
+  }
+  if (schemeCode === 'MSE_SPICE') {
+    if (!next.circularSector) {
+      next.circularSector = /e-?waste/i.test(hint)
+        ? 'ewaste'
+        : /textile/i.test(hint)
+          ? 'textile'
+          : /plastic/i.test(hint)
+            ? 'plastic'
+            : 'other';
+    }
+  }
+  if (schemeCode === 'AP_PARKS') {
+    if (!next.landRebateClaim) {
+      next.landRebateClaim = /woman/i.test(hint) ? 'women' : /\bsc\b|\bst\b/i.test(hint) ? 'scSt' : 'general';
+    }
+    if (!next.apDomicile) next.apDomicile = 'yes';
+  }
+  if (schemeCode === 'RAMP_TEAM' && !next.ondcReady) {
+    next.ondcReady = 'planning';
+  }
+  if (schemeCode === 'EPM_NIRYAT') {
+    if (!next.prePostShipment) next.prePostShipment = 'both';
+    if (!next.exportMarkets) next.exportMarkets = 'Export markets to be confirmed';
+  }
   return next;
 }
 

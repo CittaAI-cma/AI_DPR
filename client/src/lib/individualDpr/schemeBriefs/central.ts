@@ -855,7 +855,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     ),
     benefits: [L('Financing support aligned to green / EE machinery upgrade.', 'గ్రీన్ / EE యంత్రాల అప్‌గ్రేడ్ ఫైనాన్స్.')],
     eligibility: [L('Brownfield mfg/food with tech-upgrade intent and Udyam.', 'టెక్ అప్‌గ్రేడ్ ఉద్దేశంతో బ్రౌన్‌ఫీల్డ్ తయారీ/ఆహారం + ఉద్యమ్.')],
-    howToApply: [L('Complete the 18-step upgrade DPR with energy baseline and EE quotations.', 'ఎనర్జీ బేస్‌లైన్, EE కోటేషన్లతో 18-దశల DPR పూర్తి చేయండి.')],
+    howToApply: [L('Complete the 12-step MSE-GIFT pack with energy baseline and EE quotations.', 'ఎనర్జీ బేస్‌లైన్, EE కోటేషన్లతో 18-దశల DPR పూర్తి చేయండి.')],
     documents: [L('Energy bill, EE quotations, Udyam', 'ఎనర్జీ బిల్లు, EE కోటేషన్లు, ఉద్యమ్')],
     faqs: [],
     quickInfo: {
@@ -872,7 +872,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     intro: L('Coir Board linked unit-level support. Confirm live guidelines before locking cost.', 'కొయిర్ బోర్డు లింక్డ్ యూనిట్ సహాయం. ఖర్చు ఖాయం చేసే ముందు ప్రస్తుత మార్గదర్శకాలు నిర్ధారించండి.'),
     benefits: [L('Subsidy / credit support for coir product lines as notified.', 'కొయిర్ ఉత్పత్తులకు నోటిఫైడ్ సబ్సిడీ / క్రెడిట్.')],
     eligibility: [L('Coir sector flag; craft or manufacturing activity.', 'కొయిర్ రంగం; క్రాఫ్ట్ లేదా తయారీ.')],
-    howToApply: [L('Prepare full DPR with Coir Board registration status and quotations.', 'కొయిర్ బోర్డు నమోదు స్థితి, కోటేషన్లతో పూర్తి DPR తయారు చేయండి.')],
+    howToApply: [L('Complete the 12-step CVY pack with Coir Board status and quotations.', 'కొయిర్ బోర్డు నమోదు స్థితి, కోటేషన్లతో పూర్తి DPR తయారు చేయండి.')],
     documents: [L('Coir Board docs, quotations, Udyam', 'కొయిర్ బోర్డు పత్రాలు, కోటేషన్లు, ఉద్యమ్')],
     faqs: [],
     quickInfo: {
@@ -915,7 +915,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     ),
     benefits: [L('Assistance for technology upgradation in pharma units.', 'ఫార్మా యూనిట్ల టెక్ అప్‌గ్రేడ్ సహాయం.')],
     eligibility: [L('Pharma sector, brownfield, tech upgrade, Udyam.', 'ఫార్మా రంగం, బ్రౌన్‌ఫీల్డ్, టెక్ అప్‌గ్రేడ్, ఉద్యమ్.')],
-    howToApply: [L('Full 18-step upgrade DPR with licence and pollution consent uploads.', 'లైసెన్స్, పొల్యూషన్ కన్సెంట్‌తో పూర్తి 18-దశల DPR.')],
+    howToApply: [L('Complete the 13-step PTUAS pack with licence and pollution consent uploads.', 'లైసెన్స్, పొల్యూషన్ కన్సెంట్‌తో పూర్తి 18-దశల DPR.')],
     documents: [L('Manufacturing licence, pollution consent, quotations, CA FCI, Udyam', 'మాన్యుఫాక్చరింగ్ లైసెన్స్, పొల్యూషన్ కన్సెంట్, కోటేషన్లు, CA FCI, ఉద్యమ్')],
     faqs: [],
     quickInfo: {

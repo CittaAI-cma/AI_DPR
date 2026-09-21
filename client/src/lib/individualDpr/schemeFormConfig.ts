@@ -28,6 +28,18 @@ import { PMS_EXTRA_FIELDS, PMS_IMPACT_BULLETS } from '@/lib/individualDpr/pmsQue
 import { SCST_HUB_EXTRA_FIELDS, SCST_HUB_IMPACT_BULLETS } from '@/lib/individualDpr/scstHubQuestions';
 import { ASPIRE_EXTRA_FIELDS, ASPIRE_IMPACT_BULLETS } from '@/lib/individualDpr/aspireQuestions';
 import { NHDP_EXTRA_FIELDS, NHDP_IMPACT_BULLETS } from '@/lib/individualDpr/nhdpQuestions';
+import { CVY_EXTRA_FIELDS, CVY_IMPACT_BULLETS } from '@/lib/individualDpr/cvyQuestions';
+import { MSE_GIFT_EXTRA_FIELDS, MSE_GIFT_IMPACT_BULLETS } from '@/lib/individualDpr/mseGiftQuestions';
+import { PTUAS_EXTRA_FIELDS, PTUAS_IMPACT_BULLETS } from '@/lib/individualDpr/ptuasQuestions';
+import { PMPDS_EXTRA_FIELDS, PMPDS_IMPACT_BULLETS } from '@/lib/individualDpr/pmpdsQuestions';
+import { CGTMSE_EXTRA_FIELDS, CGTMSE_IMPACT_BULLETS } from '@/lib/individualDpr/cgtmseQuestions';
+import { AP_FPP_EXTRA_FIELDS, AP_FPP_IMPACT_BULLETS } from '@/lib/individualDpr/apFppQuestions';
+import { AP_CMEP_EXTRA_FIELDS, AP_CMEP_IMPACT_BULLETS } from '@/lib/individualDpr/apCmepQuestions';
+import { OBMMS_EXTRA_FIELDS, OBMMS_IMPACT_BULLETS } from '@/lib/individualDpr/obmmsQuestions';
+import { MSE_SPICE_EXTRA_FIELDS, MSE_SPICE_IMPACT_BULLETS } from '@/lib/individualDpr/mseSpiceQuestions';
+import { AP_PARKS_EXTRA_FIELDS, AP_PARKS_IMPACT_BULLETS } from '@/lib/individualDpr/apParksQuestions';
+import { RAMP_TEAM_EXTRA_FIELDS, RAMP_TEAM_IMPACT_BULLETS } from '@/lib/individualDpr/rampTeamQuestions';
+import { EPM_NIRYAT_EXTRA_FIELDS, EPM_NIRYAT_IMPACT_BULLETS } from '@/lib/individualDpr/epmNiryatQuestions';
 import {
   getSchemeSteps,
   getStepDef,
@@ -55,18 +67,26 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   PMEGP_2ND: [...PMEGP_2ND_EXTRA_FIELDS],
   SCLCSS: [...SCLCSS_EXTRA_FIELDS],
   AP_TECH_UPGRADE: [...AP_TECH_EXTRA_FIELDS],
-  MSE_GIFT: ['energyBaselineKwh', 'expectedSaving'],
+  MSE_GIFT: [...MSE_GIFT_EXTRA_FIELDS],
   ZED: [...ZED_EXTRA_FIELDS],
   LEAN: [...LEAN_EXTRA_FIELDS],
   MSME_IPR: [...MSME_IPR_EXTRA_FIELDS],
   PMS: [...PMS_EXTRA_FIELDS],
-  CVY: ['coirProductLine', 'coirBoardStatus'],
+  CVY: [...CVY_EXTRA_FIELDS],
   NHDP: [...NHDP_EXTRA_FIELDS],
-  PTUAS: ['gmpStatus', 'productLicence'],
-  PMPDS: ['deviceOrFormulation'],
+  PTUAS: [...PTUAS_EXTRA_FIELDS],
+  PMPDS: [...PMPDS_EXTRA_FIELDS],
   SCST_HUB: [...SCST_HUB_EXTRA_FIELDS],
   ASPIRE: [...ASPIRE_EXTRA_FIELDS],
   ECLGS: [...ECLGS_EXTRA_FIELDS],
+  CGTMSE: [...CGTMSE_EXTRA_FIELDS],
+  AP_FPP: [...AP_FPP_EXTRA_FIELDS],
+  AP_CMEP: [...AP_CMEP_EXTRA_FIELDS],
+  OBMMS: [...OBMMS_EXTRA_FIELDS],
+  MSE_SPICE: [...MSE_SPICE_EXTRA_FIELDS],
+  AP_PARKS: [...AP_PARKS_EXTRA_FIELDS],
+  RAMP_TEAM: [...RAMP_TEAM_EXTRA_FIELDS],
+  EPM_NIRYAT: [...EPM_NIRYAT_EXTRA_FIELDS],
 };
 
 export function extraFieldsForScheme(schemeCode: string | null | undefined): string[] {
@@ -112,6 +132,10 @@ export function hideComplexCapex(code: string | null, budget?: Budget): boolean 
     code === 'MSME_IPR' ||
     code === 'PMS' ||
     code === 'SCST_HUB' ||
+    code === 'PMPDS' ||
+    code === 'RAMP_TEAM' ||
+    code === 'EPM_NIRYAT' ||
+    code === 'OBMMS' ||
     isMudraShishuKishore(code, budget)
   );
 }
@@ -355,13 +379,84 @@ export function getStep18Uploads(
       { id: 'bankPassbook', label: 'Bank Passbook' },
     ];
   }
-  if (code === 'PTUAS' || code === 'PMPDS') {
+  if (code === 'PTUAS') {
     return [
       { id: 'manufacturingLicence', label: 'Manufacturing / Product Licence' },
       { id: 'pollutionConsent', label: 'Pollution Consent' },
       { id: 'machineryQuotations', label: 'Machinery Quotations' },
       { id: 'caFciStatement', label: 'CA FCI Statement' },
       { id: 'udyamCertificate', label: 'Udyam Certificate' },
+    ];
+  }
+  if (code === 'PMPDS') {
+    return [
+      { id: 'manufacturingLicence', label: 'Manufacturing / Product Licence (if any)' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+    ];
+  }
+  if (code === 'CGTMSE') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+      { id: 'machineryQuotations', label: 'Quotations / WC Evidence' },
+      { id: 'bankPassbook', label: 'Bank Passbook' },
+    ];
+  }
+  if (code === 'AP_FPP') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'fssai', label: 'FSSAI Licence' },
+      { id: 'cfeCfo', label: 'CFE / CFO' },
+      { id: 'machineryQuotations', label: 'Machinery Quotations' },
+      { id: 'caFciStatement', label: 'CA FCI Statement' },
+      { id: 'apDomicileProof', label: 'AP Domicile Proof' },
+    ];
+  }
+  if (code === 'AP_CMEP') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate (or application)' },
+      { id: 'machineryQuotations', label: 'Machinery / Capex Quotations' },
+      { id: 'apDomicileProof', label: 'AP Domicile Proof' },
+      { id: 'bankPassbook', label: 'Bank Passbook / Cancelled Cheque' },
+    ];
+  }
+  if (code === 'OBMMS') {
+    return [
+      { id: 'casteCertificate', label: 'Caste / Corporation Eligibility Proof' },
+      { id: 'whiteRiceCard', label: 'White Rice Card' },
+      { id: 'aadhaarPan', label: 'Aadhaar' },
+      { id: 'bankPassbook', label: 'Bank Passbook' },
+    ];
+  }
+  if (code === 'MSE_SPICE') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'machineryQuotations', label: 'New P&M Quotations (second-hand ineligible)' },
+      { id: 'bankPassbook', label: 'Bank Passbook / Sanction Path' },
+    ];
+  }
+  if (code === 'AP_PARKS') {
+    return [
+      { id: 'allotmentApplication', label: 'APIIC / Park Allotment Application' },
+      { id: 'apDomicileProof', label: 'AP Domicile Proof' },
+      { id: 'categoryProof', label: 'SC/ST / Women Category Proof (if claimed)' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+    ];
+  }
+  if (code === 'RAMP_TEAM') {
+    return [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'productCatalogue', label: 'Product List / Catalogue Draft' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+    ];
+  }
+  if (code === 'EPM_NIRYAT') {
+    return [
+      { id: 'iec', label: 'IEC Certificate' },
+      { id: 'exportEvidence', label: 'Shipping / LC / Export Evidence' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'bankStatements', label: 'Bank Statements' },
     ];
   }
   if (code === 'SCST_HUB') {
@@ -456,6 +551,42 @@ export function getSchemeImpact(code: string | null): {
   }
   if (code === 'NHDP') {
     return { title: 'NHDP (handloom)', bullets: [...NHDP_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'CVY') {
+    return { title: 'Coir Vikas Yojana', bullets: [...CVY_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'MSE_GIFT') {
+    return { title: 'MSE-GIFT', bullets: [...MSE_GIFT_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'PTUAS') {
+    return { title: 'PTUAS', bullets: [...PTUAS_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'PMPDS') {
+    return { title: 'PMPDS', bullets: [...PMPDS_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'CGTMSE') {
+    return { title: 'CGTMSE (MUDRA-adjacent)', bullets: [...CGTMSE_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'AP_FPP') {
+    return { title: 'AP FPP 4.0', bullets: [...AP_FPP_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'AP_CMEP') {
+    return { title: 'AP CMEP', bullets: [...AP_CMEP_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'OBMMS') {
+    return { title: 'AP OBMMS', bullets: [...OBMMS_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'MSE_SPICE') {
+    return { title: 'MSE-SPICE', bullets: [...MSE_SPICE_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'AP_PARKS') {
+    return { title: 'AP MSME-PARKS', bullets: [...AP_PARKS_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'RAMP_TEAM') {
+    return { title: 'RAMP TEAM (ONDC)', bullets: [...RAMP_TEAM_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'EPM_NIRYAT') {
+    return { title: 'EPM Niryat Protsahan', bullets: [...EPM_NIRYAT_IMPACT_BULLETS], firstChangedStep: 1 };
   }
   if (code === 'MUDRA') {
     return {
