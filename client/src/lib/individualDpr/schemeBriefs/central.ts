@@ -148,8 +148,8 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       'ప్రధానమంత్రి సూక్ష్మ ఆహార ప్రాసెసింగ్ యూనిట్ల అధికారికీకరణ (PMFME)'
     ),
     intro: L(
-      'The Scheme is for upgradation of existing micro food processing enterprises and also adopts a One District One Product (ODOP) approach. Copy below follows the AP MSME One PMFME page.',
-      'ఈ పథకం ఉన్న సూక్ష్మ ఆహార ప్రాసెసింగ్ యూనిట్ల అప్‌గ్రేడ్‌కు; వన్ డిస్ట్రిక్ట్ వన్ ప్రాడక్ట్ (ODOP) విధానం కూడా ఉంది. క్రింది వచనం AP MSME One PMFME పేజీ నుండి.'
+      'The Scheme is for new and existing micro food processing enterprises and also adopts a One District One Product (ODOP) approach. Create New Latest DPR follows MoFPI / NIFTEM model DPR structure — see docs/schemes/PMFME/pmfme.md.',
+      'కొత్త మరియు ఉన్న సూక్ష్మ ఆహార ప్రాసెసింగ్ యూనిట్లకు; వన్ డిస్ట్రిక్ట్ వన్ ప్రాడక్ట్ (ODOP) విధానం కూడా ఉంది. Create New Latest DPR MoFPI / NIFTEM మోడల్ DPR నిర్మాణం అనుసరిస్తుంది.'
     ),
     benefits: [
       L(
@@ -175,12 +175,13 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     ],
     eligibility: [
       L('Food processing activity (bakery, pickle, spices, milling, and similar units).', 'ఆహార ప్రాసెసింగ్ కార్యకలాపం (బేకరీ, ఊరగాయ, మసాలా, మిల్లింగ్ మొదలైనవి).'),
-      L('Typically existing micro units seeking upgradation; ODOP products are preferred.', 'సాధారణంగా అప్‌గ్రేడ్ కావాలనుకునే ఉన్న సూక్ష్మ యూనిట్లు; ODOP ఉత్పత్తులకు ప్రాధాన్యం.'),
+      L('New or existing micro units; ODOP products are preferred but not compulsory.', 'కొత్త లేదా ఉన్న సూక్ష్మ యూనిట్లు; ODOPకు ప్రాధాన్యం కానీ తప్పనిసరి కాదు.'),
       L('Sole owner, partnership, SHG, FPO, or cooperative. Project cost in Scheme Finder is treated as up to about ₹50 lakh.', 'ఏకస్వామ్యం, భాగస్వామ్యం, SHG, FPO లేదా సహకారం. స్కీమ్ ఫైండర్‌లో ప్రాజెక్ట్ ఖర్చు సుమారు ₹50 లక్షల వరకు.'),
       L('8th-class pass (Scheme Finder gate). Plan for FSSAI registration.', '8వ తరగతి ఉత్తీర్ణత (స్కీమ్ ఫైండర్ నియమం). FSSAI నమోదు ప్లాన్ చేయండి.'),
     ],
     howToApply: [
       L('Apply on the national PMFME portal through the State Nodal Agency (Andhra Pradesh).', 'జాతీయ PMFME పోర్టల్‌లో రాష్ట్ర నోడల్ ఏజెన్సీ (ఆంధ్రప్రదేశ్) ద్వారా దరఖాస్తు చేయండి.'),
+      L('Create New Latest DPR with PMFME selected builds a 14-step food-unit pack aligned to NIFTEM model DPRs.', 'PMFME ఎంచుకుంటే Create New Latest DPR NIFTEM మోడల్ DPRలకు అనుగుణంగా 14-దశల ఫుడ్-యూనిట్ ప్యాక్ ఇస్తుంది.'),
       L('Upload a DPR, machinery quotations, premises proof, and draft FSSAI details.', 'DPR, యంత్రాల కోటేషన్లు, ప్రాంగణం రుజువు, డ్రాఫ్ట్ FSSAI వివరాలు అప్‌లోడ్ చేయండి.'),
       L('Bank appraisal follows; subsidy is credit-linked.', 'తర్వాత బ్యాంకు పరిశీలన; సబ్సిడీ క్రెడిట్-లింక్డ్.'),
     ],
@@ -194,8 +195,15 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       {
         q: L('Is the ₹10 lakh ceiling on subsidy or on project cost?', '₹10 లక్షల పైపరిధి సబ్సిడీపైనా లేదా ప్రాజెక్ట్ ఖర్చుపైనా?'),
         a: L(
-          'On the AP MSME One page it is a ceiling of ₹10 lakh on the 35% credit-linked capital subsidy for an individual micro unit.',
-          'AP MSME One పేజీ ప్రకారం వ్యక్తిగత సూక్ష్మ యూనిట్ 35% క్రెడిట్-లింక్డ్ క్యాపిటల్ సబ్సిడీపై ₹10 లక్షల పైపరిధి.'
+          'On the subsidy: credit-linked capital grant @35% of eligible project cost, ceiling ₹10 lakh per individual micro unit. Own contribution must be at least 10%.',
+          'సబ్సిడీపై: అర్హ ప్రాజెక్ట్ ఖర్చులో 35% క్రెడిట్-లింక్డ్ క్యాపిటల్ గ్రాంట్, వ్యక్తిగత సూక్ష్మ యూనిట్‌కు ₹10 లక్షల పైపరిధి. స్వంత వాటా కనీసం 10%.'
+        ),
+      },
+      {
+        q: L('Are only existing units eligible?', 'ఉన్న యూనిట్లు మాత్రమే అర్హమా?'),
+        a: L(
+          'No. Both new micro food processing enterprises and existing units seeking upgrade / expansion are eligible (MoFPI FAQ).',
+          'కాదు. కొత్త సూక్ష్మ ఆహార ప్రాసెసింగ్ యూనిట్లు మరియు అప్‌గ్రేడ్ / విస్తరణ కావాలనుకునే ఉన్న యూనిట్లు రెండూ అర్హం.'
         ),
       },
     ],
@@ -205,7 +213,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: 'https://apmsmeone.ap.gov.in/Public/Schemes.aspx?ID=PMFME',
+    sourceUrl: 'https://pmfme.mofpi.gov.in/pmfme/#/Home-Page',
   },
 
   MUDRA: {

@@ -131,7 +131,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 |--------|----------------|
 | `VISHWAKARMA` | `craft`, `currentTools`, `newTools` (craft list = 18 Vishwakarma trades) |
 | `SVANIDHI` | `covOrLor`, `upiQr` |
-| `PMFME` | `fssai` (yes / planned) |
+| `PMFME` | Own 14-step food-unit pack — see [docs/schemes/PMFME/pmfme.md](./schemes/PMFME/pmfme.md), `pmfmeQuestions.ts`, `PMFME_STEPS` (NIFTEM model structure: FSSAI, new/existing, ODOP, RM sources, 35% grant cap ₹10 L). |
 | `AP_EDP` | `apiicPark` (land-rebate hint) |
 | `PMEGP` | Full bank-unit set — see [docs/schemes/PMEGP/pmegp.md](./schemes/PMEGP/pmegp.md), `pmegpQuestions.ts`, and `PMEGP_STEPS` (14 consecutive steps: category, rural/urban, agency, entrepreneur, process, capacity, margin-money %). |
 | `MUDRA` | Own 12-step PMMY pack — see [docs/schemes/MUDRA/mudra.md](./schemes/MUDRA/mudra.md), `mudraQuestions.ts`, `MUDRA_STEPS` (Shishu/Kishore/Tarun/Tarun Plus, own+bank MoF, shop proof uploads). |

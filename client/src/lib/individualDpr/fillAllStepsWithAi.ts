@@ -25,6 +25,8 @@ export function normalizeExtraValue(field: string, value: any): any {
   if (field === 'craft') return matchCraft(text);
   if (field === 'covOrLor') return /lor/i.test(text) ? 'lor' : 'cov';
   if (field === 'fssai') return /plan/i.test(text) ? 'planned' : 'yes';
+  if (field === 'unitStage') return /exist|upgrade|expans/i.test(text) ? 'existing' : 'new';
+  if (field === 'odopAligned') return /\bno\b|non-?odop/i.test(text) ? 'no' : /yes|odop/i.test(text) ? 'yes' : text;
   if (field === 'apiicPark') return /yes|apiic|park/i.test(text) && !/\bno\b/i.test(text) ? 'yes' : /no/i.test(text) ? 'no' : 'yes';
   return text;
 }
@@ -52,7 +54,11 @@ function inferMissingExtras(
     if (!next.covOrLor) next.covOrLor = 'cov';
     if (!next.upiQr) next.upiQr = 'UPI QR to be linked to the vendor bank account.';
   }
-  if (schemeCode === 'PMFME' && !next.fssai) next.fssai = 'planned';
+  if (schemeCode === 'PMFME') {
+    if (!next.fssai) next.fssai = 'planned';
+    if (!next.unitStage) next.unitStage = /exist|upgrade|expans/i.test(hint) ? 'existing' : 'new';
+    if (!next.odopAligned) next.odopAligned = 'yes';
+  }
   if (schemeCode === 'AP_EDP' && !next.apiicPark) {
     next.apiicPark = /apiic|industrial park/i.test(hint) ? 'yes' : 'no';
   }

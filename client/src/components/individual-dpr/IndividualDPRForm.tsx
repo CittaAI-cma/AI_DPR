@@ -37,6 +37,16 @@ import {
   STANDUP_MIN_OWN_PERCENT,
   STANDUP_PREMISES_OPTIONS,
 } from '@/lib/individualDpr/standupQuestions';
+import {
+  PMFME_FSSAI_OPTIONS,
+  PMFME_MIN_OWN_PERCENT,
+  PMFME_ODOP_OPTIONS,
+  PMFME_PREMISES_OPTIONS,
+  PMFME_SUBSIDY_CAP_LAKHS,
+  PMFME_SUBSIDY_PERCENT,
+  PMFME_UNIT_STAGE_OPTIONS,
+  pmfmeIndicativeGrantLakhs,
+} from '@/lib/individualDpr/pmfmeQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
@@ -62,7 +72,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const isPmegp = schemeCode === 'PMEGP';
   const isMudra = schemeCode === 'MUDRA';
   const isStandup = schemeCode === 'STANDUP';
-  const isLeanUnit = isPmegp || isMudra || isStandup;
+  const isPmfme = schemeCode === 'PMFME';
+  const isLeanUnit = isPmegp || isMudra || isStandup || isPmfme;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -455,18 +466,91 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
-        {schemeCode === 'PMFME' && (
+        {isPmfme && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">{tf("FSSAI")}</h3>
-            <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={extras.fssai || stepData.fssai || ''}
-              onChange={(e) => updateExtras({ fssai: e.target.value })}
-            >
-              <option value="">{tf("FSSAI status")}</option>
-              <option value="yes">{tf("Already have FSSAI")}</option>
-              <option value="planned">{tf("Will obtain / draft FSSAI")}</option>
-            </select>
+            <h3 className="text-lg font-semibold">{tf('PMFME — formalisation & eligibility')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'Spec: docs/schemes/PMFME/pmfme.md — NIFTEM model DPRs; 35% grant capped ₹10 L; own ≥10%'
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Unit stage')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.unitStage || ''}
+                  onChange={(e) => updateExtras({ unitStage: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {PMFME_UNIT_STAGE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('ODOP aligned?')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.odopAligned || ''}
+                  onChange={(e) => updateExtras({ odopAligned: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {PMFME_ODOP_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('FSSAI')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.fssai || stepData.fssai || ''}
+                  onChange={(e) => updateExtras({ fssai: e.target.value })}
+                >
+                  <option value="">{tf('FSSAI status')}</option>
+                  {PMFME_FSSAI_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur full name')}</label>
+                <Input
+                  value={extras.entrepreneurName || ''}
+                  onChange={(e) => updateExtras({ entrepreneurName: e.target.value })}
+                  placeholder={tf('Full name as in Aadhaar')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
+                <Input
+                  type="number"
+                  value={extras.entrepreneurAge || ''}
+                  onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
+                  placeholder={tf('e.g. 32')}
+                />
+              </div>
+              {extras.unitStage === 'existing' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {tf('Existing annual turnover (₹ Lakhs)')}
+                  </label>
+                  <Input
+                    type="number"
+                    value={extras.existingTurnover || ''}
+                    onChange={(e) => updateExtras({ existingTurnover: e.target.value })}
+                    placeholder={tf('e.g. 8')}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -794,7 +878,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
 
-        {(isPmegp || isStandup) && (
+        {(isPmegp || isStandup || isPmfme) && (
           <div>
             <label className="block text-sm font-medium mb-2">{tf('Process of manufacture')}</label>
             <textarea
@@ -802,9 +886,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               value={extras.processOfManufacture || ''}
               onChange={(e) => updateExtras({ processOfManufacture: e.target.value })}
               placeholder={
-                isStandup
-                  ? tf('Process of manufacture / service delivery (bank checklist)')
-                  : tf('Step-by-step process (as in KVIC bakery / curd profiles)')
+                isPmfme
+                  ? tf('Food processing / value-addition steps (as in NIFTEM model DPRs)')
+                  : isStandup
+                    ? tf('Process of manufacture / service delivery (bank checklist)')
+                    : tf('Step-by-step process (as in KVIC bakery / curd profiles)')
               }
             />
           </div>
@@ -1067,7 +1153,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             value={stepData.productionCapacity || extras.installedCapacity || ''}
             onChange={(e) => {
               handleInputChange('productionCapacity', e.target.value);
-              if (isPmegp || isStandup) updateExtras({ installedCapacity: e.target.value });
+              if (isPmegp || isStandup || isPmfme) updateExtras({ installedCapacity: e.target.value });
             }}
             placeholder={
               isLeanUnit
@@ -1076,7 +1162,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             }
           />
         </div>
-        {(isPmegp || isStandup) && (
+        {(isPmegp || isStandup || isPmfme) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               {tf('Capacity utilisation Year 1 (%)')}
@@ -1085,7 +1171,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="number"
               value={extras.capacityUtilisationY1 || ''}
               onChange={(e) => updateExtras({ capacityUtilisationY1: e.target.value })}
-              placeholder={tf('e.g. 60')}
+              placeholder={isPmfme ? tf('e.g. 60 (NIFTEM models ramp 60→70→80)') : tf('e.g. 60')}
+            />
+          </div>
+        )}
+        {isPmfme && (
+          <div>
+            <label className="block text-sm font-medium mb-2">{tf('Proposed workers (nos.)')}</label>
+            <Input
+              type="number"
+              value={extras.proposedWorkers || ''}
+              onChange={(e) => updateExtras({ proposedWorkers: e.target.value })}
+              placeholder={tf('e.g. 6')}
             />
           </div>
         )}
@@ -1314,6 +1411,19 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             placeholder={tf('Describe existing demand')}
           />
         </div>
+        {isPmfme && (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {tf('Sources of raw material')}
+            </label>
+            <textarea
+              className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={extras.rawMaterialSources || ''}
+              onChange={(e) => updateExtras({ rawMaterialSources: e.target.value })}
+              placeholder={tf('Farmers / mandi / contract sourcing — MoFPI DPR requirement')}
+            />
+          </div>
+        )}
         {isStandup && (
           <div>
             {renderLabel(
@@ -1618,7 +1728,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
         {isLeanUnit ? (
           <div className="space-y-4">
-            {(isMudra || isStandup) && (
+            {(isMudra || isStandup || isPmfme) && (
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Premises — owned / rented')}</label>
                 <select
@@ -1627,7 +1737,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   onChange={(e) => updateExtras({ premisesType: e.target.value })}
                 >
                   <option value="">{tf('Select')}</option>
-                  {(isStandup ? STANDUP_PREMISES_OPTIONS : MUDRA_PREMISES_OPTIONS).map((o) => (
+                  {(isPmfme
+                    ? PMFME_PREMISES_OPTIONS
+                    : isStandup
+                      ? STANDUP_PREMISES_OPTIONS
+                      : MUDRA_PREMISES_OPTIONS
+                  ).map((o) => (
                     <option key={o.value} value={o.value}>
                       {tf(o.label)}
                     </option>
@@ -1642,7 +1757,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <Input
                 value={extras.powerRequirement || stepData.powerRequirements || ''}
                 onChange={(e) => {
-                  if (isPmegp) updateExtras({ powerRequirement: e.target.value });
+                  if (isPmegp || isPmfme) updateExtras({ powerRequirement: e.target.value });
                   handleInputChange('powerRequirements', e.target.value);
                 }}
                 placeholder={tf('e.g. 8 kW')}
@@ -2001,7 +2116,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'spvContribution',
               isPmegp
                 ? 'Own contribution (₹ Lakhs) — typically 10% general / 5% special'
-                : isMudra || isStandup
+                : isMudra || isStandup || isPmfme
                   ? 'Own contribution (₹ Lakhs)'
                   : 'Promoter contribution / equity (₹ Lakhs)'
             )}
@@ -2021,7 +2136,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   ? 'Government grant (₹ Lakhs) — usually 0 for MUDRA'
                   : isStandup
                     ? 'Other subsidy / grant if converging (₹ Lakhs) — else 0'
-                    : 'Government Grant (₹ Lakhs)'
+                    : isPmfme
+                      ? 'PMFME capital grant (₹ Lakhs) — 35%, cap ₹10 L'
+                      : 'Government Grant (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -2033,7 +2150,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <div>
             {renderLabel(
               'bankLoan',
-              isPmegp || isMudra
+              isPmegp || isMudra || isPmfme
                 ? 'Bank term loan + / or WC (₹ Lakhs)'
                 : isStandup
                   ? 'Bank composite loan TL + WC (₹ Lakhs)'
@@ -2079,6 +2196,22 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'Own contribution must be at least 10% of project cost. Own + bank (+ grant/other) = total. Category'
             )}
             : {extras.standupCategory || '—'} · {tf('Min own')} {STANDUP_MIN_OWN_PERCENT}%.
+          </p>
+        )}
+        {isPmfme && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf('Credit-linked grant')} {PMFME_SUBSIDY_PERCENT}% {tf('capped at')} ₹
+            {PMFME_SUBSIDY_CAP_LAKHS} {tf('L')}. {tf('Min own')} {PMFME_MIN_OWN_PERCENT}%.{' '}
+            {tf('Indicative grant for current project cost fields')} ≈ ₹
+            {pmfmeIndicativeGrantLakhs(
+              (getStepData(12)?.land || 0) +
+                (getStepData(12)?.building || 0) +
+                (getStepData(12)?.machinery || 0) +
+                (getStepData(12)?.utilitiesAndInfrastructure || 0) +
+                (getStepData(12)?.preliminaryAndPreOperative || 0) +
+                (getStepData(12)?.workingCapitalMargin || 0)
+            ).toLocaleString('en-IN')}{' '}
+            {tf('Lakhs')} · {extras.unitStage || '—'} / ODOP {extras.odopAligned || '—'}.
           </p>
         )}
         <div className="border-t pt-4">
@@ -2404,12 +2537,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               onChange={(e) => {
                 const v = parseInt(e.target.value) || 0;
                 handleInputChange('employmentGeneration', v);
-                if (isPmegp) updateExtras({ directEmployment: String(v) });
+                if (isPmegp || isPmfme) updateExtras({ directEmployment: String(v) });
               }}
             />
           </div>
           <div>
-            {isPmegp ? (
+            {isPmegp || isPmfme ? (
               <>
                 <label className="block text-sm font-medium mb-2">{tf('Indirect employment (count)')}</label>
                 <Input
@@ -2430,7 +2563,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
           </div>
         </div>
-        {isPmegp && (
+        {(isPmegp || isPmfme) && (
           <div>
             <label className="block text-sm font-medium mb-2">{tf('Short impact note (optional)')}</label>
             <textarea
@@ -2440,7 +2573,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 updateExtras({ impactNote: e.target.value });
                 handleInputChange('impactNote', e.target.value);
               }}
-              placeholder={tf('Keep light — employment / local benefit in one short note')}
+              placeholder={
+                isPmfme
+                  ? tf('Formalisation / local offtake / farmer linkage — short note')
+                  : tf('Keep light — employment / local benefit in one short note')
+              }
             />
           </div>
         )}

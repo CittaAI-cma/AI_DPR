@@ -3,6 +3,7 @@ import { isIndividualPickerScheme, SCHEMES } from '@/lib/ventureMatch/schemes';
 import { PMEGP_EXTRA_FIELDS, PMEGP_IMPACT_BULLETS } from '@/lib/individualDpr/pmegpQuestions';
 import { MUDRA_EXTRA_FIELDS, MUDRA_IMPACT_BULLETS } from '@/lib/individualDpr/mudraQuestions';
 import { STANDUP_EXTRA_FIELDS, STANDUP_IMPACT_BULLETS } from '@/lib/individualDpr/standupQuestions';
+import { PMFME_EXTRA_FIELDS, PMFME_IMPACT_BULLETS } from '@/lib/individualDpr/pmfmeQuestions';
 import {
   getSchemeSteps,
   getStepDef,
@@ -20,7 +21,7 @@ export const SCHEME_OPTIONS = [
 export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   VISHWAKARMA: ['craft', 'currentTools', 'newTools'],
   SVANIDHI: ['covOrLor', 'upiQr'],
-  PMFME: ['fssai'],
+  PMFME: [...PMFME_EXTRA_FIELDS],
   AP_EDP: ['apiicPark'],
   PMEGP: [...PMEGP_EXTRA_FIELDS],
   MUDRA: [...MUDRA_EXTRA_FIELDS],
@@ -159,11 +160,18 @@ export function getStep18Uploads(
     return [{ id: 'covOrLor', label: 'Certificate of Vending (CoV) or Letter of Recommendation' }];
   }
   if (code === 'PMFME') {
-    return [
+    const uploads: UploadField[] = [
       { id: 'machineryQuotations', label: 'Machinery Quotations' },
-      { id: 'premisesLease', label: 'Land / Premises Lease' },
-      { id: 'fssaiDraft', label: 'Draft FSSAI Registration' },
+      { id: 'premisesLease', label: 'Land / Premises Lease or Ownership Proof' },
+      { id: 'fssaiDraft', label: 'FSSAI Licence / Draft Registration' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate (or application)' },
+      { id: 'bankPassbook', label: 'Bank Passbook / Cancelled Cheque' },
     ];
+    if (schemeExtras?.unitStage === 'existing') {
+      uploads.push({ id: 'existingUnitPhotos', label: 'Photos of Existing Unit' });
+    }
+    return uploads;
   }
   if (code === 'PMEGP' || code === 'PMEGP_2ND') {
     const uploads: UploadField[] = [
@@ -329,11 +337,7 @@ export function getSchemeImpact(code: string | null): {
   if (code === 'PMFME') {
     return {
       title: 'PMFME',
-      bullets: [
-        'Full 18-step individual DPR with FSSAI overlay on step 1.',
-        'Step 1 adds FSSAI yes/planned.',
-        'Step 18 uploads: quotations, premises lease, draft FSSAI.',
-      ],
+      bullets: [...PMFME_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }
