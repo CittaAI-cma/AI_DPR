@@ -109,10 +109,10 @@ Each row is a question the entrepreneur must answer when scheme = `PMEGP`.
 
 | ID | Question | Why |
 |----|----------|-----|
-| `building` | Land / building / workshed (₹ L) | Capex head |
+| `building` | Land / building / workshed (₹ L) — land + building fields | Capex head |
 | `machinery` | Plant & machinery (₹ L) | Capex head — need quotations |
-| `furniture` | Furniture & fixtures (₹ L) | Capex head |
-| `preliminary` | Preliminary & pre-operative (₹ L) | Capex head |
+| `utilitiesAndInfrastructure` | Furniture & fixtures (₹ L) | Capex head (UI label for PMEGP) |
+| `preliminaryAndPreOperative` | Preliminary & pre-operative (₹ L) | Capex head |
 | `workingCapitalMargin` | Working capital (₹ L) | Always in PMEGP total cost |
 | *(derived)* | **Total project cost** | Must equal means of finance |
 

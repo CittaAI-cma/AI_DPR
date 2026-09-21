@@ -542,7 +542,9 @@ export const IndividualDPRCreation: React.FC = () => {
                 ) : (
                   <Card>
                     <CardHeader>
-                      <CardTitle>{t(`individualDpr.steps.${currentStep}`, { defaultValue: getStepTitle(currentStep, data.matchedSchemeCode) })}</CardTitle>
+                      <CardTitle>
+                        {tf(getStepTitle(currentStep, data.matchedSchemeCode))}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <IndividualDPRForm

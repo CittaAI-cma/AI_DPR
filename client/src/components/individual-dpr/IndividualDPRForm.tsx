@@ -48,6 +48,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const tf = useClusterFormText();
   const { t } = useTranslation();
   const schemeCode = data.matchedSchemeCode || null;
+  const isPmegp = schemeCode === 'PMEGP';
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -612,7 +613,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           }}
         />
         <div>
-          {renderLabel('sectorType', 'Sector / Industry Type', true)}
+          {renderLabel('sectorType', isPmegp ? 'Sector / industry type' : 'Sector / Industry Type', true)}
           <Input
             value={stepData.sectorType || ''}
             onChange={(e) => handleInputChange('sectorType', e.target.value)}
@@ -621,13 +622,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         </div>
 
         <div>
-          {renderLabel('sectorDescription', schemeCode === 'PMEGP' ? 'Introduction — why this unit' : 'Sector Description', true)}
+          {renderLabel('sectorDescription', isPmegp ? 'Short intro — why this unit' : 'Sector Description', true)}
           <textarea
             className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.sectorDescription || ''}
             onChange={(e) => handleInputChange('sectorDescription', e.target.value)}
             placeholder={
-              schemeCode === 'PMEGP'
+              isPmegp
                 ? tf('Short intro: product, local demand, why this unit')
                 : tf('Describe the sector in detail')
             }
@@ -667,8 +668,6 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             placeholder={tf("Describe state-level importance")}
           />
         </div>
-          </>
-        )}
 
         <div>
           {renderLabel('keyProducts', 'Key Products')}
@@ -704,6 +703,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             </Button>
           </div>
         </div>
+          </>
+        )}
       </div>
     );
   }
@@ -722,14 +723,23 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           }}
         />
         <div>
-          {renderLabel('geography', 'Geography')}
+          {renderLabel(
+            'geography',
+            isPmegp ? 'Brief location / connectivity note' : 'Geography'
+          )}
           <textarea
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.geography || ''}
             onChange={(e) => handleInputChange('geography', e.target.value)}
-            placeholder={tf("Describe geography")}
+            placeholder={
+              isPmegp
+                ? tf('Site, roads, nearby markets — brief feasibility note')
+                : tf('Describe geography')
+            }
           />
         </div>
+        {!isPmegp && (
+          <>
         <div>
           {renderLabel('climate', 'Climate')}
           <Input
@@ -822,6 +832,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
     );
   }
@@ -840,14 +852,82 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           }}
         />
         <div>
-          {renderLabel('yearOfEstablishment', 'Year of Establishment')}
-          <Input
-            type="number"
-            value={stepData.yearOfEstablishment || ''}
-            onChange={(e) => handleInputChange('yearOfEstablishment', parseInt(e.target.value) || 0)}
-            placeholder={tf("YYYY")}
+          {renderLabel(
+            'presentActivities',
+            isPmegp ? 'Proposed activity summary' : 'Present Activities'
+          )}
+          <textarea
+            className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={stepData.presentActivities || ''}
+            onChange={(e) => handleInputChange('presentActivities', e.target.value)}
+            placeholder={
+              isPmegp
+                ? tf('Proposed activity for the glance sheet')
+                : tf('Describe present activities')
+            }
           />
         </div>
+        <div>
+          {renderLabel(
+            'yearOfEstablishment',
+            isPmegp ? 'Proposed start year / month' : 'Year of Establishment'
+          )}
+          <Input
+            type={isPmegp ? 'text' : 'number'}
+            value={stepData.yearOfEstablishment || ''}
+            onChange={(e) =>
+              handleInputChange(
+                'yearOfEstablishment',
+                isPmegp ? e.target.value : parseInt(e.target.value) || 0
+              )
+            }
+            placeholder={isPmegp ? tf('e.g. Apr 2026') : tf('YYYY')}
+          />
+        </div>
+        <div>
+          {renderLabel(
+            'technologyLevel',
+            isPmegp ? 'Technology / process level' : 'Technology Level'
+          )}
+          <Input
+            value={stepData.technologyLevel || ''}
+            onChange={(e) => handleInputChange('technologyLevel', e.target.value)}
+            placeholder={tf('Enter technology level')}
+          />
+        </div>
+        <div>
+          {renderLabel(
+            'productionCapacity',
+            isPmegp ? 'Installed capacity' : 'Production Capacity'
+          )}
+          <Input
+            value={stepData.productionCapacity || extras.installedCapacity || ''}
+            onChange={(e) => {
+              handleInputChange('productionCapacity', e.target.value);
+              if (isPmegp) updateExtras({ installedCapacity: e.target.value });
+            }}
+            placeholder={
+              isPmegp
+                ? tf('e.g. 50 kg/hour or 1000 units/month')
+                : tf('Enter production capacity')
+            }
+          />
+        </div>
+        {isPmegp && (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {tf('Capacity utilisation Year 1 (%)')}
+            </label>
+            <Input
+              type="number"
+              value={extras.capacityUtilisationY1 || ''}
+              onChange={(e) => updateExtras({ capacityUtilisationY1: e.target.value })}
+              placeholder={tf('e.g. 60')}
+            />
+          </div>
+        )}
+        {!isPmegp && (
+          <>
         <div>
           {renderLabel('clusterEvolution', 'How your unit evolved')}
           <textarea
@@ -858,64 +938,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
         <div>
-          {renderLabel('presentActivities', 'Present Activities')}
-          <textarea
-            className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={stepData.presentActivities || ''}
-            onChange={(e) => handleInputChange('presentActivities', e.target.value)}
-            placeholder={tf("Describe present activities")}
-          />
-        </div>
-        <div>
           {renderLabel('typeOfUnits', 'Type of unit')}
           <Input
             value={stepData.typeOfUnits || ''}
             onChange={(e) => handleInputChange('typeOfUnits', e.target.value)}
             placeholder={tf("Enter type of units")}
-          />
-        </div>
-        <div>
-          {renderLabel('productionCapacity', schemeCode === 'PMEGP' ? 'Installed capacity' : 'Production Capacity')}
-          <Input
-            value={stepData.productionCapacity || extras.installedCapacity || ''}
-            onChange={(e) => {
-              handleInputChange('productionCapacity', e.target.value);
-              if (schemeCode === 'PMEGP') updateExtras({ installedCapacity: e.target.value });
-            }}
-            placeholder={
-              schemeCode === 'PMEGP'
-                ? tf('e.g. 50 kg/hour or 1000 units/month')
-                : tf('Enter production capacity')
-            }
-          />
-        </div>
-        {schemeCode === 'PMEGP' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">{tf('Capacity utilisation Year 1 (%)')}</label>
-              <Input
-                type="number"
-                value={extras.capacityUtilisationY1 || ''}
-                onChange={(e) => updateExtras({ capacityUtilisationY1: e.target.value })}
-                placeholder={tf('e.g. 60')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">{tf('Power requirement (HP / kW)')}</label>
-              <Input
-                value={extras.powerRequirement || ''}
-                onChange={(e) => updateExtras({ powerRequirement: e.target.value })}
-                placeholder={tf('e.g. 8 kW')}
-              />
-            </div>
-          </div>
-        )}
-        <div>
-          {renderLabel('technologyLevel', 'Technology Level')}
-          <Input
-            value={stepData.technologyLevel || ''}
-            onChange={(e) => handleInputChange('technologyLevel', e.target.value)}
-            placeholder={tf("Enter technology level")}
           />
         </div>
         <div>
@@ -928,6 +955,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
           <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple stakeholders with commas")}</p>
         </div>
+          </>
+        )}
       </div>
     );
   }
@@ -1102,14 +1131,28 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           }}
         />
         <div>
-          {renderLabel('existingDemand', 'Existing Demand')}
+          {renderLabel(
+            'targetMarket',
+            isPmegp ? 'Target customers / market' : 'Target Market'
+          )}
+          <textarea
+            className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={stepData.targetMarket || ''}
+            onChange={(e) => handleInputChange('targetMarket', e.target.value)}
+            placeholder={tf('Describe target market')}
+          />
+        </div>
+        <div>
+          {renderLabel('existingDemand', isPmegp ? 'Demand note' : 'Existing Demand')}
           <textarea
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.existingDemand || ''}
             onChange={(e) => handleInputChange('existingDemand', e.target.value)}
-            placeholder={tf("Describe existing demand")}
+            placeholder={tf('Describe existing demand')}
           />
         </div>
+        {!isPmegp && (
+          <>
         <div>
           {renderLabel('demandSupplyGap', 'Demand-Supply Gap')}
           <textarea
@@ -1117,15 +1160,6 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             value={stepData.demandSupplyGap || ''}
             onChange={(e) => handleInputChange('demandSupplyGap', e.target.value)}
             placeholder={tf("Describe demand-supply gap")}
-          />
-        </div>
-        <div>
-          {renderLabel('targetMarket', 'Target Market')}
-          <textarea
-            className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={stepData.targetMarket || ''}
-            onChange={(e) => handleInputChange('targetMarket', e.target.value)}
-            placeholder={tf("Describe target market")}
           />
         </div>
         <div>
@@ -1155,6 +1189,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             placeholder={tf("Describe export potential")}
           />
         </div>
+          </>
+        )}
       </div>
     );
   }
@@ -1361,13 +1397,22 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            {renderLabel('name', 'Unit / shed / workplace name', true)}
+            {renderLabel(
+              'name',
+              isPmegp ? 'Workshed / premises details' : 'Unit / shed / workplace name',
+              true
+            )}
             <Input
               value={stepData.name || ''}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder={tf("Enter workplace or shed name")}
+              placeholder={
+                isPmegp
+                  ? tf('Shed size, rent or own, brief description')
+                  : tf('Enter workplace or shed name')
+              }
             />
           </div>
+          {!isPmegp && (
           <div>
             {renderLabel('location', 'Location', true)}
             <Input
@@ -1376,16 +1421,40 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               placeholder={tf("Enter location")}
             />
           </div>
+          )}
         </div>
         <div>
-          {renderLabel('landDetails', 'Land Details')}
+          {renderLabel(
+            'landDetails',
+            isPmegp ? 'Land — own / lease / rent' : 'Land Details'
+          )}
           <textarea
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.landDetails || ''}
             onChange={(e) => handleInputChange('landDetails', e.target.value)}
-            placeholder={tf("Enter land details")}
+            placeholder={
+              isPmegp
+                ? tf('Own / lease / rent — how premises are held')
+                : tf('Enter land details')
+            }
           />
         </div>
+        {isPmegp ? (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {tf('Power requirement (HP / kW)')}
+            </label>
+            <Input
+              value={extras.powerRequirement || stepData.powerRequirements || ''}
+              onChange={(e) => {
+                updateExtras({ powerRequirement: e.target.value });
+                handleInputChange('powerRequirements', e.target.value);
+              }}
+              placeholder={tf('e.g. 8 kW')}
+            />
+          </div>
+        ) : (
+          <>
         <div>
           {renderLabel('civilWorks', 'Civil Works')}
           <textarea
@@ -1447,6 +1516,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
         </div>
+          </>
+        )}
       </div>
     );
   }
@@ -1466,22 +1537,45 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            {renderLabel('spvName', 'Applicant / firm name', true)}
+            {renderLabel(
+              'spvName',
+              isPmegp ? 'Firm / proprietor name' : 'Applicant / firm name',
+              true
+            )}
             <Input
               value={stepData.spvName || ''}
               onChange={(e) => handleInputChange('spvName', e.target.value)}
-              placeholder={tf("Enter applicant or firm name")}
+              placeholder={tf('Enter applicant or firm name')}
             />
           </div>
           <div>
-            {renderLabel('legalStatus', 'Legal Status')}
+            {renderLabel(
+              'legalStatus',
+              isPmegp ? 'Legal status (sole / partnership / company)' : 'Legal Status'
+            )}
             <Input
               value={stepData.legalStatus || ''}
               onChange={(e) => handleInputChange('legalStatus', e.target.value)}
-              placeholder={tf("Enter legal status")}
+              placeholder={
+                isPmegp
+                  ? tf('Sole proprietorship / partnership / company')
+                  : tf('Enter legal status')
+              }
             />
           </div>
         </div>
+        {isPmegp ? (
+          <div>
+            {renderLabel('address', 'Correspondence address')}
+            <textarea
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={stepData.address || ''}
+              onChange={(e) => handleInputChange('address', e.target.value)}
+              placeholder={tf('Full correspondence address for KYC')}
+            />
+          </div>
+        ) : (
+          <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             {renderLabel('yearOfIncorporation', 'Year of establishment')}
@@ -1556,6 +1650,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             placeholder={tf("Owner names, separated by commas")}
           />
         </div>
+          </>
+        )}
       </div>
     );
   }
@@ -1592,7 +1688,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           {showHeavy && (
             <>
               <div>
-                {renderLabel('land', 'Land / FCI land (₹ Lakhs)')}
+                {renderLabel(
+                  'land',
+                  isPmegp ? 'Land / building / workshed — land (₹ Lakhs)' : 'Land / FCI land (₹ Lakhs)'
+                )}
                 <Input
                   type="number"
                   value={stepData.land || ''}
@@ -1601,7 +1700,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 />
               </div>
               <div>
-                {renderLabel('building', 'Building / shed (₹ Lakhs)')}
+                {renderLabel(
+                  'building',
+                  isPmegp ? 'Land / building / workshed — building (₹ Lakhs)' : 'Building / shed (₹ Lakhs)'
+                )}
                 <Input
                   type="number"
                   value={stepData.building || ''}
@@ -1623,27 +1725,42 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           {showHeavy && (
             <>
               <div>
-                {renderLabel('utilitiesAndInfrastructure', 'Utilities & Infrastructure (₹ Lakhs)')}
+                {renderLabel(
+                  'utilitiesAndInfrastructure',
+                  isPmegp ? 'Furniture & fixtures (₹ Lakhs)' : 'Utilities & Infrastructure (₹ Lakhs)'
+                )}
                 <Input
                   type="number"
                   value={stepData.utilitiesAndInfrastructure || ''}
-                  onChange={(e) => handleInputChange('utilitiesAndInfrastructure', parseFloat(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleInputChange('utilitiesAndInfrastructure', parseFloat(e.target.value) || 0)
+                  }
                   placeholder={tf("0")}
                 />
               </div>
               <div>
-                {renderLabel('preliminaryAndPreOperative', 'Preliminary & Pre-operative (₹ Lakhs)')}
+                {renderLabel(
+                  'preliminaryAndPreOperative',
+                  isPmegp
+                    ? 'Preliminary & pre-operative (₹ Lakhs)'
+                    : 'Preliminary & Pre-operative (₹ Lakhs)'
+                )}
                 <Input
                   type="number"
                   value={stepData.preliminaryAndPreOperative || ''}
-                  onChange={(e) => handleInputChange('preliminaryAndPreOperative', parseFloat(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleInputChange('preliminaryAndPreOperative', parseFloat(e.target.value) || 0)
+                  }
                   placeholder={tf("0")}
                 />
               </div>
             </>
           )}
           <div>
-            {renderLabel('workingCapitalMargin', 'Working Capital Margin (₹ Lakhs)')}
+            {renderLabel(
+              'workingCapitalMargin',
+              isPmegp ? 'Working capital (₹ Lakhs)' : 'Working Capital Margin (₹ Lakhs)'
+            )}
             <Input
               type="number"
               value={stepData.workingCapitalMargin || ''}
@@ -2065,12 +2182,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               onChange={(e) => {
                 const v = parseInt(e.target.value) || 0;
                 handleInputChange('employmentGeneration', v);
-                if (schemeCode === 'PMEGP') updateExtras({ directEmployment: String(v) });
+                if (isPmegp) updateExtras({ directEmployment: String(v) });
               }}
             />
           </div>
           <div>
-            {schemeCode === 'PMEGP' ? (
+            {isPmegp ? (
               <>
                 <label className="block text-sm font-medium mb-2">{tf('Indirect employment (count)')}</label>
                 <Input
@@ -2091,6 +2208,20 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
           </div>
         </div>
+        {isPmegp && (
+          <div>
+            <label className="block text-sm font-medium mb-2">{tf('Short impact note (optional)')}</label>
+            <textarea
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={extras.impactNote || stepData.impactNote || ''}
+              onChange={(e) => {
+                updateExtras({ impactNote: e.target.value });
+                handleInputChange('impactNote', e.target.value);
+              }}
+              placeholder={tf('Keep light — employment / local benefit in one short note')}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -2130,7 +2261,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const totalCost = (step12.land || 0) + (step12.building || 0) + (step12.machinery || 0) +
       (step12.utilitiesAndInfrastructure || 0) + (step12.preliminaryAndPreOperative || 0) +
       (step12.workingCapitalMargin || 0);
-    const uploads = getStep18Uploads(schemeCode, data.ventureMatchAnswers);
+    const uploads = getStep18Uploads(schemeCode, data.ventureMatchAnswers, extras);
     const needEdu = showPmegpEducationGate(schemeCode, data.ventureMatchAnswers?.activity, totalCost);
 
     return (

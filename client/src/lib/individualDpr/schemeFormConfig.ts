@@ -141,7 +141,8 @@ export function getHiddenSteps(_code: string | null): number[] {
 
 export function getStep18Uploads(
   code: string | null,
-  answers?: VentureMatchAnswers | null
+  answers?: VentureMatchAnswers | null,
+  schemeExtras?: Record<string, any> | null
 ): UploadField[] {
   if (code === 'VISHWAKARMA') {
     return [
@@ -175,7 +176,10 @@ export function getStep18Uploads(
       );
     }
     const owner = answers?.owner || [];
-    if (owner.some((o) => ['sc', 'st', 'bc'].includes(o))) {
+    const specialCategory =
+      schemeExtras?.pmegpCategory === 'special' ||
+      owner.some((o) => ['sc', 'st', 'bc'].includes(o));
+    if (specialCategory) {
       uploads.push({ id: 'casteCertificate', label: 'Caste / Special-category Certificate' });
     }
     return uploads;

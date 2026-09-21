@@ -24,6 +24,7 @@ export const PMEGP_EXTRA_FIELDS = [
   'pmegpOwnPercent',
   'directEmployment',
   'indirectEmployment',
+  'impactNote',
 ] as const;
 
 export type PmegpExtraField = (typeof PMEGP_EXTRA_FIELDS)[number];

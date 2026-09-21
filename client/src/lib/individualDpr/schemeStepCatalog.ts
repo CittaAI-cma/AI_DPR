@@ -56,20 +56,20 @@ export const VANILLA_STEPS: SchemeStepDef[] = catalog([
  * Spec: docs/schemes/PMEGP/pmegp.md
  */
 export const PMEGP_STEPS: SchemeStepDef[] = catalog([
-  { id: 'cover', title: 'Step 1: Unit & entrepreneur (cover / glance)', contentStep: 1 },
-  { id: 'intro', title: 'Step 2: Introduction & process of manufacture', contentStep: 2 },
-  { id: 'location', title: 'Step 3: Location', contentStep: 3 },
-  { id: 'unit', title: 'Step 4: Unit profile & capacity', contentStep: 4 },
-  { id: 'market', title: 'Step 5: Market & sales assumptions', contentStep: 6 },
-  { id: 'shed', title: 'Step 6: Workshed / premises & power', contentStep: 10 },
-  { id: 'applicant', title: 'Step 7: Applicant / firm', contentStep: 11 },
-  { id: 'cost', title: 'Step 8: Project cost', contentStep: 12 },
-  { id: 'finance', title: 'Step 9: Means of finance (own + bank + margin money)', contentStep: 13 },
-  { id: 'operating', title: 'Step 10: Operating cost & sales', contentStep: 14 },
-  { id: 'viability', title: 'Step 11: Financial viability (P&L / BS / repayment)', contentStep: 15 },
-  { id: 'schedule', title: 'Step 12: Implementation schedule', contentStep: 16 },
-  { id: 'impact', title: 'Step 13: Employment & impact', contentStep: 17 },
-  { id: 'uploads', title: 'Step 14: Documents & uploads', contentStep: 18 },
+  { id: 'cover', title: 'Cover & entrepreneur', contentStep: 1 },
+  { id: 'intro', title: 'Introduction & process', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
+  { id: 'market', title: 'Market & sales assumptions', contentStep: 6 },
+  { id: 'shed', title: 'Workshed / premises & power', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'impact', title: 'Employment & impact', contentStep: 17 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 /** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
