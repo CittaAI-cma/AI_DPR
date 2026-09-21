@@ -72,6 +72,25 @@ export const PMEGP_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
+/**
+ * MUDRA (PMMY) bank-unit pack — 12 consecutive steps.
+ * Spec: docs/schemes/MUDRA/mudra.md
+ */
+export const MUDRA_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & category', contentStep: 1 },
+  { id: 'intro', title: 'Business activity', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Market & sales assumptions', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
 /** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
 const FULL_MINUS_LATE: SchemeStepDef[] = catalog(
   VANILLA_STEPS.filter((s) => ![15, 16, 17].includes(s.contentStep)).map((s) => ({
@@ -107,6 +126,7 @@ const FULL_MINUS_LATE_CODES = new Set(['VISHWAKARMA', 'SVANIDHI', 'NHDP', 'ASPIR
 /** Scheme code → catalog. Missing codes fall back to vanilla. */
 export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   PMEGP: PMEGP_STEPS,
+  MUDRA: MUDRA_STEPS,
   PMEGP_2ND: VANILLA_STEPS,
   ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),
   ...Object.fromEntries([...SHORT_WC_CODES].map((c) => [c, SHORT_WC_STEPS])),

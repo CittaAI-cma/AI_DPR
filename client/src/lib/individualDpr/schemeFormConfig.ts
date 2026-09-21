@@ -1,6 +1,7 @@
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 import { isIndividualPickerScheme, SCHEMES } from '@/lib/ventureMatch/schemes';
 import { PMEGP_EXTRA_FIELDS, PMEGP_IMPACT_BULLETS } from '@/lib/individualDpr/pmegpQuestions';
+import { MUDRA_EXTRA_FIELDS, MUDRA_IMPACT_BULLETS } from '@/lib/individualDpr/mudraQuestions';
 import {
   getSchemeSteps,
   getStepDef,
@@ -21,6 +22,7 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   PMFME: ['fssai'],
   AP_EDP: ['apiicPark'],
   PMEGP: [...PMEGP_EXTRA_FIELDS],
+  MUDRA: [...MUDRA_EXTRA_FIELDS],
   PMEGP_2ND: ['priorScheme', 'priorSanctionAmount', 'firstSubsidyYear'],
   SCLCSS: ['existingTech', 'proposedTech'],
   AP_TECH_UPGRADE: ['existingTech', 'proposedTech'],
@@ -205,8 +207,13 @@ export function getStep18Uploads(
       { id: 'shopAddressProof', label: 'Shop Address Proof' },
       { id: 'bankStatements', label: 'Bank Statements' },
       { id: 'machineryQuotations', label: 'Machinery / Equipment Quotations' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate (or application)' },
     ];
-    if (isMudraTarunPlus(code, answers?.budget)) {
+    if (
+      isMudraTarunPlus(code, answers?.budget) ||
+      schemeExtras?.mudraCategory === 'tarunPlus'
+    ) {
       uploads.push({ id: 'mudraClosure', label: 'Previous Mudra Loan Repayment / Closure Certificate' });
     }
     return uploads;
@@ -364,12 +371,8 @@ export function getSchemeImpact(code: string | null): {
   if (code === 'MUDRA') {
     return {
       title: 'MUDRA',
-      bullets: [
-        'Step 12 hides land/building tables only if VentureMatch budget is under ₹5L (Shishu/Kishore).',
-        'Step 15 shows Nayak WC (20% of turnover, 5% margin) for that same budget band.',
-        'Step 18: shop proof, bank statements, quotes (+ Mudra closure if Tarun Plus).',
-      ],
-      firstChangedStep: 18,
+      bullets: [...MUDRA_IMPACT_BULLETS],
+      firstChangedStep: 1,
     };
   }
   if (code === 'AP_EDP') {

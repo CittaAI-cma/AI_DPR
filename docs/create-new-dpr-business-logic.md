@@ -112,6 +112,7 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 |--------|-----------------|--------|
 | Vanilla / most full schemes | 18 | `VANILLA_STEPS` |
 | `PMEGP` | **14** | Bank-unit catalog — see [pmegp.md](./schemes/PMEGP/pmegp.md) |
+| `MUDRA` | **12** | PMMY bank-unit catalog — see [mudra.md](./schemes/MUDRA/mudra.md) |
 | `VISHWAKARMA` / `SVANIDHI` / `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
 | `ZED` / `LEAN` / `MSME_IPR` / `PMS` / `SCST_HUB` | 5 | Short cert / consulting pack |
 | `ECLGS` | 7 | Working-capital pack |
@@ -133,6 +134,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `PMFME` | `fssai` (yes / planned) |
 | `AP_EDP` | `apiicPark` (land-rebate hint) |
 | `PMEGP` | Full bank-unit set — see [docs/schemes/PMEGP/pmegp.md](./schemes/PMEGP/pmegp.md), `pmegpQuestions.ts`, and `PMEGP_STEPS` (14 consecutive steps: category, rural/urban, agency, entrepreneur, process, capacity, margin-money %). |
+| `MUDRA` | Own 12-step PMMY pack — see [docs/schemes/MUDRA/mudra.md](./schemes/MUDRA/mudra.md), `mudraQuestions.ts`, `MUDRA_STEPS` (Shishu/Kishore/Tarun/Tarun Plus, own+bank MoF, shop proof uploads). |
 | `PMEGP_2ND` | `priorScheme`, `priorSanctionAmount`, `firstSubsidyYear` |
 | `SCLCSS` / `AP_TECH_UPGRADE` | `existingTech`, `proposedTech` |
 | `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |

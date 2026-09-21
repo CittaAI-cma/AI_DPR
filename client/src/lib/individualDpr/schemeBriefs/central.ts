@@ -237,7 +237,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     howToApply: [
       L('Approach any bank / NBFC / MFI that offers PMMY. MUDRA itself does not sanction your loan.', 'PMMY ఇచ్చే బ్యాంకు / NBFC / MFIని సంప్రదించండి. MUDRA మీ రుణాన్ని నేరుగా మంజూరు చేయదు.'),
       L('Shishu uses a one-page application; Kishore / Tarun use a longer indicative format (mudra.org.in).', 'శిశుకు ఒక పేజీ దరఖాస్తు; కిశోర్ / తరుణ్‌కు పొడవైన ఫారమ్ (mudra.org.in).'),
-      L('This DPR supports Kishore / Tarun / Tarun Plus appraisals. Under ₹5 lakh, land-building tables are hidden.', 'ఈ DPR కిశోర్ / తరుణ్ / తరుణ్ ప్లస్ పరిశీలనకు. ₹5 లక్షల లోపు భూమి-భవన పట్టికలు దాచబడతాయి.'),
+      L('Create New Latest DPR with MUDRA selected builds a 12-step bank-unit pack — see docs/schemes/MUDRA/mudra.md. Under ₹5 lakh, land-building tables are hidden.', 'MUDRA ఎంచుకుంటే Create New Latest DPR 12-దశల బ్యాంకు-యూనిట్ ప్యాక్ ఇస్తుంది. ₹5 లక్షల లోపు భూమి-భవన పట్టికలు దాచబడతాయి.'),
     ],
     documents: [
       L('KYC, business proof / shop proof, bank statements', 'KYC, వ్యాపారం / దుకాణం రుజువు, బ్యాంకు స్టేట్‌మెంట్లు'),
