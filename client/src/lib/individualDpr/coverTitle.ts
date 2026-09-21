@@ -53,7 +53,7 @@ export function getIndividualCoverLines(
   schemeCode: string | null | undefined,
   lang: 'en' | 'te' = 'en'
 ): IndividualCoverLines {
-  const unitName = (step1.clusterName || step1.unitName || 'UNIT NAME').trim();
+  const unitName = (step1.unitName || step1.clusterName || 'UNIT NAME').trim();
   return {
     actionLine: individualActionLine(schemeCode),
     unitName,

@@ -4,7 +4,6 @@ import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Plus, Trash2, Loader2, Sparkles, Wand2 } from 'lucide-react';
-import { api } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
@@ -35,6 +34,8 @@ import {
 } from '@/lib/individualDpr/mudraQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
+import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
+import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
@@ -69,11 +70,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     setStepData,
     getStepData,
     isIndividualDPR: true,
-    contextHint: 'This is an individual entrepreneur unit (one firm), not a cluster or SPV.',
+    contextHint: 'This is an individual entrepreneur unit (one firm), not a multi-unit CFC / SPV report.',
   };
   const aiExclude =
     contentStep === 1
-      ? ['clusterName', 'location', 'district']
+      ? ['clusterName', 'unitName', 'location', 'district']
       : hideComplexCapex(schemeCode, data.ventureMatchAnswers?.budget) && contentStep === 12
         ? ['land', 'building', 'utilitiesAndInfrastructure', 'preliminaryAndPreOperative']
         : [];
@@ -153,6 +154,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     let nextValue = value;
     if (field === 'startDate' || field === 'endDate') nextValue = toDateInputValue(value) || value;
     if (field === 'milestones') nextValue = normalizeMilestones(value);
+    if (field === 'unitName' || field === 'clusterName') {
+      setStepData(contentStep, withSyncedUnitName(latestStepData, String(nextValue ?? '')));
+      return;
+    }
     setStepData(contentStep, {
       ...latestStepData,
       [field]: nextValue,
@@ -160,7 +165,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   };
 
   const handleGenerateAllSteps = async () => {
-    if (!data.step1?.clusterName) {
+    if (!getUnitName(data.step1)) {
       toast.error(t('individualDpr.toasts.needNameForAi'));
       return;
     }
@@ -244,15 +249,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
               {tf('Unit / Project Name *')}
-              {stepDescriptions.clusterName && (
+              {stepDescriptions.unitName && (
+                <InfoTooltip content={tf(stepDescriptions.unitName)} />
+              )}
+              {!stepDescriptions.unitName && stepDescriptions.clusterName && (
                 <InfoTooltip content={tf(stepDescriptions.clusterName)} />
               )}
             </label>
             <div className="flex gap-2">
               <Input
                 className="flex-1"
-                value={stepData.clusterName || ''}
-                onChange={(e) => handleInputChange('clusterName', e.target.value)}
+                value={getUnitName(stepData)}
+                onChange={(e) => handleInputChange('unitName', e.target.value)}
                 placeholder={tf('Enter unit or project name')}
               />
               <Button
@@ -271,7 +279,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     return;
                   }
                   const suggested = suggestUnitTitle(stepData, data.schemeExtras);
-                  handleInputChange('clusterName', suggested);
+                  handleInputChange('unitName', suggested);
                   toast.success(tf('Title suggested'));
                 }}
               >
@@ -914,7 +922,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     );
   }
 
-  // Step 4: Cluster Profile
+  // Step 4: Unit profile
   if (contentStep === 4) {
     return (
       <div className="space-y-6">
@@ -2339,7 +2347,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       if (file) {
         setUploadingFiles((prev) => ({ ...prev, [field]: true }));
         try {
-          const uploadResult = await api.uploadClusterDPRDocument(file);
+          const uploadResult = await individualDprApi.uploadDocument(file);
           if (uploadResult.success && uploadResult.data?.documentUrl) {
             handleInputChange(field, uploadResult.data.documentUrl);
             toast.success(`${file.name} uploaded successfully!`);

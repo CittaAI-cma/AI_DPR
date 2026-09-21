@@ -4,6 +4,9 @@ import { create } from 'zustand';
 export interface IndividualDPRData {
   // Step 1: Executive Summary
   step1?: {
+    /** Preferred unit / project name for Create New Latest DPR */
+    unitName?: string;
+    /** Legacy wire key — keep in sync with unitName for shared generate/preview APIs */
     clusterName?: string;
     district?: string;
     location?: string;

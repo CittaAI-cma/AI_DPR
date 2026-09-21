@@ -4,7 +4,7 @@ import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { suggestionToFieldValue } from '@/lib/dprAiFieldNormalize';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
-const IDENTITY_FIELDS = ['clusterName', 'district', 'location'];
+const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
 
 function matchCraft(value: string): string {
   const text = String(value || '').toLowerCase();
@@ -35,7 +35,7 @@ function inferMissingExtras(
   extras: Record<string, any>
 ): Record<string, any> {
   const next = { ...extras };
-  const hint = [step1.clusterName, step1.natureOfBusiness, step1.majorProducts, extras.craft]
+  const hint = [step1.unitName || step1.clusterName, step1.natureOfBusiness, step1.majorProducts, extras.craft]
     .filter(Boolean)
     .join(' ');
   if (schemeCode === 'VISHWAKARMA') {

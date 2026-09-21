@@ -7,13 +7,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
-import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
+import { ClusterDPRDocumentView as IndividualDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
-import { toClusterPayload } from '@/lib/individualDpr/toClusterPayload';
+import { toIndividualPayload, getUnitName } from '@/lib/individualDpr/toIndividualPayload';
+import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
 import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
@@ -59,7 +60,7 @@ export const IndividualDPRCreation: React.FC = () => {
   const lastVisible = visibleSteps[visibleSteps.length - 1] || getSchemeStepCount(schemeCode);
   const stepOrdinal = Math.max(1, visibleSteps.indexOf(currentStep) + 1);
   const schemeImpact = getSchemeImpact(schemeCode);
-  const clusterPayload = toClusterPayload(data);
+  const dprPayload = toIndividualPayload(data);
 
   const prevPayloadRef = useRef<any>(null);
   const pendingPathsRef = useRef<string[]>([]);
@@ -98,11 +99,11 @@ export const IndividualDPRCreation: React.FC = () => {
   useEffect(() => {
     if (skipNextDiffRef.current) {
       skipNextDiffRef.current = false;
-      prevPayloadRef.current = clusterPayload;
+      prevPayloadRef.current = dprPayload;
       return;
     }
-    const changed = diffPayloadFieldPaths(prevPayloadRef.current, clusterPayload);
-    prevPayloadRef.current = clusterPayload;
+    const changed = diffPayloadFieldPaths(prevPayloadRef.current, dprPayload);
+    prevPayloadRef.current = dprPayload;
     if (!changed.length) return;
 
     pendingPathsRef.current = Array.from(
@@ -134,7 +135,7 @@ export const IndividualDPRCreation: React.FC = () => {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [clusterPayload, previewZoom, refreshHits]);
+  }, [dprPayload, previewZoom, refreshHits]);
 
   useEffect(() => {
     const load = async () => {
@@ -173,7 +174,7 @@ export const IndividualDPRCreation: React.FC = () => {
             let dprData = null;
             if (dprIdFromUrl) {
               try {
-                const dprResponse = await api.getClusterDPR(dprIdFromUrl);
+                const dprResponse = await individualDprApi.get(dprIdFromUrl);
                 dprData = dprResponse.data || dprResponse;
               } catch {
                 /* draft only */
@@ -216,7 +217,7 @@ export const IndividualDPRCreation: React.FC = () => {
         return false;
       });
       if (hasAnyData || data.projectId) {
-        const response = await api.saveClusterDPRDraft(clusterPayload);
+        const response = await individualDprApi.saveDraft(dprPayload);
         if (response.success && response.data) {
           if (response.data.dprId && response.data.projectId) {
             setDprIds(response.data.dprId, response.data.projectId);
@@ -233,10 +234,10 @@ export const IndividualDPRCreation: React.FC = () => {
       return false;
     } catch (error) {
       console.error('Error saving draft:', error);
-      toast.error(t('clusterDpr.toasts.saveFailedDb'));
+      toast.error(t('individualDpr.toasts.saveFailedDb'));
       return false;
     }
-  }, [clusterPayload, data, setDprIds]);
+  }, [dprPayload, data, setDprIds]);
 
   const goAdjacent = async (dir: 1 | -1) => {
     await saveToDatabase();
@@ -250,30 +251,30 @@ export const IndividualDPRCreation: React.FC = () => {
 
   const handleSaveDraft = async () => {
     const success = await saveToDatabase();
-    if (success) toast.success(t('clusterDpr.toasts.saveSuccess'));
-    else if (!data.step1?.clusterName) toast.error(t('individualDpr.toasts.needUnitName'));
-    else toast.error(t('clusterDpr.toasts.saveFailed'));
+    if (success) toast.success(t('individualDpr.toasts.saveSuccess'));
+    else if (!getUnitName(data.step1)) toast.error(t('individualDpr.toasts.needUnitName'));
+    else toast.error(t('individualDpr.toasts.saveFailed'));
   };
 
   const handleGenerateDPR = async () => {
     setIsGenerating(true);
     try {
-      if (!data.step1 || !data.step1.clusterName) {
+      if (!data.step1 || !getUnitName(data.step1)) {
         toast.error(t('individualDpr.toasts.needUnitNameGenerate'));
         setIsGenerating(false);
         return;
       }
       const saveSuccess = await saveToDatabase();
       if (!saveSuccess) {
-        toast.error(t('clusterDpr.toasts.saveBeforeGenerateFailed'));
+        toast.error(t('individualDpr.toasts.saveBeforeGenerateFailed'));
         setIsGenerating(false);
         return;
       }
 
-      toast.loading(t('clusterDpr.toasts.generating'), { id: 'generating-dpr' });
-      const response = await api.generateClusterDPR(
+      toast.loading(t('individualDpr.toasts.generating'), { id: 'generating-dpr' });
+      const response = await individualDprApi.generate(
         {
-          ...clusterPayload,
+          ...dprPayload,
           currentStep: undefined,
           isDraft: undefined,
           lastSaved: undefined,
@@ -285,14 +286,14 @@ export const IndividualDPRCreation: React.FC = () => {
       if (response.success && response.data) {
         setGeneratedDPR(response.data.content);
         resetData();
-        toast.success(t('clusterDpr.toasts.generateSuccess'), { id: 'generating-dpr' });
+        toast.success(t('individualDpr.toasts.generateSuccess'), { id: 'generating-dpr' });
         navigate(`/dpr/view/${response.data.dprId}`);
       } else {
         throw new Error(response.message || 'Failed to generate DPR');
       }
     } catch (error: any) {
       toast.error(
-        error.response?.data?.message || error.message || t('clusterDpr.toasts.generateFailed'),
+        error.response?.data?.message || error.message || t('individualDpr.toasts.generateFailed'),
         { id: 'generating-dpr' }
       );
     } finally {
@@ -407,18 +408,18 @@ export const IndividualDPRCreation: React.FC = () => {
                     </label>
                     <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2">
                       <Save className="h-4 w-4" />
-                      {t('clusterDpr.saveDraft')}
+                      {t('individualDpr.saveDraft')}
                     </Button>
                     <div className="flex items-center gap-1 border rounded-lg p-1">
                       <Button variant={previewMode === 'form' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('form')}>
-                        {t('clusterDpr.form')}
+                        {t('individualDpr.form')}
                       </Button>
                       <Button variant={previewMode === 'split' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('split')}>
-                        {t('clusterDpr.split')}
+                        {t('individualDpr.split')}
                       </Button>
                       <Button variant={previewMode === 'preview' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('preview')} className="gap-2">
                         <Eye className="h-4 w-4" />
-                        {t('clusterDpr.preview')}
+                        {t('individualDpr.preview')}
                       </Button>
                     </div>
                     <Button
@@ -429,7 +430,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       className="gap-2"
                       disabled={currentStep !== lastVisible}
                     >
-                      {t('clusterDpr.generateDpr')}
+                      {t('individualDpr.generateDpr')}
                     </Button>
                   </>
                 )}
@@ -502,7 +503,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent ? 'bg-primary-foreground/20' : isCompleted ? 'bg-success' : 'bg-muted-foreground/20'}`}>
                       {isCompleted && !isCurrent ? '✓' : step}
                     </span>
-                    <span className="hidden sm:inline">{t('clusterDpr.stepShort', { n: step })}</span>
+                    <span className="hidden sm:inline">{t('individualDpr.stepShort', { n: step })}</span>
                   </button>
                 );
               })}
@@ -529,7 +530,7 @@ export const IndividualDPRCreation: React.FC = () => {
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {(previewMode === 'form' || previewMode === 'split') && (
-              <div id="cluster-dpr-form" className="space-y-6">
+              <div id="individual-dpr-form" className="space-y-6">
                 {isLoadingData ? (
                   <Card>
                     <CardContent className="py-12">
@@ -575,7 +576,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 <Card className="sticky top-[146px] max-h-[calc(100vh-170px)] overflow-hidden flex flex-col">
                   <CardHeader className="flex-shrink-0 border-b border-border">
                     <div className="flex items-center justify-between">
-                      <CardTitle>{t('clusterDpr.livePreview')}</CardTitle>
+                      <CardTitle>{t('individualDpr.livePreview')}</CardTitle>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 border rounded-lg p-1">
                           <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))} className="h-7 w-7 p-0">
@@ -653,18 +654,18 @@ export const IndividualDPRCreation: React.FC = () => {
                           className="bg-white mx-auto shadow-lg"
                           style={{ minHeight: '100%', width: '21cm', padding: '2rem' }}
                         >
-                          <ClusterDPRDocumentView
+                          <IndividualDPRDocumentView
                             trackFieldHits
                             isIndividualDPR
                             dpr={{
                               content: {
                                 english: {
-                                  clusterData: clusterPayload,
+                                  clusterData: dprPayload,
                                   ...data.generatedDPR?.sections,
                                 },
                               },
                               metadata: {
-                                clusterData: clusterPayload,
+                                clusterData: dprPayload,
                                 isIndividualDPR: true,
                                 matchedSchemeCode: data.matchedSchemeCode || null,
                               },
@@ -672,9 +673,9 @@ export const IndividualDPRCreation: React.FC = () => {
                             project={project || {
                               _id: data.projectId,
                               id: data.projectId,
-                              projectName: data.step1?.clusterName,
+                              projectName: getUnitName(data.step1),
                               projectType: 'individual',
-                              stepData: clusterPayload,
+                              stepData: dprPayload,
                             }}
                             viewLanguage={viewLanguage}
                             onSectionClick={(stepNumber: number) => {

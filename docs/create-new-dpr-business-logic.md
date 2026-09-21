@@ -12,7 +12,7 @@ Related doc: [Scheme Finder (Venture Match) business logic](./venture-match-busi
 
 ## 1. Purpose
 
-Create New Latest DPR builds a **single-unit / individual enterprise** Detailed Project Report. **Each scheme owns its own consecutive step list** (Step 1…N) via `schemeStepCatalog.ts` — not a shared 18-step skeleton with “hidden” gaps. Vanilla uses 18 steps; PMEGP uses 14; short packs (ZED etc.) use 5; etc. It reuses cluster DPR APIs and document preview via `toClusterPayload`, and applies scheme-specific fields / uploads.
+Create New Latest DPR builds a **single-unit / individual enterprise** Detailed Project Report. **Each scheme owns its own consecutive step list** (Step 1…N) via `schemeStepCatalog.ts`. Vanilla uses 18 steps; PMEGP uses 14; MUDRA uses 12; short packs (ZED etc.) use 5; etc. It reuses shared draft/generate/preview services via `toIndividualPayload` (legacy wire keys remain for compatibility), and applies scheme-specific fields / uploads.
 
 Users can:
 

@@ -1301,7 +1301,8 @@
   },
   "individualDpr": {
     "title": "Create New Latest DPR",
-    "stepOf": "Step {{current}} of {{total}} visible steps",
+    "stepOf": "Step {{current}} of {{total}}",
+    "stepShort": "Step {{n}}",
     "hiddenForScheme": "({{count}} hidden for this scheme)",
     "scheme": "Scheme: {{title}}",
     "schemeSelected": "Scheme: {{name}}",
@@ -1309,6 +1310,12 @@
     "vanillaOption": "Know which scheme you want? Vanilla bank term loan",
     "loading": "Loading...",
     "fullscreen": "Fullscreen",
+    "saveDraft": "Save Draft",
+    "form": "Form",
+    "split": "Split",
+    "preview": "Preview",
+    "generateDpr": "Generate DPR",
+    "livePreview": "Live DPR Preview",
     "picker": {
       "title": "Choose how to draft this DPR",
       "subtitle": "Pick a scheme to overlay subsidy rules and documents, or continue with a plain bank term loan.",
@@ -1346,7 +1353,14 @@
       "fillPartial": "Filled {{filled}} steps. Failed: {{failed}}.",
       "fillSuccess": "Filled {{filled}} steps with AI. Review and edit as needed.",
       "generateAllFailed": "Failed to generate all steps. Please try again.",
-      "fillingStep": "Filling step {{step}} ({{index}} of {{total}})…"
+      "fillingStep": "Filling step {{step}} ({{index}} of {{total}})…",
+      "saveFailedDb": "Failed to save draft to database",
+      "saveSuccess": "Draft saved to database successfully!",
+      "saveFailed": "Failed to save draft",
+      "saveBeforeGenerateFailed": "Failed to save data before generating DPR",
+      "generating": "Generating DPR with AI enhancement...",
+      "generateSuccess": "DPR generated successfully!",
+      "generateFailed": "Failed to generate DPR. Please try again."
     },
     "brief": {
       "benefits": "Benefits",

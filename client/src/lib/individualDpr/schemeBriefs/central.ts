@@ -98,7 +98,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     ],
     howToApply: [
       L('Apply online on the KVIC PMEGP portal (kviconline.gov.in) choosing KVIC, KVIB, or DIC as the implementing agency.', 'KVIC PMEGP పోర్టల్ (kviconline.gov.in)లో KVIC, KVIB లేదా DICని అమలు సంస్థగా ఎంచుకుని ఆన్‌లైన్ దరఖాస్తు చేయండి.'),
-      L('Attach a bank-style unit DPR (not a cluster CFC), quotations, and KYC. Create New Latest DPR with PMEGP selected builds that structure — see docs/schemes/PMEGP/pmegp.md.', 'బ్యాంకు-శైలి యూనిట్ DPR (క్లస్టర్ CFC కాదు), కోటేషన్లు, KYC జత చేయండి. PMEGP ఎంచుకుని Create New Latest DPR అదే నిర్మాణం ఇస్తుంది.'),
+      L('Attach a bank-style unit DPR (not a multi-unit CFC), quotations, and KYC. Create New Latest DPR with PMEGP selected builds that structure — see docs/schemes/PMEGP/pmegp.md.', 'బ్యాంకు-శైలి యూనిట్ DPR (మల్టీ-యూనిట్ CFC కాదు), కోటేషన్లు, KYC జత చేయండి. PMEGP ఎంచుకుని Create New Latest DPR అదే నిర్మాణం ఇస్తుంది.'),
       L('The agency forwards a recommended case to a bank for appraisal and sanction.', 'సంస్థ సిఫారసు చేసిన కేసును బ్యాంకుకు పంపి మంజూరు చేయిస్తుంది.'),
       L('After the unit is set up and verified, subsidy is parked as a term deposit (back-ended) with the bank.', 'యూనిట్ ఏర్పాటు, ధృవీకరణ తర్వాత సబ్సిడీ బ్యాంకులో టర్మ్ డిపాజిట్‌గా (బ్యాక్-ఎండెడ్) ఉంచబడుతుంది.'),
     ],

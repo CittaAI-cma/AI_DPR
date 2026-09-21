@@ -16,10 +16,10 @@ Approved-style packs are:
 
 - **Category-first** (Shishu / Kishore / Tarun / Tarun Plus)
 - **Numbers-first** (project cost + own funds + bank loan + sales / WC)
-- Free of **cluster / CFC / SPV / subsidy-margin-money** chapters
+- Free of multi-unit CFC / SPV / subsidy-margin-money chapters
 - Lighter than PMEGP — no KVIC margin money, no agency (KVIC/KVIB/DIC) routing
 
-Create New Latest DPR uses its **own 12 consecutive steps** for `MUDRA` (not the vanilla 18-step list).
+Create New Latest DPR uses its **own 12 consecutive steps** for `MUDRA` (not a shared 18-step list).
 
 ---
 
@@ -62,7 +62,7 @@ Catalog: `MUDRA_STEPS` in `schemeStepCatalog.ts` — consecutive **Step 1 … St
 
 | ID | Question | Why |
 |----|----------|-----|
-| `clusterName` | Unit / enterprise name | Application + cover |
+| `unitName` | Unit / enterprise name | Application + cover *(also synced to legacy wire key `clusterName` for save/generate)* |
 | `natureOfBusiness` | Nature of business / activity | Existing vs proposed activity |
 | `majorProducts` | Major products / services | Sales tables |
 | `district` | District | Branch routing |
@@ -161,7 +161,7 @@ Catalog: `MUDRA_STEPS` in `schemeStepCatalog.ts` — consecutive **Step 1 … St
 | `shopAddressProof` | Shop / unit address proof | Checklist |
 | `bankStatements` | Bank statements (≈6 months) | Checklist |
 | `machineryQuotations` | Equipment / stock quotations | Capex proof |
-| `aadhaarPan` | Aadhaar / PAN (via default or combined) | KYC |
+| `aadhaarPan` | Aadhaar / PAN | KYC |
 | `udyamCertificate` | Udyam (recommended) | Registration path |
 | `mudraClosure` | Prior Mudra closure | **Tarun Plus only** |
 
@@ -169,12 +169,12 @@ Catalog: `MUDRA_STEPS` in `schemeStepCatalog.ts` — consecutive **Step 1 … St
 
 ## 5. Not in the MUDRA catalog
 
-Omit these (cluster / CFC / subsidy overlays):
+Omit these (multi-unit CFC / subsidy overlays):
 
 - Value chain / gaps / SWOT / CFC plan  
 - PMEGP category × rural/urban margin-money %  
 - Implementing agency KVIC / KVIB / DIC  
-- Heavy multi-year cluster employment essays  
+- Heavy multi-year employment essays  
 
 ---
 

@@ -1218,7 +1218,8 @@
   },
   "individualDpr": {
     "title": "కొత్త లేటెస్ట్ DPR సృష్టించండి",
-    "stepOf": "కనిపించే దశలు {{current}} / {{total}}",
+    "stepOf": "దశ {{current}} / {{total}}",
+    "stepShort": "దశ {{n}}",
     "hiddenForScheme": "(ఈ పథకానికి {{count}} దాచబడ్డాయి)",
     "scheme": "పథకం: {{title}}",
     "schemeSelected": "పథకం: {{name}}",
@@ -1226,6 +1227,12 @@
     "vanillaOption": "పథకం తెలుసా? సాధారణ బ్యాంకు టర్మ్ లోన్",
     "loading": "లోడ్ అవుతోంది...",
     "fullscreen": "ఫుల్‌స్క్రీన్",
+    "saveDraft": "డ్రాఫ్ట్ సేవ్",
+    "form": "ఫారమ్",
+    "split": "స్ప్లిట్",
+    "preview": "ప్రివ్యూ",
+    "generateDpr": "DPR రూపొందించు",
+    "livePreview": "లైవ్ DPR ప్రివ్యూ",
     "picker": {
       "title": "ఈ DPR ఎలా రాయాలో ఎంచుకోండి",
       "subtitle": "సబ్సిడీ నియమాలు మరియు పత్రాల కోసం పథకం ఎంచుకోండి, లేదా సాధారణ బ్యాంకు టర్మ్ లోన్‌తో కొనసాగండి.",
@@ -1263,7 +1270,14 @@
       "fillPartial": "{{filled}} దశలు నిండాయి. విఫలమైనవి: {{failed}}.",
       "fillSuccess": "AIతో {{filled}} దశలు నిండాయి. సమీక్షించి సవరించండి.",
       "generateAllFailed": "అన్ని దశలను రూపొందించడం విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.",
-      "fillingStep": "దశ {{step}} నింపుతోంది ({{index}} / {{total}})…"
+      "fillingStep": "దశ {{step}} నింపుతోంది ({{index}} / {{total}})…",
+      "saveFailedDb": "డేటాబేస్‌లో డ్రాఫ్ట్ సేవ్ కాలేదు",
+      "saveSuccess": "డ్రాఫ్ట్ డేటాబేస్‌లో సేవ్ అయింది!",
+      "saveFailed": "డ్రాఫ్ట్ సేవ్ కాలేదు",
+      "saveBeforeGenerateFailed": "DPR రూపొందించే ముందు సేవ్ కాలేదు",
+      "generating": "AIతో DPR రూపొందిస్తోంది...",
+      "generateSuccess": "DPR విజయవంతంగా రూపొందింది!",
+      "generateFailed": "DPR రూపొందించడం విఫలమైంది. మళ్లీ ప్రయత్నించండి."
     },
     "brief": {
       "benefits": "ప్రయోజనాలు",

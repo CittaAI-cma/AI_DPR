@@ -14,9 +14,9 @@ Banks, DICs, KVIB and KVIC appraise PMEGP as a **single-unit, credit-linked subs
 
 - Short and **numbers-first**
 - Built around **project cost + means of finance (incl. margin money) + projections**
-- Free of **cluster / CFC / SPV** chapters
+- Free of **multi-unit CFC / SPV** chapters
 
-Our Create Latest DPR used a cluster skeleton. For `PMEGP` we replace that with the bank unit skeleton below.
+Our Create Latest DPR used a shared multi-unit skeleton. For `PMEGP` we replace that with the bank unit skeleton below.
 
 ---
 
@@ -46,7 +46,7 @@ Each row is a question the entrepreneur must answer when scheme = `PMEGP`.
 
 | ID | Question | Why |
 |----|----------|-----|
-| `clusterName` | Unit / project name | Appears on cover and glance sheet |
+| `unitName` | Unit / project name | Appears on cover and glance sheet *(synced to legacy wire key `clusterName` for save/generate)* |
 | `natureOfBusiness` | Nature of business / activity | Product line banks appraise |
 | `majorProducts` | Major products / services | Sales & capacity tables |
 | `district` | District | Agency routing + rural/urban |
@@ -155,7 +155,7 @@ Each row is a question the entrepreneur must answer when scheme = `PMEGP`.
 | ID | Question | Why |
 |----|----------|-----|
 | Direct / indirect employment | PMEGP objective | Employment generation |
-| Short impact note | Optional | Keep light vs cluster impact essays |
+| Short impact note | Optional | Keep light vs long multi-unit impact essays |
 
 ### Step 14 — Documents & uploads
 
@@ -173,10 +173,10 @@ Each row is a question the entrepreneur must answer when scheme = `PMEGP`.
 
 ## 4. Not in the PMEGP catalog
 
-These topics belong to CFC / cluster DPRs and are **omitted** from PMEGP’s 14 steps (not “hidden gaps” in an 18-step list):
+These topics belong to multi-unit / CFC programmes and are **omitted** from PMEGP’s 14 steps (not “hidden gaps” in an 18-step list):
 
 - Value chain mapping  
-- Cluster need-gap analysis  
+- Multi-unit need-gap analysis  
 - Formal SWOT chapters  
 - Proposed CFC / SPV activity plans  
 
@@ -199,7 +199,7 @@ Education gate (app): manufacturing-like cost &gt; ₹10 L or service-like &gt; 
 
 - Common Facility Centre (CFC)  
 - SPV / member-unit grids  
-- Multi-enterprise cluster employment tables as the main story  
+- Multi-enterprise CFC employment tables as the main story  
 
 ---
 
