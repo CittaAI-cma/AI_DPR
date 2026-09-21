@@ -136,7 +136,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `PMEGP` | Full bank-unit set — see [docs/schemes/PMEGP/pmegp.md](./schemes/PMEGP/pmegp.md), `pmegpQuestions.ts`, and `PMEGP_STEPS` (14 consecutive steps: category, rural/urban, agency, entrepreneur, process, capacity, margin-money %). |
 | `MUDRA` | Own 12-step PMMY pack — see [docs/schemes/MUDRA/mudra.md](./schemes/MUDRA/mudra.md), `mudraQuestions.ts`, `MUDRA_STEPS` (Shishu/Kishore/Tarun/Tarun Plus, own+bank MoF, shop proof uploads). |
 | `STANDUP` | Own 13-step bank-unit pack — see [docs/schemes/STANDUP/standup.md](./schemes/STANDUP/standup.md), `standupQuestions.ts`, `STANDUP_STEPS` (woman/SC/ST, ≥51% stake, ≥10% own, composite TL+WC, competitors + schedule). |
-| `PMEGP_2ND` | `priorScheme`, `priorSanctionAmount`, `firstSubsidyYear` |
+| `PMEGP_2ND` | Own 14-step upgrade pack — see [docs/schemes/PMEGP_2ND/pmegp2nd.md](./schemes/PMEGP_2ND/pmegp2nd.md), `pmegp2ndQuestions.ts`, `PMEGP_2ND_STEPS` (prior PMEGP/REGP/MUDRA, uniform 15% MM / 10% own, brownfield only). |
 | `SCLCSS` / `AP_TECH_UPGRADE` | `existingTech`, `proposedTech` |
 | `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
 | `ZED` / `LEAN` / `MSME_IPR` / `PMS` / … | short-pack fields (see `SCHEME_EXTRA_FIELDS`) |

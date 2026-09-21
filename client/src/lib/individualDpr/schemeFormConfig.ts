@@ -1,6 +1,7 @@
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 import { isIndividualPickerScheme, SCHEMES } from '@/lib/ventureMatch/schemes';
 import { PMEGP_EXTRA_FIELDS, PMEGP_IMPACT_BULLETS } from '@/lib/individualDpr/pmegpQuestions';
+import { PMEGP_2ND_EXTRA_FIELDS, PMEGP_2ND_IMPACT_BULLETS } from '@/lib/individualDpr/pmegp2ndQuestions';
 import { MUDRA_EXTRA_FIELDS, MUDRA_IMPACT_BULLETS } from '@/lib/individualDpr/mudraQuestions';
 import { STANDUP_EXTRA_FIELDS, STANDUP_IMPACT_BULLETS } from '@/lib/individualDpr/standupQuestions';
 import { PMFME_EXTRA_FIELDS, PMFME_IMPACT_BULLETS } from '@/lib/individualDpr/pmfmeQuestions';
@@ -26,7 +27,7 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   PMEGP: [...PMEGP_EXTRA_FIELDS],
   MUDRA: [...MUDRA_EXTRA_FIELDS],
   STANDUP: [...STANDUP_EXTRA_FIELDS],
-  PMEGP_2ND: ['priorScheme', 'priorSanctionAmount', 'firstSubsidyYear'],
+  PMEGP_2ND: [...PMEGP_2ND_EXTRA_FIELDS],
   SCLCSS: ['existingTech', 'proposedTech'],
   AP_TECH_UPGRADE: ['existingTech', 'proposedTech'],
   MSE_GIFT: ['energyBaselineKwh', 'expectedSaving'],
@@ -184,14 +185,15 @@ export function getStep18Uploads(
     if (code === 'PMEGP_2ND') {
       uploads.push(
         { id: 'priorSanctionLetter', label: 'Prior PMEGP / REGP / MUDRA Sanction Letter' },
-        { id: 'caExistingInvestment', label: 'CA Certificate of Existing Investment' }
+        { id: 'caExistingInvestment', label: 'CA Certificate of Existing Investment' },
+        { id: 'profitStatements', label: 'Last 3 Years Profit / ITR Statements' }
       );
     }
     const owner = answers?.owner || [];
     const specialCategory =
       schemeExtras?.pmegpCategory === 'special' ||
       owner.some((o) => ['sc', 'st', 'bc'].includes(o));
-    if (specialCategory) {
+    if (code === 'PMEGP' && specialCategory) {
       uploads.push({ id: 'casteCertificate', label: 'Caste / Special-category Certificate' });
     }
     return uploads;
@@ -351,11 +353,7 @@ export function getSchemeImpact(code: string | null): {
   if (code === 'PMEGP_2ND') {
     return {
       title: '2nd PMEGP Loan',
-      bullets: [
-        'Full upgrade DPR (not a new-unit story).',
-        'Step 1: prior scheme, sanction amount, first subsidy year.',
-        'Step 18: prior sanction letter, CA existing investment, quotations.',
-      ],
+      bullets: [...PMEGP_2ND_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }

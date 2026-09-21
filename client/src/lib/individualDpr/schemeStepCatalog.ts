@@ -132,6 +132,27 @@ export const PMFME_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
+/**
+ * PMEGP 2nd loan (upgrade) — 14 consecutive steps (brownfield PMEGP/REGP/MUDRA).
+ * Spec: docs/schemes/PMEGP_2ND/pmegp2nd.md
+ */
+export const PMEGP_2ND_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & prior assistance', contentStep: 1 },
+  { id: 'intro', title: 'Introduction & upgrade process', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity (existing → proposed)', contentStep: 4 },
+  { id: 'market', title: 'Market & sales assumptions', contentStep: 6 },
+  { id: 'shed', title: 'Workshed / premises & power', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Upgrade project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'impact', title: 'Employment & impact', contentStep: 17 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
 /** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
 const FULL_MINUS_LATE: SchemeStepDef[] = catalog(
   VANILLA_STEPS.filter((s) => ![15, 16, 17].includes(s.contentStep)).map((s) => ({
@@ -170,7 +191,7 @@ export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   MUDRA: MUDRA_STEPS,
   STANDUP: STANDUP_STEPS,
   PMFME: PMFME_STEPS,
-  PMEGP_2ND: VANILLA_STEPS,
+  PMEGP_2ND: PMEGP_2ND_STEPS,
   ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),
   ...Object.fromEntries([...SHORT_WC_CODES].map((c) => [c, SHORT_WC_STEPS])),
   ...Object.fromEntries([...FULL_MINUS_LATE_CODES].map((c) => [c, FULL_MINUS_LATE])),

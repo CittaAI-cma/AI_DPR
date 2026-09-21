@@ -27,6 +27,15 @@ export function normalizeExtraValue(field: string, value: any): any {
   if (field === 'fssai') return /plan/i.test(text) ? 'planned' : 'yes';
   if (field === 'unitStage') return /exist|upgrade|expans/i.test(text) ? 'existing' : 'new';
   if (field === 'odopAligned') return /\bno\b|non-?odop/i.test(text) ? 'no' : /yes|odop/i.test(text) ? 'yes' : text;
+  if (field === 'priorScheme') {
+    if (/regp/i.test(text)) return 'REGP';
+    if (/mudra/i.test(text)) return 'MUDRA';
+    return 'PMEGP';
+  }
+  if (field === 'marginMoneyAdjusted' || field === 'firstLoanRepaid' || field === 'nerHill') {
+    return /\bno\b/i.test(text) ? 'no' : 'yes';
+  }
+  if (field === 'sectorBand') return /service|trad|business/i.test(text) ? 'service' : 'manufacturing';
   if (field === 'apiicPark') return /yes|apiic|park/i.test(text) && !/\bno\b/i.test(text) ? 'yes' : /no/i.test(text) ? 'no' : 'yes';
   return text;
 }
@@ -58,6 +67,14 @@ function inferMissingExtras(
     if (!next.fssai) next.fssai = 'planned';
     if (!next.unitStage) next.unitStage = /exist|upgrade|expans/i.test(hint) ? 'existing' : 'new';
     if (!next.odopAligned) next.odopAligned = 'yes';
+  }
+  if (schemeCode === 'PMEGP_2ND') {
+    if (!next.priorScheme) next.priorScheme = /mudra/i.test(hint) ? 'MUDRA' : /regp/i.test(hint) ? 'REGP' : 'PMEGP';
+    if (!next.marginMoneyAdjusted) next.marginMoneyAdjusted = 'yes';
+    if (!next.firstLoanRepaid) next.firstLoanRepaid = 'yes';
+    if (!next.nerHill) next.nerHill = 'no';
+    if (!next.sectorBand) next.sectorBand = /service|trad|shop/i.test(hint) ? 'service' : 'manufacturing';
+    if (!next.pmegpAgency) next.pmegpAgency = 'DIC';
   }
   if (schemeCode === 'AP_EDP' && !next.apiicPark) {
     next.apiicPark = /apiic|industrial park/i.test(hint) ? 'yes' : 'no';

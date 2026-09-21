@@ -622,28 +622,45 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       'ఇప్పటికే ఉన్న PMEGP / REGP / MUDRA యూనిట్ల 2వ లోన్'
     ),
     intro: L(
-      'This is a brownfield upgrade loan for units that already received PMEGP, REGP, or MUDRA assistance and have performed well. It is not for brand-new (greenfield) units — use first PMEGP for those. Confirm live ceilings with KVIC / DIC (manufacturing upgrade can go up to about ₹1 crore under notified guidelines).',
-      'ఇది ఇప్పటికే PMEGP / REGP / MUDRA సహాయం పొంది బాగా పనిచేసిన యూనిట్లకు బ్రౌన్‌ఫీల్డ్ అప్‌గ్రేడ్ లోన్. కొత్త (గ్రీన్‌ఫీల్డ్) యూనిట్లకు కాదు — వాటికి మొదటి PMEGP వాడండి.'
+      'This is a brownfield upgrade loan for units that already received PMEGP, REGP, or MUDRA assistance and have performed well. Create New Latest DPR builds a 14-step upgrade pack — see docs/schemes/PMEGP_2ND/pmegp2nd.md. Not for brand-new (greenfield) units — use first PMEGP for those.',
+      'ఇది ఇప్పటికే PMEGP / REGP / MUDRA సహాయం పొంది బాగా పనిచేసిన యూనిట్లకు బ్రౌన్‌ఫీల్డ్ అప్‌గ్రేడ్ లోన్. Create New Latest DPR 14-దశల అప్‌గ్రేడ్ ప్యాక్ ఇస్తుంది. కొత్త యూనిట్లకు మొదటి PMEGP వాడండి.'
     ),
     benefits: [
-      L('Credit-linked support to upgrade an existing assisted micro unit.', 'ఇప్పటికే సహాయం పొందిన సూక్ష్మ యూనిట్ అప్‌గ్రేడ్‌కు క్రెడిట్-లింక్డ్ సహాయం.'),
+      L(
+        'Credit-linked margin money @ 15% of upgrade project cost for all categories (20% in NER / Hill States); own contribution 10%.',
+        'అప్‌గ్రేడ్ ప్రాజెక్ట్ ఖర్చులో అన్ని వర్గాలకు 15% మార్జిన్ మనీ (NER / హిల్‌లో 20%); స్వంత వాటా 10%.'
+      ),
+      L(
+        'Manufacturing upgrade project cost up to about ₹1 crore; business/service/trading up to ₹25 lakh (confirm live ceilings).',
+        'తయారీ అప్‌గ్రేడ్ ప్రాజెక్ట్ సుమారు ₹1 కోటి వరకు; వ్యాపారం/సేవ/ట్రేడింగ్ ₹25 లక్షల వరకు.'
+      ),
       L('Focus on incremental machinery / civil, not a full greenfield land story.', 'పూర్తి కొత్త ల్యాండ్ కథ కాకుండా అదనపు యంత్రాలు / సివిల్‌పై దృష్టి.'),
     ],
     eligibility: [
-      L('Existing PMEGP / REGP / MUDRA unit; prior subsidy loan repaid / performing.', 'ఇప్పటికే ఉన్న PMEGP / REGP / MUDRA యూనిట్; మునుపటి సబ్సిడీ లోన్ చెల్లింపు / పనితీరు.'),
+      L('Existing PMEGP / REGP / MUDRA unit; first margin money adjusted; first loan repaid in time.', 'ఇప్పటికే ఉన్న PMEGP / REGP / MUDRA యూనిట్; మార్జిన్ మనీ అడ్జస్ట్; మొదటి లోన్ సమయానికి చెల్లింపు.'),
+      L('Profit-making with growth potential (guidelines expect about 3 years of profit). Udyam mandatory.', 'లాభాలు / వృద్ధి సామర్థ్యం (సుమారు 3 ఏళ్ల లాభం). ఉద్యమ్ తప్పనిసరి.'),
       L('Must not be a brand-new greenfield application.', 'కొత్త గ్రీన్‌ఫీల్డ్ దరఖాస్తు కాకూడదు.'),
     ],
     howToApply: [
-      L('Prepare this upgrade DPR with prior sanction proof and new quotations.', 'మునుపటి సాంక్షన్ రుజువు, కొత్త కోటేషన్లతో ఈ అప్‌గ్రేడ్ DPR తయారు చేయండి.'),
-      L('Apply through KVIC / KVIB / DIC with your bank.', 'KVIC / KVIB / DIC మరియు బ్యాంకు ద్వారా దరఖాస్తు చేయండి.'),
+      L('Apply on the PMEGP e-portal upgrade module; IA (KVIC / KVIB / DIC) forwards to bank.', 'PMEGP ఇ-పోర్టల్ అప్‌గ్రేడ్ మాడ్యూల్‌లో దరఖాస్తు; IA బ్యాంకుకు పంపుతుంది.'),
+      L('Create New Latest DPR with PMEGP 2nd Loan selected builds the 14-step upgrade pack.', 'PMEGP 2nd Loan ఎంచుకుంటే Create New Latest DPR 14-దశల అప్‌గ్రేడ్ ప్యాక్ ఇస్తుంది.'),
+      L('Attach prior sanction proof, CA existing investment, and new quotations.', 'మునుపటి సాంక్షన్, CA పెట్టుబడి, కొత్త కోటేషన్లు జత చేయండి.'),
     ],
     documents: [
       L('Prior sanction letter, CA certificate of existing investment, quotations', 'మునుపటి సాంక్షన్ లేఖ, ఉన్న పెట్టుబడి CA సర్టిఫికేట్, కోటేషన్లు'),
+      L('Udyam, KYC, profit / ITR for recent years', 'ఉద్యమ్, KYC, ఇటీవలి లాభ / ITR'),
     ],
     faqs: [
       {
         q: L('Can a new unit apply?', 'కొత్త యూనిట్ దరఖాస్తు చేయవచ్చా?'),
         a: L('No. New units use first PMEGP. This code hard-fails greenfield in Scheme Finder.', 'కాదు. కొత్త యూనిట్లు మొదటి PMEGP వాడాలి.'),
+      },
+      {
+        q: L('Do special categories get higher margin money on the 2nd loan?', '2వ లోన్‌లో ప్రత్యేక వర్గాలకు ఎక్కువ మార్జిన్ మనీ ఉందా?'),
+        a: L(
+          'No. For upgradation, subsidy is uniform 15% for all categories (20% in NER / Hill States). Own contribution is 10% for all.',
+          'కాదు. అప్‌గ్రేడ్‌కు అన్ని వర్గాలకు 15% (NER / హిల్‌లో 20%). స్వంత వాటా అందరికీ 10%.'
+        ),
       },
     ],
     quickInfo: {
@@ -652,7 +669,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: 'https://www.kviconline.gov.in',
+    sourceUrl: 'https://www.kviconline.gov.in/pmegpeportal/',
   },
   SCLCSS: {
     code: 'SCLCSS',
