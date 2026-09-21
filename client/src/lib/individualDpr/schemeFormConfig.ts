@@ -8,6 +8,10 @@ import { PMFME_EXTRA_FIELDS, PMFME_IMPACT_BULLETS } from '@/lib/individualDpr/pm
 import { SCLCSS_EXTRA_FIELDS, SCLCSS_IMPACT_BULLETS } from '@/lib/individualDpr/sclcssQuestions';
 import { AP_TECH_EXTRA_FIELDS, AP_TECH_IMPACT_BULLETS } from '@/lib/individualDpr/apTechUpgradeQuestions';
 import {
+  AP_EDP_EXTRA_FIELDS,
+  AP_EDP_IMPACT_BULLETS,
+} from '@/lib/individualDpr/apEdpQuestions';
+import {
   VISHWAKARMA_CRAFTS,
   VISHWAKARMA_EXTRA_FIELDS,
   VISHWAKARMA_IMPACT_BULLETS,
@@ -36,7 +40,7 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   VISHWAKARMA: [...VISHWAKARMA_EXTRA_FIELDS],
   SVANIDHI: [...SVANIDHI_EXTRA_FIELDS],
   PMFME: [...PMFME_EXTRA_FIELDS],
-  AP_EDP: ['apiicPark'],
+  AP_EDP: [...AP_EDP_EXTRA_FIELDS],
   PMEGP: [...PMEGP_EXTRA_FIELDS],
   MUDRA: [...MUDRA_EXTRA_FIELDS],
   STANDUP: [...STANDUP_EXTRA_FIELDS],
@@ -215,11 +219,29 @@ export function getStep18Uploads(
     return uploads;
   }
   if (code === 'AP_EDP') {
-    return [
-      { id: 'landShedAllotment', label: 'Land / Shed Allotment' },
+    const uploads: UploadField[] = [
+      { id: 'udyamCertificate', label: 'Udyam Certificate' },
+      { id: 'landShedAllotment', label: 'Land / Shed Allotment or Lease' },
       { id: 'cfeCfo', label: 'Single Desk Pollution Clearances (CFE/CFO)' },
       { id: 'caFciStatement', label: 'CA-certified FCI Statement' },
+      { id: 'apDomicileProof', label: 'AP Domicile Proof' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+      { id: 'machineryQuotations', label: 'Machinery Quotations / Invoices' },
+      { id: 'termLoanSanction', label: 'Term Loan Sanction (if credit-linked)' },
     ];
+    if (schemeExtras?.specialCategory === 'yes') {
+      uploads.push({
+        id: 'specialCategoryProof',
+        label: 'Special-category Ownership Proof (women / SC/ST / BC / PwD / etc.)',
+      });
+    }
+    if (schemeExtras?.scStOwned === 'yes' && schemeExtras?.apiicPark === 'yes') {
+      uploads.push({
+        id: 'scStOwnershipProof',
+        label: 'SC/ST Ownership Proof (APIIC land-rebate claim)',
+      });
+    }
+    return uploads;
   }
   if (code === 'AP_TECH_UPGRADE') {
     const uploads: UploadField[] = [
@@ -419,12 +441,8 @@ export function getSchemeImpact(code: string | null): {
   }
   if (code === 'AP_EDP') {
     return {
-      title: 'AP EDP',
-      bullets: [
-        'Step 1 asks if the unit is in an APIIC park (land-rebate hint).',
-        'Step 12 keeps land / building / P&M (FCI).',
-        'Step 18: land/shed, CFE/CFO, CA FCI statement.',
-      ],
+      title: 'AP MSME-EDP 4.0',
+      bullets: [...AP_EDP_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }

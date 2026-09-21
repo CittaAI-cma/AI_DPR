@@ -1109,7 +1109,7 @@ CRITICAL REQUIREMENTS:
    ${schemeCode === 'VISHWAKARMA' ? `- This unit is for PM Vishwakarma. You MUST also suggest craft (exact trade name from the field label list), currentTools (what they use today), and newTools (what to buy with the ₹15,000 voucher). Put the actual values in "suggestion", not instructions.` : ''}
    ${schemeCode === 'SVANIDHI' ? `- This unit is for PM SVANidhi. You MUST suggest covOrLor as exactly "cov" or "lor", and upiQr as a plausible UPI ID.` : ''}
    ${schemeCode === 'PMFME' ? `- This unit is for PMFME. You MUST suggest fssai as exactly "yes" or "planned".` : ''}
-   ${schemeCode === 'AP_EDP' ? `- This unit is for AP EDP. You MUST suggest apiicPark as exactly "yes" or "no".` : ''}`
+   ${schemeCode === 'AP_EDP' ? `- This unit is for AP MSME-EDP 4.0 new-unit capital subsidy. You MUST suggest enterpriseSize (micro/small/medium), specialCategory (yes/no), scStOwned (yes/no), apDomicile (yes/no), and apiicPark (yes/no).` : ''}`
        : `   - This is STEP 1 - you have the CLUSTER CONTEXT provided above (Cluster Name: "${clusterName}"${location ? `, Location: ${location}` : ''}${district ? `, District: ${district}` : ''})
    - Use the cluster name "${clusterName}" as the PRIMARY BASIS for generating ALL suggestions
    - For each field, think: "What would be appropriate for a cluster named '${clusterName}'${location ? ` located in ${location}` : ''}${district ? `, ${district} district` : ''}?"

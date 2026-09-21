@@ -19,21 +19,21 @@ export const AP_BRIEFS: Record<string, SchemeBrief> = {
     code: 'AP_EDP',
     title: L('AP MSME & Entrepreneur Development Policy 4.0 (2024–29)', 'AP MSME మరియు వ్యవస్థాపక అభివృద్ధి విధానం 4.0 (2024–29)'),
     intro: L(
-      'Andhra Pradesh MSME-EDP 4.0 offers capital subsidy on Fixed Capital Investment for new manufacturing enterprises that are Udyam-registered and located in the State. Operational guidelines were issued in February 2025 (G.O.Ms.No.28). Confirm live caps with GM-DIC / AP MSME One before you lock costs.',
-      'AP MSME-EDP 4.0 కొత్త తయారీ యూనిట్ల ఫిక్స్‌డ్ క్యాపిటల్ ఇన్వెస్ట్‌మెంట్‌పై క్యాపిటల్ సబ్సిడీ ఇస్తుంది. ఉద్యమ్ నమోదు, రాష్ట్రంలో స్థానం అవసరం. ఫిబ్రవరి 2025లో ఆపరేషనల్ గైడ్‌లైన్స్ (G.O.Ms.No.28). ఖర్చులు ఖాయం చేసే ముందు GM-DIC / AP MSME Oneతో నిర్ధారించండి.'
+      'Andhra Pradesh MSME-EDP 4.0 offers capital subsidy on Fixed Capital Investment for new manufacturing enterprises that are Udyam-registered and located in the State. Create New Latest DPR builds a 13-step greenfield pack — see docs/schemes/AP_EDP/apEdp.md. Operational guidelines were issued in February 2025 (G.O.Ms.No.28). Confirm live caps with GM-DIC / AP MSME One before you lock costs.',
+      'AP MSME-EDP 4.0 కొత్త తయారీ యూనిట్ల ఫిక్స్‌డ్ క్యాపిటల్ ఇన్వెస్ట్‌మెంట్‌పై క్యాపిటల్ సబ్సిడీ ఇస్తుంది. Create New Latest DPR 13-దశల ప్యాక్ ఇస్తుంది — docs/schemes/AP_EDP/apEdp.md. ఫిబ్రవరి 2025లో ఆపరేషనల్ గైడ్‌లైన్స్ (G.O.Ms.No.28). GM-DIC / AP MSME Oneతో నిర్ధారించండి.'
     ),
     benefits: [
       L(
-        'Capital subsidy around 25% of FCI for new manufacturing, with caps by size (illustrative policy table: micro ₹25 lakh, small ₹1.5 crore, medium ₹7 crore), paid in instalments after commercial production / first invoice.',
-        'కొత్త తయారీకి FCIలో సుమారు 25% క్యాపిటల్ సబ్సిడీ, పరిమాణం ప్రకారం పైపరిధి (సూచన: సూక్ష్మ ₹25 లక్షలు, చిన్న ₹1.5 కోట్లు, మధ్య ₹7 కోట్లు), ఉత్పత్తి / మొదటి ఇన్వాయిస్ తర్వాత విడతలు.'
+        'Capital subsidy 25% of FCI for general new manufacturing (caps: micro ₹25 L, small ₹1.5 Cr, medium ₹7 Cr), paid in instalments after CoD / first invoice.',
+        'సాధారణ కొత్త తయారీకి FCIలో 25% క్యాపిటల్ సబ్సిడీ (పైపరిధి: సూక్ష్మ ₹25 లక్షలు, చిన్న ₹1.5 కోట్లు, మధ్య ₹7 కోట్లు), CoD / మొదటి ఇన్వాయిస్ తర్వాత విడతలు.'
       ),
       L(
-        'Additional capital subsidy (policy: +10%, with higher special-category caps in later amendments) for enterprises wholly owned by women / BC / SC / ST / specially-abled / transgender entrepreneurs with AP domicile.',
-        'AP నివాసం ఉన్న మహిళ / BC / SC / ST / వికలాంగ / ట్రాన్స్‌జెండర్ పూర్తి యాజమాన్య యూనిట్లకు అదనపు క్యాపిటల్ సబ్సిడీ (విధానం: +10%, తరువాత సవరణల్లో ప్రత్యేక వర్గ పైపరిధి ఎక్కువ).'
+        'Special category (wholly owned women/BC/SC/ST/minority/PwD/transgender with AP domicile): 45% of FCI for micro/small (caps ₹45 L / ₹4.5 Cr) and 35% for medium (cap ₹7 Cr).',
+        'ప్రత్యేక వర్గం: సూక్ష్మ/చిన్నకు FCIలో 45% (₹45 లక్షలు / ₹4.5 కోట్లు), మధ్యకు 35% (₹7 కోట్లు).'
       ),
       L(
-        'Combined incentives under the policy are capped (typically 75% of FCI). Capital subsidy and technology-upgradation incentive are mutually exclusive.',
-        'విధానంలోని మొత్తం ప్రోత్సాహకాలు సాధారణంగా FCIలో 75%కి పరిమితం. క్యాపిటల్ సబ్సిడీ మరియు టెక్నాలజీ అప్‌గ్రేడ్ ప్రోత్సాహకం ఒకదానికొకటి విరుద్ధం.'
+        'SC/ST micro & small in APIIC parks: 75% land-cost rebate capped ₹25 L (once). Combined incentives ≤ 75% of FCI; capital subsidy and tech-upgrade are mutually exclusive.',
+        'APIIC పార్క్‌లో SC/ST సూక్ష్మ & చిన్న: భూమి ఖర్చుపై 75% రిబేట్, ₹25 లక్షల పైపరిధి. మొత్తం ≤ 75% FCI; క్యాపిటల్ సబ్సిడీ ↔ టెక్ అప్‌గ్రేడ్ విరుద్ధం.'
       ),
     ],
     eligibility: [
@@ -44,7 +44,7 @@ export const AP_BRIEFS: Record<string, SchemeBrief> = {
     ],
     howToApply: [
       L('Apply on the State incentives / AP MSME One channel after Udyam and CFE as required.', 'ఉద్యమ్ మరియు అవసరమైతే CFE తర్వాత రాష్ట్ర ఇన్సెంటివ్స్ / AP MSME One ద్వారా దరఖాస్తు చేయండి.'),
-      L('This DPR should show FCI (land, building, plant & machinery) clearly — Step 1 asks if the unit is in an APIIC park.', 'ఈ DPRలో FCI (భూమి, భవనం, ప్లాంట్ & మెషినరీ) స్పష్టంగా ఉండాలి — దశ 1లో APIIC పార్క్‌లో ఉందా అని అడుగుతుంది.'),
+      L('Create New Latest DPR with AP MSME-EDP 4.0 selected builds a 13-step FCI pack — see docs/schemes/AP_EDP/apEdp.md.', 'AP MSME-EDP 4.0 ఎంచుకుంటే Create New Latest DPR 13-దశల FCI ప్యాక్ ఇస్తుంది.'),
       L('GM-DIC / DIEPC sanctions as per operational guidelines; subsidy is released in instalments after CoD / first invoice.', 'GM-DIC / DIEPC మార్గదర్శకాల ప్రకారం మంజూరు; CoD / మొదటి ఇన్వాయిస్ తర్వాత విడతలు.'),
     ],
     documents: [

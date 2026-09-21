@@ -115,6 +115,7 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 | `MUDRA` | **12** | PMMY bank-unit catalog — see [mudra.md](./schemes/MUDRA/mudra.md) |
 | `VISHWAKARMA` | **12** | Artisan toolkit + training + enterprise loan — see [vishwakarma.md](./schemes/VISHWAKARMA/vishwakarma.md) |
 | `SVANIDHI` | **10** | Street-vendor WC micro-credit — see [svanidhi.md](./schemes/SVANIDHI/svanidhi.md) |
+| `AP_EDP` | **13** | New-unit FCI capital subsidy — see [apEdp.md](./schemes/AP_EDP/apEdp.md) |
 | `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
 | `ZED` / `LEAN` / `MSME_IPR` / `PMS` / `SCST_HUB` | 5 | Short cert / consulting pack |
 | `ECLGS` | 7 | Working-capital pack |
@@ -134,7 +135,7 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `VISHWAKARMA` | Own 12-step artisan pack — see [docs/schemes/VISHWAKARMA/vishwakarma.md](./schemes/VISHWAKARMA/vishwakarma.md), `vishwakarmaQuestions.ts`, `VISHWAKARMA_STEPS` (18 trades; toolkit ₹15k; tranche ₹1 L / ₹2 L at 5%). |
 | `SVANIDHI` | Own 10-step street-vendor pack — see [docs/schemes/SVANIDHI/svanidhi.md](./schemes/SVANIDHI/svanidhi.md), `svanidhiQuestions.ts`, `SVANIDHI_STEPS` (CoV/LoR + UPI; WC ₹15k / ₹25k / ₹50k; 7% interest subsidy). |
 | `PMFME` | Own 14-step food-unit pack — see [docs/schemes/PMFME/pmfme.md](./schemes/PMFME/pmfme.md), `pmfmeQuestions.ts`, `PMFME_STEPS` (NIFTEM model structure: FSSAI, new/existing, ODOP, RM sources, 35% grant cap ₹10 L). |
-| `AP_EDP` | `apiicPark` (land-rebate hint) |
+| `AP_EDP` | Own 13-step greenfield pack — see [docs/schemes/AP_EDP/apEdp.md](./schemes/AP_EDP/apEdp.md), `apEdpQuestions.ts`, `AP_EDP_STEPS` (MSME-EDP 4.0 para 6.3: 25%/45%/35% of FCI by size & special category; APIIC SC/ST land rebate). |
 | `PMEGP` | Full bank-unit set — see [docs/schemes/PMEGP/pmegp.md](./schemes/PMEGP/pmegp.md), `pmegpQuestions.ts`, and `PMEGP_STEPS` (14 consecutive steps: category, rural/urban, agency, entrepreneur, process, capacity, margin-money %). |
 | `MUDRA` | Own 12-step PMMY pack — see [docs/schemes/MUDRA/mudra.md](./schemes/MUDRA/mudra.md), `mudraQuestions.ts`, `MUDRA_STEPS` (Shishu/Kishore/Tarun/Tarun Plus, own+bank MoF, shop proof uploads). |
 | `STANDUP` | Own 13-step bank-unit pack — see [docs/schemes/STANDUP/standup.md](./schemes/STANDUP/standup.md), `standupQuestions.ts`, `STANDUP_STEPS` (woman/SC/ST, ≥51% stake, ≥10% own, composite TL+WC, competitors + schedule). |
@@ -177,7 +178,7 @@ If scheme is `PMEGP` or `PMEGP_2ND` and project cost (lakhs) exceeds:
 | `SVANIDHI` | CoV/LoR, Aadhaar, passbook, UPI proof |
 | `PMFME` | Machinery quotes, premises lease, draft FSSAI |
 | `PMEGP` | Machinery quotes, building estimate; + caste certificate if VM owner has sc/st/bc |
-| `AP_EDP` | Land/shed allotment, CFE/CFO, CA FCI statement |
+| `AP_EDP` | Udyam, land/shed, CFE/CFO, CA FCI, AP domicile (+ special / SC-ST proofs as needed) |
 | `MUDRA` | Shop proof, bank statements, quotes; + Mudra closure if Tarun Plus bands (`50Lto1Cr`+) |
 | Default / vanilla | Aadhaar/PAN, Udyam, passbook, machinery quotations |
 

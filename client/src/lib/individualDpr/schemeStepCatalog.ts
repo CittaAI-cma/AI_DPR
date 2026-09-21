@@ -194,6 +194,26 @@ export const AP_TECH_UPGRADE_STEPS: SchemeStepDef[] = catalog([
 ]);
 
 /**
+ * AP MSME-EDP 4.0 — 13 consecutive steps (new-unit capital subsidy on FCI).
+ * Spec: docs/schemes/AP_EDP/apEdp.md
+ */
+export const AP_EDP_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & AP eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Introduction & process', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises & utilities', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost (FCI)', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+/**
  * PM Vishwakarma — 12 consecutive steps (artisan toolkit + training + enterprise loan).
  * Spec: docs/schemes/VISHWAKARMA/vishwakarma.md
  */
@@ -270,6 +290,7 @@ export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   PMEGP_2ND: PMEGP_2ND_STEPS,
   SCLCSS: SCLCSS_STEPS,
   AP_TECH_UPGRADE: AP_TECH_UPGRADE_STEPS,
+  AP_EDP: AP_EDP_STEPS,
   VISHWAKARMA: VISHWAKARMA_STEPS,
   SVANIDHI: SVANIDHI_STEPS,
   ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),

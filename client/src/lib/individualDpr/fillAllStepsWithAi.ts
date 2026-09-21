@@ -42,7 +42,7 @@ export function normalizeExtraValue(field: string, value: any): any {
     if (/small/i.test(text)) return 'small';
     return 'micro';
   }
-  if (field === 'specialCategory' || field === 'apDomicile') {
+  if (field === 'specialCategory' || field === 'apDomicile' || field === 'scStOwned') {
     return /\bno\b/i.test(text) ? 'no' : 'yes';
   }
   if (field === 'priorSelfEmploymentLoan') {
@@ -143,8 +143,18 @@ function inferMissingExtras(
     }
     if (!next.apDomicile) next.apDomicile = 'yes';
   }
-  if (schemeCode === 'AP_EDP' && !next.apiicPark) {
-    next.apiicPark = /apiic|industrial park/i.test(hint) ? 'yes' : 'no';
+  if (schemeCode === 'AP_EDP') {
+    if (!next.enterpriseSize) {
+      next.enterpriseSize = /medium/i.test(hint) ? 'medium' : /small/i.test(hint) ? 'small' : 'micro';
+    }
+    if (!next.specialCategory) {
+      next.specialCategory = /woman|sc|st|bc|pwd|transgender|minority/i.test(hint) ? 'yes' : 'no';
+    }
+    if (!next.scStOwned) next.scStOwned = /\bsc\b|\bst\b|tribe|scheduled/i.test(hint) ? 'yes' : 'no';
+    if (!next.apDomicile) next.apDomicile = 'yes';
+    if (!next.apiicPark) {
+      next.apiicPark = /apiic|industrial park/i.test(hint) ? 'yes' : 'no';
+    }
   }
   return next;
 }

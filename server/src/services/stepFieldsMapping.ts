@@ -371,7 +371,31 @@ export function getIndividualSchemeExtraFields(
   }
   if (schemeCode === 'AP_EDP') {
     return [
-      { name: 'apiicPark', type: 'shortText', label: 'Is the unit inside an APIIC park? Reply only "yes" or "no"' },
+      {
+        name: 'enterpriseSize',
+        type: 'shortText',
+        label: 'Enterprise size: reply only "micro", "small", or "medium"',
+      },
+      {
+        name: 'specialCategory',
+        type: 'shortText',
+        label: 'Special category wholly owned (women/BC/SC/ST/etc.)? Reply only "yes" or "no"',
+      },
+      {
+        name: 'scStOwned',
+        type: 'shortText',
+        label: 'SC/ST wholly owned? Reply only "yes" or "no"',
+      },
+      {
+        name: 'apDomicile',
+        type: 'shortText',
+        label: 'AP domicile confirmed? Reply only "yes" or "no"',
+      },
+      {
+        name: 'apiicPark',
+        type: 'shortText',
+        label: 'Is the unit inside an APIIC park? Reply only "yes" or "no"',
+      },
     ];
   }
   return [];

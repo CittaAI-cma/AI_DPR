@@ -90,6 +90,18 @@ import {
   apTechSubsidyCapLakhs,
   apTechSubsidyPercent,
 } from '@/lib/individualDpr/apTechUpgradeQuestions';
+import {
+  AP_EDP_LAND_REBATE_CAP_LAKHS,
+  AP_EDP_LAND_REBATE_PERCENT,
+  AP_EDP_PREMISES_OPTIONS,
+  AP_EDP_SIZE_OPTIONS,
+  AP_EDP_YES_NO_OPTIONS,
+  apEdpIndicativeGrantLakhs,
+  apEdpIndicativeLandRebateLakhs,
+  apEdpLandRebateEligible,
+  apEdpSubsidyCapLakhs,
+  apEdpSubsidyPercent,
+} from '@/lib/individualDpr/apEdpQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
@@ -119,6 +131,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const isPmfme = schemeCode === 'PMFME';
   const isSclcss = schemeCode === 'SCLCSS';
   const isApTech = schemeCode === 'AP_TECH_UPGRADE';
+  const isApEdp = schemeCode === 'AP_EDP';
   const isVishwakarma = schemeCode === 'VISHWAKARMA';
   const isSvanidhi = schemeCode === 'SVANIDHI';
   const isLeanUnit =
@@ -129,6 +142,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     isPmfme ||
     isSclcss ||
     isApTech ||
+    isApEdp ||
     isVishwakarma ||
     isSvanidhi;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
@@ -790,18 +804,129 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
-        {schemeCode === 'AP_EDP' && (
+        {isApEdp && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">{tf("APIIC industrial park")}</h3>
-            <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={extras.apiicPark || stepData.apiicPark || ''}
-              onChange={(e) => updateExtras({ apiicPark: e.target.value })}
-            >
-              <option value="">{tf("Is the unit inside an APIIC park?")}</option>
-              <option value="yes">{tf("Yes — land rebate may apply")}</option>
-              <option value="no">{tf("No")}</option>
-            </select>
+            <h3 className="text-lg font-semibold">{tf('AP MSME-EDP 4.0 — new-unit eligibility')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'Spec: docs/schemes/AP_EDP/apEdp.md — greenfield FCI capital subsidy; mutually exclusive with tech-upgrade'
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Enterprise size')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.enterpriseSize || ''}
+                  onChange={(e) => updateExtras({ enterpriseSize: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {AP_EDP_SIZE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('Special category (wholly owned, AP domicile)?')}
+                </label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.specialCategory || ''}
+                  onChange={(e) => updateExtras({ specialCategory: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {AP_EDP_YES_NO_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('SC/ST wholly owned?')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.scStOwned || ''}
+                  onChange={(e) => updateExtras({ scStOwned: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {AP_EDP_YES_NO_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('AP domicile confirmed?')}</label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.apDomicile || ''}
+                  onChange={(e) => updateExtras({ apDomicile: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  {AP_EDP_YES_NO_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {tf(o.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {tf('Unit inside an APIIC park / estate?')}
+                </label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={extras.apiicPark || ''}
+                  onChange={(e) => updateExtras({ apiicPark: e.target.value })}
+                >
+                  <option value="">{tf('Select')}</option>
+                  <option value="yes">{tf('Yes — SC/ST micro/small may get land rebate')}</option>
+                  <option value="no">{tf('No')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur full name')}</label>
+                <Input
+                  value={extras.entrepreneurName || ''}
+                  onChange={(e) => updateExtras({ entrepreneurName: e.target.value })}
+                  placeholder={tf('Full name as in Aadhaar')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
+                <Input
+                  type="number"
+                  value={extras.entrepreneurAge || ''}
+                  onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
+                  placeholder={tf('e.g. 35')}
+                />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              {tf('Indicative capital subsidy')}:{' '}
+              {apEdpSubsidyPercent(extras.enterpriseSize, extras.specialCategory)}% {tf('of FCI')},{' '}
+              {tf('cap')} ₹
+              {apEdpSubsidyCapLakhs(extras.enterpriseSize, extras.specialCategory).toLocaleString(
+                'en-IN'
+              )}{' '}
+              {tf('L')} · {extras.enterpriseSize || '—'} / special {extras.specialCategory || '—'}.
+              {apEdpLandRebateEligible(
+                extras.apiicPark,
+                extras.scStOwned,
+                extras.enterpriseSize
+              ) && (
+                <>
+                  {' '}
+                  · {tf('APIIC land rebate')} {AP_EDP_LAND_REBATE_PERCENT}% {tf('cap')} ₹
+                  {AP_EDP_LAND_REBATE_CAP_LAKHS} {tf('L')}.
+                </>
+              )}
+            </p>
           </div>
         )}
 
@@ -1479,6 +1604,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           isPmfme ||
           isSclcss ||
           isApTech ||
+          isApEdp ||
           isVishwakarma ||
           isSvanidhi) && (
           <div>
@@ -1488,7 +1614,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               value={extras.processOfManufacture || ''}
               onChange={(e) => updateExtras({ processOfManufacture: e.target.value })}
               placeholder={
-                isSvanidhi
+                isApEdp
+                  ? tf('Process of manufacture for the new greenfield unit')
+                  : isSvanidhi
                   ? tf('How you source, prepare (if food), and sell — daily routine')
                   : isVishwakarma
                   ? tf('How you make / deliver the craft product or service (step by step)')
@@ -1804,7 +1932,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             value={stepData.productionCapacity || extras.installedCapacity || ''}
             onChange={(e) => {
               handleInputChange('productionCapacity', e.target.value);
-              if (isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech)
+              if (isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech || isApEdp)
                 updateExtras({ installedCapacity: e.target.value });
             }}
             placeholder={
@@ -1826,7 +1954,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
         )}
-        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech) && (
+        {(isPmegp || isPmegp2nd || isStandup || isPmfme || isSclcss || isApTech || isApEdp) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               {tf('Capacity utilisation Year 1 (%)')}
@@ -2397,6 +2525,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               isPmfme ||
               isSclcss ||
               isApTech ||
+              isApEdp ||
               isVishwakarma ||
               isSvanidhi) && (
               <div>
@@ -2423,6 +2552,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     ? SVANIDHI_VENDING_OPTIONS
                     : isVishwakarma
                     ? VISHWAKARMA_WORKPLACE_OPTIONS
+                    : isApEdp
+                    ? AP_EDP_PREMISES_OPTIONS
                     : isApTech
                     ? AP_TECH_PREMISES_OPTIONS
                     : isSclcss
@@ -2453,6 +2584,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     isPmfme ||
                     isSclcss ||
                     isApTech ||
+                    isApEdp ||
                     isVishwakarma ||
                     isSvanidhi
                   )
@@ -2822,6 +2954,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                       isPmfme ||
                       isSclcss ||
                       isApTech ||
+                      isApEdp ||
                       isVishwakarma ||
                       isSvanidhi
                     ? 'Own contribution (₹ Lakhs)'
@@ -2851,11 +2984,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                           ? 'SCLCSS capital subsidy (₹ Lakhs) — 25%, cap ₹25 L'
                           : isApTech
                             ? 'AP tech-upgrade subsidy (₹ Lakhs) — % of FCI by size'
-                            : isVishwakarma
-                              ? 'Toolkit e-voucher (₹ Lakhs) — usually 0.15'
-                              : isSvanidhi
-                                ? 'Government grant (₹ Lakhs) — usually 0 (interest subsidy ≠ capital)'
-                                : 'Government Grant (₹ Lakhs)'
+                            : isApEdp
+                              ? 'AP EDP capital subsidy (₹ Lakhs) — % of FCI by size'
+                              : isVishwakarma
+                                ? 'Toolkit e-voucher (₹ Lakhs) — usually 0.15'
+                                : isSvanidhi
+                                  ? 'Government grant (₹ Lakhs) — usually 0 (interest subsidy ≠ capital)'
+                                  : 'Government Grant (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -2871,7 +3006,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 ? 'Bank term loan + / or WC (₹ Lakhs)'
                 : isStandup
                   ? 'Bank composite loan TL + WC (₹ Lakhs)'
-                  : isSclcss || isApTech
+                  : isSclcss || isApTech || isApEdp
                     ? 'Bank term loan for P&M (₹ Lakhs)'
                     : isVishwakarma
                       ? 'Enterprise development loan tranche (₹ Lakhs)'
@@ -2988,6 +3123,42 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'en-IN'
             )}{' '}
             {tf('L')}).
+          </p>
+        )}
+        {isApEdp && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'AP EDP capital subsidy on new-unit FCI — mutually exclusive with tech-upgrade; total incentives ≤ 75% FCI. Indicative'
+            )}{' '}
+            ≈ ₹
+            {apEdpIndicativeGrantLakhs(
+              (getStepData(12)?.land || 0) +
+                (getStepData(12)?.building || 0) +
+                (getStepData(12)?.machinery || 0) +
+                (getStepData(12)?.utilitiesAndInfrastructure || 0) +
+                (getStepData(12)?.preliminaryAndPreOperative || 0) +
+                (getStepData(12)?.workingCapitalMargin || 0),
+              extras.enterpriseSize,
+              extras.specialCategory
+            ).toLocaleString('en-IN')}{' '}
+            {tf('Lakhs')} (
+            {apEdpSubsidyPercent(extras.enterpriseSize, extras.specialCategory)}% / {tf('cap')} ₹
+            {apEdpSubsidyCapLakhs(extras.enterpriseSize, extras.specialCategory).toLocaleString(
+              'en-IN'
+            )}{' '}
+            {tf('L')})
+            {apEdpLandRebateEligible(
+              extras.apiicPark,
+              extras.scStOwned,
+              extras.enterpriseSize
+            )
+              ? ` · ${tf('APIIC land rebate')} ≈ ₹${apEdpIndicativeLandRebateLakhs(
+                  getStepData(12)?.land || 0,
+                  extras.apiicPark,
+                  extras.scStOwned,
+                  extras.enterpriseSize
+                ).toLocaleString('en-IN')} ${tf('L')}.`
+              : '.'}
           </p>
         )}
         {isVishwakarma && (
