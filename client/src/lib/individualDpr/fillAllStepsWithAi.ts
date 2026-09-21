@@ -81,6 +81,42 @@ export function normalizeExtraValue(field: string, value: any): any {
     if (/other/i.test(text)) return 'other';
     return 'home';
   }
+  if (field === 'accountStatus') {
+    if (/sma/i.test(text)) return 'sma1';
+    if (/other|npa|inelig/i.test(text)) return 'other';
+    return 'standard';
+  }
+  if (field === 'zedCurrentLevel' || field === 'zedTargetLevel') {
+    if (/gold/i.test(text)) return 'gold';
+    if (/silver/i.test(text)) return 'silver';
+    if (/bronze/i.test(text)) return 'bronze';
+    return 'none';
+  }
+  if (field === 'ipType') {
+    if (/design/i.test(text)) return 'design';
+    if (/trade|mark|brand/i.test(text)) return 'trademark';
+    if (/\bgi\b|geograph/i.test(text)) return 'gi';
+    if (/other/i.test(text)) return 'other';
+    return 'patent';
+  }
+  if (field === 'filingStage') {
+    if (/grant|regist/i.test(text)) return 'granted';
+    if (/filed|applic/i.test(text)) return 'filed';
+    if (/draft/i.test(text)) return 'draft';
+    return 'idea';
+  }
+  if (field === 'gemExperience') {
+    if (/won|order/i.test(text)) return 'won';
+    if (/bid/i.test(text)) return 'bidding';
+    if (/regist/i.test(text)) return 'registered';
+    return 'none';
+  }
+  if (field === 'loomType') {
+    if (/jacquard|semi/i.test(text)) return 'jacquard';
+    if (/pit/i.test(text)) return 'pit';
+    if (/other/i.test(text)) return 'other';
+    return 'frame';
+  }
   if (field === 'apiicPark') return /yes|apiic|park/i.test(text) && !/\bno\b/i.test(text) ? 'yes' : /no/i.test(text) ? 'no' : 'yes';
   return text;
 }
@@ -155,6 +191,39 @@ function inferMissingExtras(
     if (!next.apiicPark) {
       next.apiicPark = /apiic|industrial park/i.test(hint) ? 'yes' : 'no';
     }
+  }
+  if (schemeCode === 'ECLGS') {
+    if (!next.accountStatus) next.accountStatus = 'standard';
+    if (!next.additionalWcSought && next.peakWcOutstanding) {
+      next.additionalWcSought = String(
+        Math.round(((Number(next.peakWcOutstanding) || 0) * 20) / 100)
+      );
+    }
+  }
+  if (schemeCode === 'ZED') {
+    if (!next.zedCurrentLevel) next.zedCurrentLevel = 'none';
+    if (!next.zedTargetLevel) next.zedTargetLevel = 'bronze';
+  }
+  if (schemeCode === 'LEAN' && !next.processBottleneck) {
+    next.processBottleneck = 'Primary shop-floor bottleneck to be diagnosed with the LEAN consultant.';
+  }
+  if (schemeCode === 'MSME_IPR') {
+    if (!next.ipType) next.ipType = /trade|mark|brand/i.test(hint) ? 'trademark' : 'patent';
+    if (!next.filingStage) next.filingStage = 'idea';
+  }
+  if (schemeCode === 'PMS' && !next.eventName) {
+    next.eventName = 'Domestic trade fair / exhibition (to be confirmed)';
+  }
+  if (schemeCode === 'SCST_HUB') {
+    if (!next.sclcssCategory) next.sclcssCategory = /st\b|tribe/i.test(hint) ? 'st' : 'sc';
+    if (!next.gemExperience) next.gemExperience = 'none';
+  }
+  if (schemeCode === 'ASPIRE' && !next.incubatorName) {
+    next.incubatorName = 'ASPIRE LBI / incubator (to be named)';
+  }
+  if (schemeCode === 'NHDP') {
+    if (!next.loomType) next.loomType = 'frame';
+    if (!next.weaverId) next.weaverId = 'Weaver ID / handloom corp membership to be filled';
   }
   return next;
 }

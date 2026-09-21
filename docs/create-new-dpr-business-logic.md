@@ -116,9 +116,14 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 | `VISHWAKARMA` | **12** | Artisan toolkit + training + enterprise loan — see [vishwakarma.md](./schemes/VISHWAKARMA/vishwakarma.md) |
 | `SVANIDHI` | **10** | Street-vendor WC micro-credit — see [svanidhi.md](./schemes/SVANIDHI/svanidhi.md) |
 | `AP_EDP` | **13** | New-unit FCI capital subsidy — see [apEdp.md](./schemes/AP_EDP/apEdp.md) |
-| `NHDP` / `ASPIRE` | 15 | Full bank minus late viability/schedule/impact |
-| `ZED` / `LEAN` / `MSME_IPR` / `PMS` / `SCST_HUB` | 5 | Short cert / consulting pack |
-| `ECLGS` | 7 | Working-capital pack |
+| `ECLGS` | **7** | Additional WC liquidity — see [eclgs.md](./schemes/ECLGS/eclgs.md) |
+| `ZED` | **5** | Certification note — see [zed.md](./schemes/ZED/zed.md) |
+| `LEAN` | **5** | Process consulting — see [lean.md](./schemes/LEAN/lean.md) |
+| `MSME_IPR` | **5** | IP filing note — see [msmeIpr.md](./schemes/MSME_IPR/msmeIpr.md) |
+| `PMS` | **5** | Fair / marketing annex — see [pms.md](./schemes/PMS/pms.md) |
+| `SCST_HUB` | **5** | Procurement readiness — see [scstHub.md](./schemes/SCST_HUB/scstHub.md) |
+| `ASPIRE` | **10** | Rural innovation / livelihood — see [aspire.md](./schemes/ASPIRE/aspire.md) |
+| `NHDP` | **10** | Weaver / handloom — see [nhdp.md](./schemes/NHDP/nhdp.md) |
 
 `getVisibleSteps(code)` returns `[1..N]` for that scheme and drives the step strip and next/prev navigation.
 
@@ -143,7 +148,16 @@ Configured in `client/src/lib/individualDpr/schemeFormConfig.ts`.
 | `SCLCSS` | Own 13-step tech-upgrade pack — see [docs/schemes/SCLCSS/sclcss.md](./schemes/SCLCSS/sclcss.md), `sclcssQuestions.ts`, `SCLCSS_STEPS` (SC/ST ≥51%, existing vs proposed tech, 25% subsidy cap ₹25 L). |
 | `AP_TECH_UPGRADE` | Own 13-step brownfield pack — see [docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md](./schemes/AP_TECH_UPGRADE/apTechUpgrade.md), `apTechUpgradeQuestions.ts`, `AP_TECH_UPGRADE_STEPS` (MSME-EDP 4.0 para 6.4: 20%/40%/30% of FCI by size & special category). |
 | `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
-| `ZED` / `LEAN` / `MSME_IPR` / `PMS` / … | short-pack fields (see `SCHEME_EXTRA_FIELDS`) |
+| `ZED` | Own 5-step certification pack — see [docs/schemes/ZED/zed.md](./schemes/ZED/zed.md), `zedQuestions.ts`, `ZED_STEPS`. |
+| `LEAN` | Own 5-step consulting pack — see [docs/schemes/LEAN/lean.md](./schemes/LEAN/lean.md), `leanQuestions.ts`, `LEAN_STEPS`. |
+| `MSME_IPR` | Own 5-step IP pack — see [docs/schemes/MSME_IPR/msmeIpr.md](./schemes/MSME_IPR/msmeIpr.md), `msmeIprQuestions.ts`, `MSME_IPR_STEPS`. |
+| `PMS` | Own 5-step fair annex — see [docs/schemes/PMS/pms.md](./schemes/PMS/pms.md), `pmsQuestions.ts`, `PMS_STEPS`. |
+| `ECLGS` | Own 7-step WC pack — see [docs/schemes/ECLGS/eclgs.md](./schemes/ECLGS/eclgs.md), `eclgsQuestions.ts`, `ECLGS_STEPS`. |
+| `SCST_HUB` | Own 5-step procurement pack — see [docs/schemes/SCST_HUB/scstHub.md](./schemes/SCST_HUB/scstHub.md), `scstHubQuestions.ts`, `SCST_HUB_STEPS`. |
+| `ASPIRE` | Own 10-step livelihood pack — see [docs/schemes/ASPIRE/aspire.md](./schemes/ASPIRE/aspire.md), `aspireQuestions.ts`, `ASPIRE_STEPS`. |
+| `NHDP` | Own 10-step weaver pack — see [docs/schemes/NHDP/nhdp.md](./schemes/NHDP/nhdp.md), `nhdpQuestions.ts`, `NHDP_STEPS`. |
+| `MSE_GIFT` | `energyBaselineKwh`, `expectedSaving` |
+| `CVY` / `PTUAS` / `PMPDS` / … | short-pack fields (see `SCHEME_EXTRA_FIELDS`) |
 | Cluster / CTA schemes (`MSE_CDP`, `SFURTI`, `AP_CDP`, `APICF`, `CHAMPIONS`, `ESDP`, `NTCEC`) | **Excluded** from Create New Latest DPR picker (`isIndividualPickerScheme`) |
 
 **Policy:** Do not implement general `CLCSS` — use `SCLCSS` (SC/ST only) + `AP_TECH_UPGRADE` for general category. Each scheme defines its own step catalog in `schemeStepCatalog.ts` (not hide-from-18). PMEGP uses the KVIC unit DPR question set in `docs/schemes/PMEGP/pmegp.md`.

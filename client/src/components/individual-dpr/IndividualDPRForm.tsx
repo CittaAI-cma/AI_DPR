@@ -102,6 +102,18 @@ import {
   apEdpSubsidyCapLakhs,
   apEdpSubsidyPercent,
 } from '@/lib/individualDpr/apEdpQuestions';
+import {
+  ECLGS_ACCOUNT_STATUS_OPTIONS,
+  ECLGS_INTEREST_CAP_PERCENT,
+  ECLGS_QUANTUM_PERCENT,
+  ECLGS_TENOR_YEARS,
+  eclgsIndicativeQuantumLakhs,
+} from '@/lib/individualDpr/eclgsQuestions';
+import { ZED_LEVEL_OPTIONS } from '@/lib/individualDpr/zedQuestions';
+import { MSME_IPR_STAGE_OPTIONS, MSME_IPR_TYPE_OPTIONS } from '@/lib/individualDpr/msmeIprQuestions';
+import { SCST_HUB_CATEGORY_OPTIONS, SCST_HUB_GEM_OPTIONS } from '@/lib/individualDpr/scstHubQuestions';
+import { ASPIRE_PREMISES_OPTIONS } from '@/lib/individualDpr/aspireQuestions';
+import { NHDP_LOOM_OPTIONS, NHDP_PREMISES_OPTIONS } from '@/lib/individualDpr/nhdpQuestions';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
@@ -134,6 +146,14 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const isApEdp = schemeCode === 'AP_EDP';
   const isVishwakarma = schemeCode === 'VISHWAKARMA';
   const isSvanidhi = schemeCode === 'SVANIDHI';
+  const isEclgs = schemeCode === 'ECLGS';
+  const isZed = schemeCode === 'ZED';
+  const isLean = schemeCode === 'LEAN';
+  const isMsmeIpr = schemeCode === 'MSME_IPR';
+  const isPms = schemeCode === 'PMS';
+  const isScstHub = schemeCode === 'SCST_HUB';
+  const isAspire = schemeCode === 'ASPIRE';
+  const isNhdp = schemeCode === 'NHDP';
   const isLeanUnit =
     isPmegp ||
     isPmegp2nd ||
@@ -144,7 +164,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     isApTech ||
     isApEdp ||
     isVishwakarma ||
-    isSvanidhi;
+    isSvanidhi ||
+    isEclgs ||
+    isZed ||
+    isLean ||
+    isMsmeIpr ||
+    isPms ||
+    isScstHub ||
+    isAspire ||
+    isNhdp;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   /** Store / AI / PDF bucket for this scheme's local step. */
   const contentStep = getContentStep(currentStep, schemeCode);
@@ -930,6 +958,286 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         )}
 
+        {isEclgs && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('ECLGS 5.0 — existing WC facility')}</h3>
+            <p className="text-xs text-muted-foreground">
+              {tf('Spec: docs/schemes/ECLGS/eclgs.md — additional WC up to 20% of peak Q4 outstanding')}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Existing fund-based WC limit (₹ Lakhs)')}</label>
+                <Input type="number" value={extras.existingLimit || ''} onChange={(e) => updateExtras({ existingLimit: e.target.value })} placeholder={tf('e.g. 50')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Peak Q4 WC outstanding (₹ Lakhs)')}</label>
+                <Input type="number" value={extras.peakWcOutstanding || ''} onChange={(e) => updateExtras({ peakWcOutstanding: e.target.value })} placeholder={tf('e.g. 40')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Additional ECLGS WC sought (₹ Lakhs)')}</label>
+                <Input type="number" value={extras.additionalWcSought || ''} onChange={(e) => updateExtras({ additionalWcSought: e.target.value })} placeholder={tf('e.g. 8')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Account status')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.accountStatus || ''} onChange={(e) => updateExtras({ accountStatus: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {ECLGS_ACCOUNT_STATUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Authorised signatory')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Why additional liquidity is needed')}</label>
+              <textarea className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.liquidityReason || ''} onChange={(e) => updateExtras({ liquidityReason: e.target.value })} />
+            </div>
+            <p className="text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              {tf('Indicative quantum')} {ECLGS_QUANTUM_PERCENT}% ≈ ₹
+              {eclgsIndicativeQuantumLakhs(extras.peakWcOutstanding).toLocaleString('en-IN')} {tf('L')} · ROI cap {ECLGS_INTEREST_CAP_PERCENT}% · tenor {ECLGS_TENOR_YEARS} {tf('yrs')}.
+            </p>
+          </div>
+        )}
+
+        {isZed && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('ZED — certification levels')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/ZED/zed.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Current ZED level')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.zedCurrentLevel || ''} onChange={(e) => updateExtras({ zedCurrentLevel: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {ZED_LEVEL_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Target ZED level')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.zedTargetLevel || ''} onChange={(e) => updateExtras({ zedTargetLevel: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {ZED_LEVEL_OPTIONS.filter((o) => o.value !== 'none').map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Quality / sustainability focus')}</label>
+              <textarea className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.qualityFocus || ''} onChange={(e) => updateExtras({ qualityFocus: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        {isLean && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('LEAN — process bottleneck')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/LEAN/lean.md')}</p>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Main process bottleneck')}</label>
+              <textarea className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.processBottleneck || ''} onChange={(e) => updateExtras({ processBottleneck: e.target.value })} placeholder={tf('e.g. changeover time, scrap, inventory')} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Shop-floor size / lines')}</label>
+                <Input value={extras.shopFloorSize || ''} onChange={(e) => updateExtras({ shopFloorSize: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Expected lean gain')}</label>
+              <textarea className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.expectedLeanGain || ''} onChange={(e) => updateExtras({ expectedLeanGain: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        {isMsmeIpr && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('MSME Innovative — IPR')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/MSME_IPR/msmeIpr.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('IP type')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.ipType || ''} onChange={(e) => updateExtras({ ipType: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {MSME_IPR_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Filing stage')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.filingStage || ''} onChange={(e) => updateExtras({ filingStage: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {MSME_IPR_STAGE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Invention / mark title')}</label>
+                <Input value={extras.inventionTitle || ''} onChange={(e) => updateExtras({ inventionTitle: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPms && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('PMS — fair / marketing')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/PMS/pms.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Event / fair name')}</label>
+                <Input value={extras.eventName || ''} onChange={(e) => updateExtras({ eventName: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Stall size')}</label>
+                <Input value={extras.stallSize || ''} onChange={(e) => updateExtras({ stallSize: e.target.value })} placeholder={tf('e.g. 9 sqm')} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Fair city')}</label>
+                <Input value={extras.fairCity || ''} onChange={(e) => updateExtras({ fairCity: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Estimated fair cost (₹ Lakhs)')}</label>
+                <Input type="number" value={extras.estimatedFairCost || ''} onChange={(e) => updateExtras({ estimatedFairCost: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isScstHub && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('SC/ST Hub — procurement readiness')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/SCST_HUB/scstHub.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Category')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.sclcssCategory || ''} onChange={(e) => updateExtras({ sclcssCategory: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {SCST_HUB_CATEGORY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('GeM experience')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.gemExperience || ''} onChange={(e) => updateExtras({ gemExperience: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {SCST_HUB_GEM_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Procurement focus')}</label>
+              <textarea className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.procurementFocus || ''} onChange={(e) => updateExtras({ procurementFocus: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        {isAspire && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('ASPIRE — incubator & livelihood')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/ASPIRE/aspire.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Incubator / LBI name')}</label>
+                <Input value={extras.incubatorName || ''} onChange={(e) => updateExtras({ incubatorName: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Premises type')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.premisesType || ''} onChange={(e) => updateExtras({ premisesType: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {ASPIRE_PREMISES_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Age')}</label>
+                <Input type="number" value={extras.entrepreneurAge || ''} onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Innovation / livelihood brief')}</label>
+              <textarea className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.innovationBrief || extras.livelihoodFocus || ''} onChange={(e) => updateExtras({ innovationBrief: e.target.value, livelihoodFocus: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        {isNhdp && (
+          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
+            <h3 className="text-lg font-semibold">{tf('NHDP — loom & weaver')}</h3>
+            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/NHDP/nhdp.md')}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Loom type')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.loomType || ''} onChange={(e) => updateExtras({ loomType: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {NHDP_LOOM_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Weaver ID / corp membership')}</label>
+                <Input value={extras.weaverId || ''} onChange={(e) => updateExtras({ weaverId: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Workplace')}</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.premisesType || ''} onChange={(e) => updateExtras({ premisesType: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {NHDP_PREMISES_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Product line')}</label>
+                <Input value={extras.productLine || ''} onChange={(e) => updateExtras({ productLine: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Yarn source')}</label>
+                <Input value={extras.yarnSource || ''} onChange={(e) => updateExtras({ yarnSource: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Weaver name')}</label>
+                <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {schemeCode === 'PMEGP' && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PMEGP — entrepreneur & subsidy inputs')}</h3>
@@ -1540,7 +1848,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
 
         {extraFieldNames.length > 0 &&
-          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP', 'SCLCSS', 'AP_TECH_UPGRADE'].includes(
+          !['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP', 'PMEGP', 'PMEGP_2ND', 'MUDRA', 'STANDUP', 'SCLCSS', 'AP_TECH_UPGRADE', 'ECLGS', 'ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB', 'ASPIRE', 'NHDP'].includes(
             schemeCode || ''
           ) && (
             <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
@@ -2988,8 +3296,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                               ? 'AP EDP capital subsidy (₹ Lakhs) — % of FCI by size'
                               : isVishwakarma
                                 ? 'Toolkit e-voucher (₹ Lakhs) — usually 0.15'
-                                : isSvanidhi
-                                  ? 'Government grant (₹ Lakhs) — usually 0 (interest subsidy ≠ capital)'
+                                : isSvanidhi || isEclgs
+                                  ? 'Government grant (₹ Lakhs) — usually 0 (guarantee ≠ capital)'
                                   : 'Government Grant (₹ Lakhs)'
             )}
             <Input
@@ -3012,7 +3320,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                       ? 'Enterprise development loan tranche (₹ Lakhs)'
                       : isSvanidhi
                         ? 'WC term loan tranche (₹ Lakhs)'
-                        : 'Bank Loan (₹ Lakhs)'
+                        : isEclgs
+                          ? 'ECLGS working-capital term loan (₹ Lakhs)'
+                          : 'Bank Loan (₹ Lakhs)'
             )}
             <Input
               type="number"
@@ -3183,6 +3493,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             · {svanidhiTrancheTenorMonths(extras.loanTranche)} {tf('months')} ·{' '}
             {SVANIDHI_INTEREST_SUBSIDY_PERCENT}% {tf('interest subsidy (quarterly, not capital grant)')}{' '}
             · {extras.covOrLor || '—'} / {extras.loanTranche || '—'}.
+          </p>
+        )}
+        {isEclgs && (
+          <p className="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted/40">
+            {tf(
+              'ECLGS is a guaranteed WCTL — governmentGrant usually 0. Bank loan ≈ additional WC sought. Indicative 20% of peak'
+            )}{' '}
+            ≈ ₹{eclgsIndicativeQuantumLakhs(extras.peakWcOutstanding).toLocaleString('en-IN')}{' '}
+            {tf('L')} · sought {extras.additionalWcSought || '—'} · ROI cap {ECLGS_INTEREST_CAP_PERCENT}%.
           </p>
         )}
         <div className="border-t pt-4">

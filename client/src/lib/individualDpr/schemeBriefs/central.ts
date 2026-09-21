@@ -730,14 +730,20 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     code: 'ECLGS',
     title: L('Emergency Credit Line Guarantee Scheme (ECLGS)', 'అత్యవసర క్రెడిట్ లైన్ గ్యారంటీ (ECLGS)'),
     intro: L(
-      'ECLGS is additional working-capital / liquidity guarantee for existing MSMEs — not a greenfield plant DPR. This app uses a short WC pack.',
-      'ECLGS ఇప్పటికే ఉన్న MSMEలకు అదనపు వర్కింగ్ క్యాపిటల్ గ్యారంటీ — కొత్త ప్లాంట్ DPR కాదు.'
+      'ECLGS 5.0 is additional working-capital / liquidity guarantee for existing MSMEs — not a greenfield plant DPR. Create New Latest DPR builds a 7-step WC pack — see docs/schemes/ECLGS/eclgs.md. Confirm live cut-offs with your bank / NCGTC.',
+      'ECLGS 5.0 ఇప్పటికే ఉన్న MSMEలకు అదనపు వర్కింగ్ క్యాపిటల్ గ్యారంటీ — కొత్త ప్లాంట్ DPR కాదు. Create New Latest DPR 7-దశల WC ప్యాక్ ఇస్తుంది.'
     ),
-    benefits: [L('Guarantee cover on additional WC / liquidity.', 'అదనపు WC / లిక్విడిటీపై గ్యారంటీ.')],
-    eligibility: [
-      L('Existing unit with Udyam; not a brand-new idea-only applicant.', 'ఉద్యమ్ ఉన్న ఇప్పటికే ఉన్న యూనిట్.'),
+    benefits: [
+      L('Additional WC up to ~20% of peak Q4 fund-based outstanding (cap ₹100 Cr); 100% NCGTC guarantee for MSMEs.', 'పీక్ Q4 WCలో ~20% అదనపు WC (₹100 కోట్ల పైపరిధి); MSMEలకు 100% గ్యారంటీ.'),
+      L('Interest typically EBLR+0.75% capped at 9% p.a.; tenor 5 years incl. 1-year moratorium.', 'వడ్డీ సాధారణంగా EBLR+0.75%, 9% పైపరిధి; 5 సంవత్సరాలు (1 సం. మారటోరియం).'),
     ],
-    howToApply: [L('Approach your existing bank with turnover proof and this short pack.', 'టర్నోవర్ రుజువు, ఈ చిన్న ప్యాక్‌తో మీ బ్యాంకును సంప్రదించండి.')],
+    eligibility: [
+      L('Existing unit with standard fund-based WC; Udyam for MSME path.', 'స్టాండర్డ్ ఫండ్-బేస్డ్ WC ఉన్న యూనిట్; MSMEకి ఉద్యమ్.'),
+    ],
+    howToApply: [
+      L('Approach your existing bank with turnover proof and this short pack.', 'టర్నోవర్ రుజువు, ఈ చిన్న ప్యాక్‌తో మీ బ్యాంకును సంప్రదించండి.'),
+      L('Create New Latest DPR with ECLGS selected builds the 7-step WC pack.', 'ECLGS ఎంచుకుంటే Create New Latest DPR 7-దశల ప్యాక్ ఇస్తుంది.'),
+    ],
     documents: [L('Udyam, GST/ITR, bank statements, existing sanction, CA turnover', 'ఉద్యమ్, GST/ITR, బ్యాంకు స్టేట్‌మెంట్లు, ఉన్న సాంక్షన్, CA టర్నోవర్')],
     faqs: [],
     quickInfo: {
@@ -746,18 +752,21 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: '',
+    sourceUrl: 'https://www.ncgtc.in',
   },
   ZED: {
     code: 'ZED',
     title: L('Sustainable ZED Certification', 'ZED సర్టిఫికేషన్'),
     intro: L(
-      'ZED is a quality certification track, not a bank term loan. This app prepares a short certification assistance note — not a 5-year P&L.',
-      'ZED నాణ్యత సర్టిఫికేషన్ — బ్యాంకు టర్మ్ లోన్ కాదు. ఈ యాప్ చిన్న సర్టిఫికేషన్ నోట్ తయారు చేస్తుంది.'
+      'ZED is a quality certification track, not a bank term loan. Create New Latest DPR builds a 5-step certification note — see docs/schemes/ZED/zed.md.',
+      'ZED నాణ్యత సర్టిఫికేషన్ — బ్యాంకు టర్మ్ లోన్ కాదు. Create New Latest DPR 5-దశల నోట్ ఇస్తుంది.'
     ),
     benefits: [L('Assessment and certification pathway (Bronze / Silver / Gold).', 'అసెస్‌మెంట్ మరియు సర్టిఫికేషన్ మార్గం.')],
     eligibility: [L('Registered MSE with Udyam (or willing).', 'ఉద్యమ్ ఉన్న / తీసుకోవాలనుకునే MSE.')],
-    howToApply: [L('Complete the short ZED pack and register on the ZED portal / through DIC.', 'చిన్న ZED ప్యాక్ పూర్తి చేసి ZED పోర్టల్ / DIC ద్వారా నమోదు చేయండి.')],
+    howToApply: [
+      L('Complete the short ZED pack and register on the ZED portal / through DIC.', 'చిన్న ZED ప్యాక్ పూర్తి చేసి ZED పోర్టల్ / DIC ద్వారా నమోదు చేయండి.'),
+      L('See docs/schemes/ZED/zed.md for the 5-step question catalog.', '5-దశల ప్రశ్న కేటలాగ్‌కు docs/schemes/ZED/zed.md చూడండి.'),
+    ],
     documents: [L('Udyam, Aadhaar/PAN', 'ఉద్యమ్, ఆధార్/పాన్')],
     faqs: [],
     quickInfo: {
@@ -772,12 +781,15 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
     code: 'LEAN',
     title: L('Competitive LEAN', 'Competitive LEAN'),
     intro: L(
-      'LEAN is process-improvement consulting for existing units — short pack, not a full bank DPR.',
-      'LEAN ఇప్పటికే ఉన్న యూనిట్ల ప్రాసెస్ మెరుగుదల — చిన్న ప్యాక్, పూర్తి బ్యాంకు DPR కాదు.'
+      'LEAN is process-improvement consulting for existing units — Create New Latest DPR builds a 5-step pack — see docs/schemes/LEAN/lean.md.',
+      'LEAN ఇప్పటికే ఉన్న యూనిట్ల ప్రాసెస్ మెరుగుదల — Create New Latest DPR 5-దశల ప్యాక్ ఇస్తుంది.'
     ),
     benefits: [L('Consultant-led shop-floor improvement.', 'కన్సల్టెంట్ నేతృత్వంలో షాప్-ఫ్లోర్ మెరుగుదల.')],
     eligibility: [L('Brownfield manufacturing or food unit with Udyam.', 'ఉద్యమ్ ఉన్న బ్రౌన్‌ఫీల్డ్ తయారీ / ఆహార యూనిట్.')],
-    howToApply: [L('Prepare the short LEAN pack and approach the implementing agency / DIC.', 'చిన్న LEAN ప్యాక్‌తో అమలు సంస్థ / DICని సంప్రదించండి.')],
+    howToApply: [
+      L('Prepare the short LEAN pack and approach the implementing agency / DIC.', 'చిన్న LEAN ప్యాక్‌తో అమలు సంస్థ / DICని సంప్రదించండి.'),
+      L('See docs/schemes/LEAN/lean.md.', 'docs/schemes/LEAN/lean.md చూడండి.'),
+    ],
     documents: [L('Udyam', 'ఉద్యమ్')],
     faqs: [],
     quickInfo: {
@@ -786,15 +798,21 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: '',
+    sourceUrl: 'https://www.msme.gov.in',
   },
   MSME_IPR: {
     code: 'MSME_IPR',
     title: L('MSME Innovative — IPR / Design / Incubation', 'MSME Innovative — IPR / డిజైన్'),
-    intro: L('Short IP filing pack — not a plant-and-machinery term-loan DPR.', 'చిన్న IP ఫైలింగ్ ప్యాక్ — ప్లాంట్ టర్మ్ లోన్ DPR కాదు.'),
+    intro: L(
+      'Short IP filing pack — not a plant-and-machinery term-loan DPR. Create New Latest DPR builds 5 steps — see docs/schemes/MSME_IPR/msmeIpr.md.',
+      'చిన్న IP ఫైలింగ్ ప్యాక్ — ప్లాంట్ టర్మ్ లోన్ DPR కాదు. Create New Latest DPR 5 దశలు ఇస్తుంది.'
+    ),
     benefits: [L('Support toward patent / design / trademark / GI filings.', 'పేటెంట్ / డిజైన్ / ట్రేడ్‌మార్క్ / GI ఫైలింగ్ సహాయం.')],
     eligibility: [L('Knowledge, manufacturing, or food unit with Udyam.', 'నాలెడ్జ్ / తయారీ / ఆహార యూనిట్ + ఉద్యమ్.')],
-    howToApply: [L('Complete the short IP pack and apply via the MSME Innovative portal / DIC.', 'చిన్న IP ప్యాక్‌తో MSME Innovative పోర్టల్ / DIC ద్వారా దరఖాస్తు చేయండి.')],
+    howToApply: [
+      L('Complete the short IP pack and apply via the MSME Innovative portal / DIC.', 'చిన్న IP ప్యాక్‌తో MSME Innovative పోర్టల్ / DIC ద్వారా దరఖాస్తు చేయండి.'),
+      L('See docs/schemes/MSME_IPR/msmeIpr.md.', 'docs/schemes/MSME_IPR/msmeIpr.md చూడండి.'),
+    ],
     documents: [L('Udyam, draft specification or TM search', 'ఉద్యమ్, డ్రాఫ్ట్ స్పెసిఫికేషన్ / TM సెర్చ్')],
     faqs: [],
     quickInfo: {
@@ -803,18 +821,21 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: '',
+    sourceUrl: 'https://www.msme.gov.in',
   },
   PMS: {
     code: 'PMS',
     title: L('Procurement and Marketing Scheme (PMS)', 'ప్రొక్యూర్‌మెంట్ అండ్ మార్కెటింగ్ స్కీమ్ (PMS)'),
     intro: L(
-      'Marketing / trade-fair annex — not a plant DPR. Use a second CTA if you also need a term loan.',
-      'మార్కెటింగ్ / ట్రేడ్ ఫెయిర్ అనెక్స్ — ప్లాంట్ DPR కాదు.'
+      'Marketing / trade-fair annex — not a plant DPR. Create New Latest DPR builds a 5-step fair pack — see docs/schemes/PMS/pms.md.',
+      'మార్కెటింగ్ / ట్రేడ్ ఫెయిర్ అనెక్స్ — ప్లాంట్ DPR కాదు. Create New Latest DPR 5-దశల ప్యాక్ ఇస్తుంది.'
     ),
     benefits: [L('Support toward fair participation / stall costs as per live guidelines.', 'ఫెయిర్ / స్టాల్ ఖర్చు సహాయం (ప్రస్తుత మార్గదర్శకాల ప్రకారం).')],
     eligibility: [L('Udyam-registered unit seeking marketing fair support.', 'మార్కెటింగ్ ఫెయిర్ సహాయం కోరే ఉద్యమ్ యూనిట్.')],
-    howToApply: [L('Fill the short fair annex and apply through the implementing agency.', 'చిన్న ఫెయిర్ అనెక్స్‌తో అమలు సంస్థ ద్వారా దరఖాస్తు చేయండి.')],
+    howToApply: [
+      L('Fill the short fair annex and apply through the implementing agency.', 'చిన్న ఫెయిర్ అనెక్స్‌తో అమలు సంస్థ ద్వారా దరఖాస్తు చేయండి.'),
+      L('See docs/schemes/PMS/pms.md.', 'docs/schemes/PMS/pms.md చూడండి.'),
+    ],
     documents: [L('Udyam', 'ఉద్యమ్')],
     faqs: [],
     quickInfo: {
@@ -823,7 +844,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: '',
+    sourceUrl: 'https://www.msme.gov.in',
   },
   MSE_GIFT: {
     code: 'MSE_GIFT',
@@ -865,10 +886,16 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
   NHDP: {
     code: 'NHDP',
     title: L('National Handloom Development Programme', 'జాతీయ చేనేత అభివృద్ధి కార్యక్రమం'),
-    intro: L('Weaver / handloom overlay. May drop heavy P&L steps like Vishwakarma.', 'నేతగాడు / చేనేత ఓవర్‌లే. Vishwakarmaలా భారీ P&L దశలు తగ్గవచ్చు.'),
+    intro: L(
+      'Weaver / handloom overlay. Create New Latest DPR builds a 10-step weaver pack — see docs/schemes/NHDP/nhdp.md.',
+      'నేతగాడు / చేనేత ఓవర్‌లే. Create New Latest DPR 10-దశల ప్యాక్ ఇస్తుంది.'
+    ),
     benefits: [L('Handloom development support as per live ministry guidelines.', 'ప్రస్తుత మంత్రిత్వ మార్గదర్శకాల ప్రకారం చేనేత సహాయం.')],
     eligibility: [L('Handloom sector + craft activity.', 'చేనేత రంగం + క్రాఫ్ట్.')],
-    howToApply: [L('Complete the weaver overlay and apply through the handloom agency.', 'నేతగాడు ఓవర్‌లేతో చేనేత సంస్థ ద్వారా దరఖాస్తు చేయండి.')],
+    howToApply: [
+      L('Complete the weaver overlay and apply through the handloom agency.', 'నేతగాడు ఓవర్‌లేతో చేనేత సంస్థ ద్వారా దరఖాస్తు చేయండి.'),
+      L('See docs/schemes/NHDP/nhdp.md.', 'docs/schemes/NHDP/nhdp.md చూడండి.'),
+    ],
     documents: [L('Weaver ID, Aadhaar, passbook', 'నేతగాడి ID, ఆధార్, పాస్‌బుక్')],
     faqs: [],
     quickInfo: {
@@ -877,7 +904,7 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: '',
+    sourceUrl: 'https://handlooms.nic.in',
   },
   PTUAS: {
     code: 'PTUAS',
@@ -919,10 +946,16 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
   ASPIRE: {
     code: 'ASPIRE',
     title: L('ASPIRE', 'ASPIRE'),
-    intro: L('Rural innovation / livelihood incubator track — shorter financials.', 'గ్రామీణ ఇన్నోవేషన్ / జీవనోపాధి — చిన్న ఆర్థికాలు.'),
+    intro: L(
+      'Rural innovation / livelihood incubator track. Create New Latest DPR builds a 10-step pack — see docs/schemes/ASPIRE/aspire.md.',
+      'గ్రామీణ ఇన్నోవేషన్ / జీవనోపాధి. Create New Latest DPR 10-దశల ప్యాక్ ఇస్తుంది.'
+    ),
     benefits: [L('Incubation / livelihood support as per live guidelines.', 'ఇన్క్యుబేషన్ / జీవనోపాధి సహాయం.')],
     eligibility: [L('Idea or greenfield; not above ₹10 Cr factory scale.', 'ఆలోచన లేదా గ్రీన్‌ఫీల్డ్; ₹10 కోట్ల పైన కాదు.')],
-    howToApply: [L('Prepare the shorter livelihood DPR and approach the Aspire agency / DIC.', 'చిన్న జీవనోపాధి DPRతో Aspire సంస్థ / DICని సంప్రదించండి.')],
+    howToApply: [
+      L('Prepare the shorter livelihood DPR and approach the Aspire agency / DIC.', 'చిన్న జీవనోపాధి DPRతో Aspire సంస్థ / DICని సంప్రదించండి.'),
+      L('See docs/schemes/ASPIRE/aspire.md.', 'docs/schemes/ASPIRE/aspire.md చూడండి.'),
+    ],
     documents: [L('Rural address proof, concept note', 'గ్రామీణ చిరునామా రుజువు, కాన్సెప్ట్ నోట్')],
     faqs: [],
     quickInfo: {
@@ -931,15 +964,21 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: '',
+    sourceUrl: 'https://www.msme.gov.in',
   },
   SCST_HUB: {
     code: 'SCST_HUB',
     title: L('National SC/ST Hub', 'జాతీయ SC/ST హబ్'),
-    intro: L('Procurement-readiness pack for SC/ST MSEs — not a term loan by itself.', 'SC/ST MSEల సేకరణ సిద్ధత ప్యాక్ — టర్మ్ లోన్ కాదు.'),
+    intro: L(
+      'Procurement-readiness pack for SC/ST MSEs — not a term loan by itself. Create New Latest DPR builds 5 steps — see docs/schemes/SCST_HUB/scstHub.md.',
+      'SC/ST MSEల సేకరణ సిద్ధత ప్యాక్ — టర్మ్ లోన్ కాదు. Create New Latest DPR 5 దశలు ఇస్తుంది.'
+    ),
     benefits: [L('Market access / procurement facilitation for SC/ST enterprises.', 'SC/ST సంస్థలకు సేకరణ / మార్కెట్ యాక్సెస్.')],
     eligibility: [L('SC/ST ownership + procurement interest + Udyam.', 'SC/ST యాజమాన్యం + సేకరణ ఆసక్తి + ఉద్యమ్.')],
-    howToApply: [L('Complete the short procurement pack and register with the Hub / DIC.', 'చిన్న సేకరణ ప్యాక్‌తో హబ్ / DICలో నమోదు చేయండి.')],
+    howToApply: [
+      L('Complete the short procurement pack and register with the Hub / DIC.', 'చిన్న సేకరణ ప్యాక్‌తో హబ్ / DICలో నమోదు చేయండి.'),
+      L('See docs/schemes/SCST_HUB/scstHub.md.', 'docs/schemes/SCST_HUB/scstHub.md చూడండి.'),
+    ],
     documents: [L('Caste certificate, Udyam, cancelled cheque', 'జాతి సర్టిఫికేట్, ఉద్యమ్, క్యాన్సిల్డ్ చెక్')],
     faqs: [],
     quickInfo: {
@@ -948,6 +987,6 @@ export const CENTRAL_BRIEFS: Record<string, SchemeBrief> = {
       type: CENTRAL,
       status: ACTIVE,
     },
-    sourceUrl: '',
+    sourceUrl: 'https://www.scsthub.in',
   },
 };

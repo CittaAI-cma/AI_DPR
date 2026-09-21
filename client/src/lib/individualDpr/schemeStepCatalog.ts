@@ -249,37 +249,113 @@ export const SVANIDHI_STEPS: SchemeStepDef[] = catalog([
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
-/** Full bank DPR minus viability / schedule / impact (15 consecutive steps). */
-const FULL_MINUS_LATE: SchemeStepDef[] = catalog(
-  VANILLA_STEPS.filter((s) => ![15, 16, 17].includes(s.contentStep)).map((s) => ({
-    id: s.id,
-    title: s.title,
-    contentStep: s.contentStep,
-  }))
-);
-/** Identity + profile + market + applicant + uploads (cert / consulting overlays). */
-const SHORT_CERT_STEPS: SchemeStepDef[] = catalog([
-  { id: 'cover', title: 'Step 1: Unit basics', contentStep: 1 },
-  { id: 'unit', title: 'Step 2: Unit profile', contentStep: 4 },
-  { id: 'market', title: 'Step 3: Market / need', contentStep: 6 },
-  { id: 'applicant', title: 'Step 4: Applicant / firm', contentStep: 11 },
-  { id: 'uploads', title: 'Step 5: Documents & uploads', contentStep: 18 },
+/**
+ * ECLGS 5.0 — 7 consecutive steps (additional WC liquidity).
+ * Spec: docs/schemes/ECLGS/eclgs.md
+ */
+export const ECLGS_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & existing facility', contentStep: 1 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Additional WC need', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
-/** Working-capital focused (ECLGS). */
-const SHORT_WC_STEPS: SchemeStepDef[] = catalog([
-  { id: 'cover', title: 'Step 1: Unit basics', contentStep: 1 },
-  { id: 'unit', title: 'Step 2: Unit profile', contentStep: 4 },
-  { id: 'applicant', title: 'Step 3: Applicant / firm', contentStep: 11 },
-  { id: 'cost', title: 'Step 4: Project / WC cost', contentStep: 12 },
-  { id: 'finance', title: 'Step 5: Means of finance', contentStep: 13 },
-  { id: 'operating', title: 'Step 6: Operating cost & sales', contentStep: 14 },
-  { id: 'uploads', title: 'Step 7: Documents & uploads', contentStep: 18 },
+/**
+ * MSME Sustainable ZED — 5 consecutive steps (certification note).
+ * Spec: docs/schemes/ZED/zed.md
+ */
+export const ZED_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & ZED levels', contentStep: 1 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Quality / market need', contentStep: 6 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
-const SHORT_CERT_CODES = new Set(['ZED', 'LEAN', 'MSME_IPR', 'PMS', 'SCST_HUB']);
-const SHORT_WC_CODES = new Set(['ECLGS']);
-const FULL_MINUS_LATE_CODES = new Set(['NHDP', 'ASPIRE']);
+/**
+ * Competitive LEAN — 5 consecutive steps (process consulting note).
+ * Spec: docs/schemes/LEAN/lean.md
+ */
+export const LEAN_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & bottleneck', contentStep: 1 },
+  { id: 'unit', title: 'Unit / shop-floor profile', contentStep: 4 },
+  { id: 'market', title: 'Process / market need', contentStep: 6 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+/**
+ * MSME Innovative IPR — 5 consecutive steps (IP filing note).
+ * Spec: docs/schemes/MSME_IPR/msmeIpr.md
+ */
+export const MSME_IPR_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & IP type', contentStep: 1 },
+  { id: 'unit', title: 'Unit / invention profile', contentStep: 4 },
+  { id: 'market', title: 'IP / market need', contentStep: 6 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+/**
+ * PMS — 5 consecutive steps (trade-fair / marketing annex).
+ * Spec: docs/schemes/PMS/pms.md
+ */
+export const PMS_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & fair details', contentStep: 1 },
+  { id: 'unit', title: 'Unit / product profile', contentStep: 4 },
+  { id: 'market', title: 'Market / fair offtake', contentStep: 6 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+/**
+ * National SC/ST Hub — 5 consecutive steps (procurement readiness).
+ * Spec: docs/schemes/SCST_HUB/scstHub.md
+ */
+export const SCST_HUB_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & GeM readiness', contentStep: 1 },
+  { id: 'unit', title: 'Unit profile', contentStep: 4 },
+  { id: 'market', title: 'Procurement focus', contentStep: 6 },
+  { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+/**
+ * ASPIRE — 10 consecutive steps (rural innovation / livelihood).
+ * Spec: docs/schemes/ASPIRE/aspire.md
+ */
+export const ASPIRE_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & incubator', contentStep: 1 },
+  { id: 'intro', title: 'Innovation / livelihood story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Unit / livelihood profile', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Premises', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant', contentStep: 11 },
+  { id: 'cost', title: 'Light project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
+
+/**
+ * NHDP — 10 consecutive steps (weaver / handloom).
+ * Spec: docs/schemes/NHDP/nhdp.md
+ */
+export const NHDP_STEPS: SchemeStepDef[] = catalog([
+  { id: 'cover', title: 'Cover & loom eligibility', contentStep: 1 },
+  { id: 'intro', title: 'Handloom / process story', contentStep: 2 },
+  { id: 'location', title: 'Location', contentStep: 3 },
+  { id: 'unit', title: 'Weaver profile', contentStep: 4 },
+  { id: 'market', title: 'Market & offtake', contentStep: 6 },
+  { id: 'shed', title: 'Workplace / loom shed', contentStep: 10 },
+  { id: 'applicant', title: 'Applicant', contentStep: 11 },
+  { id: 'cost', title: 'Tools / WC cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
+]);
 
 /** Scheme code → catalog. Missing codes fall back to vanilla. */
 export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
@@ -293,9 +369,14 @@ export const SCHEME_STEP_CATALOGS: Record<string, SchemeStepDef[]> = {
   AP_EDP: AP_EDP_STEPS,
   VISHWAKARMA: VISHWAKARMA_STEPS,
   SVANIDHI: SVANIDHI_STEPS,
-  ...Object.fromEntries([...SHORT_CERT_CODES].map((c) => [c, SHORT_CERT_STEPS])),
-  ...Object.fromEntries([...SHORT_WC_CODES].map((c) => [c, SHORT_WC_STEPS])),
-  ...Object.fromEntries([...FULL_MINUS_LATE_CODES].map((c) => [c, FULL_MINUS_LATE])),
+  ECLGS: ECLGS_STEPS,
+  ZED: ZED_STEPS,
+  LEAN: LEAN_STEPS,
+  MSME_IPR: MSME_IPR_STEPS,
+  PMS: PMS_STEPS,
+  SCST_HUB: SCST_HUB_STEPS,
+  ASPIRE: ASPIRE_STEPS,
+  NHDP: NHDP_STEPS,
 };
 
 export function getSchemeSteps(schemeCode?: string | null): SchemeStepDef[] {

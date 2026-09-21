@@ -20,6 +20,14 @@ import {
   SVANIDHI_EXTRA_FIELDS,
   SVANIDHI_IMPACT_BULLETS,
 } from '@/lib/individualDpr/svanidhiQuestions';
+import { ECLGS_EXTRA_FIELDS, ECLGS_IMPACT_BULLETS } from '@/lib/individualDpr/eclgsQuestions';
+import { ZED_EXTRA_FIELDS, ZED_IMPACT_BULLETS } from '@/lib/individualDpr/zedQuestions';
+import { LEAN_EXTRA_FIELDS, LEAN_IMPACT_BULLETS } from '@/lib/individualDpr/leanQuestions';
+import { MSME_IPR_EXTRA_FIELDS, MSME_IPR_IMPACT_BULLETS } from '@/lib/individualDpr/msmeIprQuestions';
+import { PMS_EXTRA_FIELDS, PMS_IMPACT_BULLETS } from '@/lib/individualDpr/pmsQuestions';
+import { SCST_HUB_EXTRA_FIELDS, SCST_HUB_IMPACT_BULLETS } from '@/lib/individualDpr/scstHubQuestions';
+import { ASPIRE_EXTRA_FIELDS, ASPIRE_IMPACT_BULLETS } from '@/lib/individualDpr/aspireQuestions';
+import { NHDP_EXTRA_FIELDS, NHDP_IMPACT_BULLETS } from '@/lib/individualDpr/nhdpQuestions';
 import {
   getSchemeSteps,
   getStepDef,
@@ -48,17 +56,17 @@ export const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   SCLCSS: [...SCLCSS_EXTRA_FIELDS],
   AP_TECH_UPGRADE: [...AP_TECH_EXTRA_FIELDS],
   MSE_GIFT: ['energyBaselineKwh', 'expectedSaving'],
-  ZED: ['zedCurrentLevel', 'zedTargetLevel'],
-  LEAN: ['processBottleneck'],
-  MSME_IPR: ['ipType', 'filingStage'],
-  PMS: ['eventName', 'stallSize'],
+  ZED: [...ZED_EXTRA_FIELDS],
+  LEAN: [...LEAN_EXTRA_FIELDS],
+  MSME_IPR: [...MSME_IPR_EXTRA_FIELDS],
+  PMS: [...PMS_EXTRA_FIELDS],
   CVY: ['coirProductLine', 'coirBoardStatus'],
-  NHDP: ['loomType', 'weaverId'],
+  NHDP: [...NHDP_EXTRA_FIELDS],
   PTUAS: ['gmpStatus', 'productLicence'],
   PMPDS: ['deviceOrFormulation'],
-  SCST_HUB: ['gemExperience'],
-  ASPIRE: ['incubatorName'],
-  ECLGS: ['existingLimit', 'additionalWcSought'],
+  SCST_HUB: [...SCST_HUB_EXTRA_FIELDS],
+  ASPIRE: [...ASPIRE_EXTRA_FIELDS],
+  ECLGS: [...ECLGS_EXTRA_FIELDS],
 };
 
 export function extraFieldsForScheme(schemeCode: string | null | undefined): string[] {
@@ -94,7 +102,17 @@ export function isMudraTarunPlus(code: string | null, budget?: Budget): boolean 
 
 export function hideComplexCapex(code: string | null, budget?: Budget): boolean {
   return (
-    code === 'VISHWAKARMA' || code === 'SVANIDHI' || isMudraShishuKishore(code, budget)
+    code === 'VISHWAKARMA' ||
+    code === 'SVANIDHI' ||
+    code === 'ECLGS' ||
+    code === 'NHDP' ||
+    code === 'ASPIRE' ||
+    code === 'ZED' ||
+    code === 'LEAN' ||
+    code === 'MSME_IPR' ||
+    code === 'PMS' ||
+    code === 'SCST_HUB' ||
+    isMudraShishuKishore(code, budget)
   );
 }
 
@@ -353,6 +371,14 @@ export function getStep18Uploads(
       { id: 'cancelledCheque', label: 'Cancelled Cheque' },
     ];
   }
+  if (code === 'ASPIRE') {
+    return [
+      { id: 'ruralAddressProof', label: 'Rural / Village Address Proof' },
+      { id: 'conceptNote', label: 'Concept / Innovation Note' },
+      { id: 'udyamCertificate', label: 'Udyam Certificate (or application)' },
+      { id: 'aadhaarPan', label: 'Aadhaar / PAN' },
+    ];
+  }
   return DEFAULT_UPLOADS;
 }
 
@@ -405,25 +431,31 @@ export function getSchemeImpact(code: string | null): {
   }
   if (code === 'ECLGS') {
     return {
-      title: 'ECLGS',
-      bullets: [
-        'Own 7-step working-capital pack (numbered 1–7).',
-        'Not a greenfield capex / Gantt DPR.',
-        'Final step: Udyam, GST/ITR, bank statements, existing sanction.',
-      ],
+      title: 'ECLGS 5.0',
+      bullets: [...ECLGS_IMPACT_BULLETS],
       firstChangedStep: 1,
     };
   }
-  if (code === 'ZED' || code === 'LEAN' || code === 'MSME_IPR' || code === 'PMS') {
-    return {
-      title: code,
-      bullets: [
-        'Own 5-step short pack (numbered 1–5) — not an 18-step bank P&L.',
-        'Unit identity, profile, market, applicant, uploads only.',
-        'Use this pack for certification / consulting / fair support.',
-      ],
-      firstChangedStep: 1,
-    };
+  if (code === 'ZED') {
+    return { title: 'MSME Sustainable ZED', bullets: [...ZED_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'LEAN') {
+    return { title: 'Competitive LEAN', bullets: [...LEAN_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'MSME_IPR') {
+    return { title: 'MSME Innovative — IPR', bullets: [...MSME_IPR_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'PMS') {
+    return { title: 'PMS (marketing / fair)', bullets: [...PMS_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'SCST_HUB') {
+    return { title: 'National SC/ST Hub', bullets: [...SCST_HUB_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'ASPIRE') {
+    return { title: 'ASPIRE', bullets: [...ASPIRE_IMPACT_BULLETS], firstChangedStep: 1 };
+  }
+  if (code === 'NHDP') {
+    return { title: 'NHDP (handloom)', bullets: [...NHDP_IMPACT_BULLETS], firstChangedStep: 1 };
   }
   if (code === 'MUDRA') {
     return {
