@@ -4461,6 +4461,74 @@ export class DPRService {
         const s1 = clusterData.step1 || {};
         const s11 = clusterData.step11 || {};
         const clusterName = s1.clusterName || project.projectName || 'CLUSTER NAME';
+        const isIndividualDPR = !!(
+          clusterData.isIndividualDPR ||
+          clusterData.metadata?.isIndividualDPR ||
+          dpr.metadata?.isIndividualDPR ||
+          project.projectType === 'individual'
+        );
+        const matchedSchemeCode =
+          clusterData.matchedSchemeCode ||
+          clusterData.metadata?.matchedSchemeCode ||
+          dpr.metadata?.matchedSchemeCode ||
+          null;
+
+        const UPGRADE_SCHEMES = new Set([
+          'PMEGP_2ND', 'SCLCSS', 'AP_TECH_UPGRADE', 'MSE_GIFT', 'PTUAS', 'MSE_SPICE',
+        ]);
+        let coverAction = 'Establishment of Common Facility Centre for';
+        let coverUnder = "under 'Micro Cluster Development Programme'";
+        let coverNameFallback = 'CLUSTER NAME';
+        if (isIndividualDPR) {
+          coverNameFallback = 'UNIT NAME';
+          if (matchedSchemeCode && UPGRADE_SCHEMES.has(matchedSchemeCode)) {
+            coverAction = 'Upgradation of';
+          } else if (matchedSchemeCode === 'ECLGS') {
+            coverAction = 'Working Capital Proposal for';
+          } else if (['ZED', 'LEAN', 'MSME_IPR'].includes(matchedSchemeCode || '')) {
+            coverAction = 'Proposal for';
+          } else if (matchedSchemeCode === 'PMS') {
+            coverAction = 'Marketing Support Proposal for';
+          } else {
+            coverAction = 'Establishment of';
+          }
+          const SCHEME_LABELS: Record<string, string> = {
+            PMEGP: 'PMEGP',
+            PMEGP_2ND: '2nd PMEGP Upgrade Loan',
+            MUDRA: 'PM MUDRA Yojana',
+            STANDUP: 'Stand-Up India',
+            CGTMSE: 'CGTMSE',
+            VISHWAKARMA: 'PM Vishwakarma',
+            PMFME: 'PMFME',
+            SVANIDHI: 'PM SVANidhi',
+            SCLCSS: 'SCLCSS (SC/ST)',
+            AP_TECH_UPGRADE: 'AP Technology Upgradation Subsidy',
+            AP_EDP: 'AP MSME-EDP 4.0',
+            AP_CMEP: 'AP CMEP',
+            AP_FPP: 'AP Food Processing Policy 4.0',
+            ECLGS: 'ECLGS',
+            ZED: 'ZED Certification',
+            LEAN: 'Competitive LEAN',
+            MSME_IPR: 'MSME Innovative (IPR)',
+            PMS: 'Procurement & Marketing Scheme',
+            MSE_GIFT: 'MSE-GIFT',
+            CVY: 'Coir Vikas Yojana',
+            NHDP: 'National Handloom Development Programme',
+            PTUAS: 'PTUAS',
+            PMPDS: 'PMPDS',
+            MSE_SPICE: 'RAMP MSE-SPICE',
+            RAMP_TEAM: 'RAMP TEAM (ONDC)',
+            EPM_NIRYAT: 'EPM Niryat Protsahan',
+            ASPIRE: 'ASPIRE',
+            SCST_HUB: 'National SC/ST Hub',
+            OBMMS: 'AP OBMMS Welfare Loans',
+            AP_PARKS: 'AP MSME-PARKS',
+          };
+          const schemeLabel = matchedSchemeCode
+            ? (SCHEME_LABELS[matchedSchemeCode] || matchedSchemeCode)
+            : 'Bank Term Loan';
+          coverUnder = `under '${schemeLabel}'`;
+        }
         
         // Draw grey box background with diagonal stripes pattern
         const boxX = 50;
@@ -4485,20 +4553,20 @@ export class DPRService {
           align: 'center'
         });
         
-        doc.fontSize(18).font('Helvetica').text('Establishment of Common Facility Centre for', boxX + 25, boxY + 95, {
+        doc.fontSize(18).font('Helvetica').text(coverAction, boxX + 25, boxY + 95, {
           width: boxWidth - 50,
           align: 'center'
         });
         
-        // Cluster name in green
+        // Unit / cluster name in green
         doc.fillColor('#059669'); // Green
-        doc.fontSize(24).font('Helvetica-Bold').text(clusterName.toUpperCase(), boxX + 25, boxY + 130, {
+        doc.fontSize(24).font('Helvetica-Bold').text((clusterName || coverNameFallback).toUpperCase(), boxX + 25, boxY + 130, {
           width: boxWidth - 50,
           align: 'center'
         });
         
         doc.fillColor('#1F2937'); // Back to dark grey
-        doc.fontSize(16).font('Helvetica').text("under 'Micro Cluster Development Programme'", boxX + 25, boxY + 165, {
+        doc.fontSize(16).font('Helvetica').text(coverUnder, boxX + 25, boxY + 165, {
           width: boxWidth - 50,
           align: 'center'
         });

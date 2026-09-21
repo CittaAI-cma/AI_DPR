@@ -36,8 +36,8 @@ On Individual DPR open with `?new=true`:
 
 1. Page **peeks** the handoff (`peekHandoff`) — does not delete it.
 2. Sets `matchedSchemeCode` from `?scheme=` if present.
-3. Stores `ventureMatchAnswers` from handoff.
-4. Prefills step fields via `prefillFromVentureMatch(answers)`.
+3. Stores `ventureMatchAnswers` from handoff (overlay rules only).  
+4. Does **not** prefill Create New Latest DPR form fields from Scheme Finder answers.
 
 So Scheme Finder is the **eligibility + scheme choice front door**; Create New DPR is the **18-step bank-ready report** that consumes that choice.
 

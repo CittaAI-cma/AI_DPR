@@ -28,7 +28,7 @@ Users can:
 |------|-----------|--------|
 | Entry from Scheme Finder | VM → DPR | `saveHandoff` then navigate to `/individual-dpr/create?new=true` or `...?scheme=<CODE>` |
 | Handoff key | shared | `localStorage` `venture-match-handoff` |
-| On `?new=true` load | DPR reads VM | `peekHandoff()` → `setVentureMatchAnswers`, optional `setMatchedSchemeCode` from query, `prefillFromVentureMatch(answers)` |
+| On `?new=true` load | DPR reads VM | `peekHandoff()` → `setVentureMatchAnswers` (for overlay rules only), optional `setMatchedSchemeCode` from query. **No form-field prefill.** |
 | Scheme list | shared catalog | Dropdown / picker = `SCHEMES` filtered by `isIndividualPickerScheme` (+ empty vanilla option) |
 | Runtime use of VM answers | DPR reads VM | Step 18 uploads / PMEGP caste cert / MUDRA Tarun Plus / MUDRA Shishu–Kishore / PMEGP education gate use `data.ventureMatchAnswers` |
 | Form impact copy | DPR only | `getSchemeImpact(code)` explains how the **form** changes — not eligibility matching |
@@ -47,9 +47,9 @@ Changing the scheme dropdown mid-flow updates `matchedSchemeCode`, visible steps
 `/individual-dpr/create?new=true` (± `&scheme=CODE`)
 
 1. `resetData()`, clear project/DPR ids.  
-2. Peek Venture Match handoff if present.  
+2. Peek Venture Match handoff if present (store answers for overlay rules only — uploads, MUDRA bands, education gate).  
 3. Set scheme from query string (may be null).  
-4. Prefill steps from handoff answers if any.  
+4. **Do not** prefill any form step fields from Scheme Finder.  
 5. Force `currentStep = 1`, clear loading.
 6. **Setup phases (UI):**
    - No `scheme` in URL → **pick** (scheme cards grid).  
@@ -197,16 +197,11 @@ On form steps after step 1, a compact amber **scheme impact** strip still shows 
 
 ## 7. Prefill from Scheme Finder
 
-`prefillFromVentureMatch(answers)` maps VM answers into individual steps, for example:
+**Disabled.** Create New Latest DPR leaves all step fields blank on `?new=true`.
 
-- Activity → sector / nature of business / present activities  
-- Stage → sector description / technology level  
-- Domicile / location → district geography, connectivity, workplace  
-- Legal → step 11 legal status  
-- Udyam → step 11 submittedTo text  
-- Budget mid-band (lakhs) → rough split on step 12 (50% machinery / 30% building / 20% WC) and step 13 (25% own / 75% bank)
-
-Empty / notSure activity does not invent a sector.
+- Scheme Finder may still set `matchedSchemeCode` via `?scheme=` and store `ventureMatchAnswers` for **overlay rules only** (e.g. step-18 caste cert, MUDRA Shishu/Kishore hide-capex, PMEGP education gate).
+- `prefillFromVentureMatch` is a no-op and must not write nature of business, district, costs, or other form values.
+- AI Guided Builder (`/dpr/builder`) may still use its own handoff prefill — that path is separate.
 
 ---
 
@@ -251,7 +246,7 @@ Form: `IndividualDPRForm.tsx`
 | `client/src/components/individual-dpr/SchemeBriefPanel.tsx` | Scheme brochure UI |
 | `client/src/lib/individualDpr/schemeFormConfig.ts` | Overlay rules, uploads, impact copy |
 | `client/src/lib/individualDpr/schemeBriefs/*` | Brochure content EN/TE |
-| `client/src/lib/individualDpr/prefillFromVentureMatch.ts` | VM → step prefill |
+| `client/src/lib/individualDpr/prefillFromVentureMatch.ts` | No-op (form prefill disabled) |
 | `client/src/lib/individualDpr/toClusterPayload.ts` | Adapter to cluster APIs |
 | `client/src/lib/individualDpr/previewFieldHits.ts` | Live preview field-diff + scroll helpers |
 | `client/src/lib/ventureMatch/schemes.ts` | Scheme codes listed in dropdown |

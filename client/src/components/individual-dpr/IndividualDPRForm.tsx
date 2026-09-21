@@ -3,7 +3,7 @@ import React from 'react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Plus, Trash2, Loader2, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
@@ -20,10 +20,10 @@ import {
   isMudraShishuKishore,
 } from '@/lib/individualDpr/schemeFormConfig';
 import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
+import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
-
 interface IndividualDPRFormProps {
   currentStep: number;
   onNext: () => void;
@@ -230,11 +230,42 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 <InfoTooltip content={tf(stepDescriptions.clusterName)} />
               )}
             </label>
-            <Input
-              value={stepData.clusterName || ''}
-              onChange={(e) => handleInputChange('clusterName', e.target.value)}
-              placeholder={tf("Enter unit or project name")}
-            />
+            <div className="flex gap-2">
+              <Input
+                className="flex-1"
+                value={stepData.clusterName || ''}
+                onChange={(e) => handleInputChange('clusterName', e.target.value)}
+                placeholder={tf('Enter unit or project name')}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-1.5 shrink-0"
+                onClick={() => {
+                  const nature = String(stepData.natureOfBusiness || '').trim();
+                  const products = String(stepData.majorProducts || '').trim();
+                  if (!nature || !products) {
+                    toast.error(
+                      tf(
+                        'Fill Nature of Business and Major Products first, then suggest a title'
+                      )
+                    );
+                    return;
+                  }
+                  const suggested = suggestUnitTitle(stepData, data.schemeExtras);
+                  handleInputChange('clusterName', suggested);
+                  toast.success(tf('Title suggested'));
+                }}
+              >
+                <Wand2 className="h-4 w-4" />
+                {tf('Suggest title')}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              {tf(
+                'This name appears in green on the DPR cover. Suggest title needs Nature of Business and Major Products.'
+              )}
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">

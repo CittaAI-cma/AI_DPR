@@ -14,6 +14,7 @@ import {
 import { EditableFinancialTable } from './EditableFinancialTable';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { fieldHitNode } from '@/lib/individualDpr/previewFieldHits';
+import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
 
 interface ClusterDPRDocumentViewProps {
   dpr: any;
@@ -23,6 +24,8 @@ interface ClusterDPRDocumentViewProps {
   onDataChange?: (field: string, value: any) => void; // Callback to update store when financial data changes
   /** When true, wrap displayed field values with data-dpr-field for live-preview scroll hits */
   trackFieldHits?: boolean;
+  /** Force individual cover / wording even if metadata is missing */
+  isIndividualDPR?: boolean;
 }
 
 export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
@@ -32,6 +35,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
   onSectionClick,
   onDataChange,
   trackFieldHits = false,
+  isIndividualDPR: isIndividualProp = false,
 }) => {
   // Get store functions to update data
   const { data: storeData, setStepData } = useClusterDPRStore();
@@ -48,6 +52,19 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
     project?.stepData ||
     storeData || // Also check store
     {};
+
+  const isIndividualDPR =
+    isIndividualProp ||
+    !!dpr?.metadata?.isIndividualDPR ||
+    !!clusterData?.isIndividualDPR ||
+    !!clusterData?.metadata?.isIndividualDPR ||
+    project?.projectType === 'individual';
+
+  const matchedSchemeCode =
+    clusterData?.matchedSchemeCode ||
+    clusterData?.metadata?.matchedSchemeCode ||
+    dpr?.metadata?.matchedSchemeCode ||
+    null;
 
   // Use contentRefreshKey to force re-read of content when it changes
   const content = (dpr.content?.[viewLanguage] || dpr.content?.english || {});
@@ -1741,15 +1758,41 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
               <h2 className="text-2xl font-semibold text-center " style={{ color: '#1F2937' }}>
                 On
               </h2>
-              <h2 className="text-2xl font-semibold text-center" style={{ color: '#1F2937' }}>
-                Establishment of Common Facility Centre for
-              </h2>
-              <h2 className="text-3xl font-bold text-center uppercase" style={{ color: '#059669', letterSpacing: '0.05em' }}>
-                {fieldHit('step1.clusterName', s1.clusterName || 'CLUSTER NAME')}
-              </h2>
-              <p className="text-lg font-semibold text-center items-center px-32" style={{ color: '#1F2937' }}>
-                under 'Micro Cluster Development Programme'
-              </p>
+              {(() => {
+                if (isIndividualDPR) {
+                  const cover = getIndividualCoverLines(
+                    s1,
+                    matchedSchemeCode,
+                    viewLanguage === 'telugu' ? 'te' : 'en'
+                  );
+                  return (
+                    <>
+                      <h2 className="text-2xl font-semibold text-center" style={{ color: '#1F2937' }}>
+                        {cover.actionLine}
+                      </h2>
+                      <h2 className="text-3xl font-bold text-center uppercase" style={{ color: '#059669', letterSpacing: '0.05em' }}>
+                        {fieldHit('step1.clusterName', cover.unitName || 'UNIT NAME')}
+                      </h2>
+                      <p className="text-lg font-semibold text-center items-center px-32" style={{ color: '#1F2937' }}>
+                        {cover.underLine}
+                      </p>
+                    </>
+                  );
+                }
+                return (
+                  <>
+                    <h2 className="text-2xl font-semibold text-center" style={{ color: '#1F2937' }}>
+                      Establishment of Common Facility Centre for
+                    </h2>
+                    <h2 className="text-3xl font-bold text-center uppercase" style={{ color: '#059669', letterSpacing: '0.05em' }}>
+                      {fieldHit('step1.clusterName', s1.clusterName || 'CLUSTER NAME')}
+                    </h2>
+                    <p className="text-lg font-semibold text-center items-center px-32" style={{ color: '#1F2937' }}>
+                      under 'Micro Cluster Development Programme'
+                    </p>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -1758,12 +1801,12 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
             {renderImage(
               'cover-image',
               '',
-              'Cluster Cover Image',
+              isIndividualDPR ? 'Unit Cover Image' : 'Cluster Cover Image',
               '',
               'coverPage',
               { clusterName: s1.clusterName, location: s1.location, district: s1.district },
               //add products and services list to the prompt
-              `Professional cover image showcasing the key products manufactured and developed by ${s1.clusterName || 'the cluster'} without text, labels, diagrams, or watermarks. The products and services list is: ${s1.majorProducts || 'N/A'}.`
+              `Professional cover image showcasing the key products manufactured and developed by ${s1.clusterName || (isIndividualDPR ? 'the unit' : 'the cluster')} without text, labels, diagrams, or watermarks. The products and services list is: ${s1.majorProducts || 'N/A'}.`
             )}
           </div>
 

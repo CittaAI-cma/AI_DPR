@@ -16,7 +16,6 @@ import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { toClusterPayload } from '@/lib/individualDpr/toClusterPayload';
 import { getVisibleSteps, getStepTitle, getSchemeImpact } from '@/lib/individualDpr/schemeFormConfig';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
-import { prefillFromVentureMatch } from '@/lib/individualDpr/prefillFromVentureMatch';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
 import { SchemePickerGrid } from '@/components/individual-dpr/SchemePickerGrid';
 import {
@@ -44,7 +43,6 @@ export const IndividualDPRCreation: React.FC = () => {
     setStepData,
     setMatchedSchemeCode,
     setVentureMatchAnswers,
-    applyPrefill,
   } = useIndividualDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
@@ -152,14 +150,12 @@ export const IndividualDPRCreation: React.FC = () => {
 
           const handoff = peekHandoff();
           const answers = handoff?.answers || null;
+          // Keep answers for overlay rules (uploads / MUDRA bands) only — do not prefill form fields.
           if (answers) setVentureMatchAnswers(answers);
 
           const scheme = schemeFromUrl || null;
           setMatchedSchemeCode(scheme);
 
-          if (answers) {
-            applyPrefill(prefillFromVentureMatch(answers));
-          }
           setCurrentStep(1);
           // Scheme Finder with a code → brief; otherwise show cards first
           setSetupPhase(scheme ? 'brief' : 'pick');
@@ -623,6 +619,7 @@ export const IndividualDPRCreation: React.FC = () => {
                         >
                           <ClusterDPRDocumentView
                             trackFieldHits
+                            isIndividualDPR
                             dpr={{
                               content: {
                                 english: {
@@ -633,13 +630,14 @@ export const IndividualDPRCreation: React.FC = () => {
                               metadata: {
                                 clusterData: clusterPayload,
                                 isIndividualDPR: true,
+                                matchedSchemeCode: data.matchedSchemeCode || null,
                               },
                             }}
                             project={project || {
                               _id: data.projectId,
                               id: data.projectId,
                               projectName: data.step1?.clusterName,
-                              projectType: 'cluster',
+                              projectType: 'individual',
                               stepData: clusterPayload,
                             }}
                             viewLanguage={viewLanguage}
