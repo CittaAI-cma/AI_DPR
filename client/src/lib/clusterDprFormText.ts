@@ -1,7 +1,9 @@
+import { SCHEME_FORM_TE } from '@/lib/individualDpr/schemeFormTe';
 import { useTranslation } from 'react-i18next';
 
 /** English UI string → Telugu. Missing keys fall back to English. */
 const TE: Record<string, string> = {
+  ...SCHEME_FORM_TE,
   'Cluster Name *': 'క్లస్టర్ పేరు *',
   'District *': 'జిల్లా *',
   'Location *': 'స్థలం *',

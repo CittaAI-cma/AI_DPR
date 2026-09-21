@@ -782,7 +782,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               )}{' '}
               · {svanidhiTrancheTenorMonths(extras.loanTranche)} {tf('months')} ·{' '}
               {SVANIDHI_INTEREST_SUBSIDY_PERCENT}% {tf('interest subsidy')} ·{' '}
-              {extras.covOrLor || '—'} / {extras.loanTranche || '—'}.
+              {tf(
+                SVANIDHI_PROOF_OPTIONS.find((o) => o.value === extras.covOrLor)?.label ||
+                  extras.covOrLor ||
+                  '—'
+              )}{' '}
+              /{' '}
+              {tf(
+                SVANIDHI_TRANCHE_OPTIONS.find((o) => o.value === extras.loanTranche)?.label ||
+                  extras.loanTranche ||
+                  '—'
+              )}
+              .
             </p>
           </div>
         )}
