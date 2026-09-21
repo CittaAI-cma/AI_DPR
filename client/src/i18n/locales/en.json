@@ -1304,6 +1304,8 @@
     "stepOf": "Step {{current}} of {{total}} visible steps",
     "hiddenForScheme": "({{count}} hidden for this scheme)",
     "scheme": "Scheme: {{title}}",
+    "schemeSelected": "Scheme: {{name}}",
+    "schemeLabel": "Scheme",
     "vanillaOption": "Know which scheme you want? Vanilla bank term loan",
     "loading": "Loading...",
     "fullscreen": "Fullscreen",

@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { toClusterPayload } from '@/lib/individualDpr/toClusterPayload';
-import { getVisibleSteps, getStepTitle, getSchemeImpact } from '@/lib/individualDpr/schemeFormConfig';
+import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS } from '@/lib/individualDpr/schemeFormConfig';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
 import { SchemePickerGrid } from '@/components/individual-dpr/SchemePickerGrid';
@@ -315,6 +315,19 @@ export const IndividualDPRCreation: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSchemeDropdownChange = (code: string) => {
+    const nextCode = code || null;
+    setMatchedSchemeCode(nextCode);
+    const nextVisible = getVisibleSteps(nextCode);
+    if (!nextVisible.includes(currentStep)) {
+      setCurrentStep(nextVisible[0] || 1);
+    }
+  };
+
+  const selectedSchemeLabel =
+    SCHEME_OPTIONS.find((o) => o.code === (data.matchedSchemeCode || ''))?.label ||
+    tf(schemeImpact.title);
+
   const headerSubtitle =
     setupPhase === 'pick'
       ? t('individualDpr.picker.headerHint', { defaultValue: 'Select a scheme to continue' })
@@ -354,6 +367,14 @@ export const IndividualDPRCreation: React.FC = () => {
                 </Button>
                 <div>
                   <h1 className="text-2xl font-bold">{t('individualDpr.title')}</h1>
+                  {setupPhase === 'form' ? (
+                    <p className="text-sm font-semibold text-foreground mt-0.5">
+                      {t('individualDpr.schemeSelected', {
+                        defaultValue: 'Scheme: {{name}}',
+                        name: selectedSchemeLabel,
+                      })}
+                    </p>
+                  ) : null}
                   <p className="text-sm text-muted-foreground">{headerSubtitle}</p>
                 </div>
               </div>
@@ -362,16 +383,23 @@ export const IndividualDPRCreation: React.FC = () => {
                 <LanguageToggle />
                 {setupPhase === 'form' && (
                   <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSetupPhase('pick');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                    >
-                      {t('individualDpr.picker.changeScheme', { defaultValue: 'Change scheme' })}
-                    </Button>
+                    <label className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground whitespace-nowrap">
+                        {t('individualDpr.schemeLabel', { defaultValue: 'Scheme' })}
+                      </span>
+                      <select
+                        className="max-w-[min(100vw-8rem,22rem)] rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                        value={data.matchedSchemeCode || ''}
+                        onChange={(e) => handleSchemeDropdownChange(e.target.value)}
+                        aria-label={t('individualDpr.schemeLabel', { defaultValue: 'Scheme' })}
+                      >
+                        {SCHEME_OPTIONS.map((opt) => (
+                          <option key={opt.code || 'vanilla'} value={opt.code}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2">
                       <Save className="h-4 w-4" />
                       {t('clusterDpr.saveDraft')}
@@ -477,11 +505,13 @@ export const IndividualDPRCreation: React.FC = () => {
           </div>
         </div>
 
-        {currentStep !== 1 && (
-          <div className="bg-amber-50 border-b border-amber-200">
+        <div className="bg-amber-50 border-b border-amber-200">
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
               <p className="text-sm font-semibold text-foreground">
-                {t('individualDpr.scheme', { title: tf(schemeImpact.title) })}
+                {t('individualDpr.scheme', {
+                  title: selectedSchemeLabel,
+                  defaultValue: 'Scheme: {{title}}',
+                })}
               </p>
               <ul className="mt-1 text-sm text-muted-foreground list-disc pl-5 space-y-0.5">
                 {schemeImpact.bullets.map((b) => (
@@ -490,7 +520,6 @@ export const IndividualDPRCreation: React.FC = () => {
               </ul>
             </div>
           </div>
-        )}
 
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>

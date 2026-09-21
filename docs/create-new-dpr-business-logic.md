@@ -174,6 +174,9 @@ If scheme is `PMEGP` or `PMEGP_2ND` and project cost (lakhs) exceeds:
 
 ## 6. Scheme pick → brief → form
 
+- **Form header:** scheme **dropdown** (`SCHEME_OPTIONS`) switches `matchedSchemeCode` without leaving the form; selected scheme name is shown under the page title.  
+- Yellow scheme-impact bar shows from **step 1** onward (scheme name + how steps/uploads change).
+
 **Pick:** `SchemePickerGrid` shows all `SCHEME_OPTIONS` (vanilla + every scheme) as cards (title, intro, category/type chips).
 
 **Brief:** Tapping a card (or arriving with `?scheme=`) opens `SchemeBriefPanel`:
@@ -190,8 +193,6 @@ Data packs:
 - `lib/individualDpr/schemeBriefs/central.ts` — central schemes + vanilla  
 - `lib/individualDpr/schemeBriefs/ap.ts` — AP schemes incl. CMEP  
 - Lookup: `getSchemeBrief(code)`  
-
-On form steps after step 1, a compact amber **scheme impact** strip still shows form-change bullets. **Change scheme** in the header returns to the card grid.
 
 ---
 

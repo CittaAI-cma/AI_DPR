@@ -1221,6 +1221,8 @@
     "stepOf": "కనిపించే దశలు {{current}} / {{total}}",
     "hiddenForScheme": "(ఈ పథకానికి {{count}} దాచబడ్డాయి)",
     "scheme": "పథకం: {{title}}",
+    "schemeSelected": "పథకం: {{name}}",
+    "schemeLabel": "పథకం",
     "vanillaOption": "పథకం తెలుసా? సాధారణ బ్యాంకు టర్మ్ లోన్",
     "loading": "లోడ్ అవుతోంది...",
     "fullscreen": "ఫుల్‌స్క్రీన్",
