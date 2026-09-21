@@ -5,6 +5,8 @@ import { AISuggestionsService, AISuggestion } from '@/services/aiSuggestions.ser
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { toast } from 'react-hot-toast';
 import { extraFieldsForScheme } from '@/lib/individualDpr/schemeFormConfig';
+import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
+import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 
@@ -50,18 +52,35 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   // Collect previous steps data (in-memory) - use useMemo to avoid recalculating
   const previousStepsData = React.useMemo(() => {
     const previousData: Record<string, any> = {};
+    if (isIndividualDPR) {
+      const schemeCode = data?.matchedSchemeCode || null;
+      const catalog = getSchemeSteps(schemeCode);
+      const currentLocal = catalog.find((s) => s.contentStep === currentStep)?.n ?? currentStep;
+      for (const def of catalog) {
+        if (def.n >= currentLocal) continue;
+        const stepKey = `step${def.contentStep}`;
+        if (data[stepKey as keyof typeof data]) {
+          previousData[stepKey] = data[stepKey as keyof typeof data];
+        }
+      }
+      if (data.step1 && !previousData.step1) previousData.step1 = data.step1;
+      previousData._isIndividualDPR = true;
+      if (data?.matchedSchemeCode) previousData._schemeCode = data.matchedSchemeCode;
+      return previousData;
+    }
     for (let i = 1; i < currentStep; i++) {
       const stepKey = `step${i}`;
       if (data[stepKey as keyof typeof data]) {
         previousData[stepKey] = data[stepKey as keyof typeof data];
       }
     }
-    if (isIndividualDPR) previousData._isIndividualDPR = true;
-    if (isIndividualDPR && data?.matchedSchemeCode) previousData._schemeCode = data.matchedSchemeCode;
     return previousData;
   }, [currentStep, data, isIndividualDPR]);
 
-  const hasPreviousData = previousStepsData.step1 && Object.keys(previousStepsData.step1).length > 0;
+  const hasPreviousData = Boolean(
+    (previousStepsData.step1 && Object.keys(previousStepsData.step1).length > 0) ||
+      (isIndividualDPR && getUnitName(data?.step1))
+  );
 
   // Reset suggestions when step changes
   useEffect(() => {

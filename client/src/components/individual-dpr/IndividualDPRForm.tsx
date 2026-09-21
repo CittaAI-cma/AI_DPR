@@ -239,12 +239,21 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     });
   };
 
-  // Step 1: Executive Summary
+  // Step 1: Unit basics
   if (contentStep === 1) {
     const stepDescriptions = FIELD_DESCRIPTIONS.step1 || {};
 
     return (
       <div className="space-y-6">
+        <AISuggestions
+          {...aiStore}
+          excludeFields={aiExclude}
+          currentStep={contentStep}
+          currentStepData={stepData}
+          onApplySuggestion={(field, content) => {
+            handleInputChange(field, content);
+          }}
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
@@ -670,15 +679,6 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             </div>
           )}
 
-        <AISuggestions
-          {...aiStore}
-          excludeFields={aiExclude}
-          currentStep={contentStep}
-          currentStepData={stepData}
-          onApplySuggestion={(field, content) => {
-            handleInputChange(field, content);
-          }}
-        />
       </div>
     );
   }
