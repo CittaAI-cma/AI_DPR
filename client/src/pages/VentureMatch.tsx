@@ -176,11 +176,6 @@ export const VentureMatch: React.FC = () => {
     navigate('/individual-dpr/create?new=true');
   };
 
-  const handleClusterDpr = () => {
-    saveHandoff(answers, result.matches);
-    navigate('/cluster-dpr/create');
-  };
-
   const selected = question ? answers[question.id as QuestionId] : undefined;
 
   if (!hydrated) {
@@ -208,7 +203,6 @@ export const VentureMatch: React.FC = () => {
             result={result}
             onCreateDpr={handleCreateDpr}
             onCreateDprForScheme={handleCreateDprForScheme}
-            onOpenClusterDpr={handleClusterDpr}
             onRestart={handleRestart}
           />
         ) : (

@@ -10,7 +10,6 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
-  FolderPlus, 
   FileText, 
   MessageSquare, 
   Building, 
@@ -350,32 +349,14 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             {canCreateDpr(user?.role) && (
-              <>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate('/cluster-dpr/create?new=true')}
-                  className="gap-2 whitespace-nowrap"
-                >
-                  <Building className="h-4 w-4" />
-                  Create Cluster DPR
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate('/individual-dpr/create?new=true')}
-                  className="gap-2 whitespace-nowrap"
-                >
-                  <FileText className="h-4 w-4" />
-                  Create New Latest DPR
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate('/dpr/builder')}
-                  className="gap-2 whitespace-nowrap"
-                >
-                  <FolderPlus className="h-4 w-4" />
-                  Create DPR
-                </Button>
-              </>
+              <Button
+                variant="primary"
+                onClick={() => navigate('/individual-dpr/create?new=true')}
+                className="gap-2 whitespace-nowrap"
+              >
+                <FileText className="h-4 w-4" />
+                Create New Latest DPR
+              </Button>
             )}
             <Button
               variant="outline"
@@ -547,9 +528,13 @@ export const Dashboard: React.FC = () => {
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {t('dashboard.createFirstDPR')}
                 </p>
-                <Button variant="secondary" onClick={() => navigate('/dpr/builder')} size="lg">
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  {t('dashboard.createYourFirstDPR')}
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate('/individual-dpr/create?new=true')}
+                  size="lg"
+                >
+                  <FileText className="h-5 w-5 mr-2" />
+                  Create New Latest DPR
                 </Button>
               </div>
             ) : (
@@ -699,18 +684,7 @@ export const Dashboard: React.FC = () => {
             <CardDescription>{t('dashboard.accessFrequentlyUsed')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-              <Button
-                variant="primary"
-                onClick={() => navigate('/cluster-dpr/create?new=true')}
-                className="h-28 flex-col gap-3 bg-gradient-to-br from-primary to-primary/80"
-              >
-                <div className="h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center">
-                  <Building className="h-6 w-6" />
-                </div>
-                <span className="font-semibold">Create Cluster DPR</span>
-                <span className="text-sm opacity-90">Cluster Development Projects</span>
-              </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Button
                 variant="primary"
                 onClick={() => navigate('/individual-dpr/create?new=true')}
@@ -721,17 +695,6 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <span className="font-semibold">Create New Latest DPR</span>
                 <span className="text-sm opacity-90">Individual / scheme-aware</span>
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => navigate('/dpr/builder')}
-                className="h-28 flex-col gap-3"
-              >
-                <div className="h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center">
-                  <FolderPlus className="h-6 w-6" />
-                </div>
-                <span className="font-semibold">{t('dashboard.createNewDPR')}</span>
-                <span className="text-sm opacity-90">{t('dashboard.aiGuidedBuilder')}</span>
               </Button>
               <Button
                 variant="outline"

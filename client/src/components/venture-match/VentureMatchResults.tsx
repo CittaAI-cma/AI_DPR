@@ -65,9 +65,9 @@ function MatchAction({
 
   if (route === 'cluster') {
     return (
-      <Button className="mt-3 gap-2" size="sm" onClick={() => onOpenClusterDpr?.()}>
+      <Button className="mt-3 gap-2" size="sm" onClick={() => onCreateDprForScheme(scheme.code)}>
         <FolderPlus className="h-4 w-4" />
-        {t('ventureMatch.openClusterDpr')}
+        {t('ventureMatch.generateDprForMatch')}
       </Button>
     );
   }
