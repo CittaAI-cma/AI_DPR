@@ -77,6 +77,10 @@ URL may be rewritten to include `projectId`, `dprId`, and `&scheme=` when presen
 
 User must be on the **last visible** step. Generate persists the scheme answers only (no cluster AI chapters). Live preview and `/dpr/view/:id` both render `IndividualDPRDocumentView` — **one section per scheme catalog step**, each a Q&A table of the questions asked plus their answers. Cluster chapters (SPV, CFC, enterprise mix, “Basic Cluster Details”) are not used.
 
+Downloads (PDF / DOCX / XLS from preview, All DPRs, or Telugu Word-to-PDF) use the same scheme Q&A — not `cluster-dpr-pdf.html`. Preview PDF captures `.dpr-document`; other paths build Q&A via `server/src/services/individualDprDocument.ts`.
+
+DPR quality analysis scores the **stored scheme answers** (`clusterData` steps + extras), not the downloaded PDF and not empty cluster chapters (executive summary / cluster profile).
+
 ---
 
 ## 4. Step model

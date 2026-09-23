@@ -424,7 +424,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
           </label>
           <Input
-            value={getUnitName(stepData)}
+            value={String(stepData.unitName ?? stepData.clusterName ?? '')}
             onChange={(e) => handleInputChange('unitName', e.target.value)}
             placeholder={tf('Enter unit or project name')}
           />

@@ -1,0 +1,1996 @@
+{
+  "VANILLA_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Your unit \u2013 basic details",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "sector",
+      "title": "Step 2: Sector overview",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: District & location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Your unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "valueChain",
+      "title": "Step 5: Value chain",
+      "contentStep": 5
+    },
+    {
+      "n": 6,
+      "id": "market",
+      "title": "Step 6: Market",
+      "contentStep": 6
+    },
+    {
+      "n": 7,
+      "id": "gaps",
+      "title": "Step 7: Gaps",
+      "contentStep": 7
+    },
+    {
+      "n": 8,
+      "id": "swot",
+      "title": "Step 8: SWOT",
+      "contentStep": 8
+    },
+    {
+      "n": 9,
+      "id": "plan",
+      "title": "Step 9: What you plan to do",
+      "contentStep": 9
+    },
+    {
+      "n": 10,
+      "id": "shed",
+      "title": "Step 10: Workplace / shed / unit",
+      "contentStep": 10
+    },
+    {
+      "n": 11,
+      "id": "applicant",
+      "title": "Step 11: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 12,
+      "id": "cost",
+      "title": "Step 12: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 13,
+      "id": "finance",
+      "title": "Step 13: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 14,
+      "id": "operating",
+      "title": "Step 14: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 15,
+      "id": "viability",
+      "title": "Step 15: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 16,
+      "id": "schedule",
+      "title": "Step 16: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 17,
+      "id": "impact",
+      "title": "Step 17: Expected impact",
+      "contentStep": 17
+    },
+    {
+      "n": 18,
+      "id": "uploads",
+      "title": "Step 18: Document uploads",
+      "contentStep": 18
+    }
+  ],
+  "PMEGP_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & entrepreneur",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Introduction & process",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales assumptions",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Workshed / premises & power",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "impact",
+      "title": "Step 13: Employment & impact",
+      "contentStep": 17
+    },
+    {
+      "n": 14,
+      "id": "uploads",
+      "title": "Step 14: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "MUDRA_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & category",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Business activity",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales assumptions",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "uploads",
+      "title": "Step 12: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "STANDUP_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Business activity & process",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market, buyers & competition",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "uploads",
+      "title": "Step 13: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "PMFME_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & formalisation",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Introduction & process",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market, buyers & raw material",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises & utilities",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "impact",
+      "title": "Step 13: Employment & impact",
+      "contentStep": 17
+    },
+    {
+      "n": 14,
+      "id": "uploads",
+      "title": "Step 14: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "PMEGP_2ND_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & prior assistance",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Introduction & upgrade process",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity (existing \u2192 proposed)",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales assumptions",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Workshed / premises & power",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Upgrade project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "impact",
+      "title": "Step 13: Employment & impact",
+      "contentStep": 17
+    },
+    {
+      "n": 14,
+      "id": "uploads",
+      "title": "Step 14: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "SCLCSS_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & SC/ST eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Technology upgrade story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost (machinery-led)",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "uploads",
+      "title": "Step 13: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "AP_TECH_UPGRADE_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & AP eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Technology upgrade story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Upgrade project cost (FCI)",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "uploads",
+      "title": "Step 13: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "AP_EDP_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & AP eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Introduction & process",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises & utilities",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost (FCI)",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "uploads",
+      "title": "Step 13: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "VISHWAKARMA_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & craft eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Trade story & process",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Craft profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales assumptions",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Workplace / premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost (tools + WC)",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "uploads",
+      "title": "Step 12: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "SVANIDHI_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & vending eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Vending activity",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location / pitch",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Vendor profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & daily sales",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Pitch / workplace",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Working capital need",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "uploads",
+      "title": "Step 10: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "ECLGS_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & existing facility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "applicant",
+      "title": "Step 3: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 4,
+      "id": "cost",
+      "title": "Step 4: Additional WC need",
+      "contentStep": 12
+    },
+    {
+      "n": 5,
+      "id": "finance",
+      "title": "Step 5: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 6,
+      "id": "operating",
+      "title": "Step 6: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 7,
+      "id": "uploads",
+      "title": "Step 7: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "ZED_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & ZED levels",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "market",
+      "title": "Step 3: Quality / market need",
+      "contentStep": 6
+    },
+    {
+      "n": 4,
+      "id": "applicant",
+      "title": "Step 4: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 5,
+      "id": "uploads",
+      "title": "Step 5: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "LEAN_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & bottleneck",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit / shop-floor profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "market",
+      "title": "Step 3: Process / market need",
+      "contentStep": 6
+    },
+    {
+      "n": 4,
+      "id": "applicant",
+      "title": "Step 4: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 5,
+      "id": "uploads",
+      "title": "Step 5: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "MSME_IPR_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & IP type",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit / invention profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "market",
+      "title": "Step 3: IP / market need",
+      "contentStep": 6
+    },
+    {
+      "n": 4,
+      "id": "applicant",
+      "title": "Step 4: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 5,
+      "id": "uploads",
+      "title": "Step 5: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "PMS_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & fair details",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit / product profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "market",
+      "title": "Step 3: Market / fair offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 4,
+      "id": "applicant",
+      "title": "Step 4: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 5,
+      "id": "uploads",
+      "title": "Step 5: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "SCST_HUB_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & GeM readiness",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "market",
+      "title": "Step 3: Procurement focus",
+      "contentStep": 6
+    },
+    {
+      "n": 4,
+      "id": "applicant",
+      "title": "Step 4: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 5,
+      "id": "uploads",
+      "title": "Step 5: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "ASPIRE_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & incubator",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Innovation / livelihood story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit / livelihood profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Light project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "uploads",
+      "title": "Step 10: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "NHDP_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & loom eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Handloom / process story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Weaver profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Workplace / loom shed",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Tools / WC cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "uploads",
+      "title": "Step 10: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "CVY_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Business / activity story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "uploads",
+      "title": "Step 12: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "MSE_GIFT_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Business / activity story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "uploads",
+      "title": "Step 12: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "PTUAS_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Upgrade / process story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises & utilities",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Upgrade project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "uploads",
+      "title": "Step 13: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "PMPDS_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & scheme inputs",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit / product profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "market",
+      "title": "Step 3: Market / need",
+      "contentStep": 6
+    },
+    {
+      "n": 4,
+      "id": "applicant",
+      "title": "Step 4: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 5,
+      "id": "uploads",
+      "title": "Step 5: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "CGTMSE_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Business / activity story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "uploads",
+      "title": "Step 12: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "AP_FPP_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Upgrade / process story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises & utilities",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Upgrade project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "uploads",
+      "title": "Step 13: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "AP_CMEP_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Upgrade / process story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile & capacity",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises & utilities",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Upgrade project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance (critical)",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "schedule",
+      "title": "Step 12: Implementation schedule",
+      "contentStep": 16
+    },
+    {
+      "n": 13,
+      "id": "uploads",
+      "title": "Step 13: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "OBMMS_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Activity story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project / land cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "uploads",
+      "title": "Step 10: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "MSE_SPICE_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Business / activity story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & sales",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
+      "id": "viability",
+      "title": "Step 11: Financial viability",
+      "contentStep": 15
+    },
+    {
+      "n": 12,
+      "id": "uploads",
+      "title": "Step 12: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "AP_PARKS_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "intro",
+      "title": "Step 2: Activity story",
+      "contentStep": 2
+    },
+    {
+      "n": 3,
+      "id": "location",
+      "title": "Step 3: Location",
+      "contentStep": 3
+    },
+    {
+      "n": 4,
+      "id": "unit",
+      "title": "Step 4: Unit profile",
+      "contentStep": 4
+    },
+    {
+      "n": 5,
+      "id": "market",
+      "title": "Step 5: Market & offtake",
+      "contentStep": 6
+    },
+    {
+      "n": 6,
+      "id": "shed",
+      "title": "Step 6: Premises",
+      "contentStep": 10
+    },
+    {
+      "n": 7,
+      "id": "applicant",
+      "title": "Step 7: Applicant",
+      "contentStep": 11
+    },
+    {
+      "n": 8,
+      "id": "cost",
+      "title": "Step 8: Project / land cost",
+      "contentStep": 12
+    },
+    {
+      "n": 9,
+      "id": "finance",
+      "title": "Step 9: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 10,
+      "id": "uploads",
+      "title": "Step 10: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "RAMP_TEAM_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & scheme inputs",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit / product profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "market",
+      "title": "Step 3: Market / need",
+      "contentStep": 6
+    },
+    {
+      "n": 4,
+      "id": "applicant",
+      "title": "Step 4: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 5,
+      "id": "uploads",
+      "title": "Step 5: Documents & uploads",
+      "contentStep": 18
+    }
+  ],
+  "EPM_NIRYAT_STEPS": [
+    {
+      "n": 1,
+      "id": "cover",
+      "title": "Step 1: Cover & eligibility",
+      "contentStep": 1
+    },
+    {
+      "n": 2,
+      "id": "unit",
+      "title": "Step 2: Unit / export profile",
+      "contentStep": 4
+    },
+    {
+      "n": 3,
+      "id": "applicant",
+      "title": "Step 3: Applicant / firm",
+      "contentStep": 11
+    },
+    {
+      "n": 4,
+      "id": "cost",
+      "title": "Step 4: Export credit / WC need",
+      "contentStep": 12
+    },
+    {
+      "n": 5,
+      "id": "finance",
+      "title": "Step 5: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 6,
+      "id": "operating",
+      "title": "Step 6: Operating & export sales",
+      "contentStep": 14
+    },
+    {
+      "n": 7,
+      "id": "uploads",
+      "title": "Step 7: Documents & uploads",
+      "contentStep": 18
+    }
+  ]
+}

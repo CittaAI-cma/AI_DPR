@@ -270,15 +270,22 @@ export const DPRPreview: React.FC = () => {
 
       let blob;
       if (format === 'pdf') {
-        // For Cluster DPRs: generate PDF from the actual rendered DOM + CSS so download matches preview 1:1
-        if (isClusterDPR) {
+        // Cluster + Latest individual: capture the on-screen Q&A document (not the cluster server PDF)
+        if (isClusterDPR || isIndividualDPR) {
           const root = document.querySelector('.dpr-document');
-          if (!root) {
-            throw new Error('Preview root not found');
+          if (root) {
+            try {
+              const html = captureElementAsStandaloneHTML(root);
+              blob = await api.downloadPDFExactFromHTML(dprId!, html, viewLanguage);
+            } catch (htmlErr) {
+              console.warn('HTML PDF failed, using server Q&A PDF', htmlErr);
+              blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
+            }
+            downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
+          } else {
+            blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
+            downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
           }
-          const html = captureElementAsStandaloneHTML(root);
-          blob = await api.downloadPDFExactFromHTML(dprId!, html, viewLanguage);
-          downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
         } else {
           blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
           downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);

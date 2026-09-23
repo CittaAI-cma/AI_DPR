@@ -781,7 +781,6 @@ export class DPRController {
       const { dprId } = req.params;
       const { language = 'english' } = req.query;
       const html = req.body?.html;
-      console.log('html', html);
 
       if (!html || typeof html !== 'string' || html.trim().length === 0) {
         res.status(400).json({
@@ -803,7 +802,13 @@ export class DPRController {
       console.log(`📥 Downloading EXACT PDF (from HTML) for DPR ${dprId} in ${language}...`);
       console.log(`   HTML length: ${html.length} chars`);
 
-      const pdfBuffer = await DPRService.generatePDFFromHTML(html);
+      let pdfBuffer: Buffer;
+      try {
+        pdfBuffer = await DPRService.generatePDFFromHTML(html);
+      } catch (htmlError: any) {
+        console.warn('⚠️ Exact HTML PDF failed, falling back to scheme/server PDF:', htmlError?.message);
+        pdfBuffer = await DPRService.generatePDF(dprId, language === 'telugu' ? 'telugu' : 'english');
+      }
 
       // Validate PDF header (PDF files start with %PDF)
       if (!pdfBuffer || !Buffer.isBuffer(pdfBuffer) || pdfBuffer.length < 4) {
@@ -1289,6 +1294,44 @@ export class DPRController {
           message: 'Access denied: This DPR does not belong to you',
         });
         return;
+      }
+
+      const { buildIndividualDocument, isIndividualDprRecord } = await import('../services/individualDprDocument');
+      if (isIndividualDprRecord(dpr, project)) {
+        const doc = buildIndividualDocument(dpr, project);
+        try {
+          const ExcelJS = require('exceljs');
+          const workbook = new ExcelJS.Workbook();
+          const cover = workbook.addWorksheet('Cover');
+          cover.addRow(['Detailed Project Report']);
+          cover.addRow([doc.actionLine, doc.unitName, doc.underLine]);
+          cover.addRow(['District', doc.district]);
+          cover.addRow(['Location', doc.location]);
+          if (doc.entrepreneurName) cover.addRow(['Entrepreneur name', doc.entrepreneurName]);
+          const qa = workbook.addWorksheet('Scheme Q&A');
+          qa.addRow(['Section #', 'Section', 'Question', 'Answer']);
+          doc.sections.forEach((s) => {
+            s.rows.forEach((r) => qa.addRow([s.n, s.title, r.label, r.value]));
+          });
+          const buffer = await workbook.xlsx.writeBuffer();
+          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          res.setHeader('Content-Disposition', `attachment; filename="DPR_${dprId}.xlsx"`);
+          res.send(buffer);
+          return;
+        } catch (excelError: any) {
+          let csv = `Detailed Project Report\n${doc.unitName}\n${doc.underLine}\n\n`;
+          doc.sections.forEach((s) => {
+            csv += `${s.n}. ${s.title}\n`;
+            s.rows.forEach((r) => {
+              csv += `"${String(r.label).replace(/"/g, '""')}","${String(r.value).replace(/"/g, '""')}"\n`;
+            });
+            csv += '\n';
+          });
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', `attachment; filename="DPR_${dprId}.csv"`);
+          res.send(csv);
+          return;
+        }
       }
 
       const contentLang = language === 'telugu' ? dpr.content.telugu : dpr.content.english;

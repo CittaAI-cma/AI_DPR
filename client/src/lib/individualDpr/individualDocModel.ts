@@ -645,10 +645,15 @@ export function extractSchemeCode(dpr: any, project?: any, data?: Record<string,
 }
 
 export function isIndividualDprRecord(dpr: any, project?: any): boolean {
-  return !!(
+  if (
     dpr?.metadata?.isIndividualDPR ||
     dpr?.content?.english?.clusterData?.isIndividualDPR ||
     dpr?.content?.english?.isIndividualDPR ||
     project?.projectType === 'individual'
-  );
+  ) {
+    return true;
+  }
+  const data = extractIndividualDocData(dpr, project);
+  const scheme = extractSchemeCode(dpr, project, data);
+  return !!scheme && project?.projectType !== 'cluster';
 }

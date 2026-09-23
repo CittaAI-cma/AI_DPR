@@ -4,6 +4,11 @@ import dotenv from 'dotenv';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { Project } from '../models/Project.model';
 import { MLService } from './ml.service';
+import {
+  buildIndividualDocument,
+  groupSectionsForQuality,
+  isIndividualDprRecord,
+} from './individualDprDocument';
 
 dotenv.config();
 
@@ -55,6 +60,10 @@ export class QualityService {
       const project = await Project.findById(dpr.projectId);
       if (!project) {
         throw new Error('Project not found');
+      }
+
+      if (isIndividualDprRecord(dpr, project)) {
+        return this.analyzeIndividualQuality(dpr, project);
       }
 
       // Rule-based validation
@@ -113,6 +122,114 @@ export class QualityService {
       console.error('Error analyzing DPR quality:', error);
       throw new Error('Failed to analyze DPR quality');
     }
+  }
+
+  /**
+   * Quality for Create New Latest DPR: score the scheme Q&A answers, not cluster chapters or the PDF file.
+   */
+  private static async analyzeIndividualQuality(dpr: any, project: any): Promise<QualityAnalysisResult> {
+    const doc = buildIndividualDocument(dpr, project);
+    const grouped = groupSectionsForQuality(doc);
+    const bucketSteps: Record<string, number[]> = {
+      executiveSummary: [1],
+      businessProfile: [2, 3, 4, 11],
+      marketAnalysis: [5, 6, 8],
+      technicalFeasibility: [7, 9, 10],
+      financialProjections: [12, 13, 14, 15],
+      conclusion: [16, 17, 18],
+    };
+
+    const scoreBucket = (key: string): number => {
+      const steps = bucketSteps[key];
+      const rows = doc.sections
+        .filter((s) => steps.includes(s.contentStep) || (key === 'executiveSummary' && s.n === 1))
+        .flatMap((s) => s.rows);
+      if (!rows.length) return 75;
+      const filled = rows.filter((r) => r.filled).length;
+      let score = Math.round((filled / rows.length) * 85);
+      const chars = rows.filter((r) => r.filled).reduce((n, r) => n + r.value.length, 0);
+      if (chars >= 200) score += 15;
+      else if (chars >= 60) score += 10;
+      else if (chars >= 20) score += 5;
+      return Math.min(100, score);
+    };
+
+    const ruleBasedScores = {
+      executiveSummary: scoreBucket('executiveSummary'),
+      businessProfile: scoreBucket('businessProfile'),
+      marketAnalysis: scoreBucket('marketAnalysis'),
+      technicalFeasibility: scoreBucket('technicalFeasibility'),
+      financialProjections: scoreBucket('financialProjections'),
+      conclusion: scoreBucket('conclusion'),
+    };
+
+    const synthetic = {
+      content: { english: grouped, telugu: grouped },
+    };
+    const nlpAnalysis = await this.nlpAnalysis(synthetic, project);
+
+    const sectionScores = {
+      executiveSummary: Math.round(ruleBasedScores.executiveSummary * 0.7 + nlpAnalysis.executiveSummary * 0.3),
+      businessProfile: Math.round(ruleBasedScores.businessProfile * 0.7 + nlpAnalysis.businessProfile * 0.3),
+      marketAnalysis: Math.round(ruleBasedScores.marketAnalysis * 0.7 + nlpAnalysis.marketAnalysis * 0.3),
+      technicalFeasibility: Math.round(ruleBasedScores.technicalFeasibility * 0.7 + nlpAnalysis.technicalFeasibility * 0.3),
+      financialProjections: Math.round(ruleBasedScores.financialProjections * 0.7 + nlpAnalysis.financialProjections * 0.3),
+      conclusion: Math.round(ruleBasedScores.conclusion * 0.7 + nlpAnalysis.conclusion * 0.3),
+    };
+
+    const completeness = doc.askedCount ? Math.round((doc.filledCount / doc.askedCount) * 100) : 0;
+    const avgSection = Math.round(
+      (sectionScores.executiveSummary +
+        sectionScores.businessProfile +
+        sectionScores.marketAnalysis +
+        sectionScores.technicalFeasibility +
+        sectionScores.financialProjections +
+        sectionScores.conclusion) /
+        6
+    );
+    const overallScore = Math.round(completeness * 0.55 + avgSection * 0.45);
+
+    const weakSections = Object.entries(sectionScores)
+      .filter(([_, score]) => score < 70)
+      .map(([section]) => this.formatSectionName(section));
+
+    const missing = doc.sections
+      .filter((s) => s.rows.some((r) => !r.filled))
+      .map((s) => s.title);
+    const extraFeedback = [
+      `Scored ${doc.filledCount}/${doc.askedCount} answered scheme questions (not the download PDF).`,
+    ];
+    if (missing.length) {
+      extraFeedback.push(`Unanswered items remain in: ${missing.slice(0, 6).join(', ')}.`);
+    }
+
+    const feedback = this.generateFeedback(sectionScores, [...extraFeedback, ...(nlpAnalysis.feedback || [])], weakSections);
+    const recommendations = this.generateRecommendations(sectionScores, weakSections, project);
+    if (missing.length) {
+      recommendations.unshift(`Complete the unanswered questions in: ${missing.join(', ')}.`);
+    }
+
+    const detailedMetrics = {
+      completeness,
+      clarity: avgSection,
+      accuracy: Math.min(100, 60 + Math.round((doc.filledCount / Math.max(doc.askedCount, 1)) * 40)),
+      bankability: Math.round(sectionScores.financialProjections * 0.5 + sectionScores.marketAnalysis * 0.3 + sectionScores.technicalFeasibility * 0.2),
+      professionalism: avgSection,
+    };
+
+    const sectionDetails = this.generateSectionDetails(sectionScores, nlpAnalysis, {
+      content: { english: grouped },
+    });
+
+    return {
+      score: overallScore,
+      feedback,
+      weakSections,
+      sectionScores,
+      recommendations,
+      detailedMetrics,
+      sectionDetails,
+    };
   }
 
   /**

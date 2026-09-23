@@ -89,7 +89,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   };
 
   return (
-    <div className="text-gray-900" style={{ color: '#1F2937' }}>
+    <div className="text-gray-900 dpr-document" style={{ color: '#1F2937' }}>
       <div className="mb-10 pb-8" style={{ borderBottom: '2px solid #1F2937' }}>
         <h1 className="text-3xl font-bold text-center tracking-wide mb-2">DETAILED PROJECT REPORT</h1>
         <h2 className="text-xl font-semibold text-center mb-1">{tf('On')}</h2>
