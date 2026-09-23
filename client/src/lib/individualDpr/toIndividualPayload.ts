@@ -29,13 +29,13 @@ export function toIndividualPayload(data: any) {
   return {
     ...data,
     isIndividualDPR: true,
+    projectId: data.projectId || undefined,
     matchedSchemeCode: data.matchedSchemeCode || null,
     step1: {
       ...step1,
       unitName,
-      // Legacy key required by shared DPR generate/preview services
+      // Legacy key still written for shared draft APIs — document view uses unitName.
       clusterName: unitName,
-      enterpriseCount: step1.enterpriseCount || { micro: 1, small: 0, medium: 0 },
     },
     step11: {
       ...(data.step11 || {}),

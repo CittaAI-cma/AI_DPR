@@ -655,20 +655,29 @@ export class ClusterDPRController {
 
       const { clusterData } = req.body;
 
-      if (!clusterData || !clusterData.step1?.clusterName) {
+      const unitName =
+        clusterData?.step1?.unitName || clusterData?.step1?.clusterName;
+      if (!clusterData || !unitName) {
         res.status(400).json({
           success: false,
-          message: 'Cluster data with step1.clusterName is required',
+          message: 'Draft data with a unit / project name is required',
         });
         return;
       }
 
-      // Find or create project for this cluster DPR
-      let project = await Project.findOne({
-        userId,
-        projectName: clusterData.step1.clusterName,
-        projectType: 'cluster',
-      });
+      const isIndividual = !!(
+        clusterData.isIndividualDPR || clusterData.metadata?.isIndividualDPR
+      );
+      const projectType = isIndividual ? 'individual' : 'cluster';
+
+      // Find or create project for this draft
+      let project = clusterData.projectId
+        ? await Project.findById(clusterData.projectId)
+        : await Project.findOne({
+            userId,
+            projectName: unitName,
+            projectType,
+          });
 
       // Calculate total cost from step 12 if available
       const totalCost = clusterData.step12
@@ -687,11 +696,11 @@ export class ClusterDPRController {
       if (!project) {
         project = await Project.create({
           userId,
-          projectName: clusterData.step1.clusterName,
-          industrySector: clusterData.step2?.sectorType || 'Cluster Development',
+          projectName: unitName,
+          industrySector: clusterData.step2?.sectorType || (isIndividual ? 'Individual unit' : 'Cluster Development'),
           location: clusterData.step1?.location || '',
           district: clusterData.step1?.district || '',
-          projectType: 'cluster',
+          projectType,
           totalCost: totalCost || 0,
           ownContribution: ownContribution || 0,
           loanAmount: loanAmount || 0,
@@ -727,11 +736,15 @@ export class ClusterDPRController {
           language: 'bilingual',
           content: {
             english: {
-              isClusterDPR: true,
+              isClusterDPR: !isIndividual,
+              isIndividualDPR: isIndividual,
+              matchedSchemeCode: clusterData.matchedSchemeCode || null,
               clusterData: clusterData,
             },
             telugu: {
-              isClusterDPR: true,
+              isClusterDPR: !isIndividual,
+              isIndividualDPR: isIndividual,
+              matchedSchemeCode: clusterData.matchedSchemeCode || null,
               clusterData: clusterData,
             },
           },
@@ -745,9 +758,13 @@ export class ClusterDPRController {
         if (!dprVersion.content.telugu) {
           dprVersion.content.telugu = {};
         }
-        dprVersion.content.english.isClusterDPR = true;
+        dprVersion.content.english.isClusterDPR = !isIndividual;
+        dprVersion.content.english.isIndividualDPR = isIndividual;
+        dprVersion.content.english.matchedSchemeCode = clusterData.matchedSchemeCode || null;
         dprVersion.content.english.clusterData = clusterData;
-        dprVersion.content.telugu.isClusterDPR = true;
+        dprVersion.content.telugu.isClusterDPR = !isIndividual;
+        dprVersion.content.telugu.isIndividualDPR = isIndividual;
+        dprVersion.content.telugu.matchedSchemeCode = clusterData.matchedSchemeCode || null;
         dprVersion.content.telugu.clusterData = clusterData;
         await dprVersion.save();
         console.log('✅ Updated DPRVersion record:', dprVersion._id);

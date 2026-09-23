@@ -391,11 +391,34 @@ Return only valid JSON without markdown code blocks.`;
       console.log(`📥 Received ${imageKeys.length} images from frontend:`, imageKeys);
       
       // Remove enhancedContent and images from clusterData before processing
-      const { enhancedContent, images, ...cleanClusterData } = clusterData;
-      
-      // Enhance data using OpenAI
-      console.log('🤖 Enhancing cluster DPR data with OpenAI...');
-      const enhancedDPR = await this.enhanceClusterDPRData(cleanClusterData);
+      const { enhancedContent, images, ...restClusterData } = clusterData;
+      let cleanClusterData = restClusterData;
+      const isIndividual = !!(
+        cleanClusterData.isIndividualDPR ||
+        cleanClusterData.metadata?.isIndividualDPR
+      );
+      const projectType = isIndividual ? 'individual' : 'cluster';
+      const unitName =
+        cleanClusterData.step1?.unitName ||
+        cleanClusterData.step1?.clusterName ||
+        (isIndividual ? 'Individual unit' : 'Cluster DPR');
+
+      let enhancedDPR: any;
+      if (isIndividual) {
+        // Create New Latest DPR: persist answers only — no cluster narrative chapters.
+        enhancedDPR = {
+          coverPage: '',
+          tableOfContents: '',
+          sections: {},
+          metadata: {
+            isIndividualDPR: true,
+            matchedSchemeCode: cleanClusterData.matchedSchemeCode || null,
+          },
+        };
+      } else {
+        console.log('🤖 Enhancing cluster DPR data with OpenAI...');
+        enhancedDPR = await this.enhanceClusterDPRData(cleanClusterData);
+      }
       
       // Merge provided enhanced content with generated content
       // User-enhanced content takes precedence over AI-generated content
@@ -430,18 +453,23 @@ Return only valid JSON without markdown code blocks.`;
 
       // Create or find a project for this cluster DPR
       // First try to find by project name, then by stepData if available
-      let project = await Project.findOne({
-        userId,
-        projectName: cleanClusterData.step1?.clusterName || 'Cluster DPR',
-        projectType: 'cluster',
-      });
+      let project = cleanClusterData.projectId
+        ? await Project.findById(cleanClusterData.projectId)
+        : await Project.findOne({
+            userId,
+            projectName: unitName,
+            projectType,
+          });
 
       // If project not found, try to find by matching stepData (for existing drafts)
-      if (!project && cleanClusterData.step1?.clusterName) {
+      if (!project && (cleanClusterData.step1?.clusterName || cleanClusterData.step1?.unitName)) {
         const projects = await Project.find({
           userId,
-          projectType: 'cluster',
-          'stepData.step1.clusterName': cleanClusterData.step1.clusterName,
+          projectType,
+          $or: [
+            { 'stepData.step1.clusterName': cleanClusterData.step1.clusterName },
+            { 'stepData.step1.unitName': cleanClusterData.step1.unitName },
+          ],
         }).sort({ updatedAt: -1 }).limit(1);
         
         if (projects.length > 0) {
@@ -495,11 +523,11 @@ Return only valid JSON without markdown code blocks.`;
       if (!project) {
         project = await Project.create({
           userId,
-          projectName: cleanClusterData.step1?.clusterName || 'Cluster DPR',
-          industrySector: cleanClusterData.step2?.sectorType || 'Cluster Development',
+          projectName: unitName,
+          industrySector: cleanClusterData.step2?.sectorType || (isIndividual ? 'Individual unit' : 'Cluster Development'),
           location: cleanClusterData.step1?.location || '',
           district: cleanClusterData.step1?.district || '',
-          projectType: 'cluster',
+          projectType,
           totalCost: totalCost || 100000, // Default to 1 lakh if not provided
           ownContribution: ownContribution || 0,
           loanAmount: loanAmount || 0,
@@ -554,7 +582,9 @@ Return only valid JSON without markdown code blocks.`;
             operatingCostRevenue: enhancedDPR.sections?.operatingCostRevenue || '',
             implementationSchedule: enhancedDPR.sections?.implementationSchedule || '',
             annexures: enhancedDPR.sections?.annexures || '',
-            isClusterDPR: true,
+            isClusterDPR: !isIndividual,
+            isIndividualDPR: isIndividual,
+            matchedSchemeCode: cleanClusterData.matchedSchemeCode || null,
             clusterData: cleanClusterData,
             // Store generated sections separately (for user review before applying)
             generatedSections: generatedSections,
@@ -587,7 +617,9 @@ Return only valid JSON without markdown code blocks.`;
             operatingCostRevenue: enhancedDPR.sections?.operatingCostRevenue || '',
             implementationSchedule: enhancedDPR.sections?.implementationSchedule || '',
             annexures: enhancedDPR.sections?.annexures || '',
-            isClusterDPR: true,
+            isClusterDPR: !isIndividual,
+            isIndividualDPR: isIndividual,
+            matchedSchemeCode: cleanClusterData.matchedSchemeCode || null,
             clusterData: cleanClusterData,
             // Store generated sections separately (for user review before applying)
             generatedSections: generatedSections,
@@ -671,8 +703,10 @@ Return only valid JSON without markdown code blocks.`;
         }));
       });
 
-      await Promise.all(sectionPromises);
-      console.log(`✅ Stored ${Object.keys(sectionsToStore).length} generated sections in ClusterSection model`);
+      if (!isIndividual) {
+        await Promise.all(sectionPromises);
+        console.log(`✅ Stored ${Object.keys(sectionsToStore).length} generated sections in ClusterSection model`);
+      }
 
       // Return the saved DPR content structure (not the raw enhancedDPR)
       // This ensures the frontend receives the data in the correct format

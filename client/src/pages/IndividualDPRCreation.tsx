@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
-import { ClusterDPRDocumentView as IndividualDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
+import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
@@ -42,7 +42,6 @@ export const IndividualDPRCreation: React.FC = () => {
     resetData,
     setDprIds,
     loadDataFromProject,
-    setStepData,
     setMatchedSchemeCode,
     setVentureMatchAnswers,
   } = useIndividualDPRStore();
@@ -656,12 +655,10 @@ export const IndividualDPRCreation: React.FC = () => {
                         >
                           <IndividualDPRDocumentView
                             trackFieldHits
-                            isIndividualDPR
                             dpr={{
                               content: {
                                 english: {
                                   clusterData: dprPayload,
-                                  ...data.generatedDPR?.sections,
                                 },
                               },
                               metadata: {
@@ -681,11 +678,6 @@ export const IndividualDPRCreation: React.FC = () => {
                             onSectionClick={(stepNumber: number) => {
                               if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
                               window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            onDataChange={(field, value) => {
-                              if (field === 'financialStatements') {
-                                setStepData(15, { ...(data.step15 || {}), financialStatements: value });
-                              }
                             }}
                           />
                         </div>

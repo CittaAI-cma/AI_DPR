@@ -295,6 +295,14 @@ const TE: Record<string, string> = {
   'Udyam Certificate': 'ఉద్యమ్ సర్టిఫికేట్',
   'Bank Passbook': 'బ్యాంకు పాస్‌బుక్',
   'Machinery / Equipment Quotations': 'యంత్రాల / పరికరాల కోటేషన్లు',
+  Question: 'ప్రశ్న',
+  Answer: 'సమాధానం',
+  Section: 'విభాగం',
+  Document: 'పత్రం',
+  Status: 'స్థితి',
+  Pending: 'పెండింగ్',
+  On: 'పై',
+  'Table of Contents': 'విషయ సూచిక',
 };
 
 export function useClusterFormText() {

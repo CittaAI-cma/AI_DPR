@@ -75,7 +75,7 @@ URL may be rewritten to include `projectId`, `dprId`, and `&scheme=` when presen
 
 ### Generate
 
-User must be on the **last visible** step. Generate uses the same adapted payload to produce the bilingual document shown in `ClusterDPRDocumentView`.
+User must be on the **last visible** step. Generate persists the scheme answers only (no cluster AI chapters). Live preview and `/dpr/view/:id` both render `IndividualDPRDocumentView` — **one section per scheme catalog step**, each a Q&A table of the questions asked plus their answers. Cluster chapters (SPV, CFC, enterprise mix, “Basic Cluster Details”) are not used.
 
 ---
 
@@ -138,6 +138,10 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 | `EPM_NIRYAT` | **7** | Export interest subvention — see [epmNiryat.md](./schemes/EPM_NIRYAT/epmNiryat.md) |
 
 `getVisibleSteps(code)` returns `[1..N]` for that scheme and drives the step strip and next/prev navigation.
+
+### Live preview & generated document
+
+`IndividualDPRDocumentView` (not `ClusterDPRDocumentView`) is the only document for this flow. Cover + TOC + **one Q&A section per catalog step**. Fields come from `individualDocModel.ts` (asked questions only). No cluster / SPV / CFC / enterprise-count chapters. Cluster DPR stays on `/cluster-dpr/create`.
 
 ---
 
@@ -263,7 +267,7 @@ Data packs:
 
 On **Create New Latest DPR** only (`IndividualDPRCreation` split/preview pane):
 
-- When step / `schemeExtras` values change (typing, AI apply, fill-all), the live `ClusterDPRDocumentView` scrolls to the **first** tagged occurrence of those fields (`data-dpr-field`).
+- When step / `schemeExtras` values change (typing, AI apply, fill-all), the live `IndividualDPRDocumentView` scrolls to the **first** tagged occurrence of those fields (`data-dpr-field`).
 - If the same change appears in **multiple** places, **Up** / **Down** buttons cycle hits in document order; **Up** hides on the first hit, **Down** hides on the last.
 - Cluster create and saved DPR preview pages do not use this navigator.
 
@@ -295,7 +299,9 @@ Form: `IndividualDPRForm.tsx`
 | `client/src/lib/individualDpr/schemeFormConfig.ts` | Overlay rules, uploads, impact copy |
 | `client/src/lib/individualDpr/schemeBriefs/*` | Brochure content EN/TE |
 | `client/src/lib/individualDpr/prefillFromVentureMatch.ts` | No-op (form prefill disabled) |
-| `client/src/lib/individualDpr/toClusterPayload.ts` | Adapter to cluster APIs |
+| `client/src/components/individual-dpr/IndividualDPRDocumentView.tsx` | Scheme-only live + generated document (Q&A sections) |
+| `client/src/lib/individualDpr/individualDocModel.ts` | Fields asked per scheme step for the document |
+| `client/src/lib/individualDpr/toIndividualPayload.ts` | Adapter to shared draft/generate APIs |
 | `client/src/lib/individualDpr/previewFieldHits.ts` | Live preview field-diff + scroll helpers |
 | `client/src/lib/ventureMatch/schemes.ts` | Scheme codes listed in dropdown |
 | `client/src/lib/ventureMatch/mapToDpr.ts` | Handoff peek/save (shared with Scheme Finder) |
