@@ -55,18 +55,15 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const renderQaTable = (fields: IndividualDocField[]) => {
     if (!fields.length) return null;
     return (
-      <table className="w-full border-collapse text-sm mb-4">
+      <table className="individual-qa">
+        <colgroup>
+          <col style={{ width: '36%' }} />
+          <col style={{ width: '64%' }} />
+        </colgroup>
         <thead>
-          <tr style={{ backgroundColor: '#F3F4F6' }}>
-            <th
-              className="border px-3 py-2 text-left w-2/5"
-              style={{ borderColor: '#1F2937' }}
-            >
-              {tf('Question')}
-            </th>
-            <th className="border px-3 py-2 text-left" style={{ borderColor: '#1F2937' }}>
-              {tf('Answer')}
-            </th>
+          <tr>
+            <th>{tf('Question')}</th>
+            <th>{tf('Answer')}</th>
           </tr>
         </thead>
         <tbody>
@@ -74,12 +71,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             const raw = readDocField(field, data);
             return (
               <tr key={field.path}>
-                <td className="border px-3 py-2 align-top font-medium" style={{ borderColor: '#1F2937' }}>
-                  {tf(field.label)}
-                </td>
-                <td className="border px-3 py-2 align-top whitespace-pre-wrap" style={{ borderColor: '#1F2937' }}>
-                  {fieldHit(field.path, formatDocValue(raw), trackFieldHits)}
-                </td>
+                <td className="q">{tf(field.label)}</td>
+                <td className="a">{fieldHit(field.path, formatDocValue(raw), trackFieldHits)}</td>
               </tr>
             );
           })}
@@ -89,83 +82,79 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   };
 
   return (
-    <div className="text-gray-900 dpr-document" style={{ color: '#1F2937' }}>
-      <div className="mb-10 pb-8" style={{ borderBottom: '2px solid #1F2937' }}>
-        <h1 className="text-3xl font-bold text-center tracking-wide mb-2">DETAILED PROJECT REPORT</h1>
-        <h2 className="text-xl font-semibold text-center mb-1">{tf('On')}</h2>
-        <h2 className="text-xl font-semibold text-center">{tf(cover.actionLine)}</h2>
-        <h2 className="text-2xl font-bold text-center uppercase my-2" style={{ color: '#059669' }}>
+    <div className="dpr-document individual-dpr-document">
+      <header className="individual-cover">
+        <p className="cover-kicker">DETAILED PROJECT REPORT</p>
+        <p className="cover-on">{tf('On')}</p>
+        <p className="cover-action">{tf(cover.actionLine)}</p>
+        <h1 className="cover-unit">
           {fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
-        </h2>
-        <p className="text-center font-semibold">{cover.underLine}</p>
-        <div className="mt-6 max-w-md mx-auto text-sm space-y-1">
-          <p>
-            <span className="font-semibold">{tf('District')}: </span>
+        </h1>
+        <p className="cover-scheme">{cover.underLine}</p>
+        <div className="cover-meta">
+          <div>
+            <span>{tf('District')}</span>
             {fieldHit('step1.district', step1.district || '—', trackFieldHits)}
-          </p>
-          <p>
-            <span className="font-semibold">{tf('Location')}: </span>
+          </div>
+          <div>
+            <span>{tf('Location')}</span>
             {fieldHit('step1.location', step1.location || '—', trackFieldHits)}
-          </p>
+          </div>
           {extras.entrepreneurName && (
-            <p>
-              <span className="font-semibold">{tf('Entrepreneur name')}: </span>
+            <div>
+              <span>{tf('Entrepreneur name')}</span>
               {fieldHit('schemeExtras.entrepreneurName', extras.entrepreneurName, trackFieldHits)}
-            </p>
+            </div>
           )}
         </div>
-      </div>
+      </header>
 
-      <div className="mb-10">
-        <h2 className="text-xl font-bold mb-3">{tf('Table of Contents')}</h2>
-        <table className="w-full border-collapse text-sm">
+      <section className="individual-toc">
+        <h2>{tf('Table of Contents')}</h2>
+        <table className="individual-qa toc">
+          <colgroup>
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '88%' }} />
+          </colgroup>
           <thead>
-            <tr style={{ backgroundColor: '#F3F4F6' }}>
-              <th className="border px-3 py-2 text-left w-16" style={{ borderColor: '#1F2937' }}>
-                #
-              </th>
-              <th className="border px-3 py-2 text-left" style={{ borderColor: '#1F2937' }}>
-                {tf('Section')}
-              </th>
+            <tr>
+              <th>#</th>
+              <th>{tf('Section')}</th>
             </tr>
           </thead>
           <tbody>
             {steps.map((def) => (
               <tr
                 key={def.id}
-                className={onSectionClick ? 'cursor-pointer hover:bg-muted/40' : undefined}
+                className={onSectionClick ? 'is-clickable' : undefined}
                 onClick={() => onSectionClick?.(def.n)}
               >
-                <td className="border px-3 py-2" style={{ borderColor: '#1F2937' }}>
-                  {def.n}
-                </td>
-                <td className="border px-3 py-2" style={{ borderColor: '#1F2937' }}>
-                  {tf(sectionTitleFromStep(def))}
-                </td>
+                <td className="num">{def.n}</td>
+                <td>{tf(sectionTitleFromStep(def))}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </section>
 
       {steps.map((def) => {
         const heading = `${def.n}. ${tf(sectionTitleFromStep(def))}`;
         if (def.id === 'uploads' || def.contentStep === 18) {
           return (
-            <div key={def.id} id={`individual-section-${def.n}`} className="mb-10">
-              <h2 className="text-xl font-bold mb-3">{heading}</h2>
+            <section key={def.id} id={`individual-section-${def.n}`} className="individual-sec">
+              <h2>{heading}</h2>
               {uploads.length === 0 ? (
-                <p className="text-sm">—</p>
+                <p className="empty">—</p>
               ) : (
-                <table className="w-full border-collapse text-sm">
+                <table className="individual-qa">
+                  <colgroup>
+                    <col style={{ width: '72%' }} />
+                    <col style={{ width: '28%' }} />
+                  </colgroup>
                   <thead>
-                    <tr style={{ backgroundColor: '#F3F4F6' }}>
-                      <th className="border px-3 py-2 text-left" style={{ borderColor: '#1F2937' }}>
-                        {tf('Document')}
-                      </th>
-                      <th className="border px-3 py-2 text-left w-32" style={{ borderColor: '#1F2937' }}>
-                        {tf('Status')}
-                      </th>
+                    <tr>
+                      <th>{tf('Document')}</th>
+                      <th>{tf('Status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -173,28 +162,24 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                       const present = !!(uploadStore[u.id] || uploadStore[u.label]);
                       return (
                         <tr key={u.id}>
-                          <td className="border px-3 py-2" style={{ borderColor: '#1F2937' }}>
-                            {tf(u.label)}
-                          </td>
-                          <td className="border px-3 py-2" style={{ borderColor: '#1F2937' }}>
-                            {tf(present ? 'Uploaded' : 'Pending')}
-                          </td>
+                          <td>{tf(u.label)}</td>
+                          <td>{tf(present ? 'Uploaded' : 'Pending')}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               )}
-            </div>
+            </section>
           );
         }
 
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
         return (
-          <div key={def.id} id={`individual-section-${def.n}`} className="mb-10">
-            <h2 className="text-xl font-bold mb-3">{heading}</h2>
+          <section key={def.id} id={`individual-section-${def.n}`} className="individual-sec">
+            <h2>{heading}</h2>
             {renderQaTable(fields)}
-          </div>
+          </section>
         );
       })}
     </div>

@@ -136,6 +136,12 @@
   text-align: justify;
 }
 
+.dpr-document .cover-under,
+.dpr-document p.cover-under {
+  text-align: center;
+  text-align-last: center;
+}
+
 .dpr-document table {
   width: 100%;
   border-collapse: collapse;
@@ -225,4 +231,139 @@
   page-break-inside: auto;
   min-height: auto;
   height: auto;
+}
+
+/* Create New Latest DPR — A4-safe scheme Q&A document */
+.individual-dpr-document {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  color: #1f2937;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 11pt;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.individual-dpr-document * {
+  box-sizing: border-box;
+}
+
+.individual-cover {
+  text-align: center;
+  padding: 8mm 4mm 10mm;
+  margin-bottom: 8mm;
+  border-bottom: 2px solid #1f2937;
+}
+
+.individual-dpr-document .cover-kicker {
+  font-size: 20pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0 0 10pt;
+  text-align: center;
+  text-align-last: center;
+}
+
+.individual-dpr-document .cover-on,
+.individual-dpr-document .cover-action {
+  font-size: 13pt;
+  font-weight: 600;
+  margin: 2pt 0;
+  text-align: center;
+  text-align-last: center;
+}
+
+.individual-dpr-document .cover-unit {
+  color: #059669;
+  font-size: 20pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 10pt 8mm;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.individual-dpr-document .cover-scheme {
+  font-size: 12pt;
+  font-weight: 600;
+  max-width: 150mm;
+  margin: 8pt auto 0;
+  line-height: 1.4;
+  text-align: center;
+  text-align-last: center;
+}
+
+.individual-cover .cover-meta {
+  display: table;
+  margin: 14pt auto 0;
+  text-align: left;
+  font-size: 11pt;
+}
+
+.individual-cover .cover-meta > div {
+  display: table-row;
+}
+
+.individual-cover .cover-meta span {
+  display: table-cell;
+  font-weight: 700;
+  padding: 2pt 10pt 2pt 0;
+  white-space: nowrap;
+}
+
+.individual-toc,
+.individual-sec {
+  margin: 0 0 7mm;
+  page-break-inside: avoid;
+}
+
+.individual-dpr-document h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  margin: 0 0 8pt;
+  padding-bottom: 3pt;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.individual-dpr-document table.individual-qa {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0 0 4pt;
+  font-size: 10pt;
+}
+
+.individual-dpr-document table.individual-qa th,
+.individual-dpr-document table.individual-qa td {
+  border: 1px solid #1f2937;
+  padding: 6pt 7pt;
+  vertical-align: top;
+  text-align: left;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.individual-dpr-document table.individual-qa th {
+  background: #f3f4f6;
+  font-weight: 700;
+}
+
+.individual-dpr-document table.individual-qa td.q {
+  font-weight: 600;
+  background: #fafafa;
+}
+
+.individual-dpr-document table.individual-qa td.num {
+  text-align: center;
+}
+
+.individual-dpr-document tr.is-clickable {
+  cursor: pointer;
+}
+
+.individual-dpr-document .empty {
+  text-align: left;
 }

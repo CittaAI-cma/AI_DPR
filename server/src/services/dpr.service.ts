@@ -3961,7 +3961,7 @@ export class DPRService {
     const doc = buildIndividualDocument(dpr, project);
     const html = renderIndividualDprHtml(doc);
     try {
-      return await this.generatePDFFromHTML(html);
+      return await this.generatePDFFromHTML(html, { margin: '16mm' });
     } catch (error: any) {
       console.warn('⚠️ Individual HTML PDF failed, using PDFKit fallback:', error?.message);
       return this.generateIndividualDPRPDFWithPDFKit(doc);
@@ -4250,10 +4250,15 @@ export class DPRService {
    * Generate a PDF directly from a full HTML document string.
    * Used to ensure the downloaded PDF matches the client preview 1:1 (Cluster DPR React view).
    */
-  static async generatePDFFromHTML(html: string): Promise<Buffer> {
+  static async generatePDFFromHTML(
+    html: string,
+    options?: { margin?: string }
+  ): Promise<Buffer> {
     if (!html || typeof html !== 'string') {
       throw new Error('HTML must be a string');
     }
+
+    const pageMargin = options?.margin || '0';
 
     // Try to use Puppeteer for HTML-to-PDF conversion
     try {
@@ -4301,8 +4306,8 @@ export class DPRService {
           format: 'A4',
           printBackground: true,
           displayHeaderFooter: false,
-          margin: { top: '0', right: '0', bottom: '0', left: '0' },
-          preferCSSPageSize: true,
+          margin: { top: pageMargin, right: pageMargin, bottom: pageMargin, left: pageMargin },
+          preferCSSPageSize: !options?.margin,
           timeout: 120000,
           scale: 1.0,
         });

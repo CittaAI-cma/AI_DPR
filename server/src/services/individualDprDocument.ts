@@ -766,14 +766,14 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
     const body = rows
       .map(
         (r) =>
-          `<tr><td>${escapeHtml(r.label)}</td><td>${escapeHtml(r.value).replace(/\n/g, '<br/>')}</td></tr>`
+          `<tr><td class="q">${escapeHtml(r.label)}</td><td>${escapeHtml(r.value).replace(/\n/g, '<br/>')}</td></tr>`
       )
       .join('');
-    return `<table><thead><tr><th style="width:40%">Question</th><th>Answer</th></tr></thead><tbody>${body}</tbody></table>`;
+    return `<table><colgroup><col style="width:36%"/><col style="width:64%"/></colgroup><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>${body}</tbody></table>`;
   };
 
   const toc = doc.sections
-    .map((s) => `<tr><td>${s.n}</td><td>${escapeHtml(s.title)}</td></tr>`)
+    .map((s) => `<tr><td class="num">${s.n}</td><td>${escapeHtml(s.title)}</td></tr>`)
     .join('');
 
   const sectionsHtml = doc.sections
@@ -789,34 +789,40 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
 <meta charset="utf-8" />
 <style>
   @page { size: A4; margin: 16mm; }
-  html, body { margin: 0; padding: 0; color: #1F2937; font-family: Helvetica, Arial, sans-serif; }
-  .cover { text-align: center; border-bottom: 2px solid #1F2937; padding-bottom: 24px; margin-bottom: 28px; }
-  h1 { font-size: 26px; letter-spacing: 0.04em; margin: 0 0 8px; }
-  h2 { font-size: 16px; margin: 0 0 6px; }
-  .unit { color: #059669; font-size: 22px; font-weight: 700; text-transform: uppercase; margin: 10px 0; }
-  .meta { text-align: left; max-width: 360px; margin: 20px auto 0; font-size: 13px; }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 12px; }
-  th, td { border: 1px solid #1F2937; padding: 7px 9px; vertical-align: top; text-align: left; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; color: #1F2937; font-family: 'Times New Roman', Times, serif; }
+  .cover { text-align: center; border-bottom: 2px solid #1F2937; padding: 4mm 2mm 8mm; margin-bottom: 8mm; }
+  .kicker { font-size: 20pt; font-weight: 700; letter-spacing: 0.08em; margin: 0 0 10pt; }
+  .on, .action { font-size: 13pt; font-weight: 600; margin: 2pt 0; }
+  .unit { color: #059669; font-size: 20pt; font-weight: 700; text-transform: uppercase; margin: 10pt 6mm; line-height: 1.25; }
+  .scheme { font-size: 12pt; font-weight: 600; max-width: 150mm; margin: 8pt auto 0; line-height: 1.4; }
+  .meta { display: table; margin: 14pt auto 0; text-align: left; font-size: 11pt; }
+  .meta div { display: table-row; }
+  .meta span { display: table-cell; font-weight: 700; padding: 2pt 10pt 2pt 0; white-space: nowrap; }
+  h2 { font-size: 13pt; margin: 0 0 8pt; padding-bottom: 3pt; border-bottom: 1px solid #D1D5DB; }
+  table { width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0 0 6mm; font-size: 10pt; }
+  th, td { border: 1px solid #1F2937; padding: 6pt 7pt; vertical-align: top; text-align: left; overflow-wrap: anywhere; word-break: break-word; }
   thead th { background: #F3F4F6; }
-  .sec { margin-bottom: 22px; page-break-inside: avoid; }
-  .sec h2 { font-size: 16px; margin-bottom: 8px; }
+  td.q { font-weight: 600; background: #FAFAFA; }
+  td.num { text-align: center; width: 12%; }
+  .sec { margin-bottom: 7mm; page-break-inside: avoid; }
 </style>
 </head>
 <body>
   <div class="cover">
-    <h1>DETAILED PROJECT REPORT</h1>
-    <h2>On</h2>
-    <h2>${escapeHtml(doc.actionLine)}</h2>
+    <div class="kicker">DETAILED PROJECT REPORT</div>
+    <div class="on">On</div>
+    <div class="action">${escapeHtml(doc.actionLine)}</div>
     <div class="unit">${escapeHtml(doc.unitName)}</div>
-    <p><strong>${escapeHtml(doc.underLine)}</strong></p>
+    <div class="scheme">${escapeHtml(doc.underLine)}</div>
     <div class="meta">
-      <p><strong>District:</strong> ${escapeHtml(doc.district || '—')}</p>
-      <p><strong>Location:</strong> ${escapeHtml(doc.location || '—')}</p>
-      ${doc.entrepreneurName ? `<p><strong>Entrepreneur name:</strong> ${escapeHtml(doc.entrepreneurName)}</p>` : ''}
+      <div><span>District</span>${escapeHtml(doc.district || '—')}</div>
+      <div><span>Location</span>${escapeHtml(doc.location || '—')}</div>
+      ${doc.entrepreneurName ? `<div><span>Entrepreneur name</span>${escapeHtml(doc.entrepreneurName)}</div>` : ''}
     </div>
   </div>
   <h2>Table of Contents</h2>
-  <table><thead><tr><th style="width:48px">#</th><th>Section</th></tr></thead><tbody>${toc}</tbody></table>
+  <table><colgroup><col style="width:12%"/><col style="width:88%"/></colgroup><thead><tr><th>#</th><th>Section</th></tr></thead><tbody>${toc}</tbody></table>
   ${sectionsHtml}
 </body>
 </html>`;

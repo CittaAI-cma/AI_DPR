@@ -271,14 +271,18 @@ export const DPRPreview: React.FC = () => {
       let blob;
       if (format === 'pdf') {
         // Cluster + Latest individual: capture the on-screen Q&A document (not the cluster server PDF)
-        if (isClusterDPR || isIndividualDPR) {
+        if (isIndividualDPR) {
+          // Server A4 template (16mm margins) — DOM capture was clipping tables at the page edge
+          blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
+          downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
+        } else if (isClusterDPR) {
           const root = document.querySelector('.dpr-document');
           if (root) {
             try {
               const html = captureElementAsStandaloneHTML(root);
               blob = await api.downloadPDFExactFromHTML(dprId!, html, viewLanguage);
             } catch (htmlErr) {
-              console.warn('HTML PDF failed, using server Q&A PDF', htmlErr);
+              console.warn('HTML PDF failed, using server PDF', htmlErr);
               blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
             }
             downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
