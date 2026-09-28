@@ -1,6 +1,7 @@
 import {
   DATA_FIDUCIARY_NAME,
   DRAFT_RETENTION_MONTHS,
+  AUDIT_RETENTION_MONTHS,
   GRIEVANCE_EMAIL,
   PRIVACY_NOTICE_VERSION,
 } from './constants';
@@ -36,12 +37,12 @@ const EN: PrivacyNoticeCopy = {
     {
       id: 'others',
       heading: 'Who else may see it',
-      body: 'Our hosting provider stores the database. Identity scans are kept privately on our server (not as a public web link). Cluster photos may still go to Cloudinary. OpenAI receives form text only when AI help is switched on. We do not put Aadhaar, PAN, or bank scans in the AI prompt. Downloaded DPRs show Uploaded or Pending for identity files — they do not attach the scan. Take originals to the bank or DIC.',
+      body: 'Our hosting provider stores the database. Identity scans and cluster photos are kept privately on our server (not as a public web link, and not on Cloudinary). OpenAI receives form text only when AI help is switched on. We do not put Aadhaar, PAN, or bank scans in the AI prompt. Downloaded DPRs show Uploaded or Pending for identity files — they do not attach the scan. Unit photos can appear in the DPR. Take identity originals to the bank or DIC.',
     },
     {
       id: 'howLong',
       heading: 'How long we keep it',
-      body: `A scheduled job deletes unused DPR drafts ${DRAFT_RETENTION_MONTHS} months after the last edit of that draft. Fifteen days before that, we warn you in the app and to the phone number on your account (SMS is mocked until a gateway such as Twilio is connected). Your account is not deleted only because one draft is old. The same last-edit clock applies to submitted copies unless a later legal hold says otherwise. Audit logs stay after a draft is gone, usually 12–24 months.`,
+      body: `A scheduled job deletes unused DPR drafts and submitted copies ${DRAFT_RETENTION_MONTHS} months after the last edit of that report (not after first save, and not because you only logged in). Fifteen days before that, we warn you in the app and to the phone number on your account (SMS is mocked until a gateway such as Twilio is connected). Your account is not deleted only because one report is old. Audit logs of each action stay ${AUDIT_RETENTION_MONTHS} months from that action, then they are erased. They stay if you delete your account, until that clock ends.`,
     },
     {
       id: 'rights',
@@ -85,12 +86,12 @@ const TE: PrivacyNoticeCopy = {
     {
       id: 'others',
       heading: 'ఇంకెవరు చూడవచ్చు',
-      body: 'హోస్టింగ్ ప్రొవైడర్ డేటాబేస్‌ను ఉంచుతుంది. గుర్తింపు స్కాన్లు మా సర్వర్‌లో ప్రైవేట్‌గా ఉంటాయి (పబ్లిక్ వెబ్ లింక్ కాదు). క్లస్టర్ ఫోటోలు Cloudinaryకి వెళ్లవచ్చు. AI సహాయం ఆన్ ఉన్నప్పుడు మాత్రమే OpenAI ఫారమ్ టెక్స్ట్‌ను పొందుతుంది. ఆధార్, పాన్, బ్యాంకు స్కాన్లను AI ప్రాంప్ట్‌లో పెట్టము. డౌన్‌లోడ్ DPRలో గుర్తింపు ఫైళ్లు Uploaded లేదా Pendingగా కనిపిస్తాయి — స్కాన్ జత కాదు.',
+      body: 'హోస్టింగ్ ప్రొవైడర్ డేటాబేస్‌ను ఉంచుతుంది. గుర్తింపు స్కాన్లు మరియు క్లస్టర్ ఫోటోలు మా సర్వర్‌లో ప్రైవేట్‌గా ఉంటాయి (పబ్లిక్ వెబ్ లింక్ కాదు, Cloudinary కాదు). AI సహాయం ఆన్ ఉన్నప్పుడు మాత్రమే OpenAI ఫారమ్ టెక్స్ట్‌ను పొందుతుంది. ఆధార్, పాన్, బ్యాంకు స్కాన్లను AI ప్రాంప్ట్‌లో పెట్టము. డౌన్‌లోడ్ DPRలో గుర్తింపు ఫైళ్లు Uploaded లేదా Pendingగా కనిపిస్తాయి — స్కాన్ జత కాదు. యూనిట్ ఫోటోలు DPRలో కనిపించవచ్చు.',
     },
     {
       id: 'howLong',
       heading: 'ఎంతకాలం ఉంచుతాము',
-      body: `ఉపయోగించని DPR డ్రాఫ్ట్‌లు చివరి సవరణ తర్వాత ${DRAFT_RETENTION_MONTHS} నెలలకు షెడ్యూల్ జాబ్ తొలగిస్తుంది. అంతకు 15 రోజుల ముందు యాప్‌లో మరియు మీ ఫోన్ నంబర్‌కు హెచ్చరిక (SMS ప్రస్తుతం మాక్; Twilio వంటి గేట్‌వే తర్వాత నిజం). ఒక డ్రాఫ్ట్ పాతది అని మాత్రమే ఖాతా తొలగించబడదు. ఆడిట్ లాగ్‌లు డ్రాఫ్ట్ పోయినా ఉంటాయి.`,
+      body: `ఉపయోగించని DPR డ్రాఫ్ట్‌లు మరియు సమర్పించిన కాపీలు చివరి సవరణ తర్వాత ${DRAFT_RETENTION_MONTHS} నెలలకు తొలగిస్తాము (మొదటి సేవ్ కాదు, లాగిన్ మాత్రమే కాదు). అంతకు 15 రోజుల ముందు యాప్‌లో మరియు మీ ఫోన్ నంబర్‌కు హెచ్చరిక. ఖాతా తొలగించబడదు. ప్రతి ఆడిట్ చర్య ${AUDIT_RETENTION_MONTHS} నెలలు ఉండి తర్వాత తొలగుతుంది.`,
     },
     {
       id: 'rights',

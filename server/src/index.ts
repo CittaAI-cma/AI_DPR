@@ -6,7 +6,6 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import path from 'path';
 import { connectDatabase } from './config/database';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler.middleware';
@@ -28,6 +27,10 @@ if (process.env.NODE_ENV === 'production') {
     getJwtSecret();
   } catch (error: any) {
     console.error('❌ ERROR:', error.message);
+    process.exit(1);
+  }
+  if (!(process.env.KYC_ENCRYPTION_KEY || '').trim()) {
+    console.error('❌ ERROR: KYC_ENCRYPTION_KEY is required in production.');
     process.exit(1);
   }
 }
@@ -57,25 +60,10 @@ app.use(morgan('dev')); // Logging
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve cluster photos only. KYC lives under uploads/kyc and is not public.
-app.use('/uploads', (req, res, next) => {
-  const rel = (req.path || '').toLowerCase();
-  if (rel.startsWith('/kyc') || rel.startsWith('/documents') || rel.startsWith('/dprs')) {
-    res.status(404).json({ success: false, message: 'Not found' });
-    return;
-  }
-  const origin = process.env.CORS_ORIGIN || 'http://localhost:5173';
-  res.header('Access-Control-Allow-Origin', origin);
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.removeHeader('X-Frame-Options');
-  res.removeHeader('Content-Security-Policy');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-}, express.static(path.join(process.cwd(), 'uploads')));
+// No public file tree. KYC and cluster photos are served only via authenticated APIs.
+app.use('/uploads', (req, res) => {
+  res.status(404).json({ success: false, message: 'Not found' });
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -130,9 +118,9 @@ const startServer = async () => {
     const runRetention = () => {
       runRetentionJob()
         .then((summary) => {
-          if (summary.warned || summary.purged) {
+          if (summary.warned || summary.purged || summary.auditPurged) {
             console.info(
-              `[retention] warned=${summary.warned} purged=${summary.purged} idleDays=${summary.idleDays}`
+              `[retention] warned=${summary.warned} purged=${summary.purged} auditPurged=${summary.auditPurged} idleDays=${summary.idleDays} auditDays=${summary.auditDays}`
             );
           }
         })

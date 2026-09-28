@@ -767,6 +767,13 @@ class APIClient {
     );
   }
 
+  async getClusterFileBlob(fileId: string) {
+    const response = await this.client.get(`/dpr/cluster/files/${fileId}`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  }
+
   async uploadClusterDPRImage(file: File) {
     return this.handleRequest(
       async () => {
@@ -877,10 +884,12 @@ class APIClient {
   async deleteClusterDPRImage(imageUrl: string, cloudinaryPublicId?: string) {
     return this.handleRequest(
       async () => {
+        const fileId = imageUrl?.startsWith('file:') ? imageUrl.slice(5) : undefined;
         const response = await this.client.delete('/dpr/cluster/images/delete', {
           data: {
             imageUrl,
             publicId: cloudinaryPublicId,
+            fileId,
           },
         });
         return response.data;

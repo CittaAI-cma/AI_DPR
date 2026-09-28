@@ -15,6 +15,8 @@ import { EditableFinancialTable } from './EditableFinancialTable';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { fieldHitNode } from '@/lib/individualDpr/previewFieldHits';
 import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
+import { PrivateImg } from '@/components/privacy/PrivateImg';
+import { isPrivateFileRef, storedImageRef } from '@/lib/privacy/privateFile';
 
 interface ClusterDPRDocumentViewProps {
   dpr: any;
@@ -577,7 +579,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
     try {
       const result = await api.generateClusterDPRImage(prompt, sectionType, sectionInfo);
       if (result.success && result.data?.imageUrl) {
-        const imageUrl = result.data.imageUrl;
+        const imageUrl = storedImageRef(result.data);
         setImages({ ...images, [imageId]: imageUrl });
 
         // Save image to project database
@@ -615,15 +617,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
     try {
       const result = await api.uploadClusterDPRImage(file);
       if (result.success && result.data?.imageUrl) {
-        // Use Cloudinary URL directly (already full URL) or construct local URL
-        const imageUrl = result.data.imageUrl.startsWith('http')
-          ? result.data.imageUrl
-          : (() => {
-            const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            const serverBaseUrl = apiBaseUrl.replace('/api', '');
-            return `${serverBaseUrl}${result.data.imageUrl}`;
-          })();
-
+        const imageUrl = storedImageRef(result.data);
         setImages({ ...images, [imageId]: imageUrl });
 
         // Store Cloudinary public ID for future deletion if available
@@ -666,46 +660,25 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
       return;
     }
 
-    // Check if it's a Cloudinary URL
-    const isCloudinaryUrl = imageUrl.includes('cloudinary.com') || imageUrl.includes('res.cloudinary.com');
-
-    if (isCloudinaryUrl) {
+    if (isPrivateFileRef(imageUrl) || imageUrl.includes('cloudinary.com')) {
       try {
-        // Extract public ID from Cloudinary URL
-        const urlParts = imageUrl.split('/');
-        const uploadIndex = urlParts.findIndex(part => part === 'upload');
-        if (uploadIndex !== -1 && uploadIndex < urlParts.length - 1) {
-          // Extract public ID (format: v1234567890/folder/public_id.ext)
-          const publicIdPath = urlParts.slice(uploadIndex + 2).join('/').replace(/\.[^/.]+$/, '');
-
-          // Call API to delete from Cloudinary
-          const result = await api.deleteClusterDPRImage(imageUrl, publicIdPath);
-
-          if (result.success) {
-            const newImages = { ...images };
-            delete newImages[imageId];
-            setImages(newImages);
-            toast.success('Image removed and deleted from storage');
-          } else {
-            throw new Error(result.message || 'Failed to delete image');
-          }
-        } else {
-          // Fallback: just remove from UI
-          const newImages = { ...images };
-          delete newImages[imageId];
-          setImages(newImages);
-          toast.success('Image removed');
-        }
-      } catch (error: any) {
-        console.error('Error deleting image from Cloudinary:', error);
-        toast.error('Failed to delete image from storage, but removed from view');
-        // Still remove from UI even if deletion fails
+        const result = await api.deleteClusterDPRImage(imageUrl);
         const newImages = { ...images };
         delete newImages[imageId];
         setImages(newImages);
+        if (result.success) {
+          toast.success('Image removed and deleted from storage');
+        } else {
+          toast.success('Image removed');
+        }
+      } catch (error: any) {
+        console.error('Error deleting image:', error);
+        const newImages = { ...images };
+        delete newImages[imageId];
+        setImages(newImages);
+        toast.success('Image removed');
       }
     } else {
-      // Not a Cloudinary URL, just remove from UI
       const newImages = { ...images };
       delete newImages[imageId];
       setImages(newImages);
@@ -1209,14 +1182,13 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
           >
             {hasImage ? (
               <>
-                <img
+                <PrivateImg
                   src={currentImage}
                   alt={alt}
                   className="w-full h-auto object-contain"
                   style={{ maxHeight: '300px' }}
                   crossOrigin="anonymous"
                   onError={(e) => {
-                    // Fallback to placeholder
                     e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD48L3N2Zz4=';
                   }}
                 />
@@ -1678,7 +1650,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
                           );
 
                           if (result.success && result.data?.imageUrl) {
-                            const imageUrl = result.data.imageUrl;
+                            const imageUrl = storedImageRef(result.data);
                             setImages(prev => ({ ...prev, [imageConfig.imageId]: imageUrl }));
 
                             // Save image to project database

@@ -5,7 +5,8 @@ import { KycFile } from '../models/KycFile.model';
 import { User } from '../models/User.model';
 import { AuditService } from './audit.service';
 import { NotifyService } from './notify.service';
-import { retentionIdleDays, retentionWarningDays } from '../lib/kycStorage';
+import { retentionIdleDays, retentionWarningDays, auditRetentionDays } from '../lib/kycStorage';
+import { AuditEvent } from '../models/AuditEvent.model';
 import { CloudinaryService } from './cloudinary.service';
 import fs from 'fs';
 import path from 'path';
@@ -13,8 +14,10 @@ import path from 'path';
 export type RetentionResult = {
   warned: number;
   purged: number;
+  auditPurged: number;
   idleDays: number;
   warningDays: number;
+  auditDays: number;
   details: Array<{ dprId: string; action: 'warn' | 'purge'; userId?: string }>;
 };
 
@@ -38,6 +41,11 @@ function collectPublicIds(value: unknown, out: Set<string>, depth = 0): void {
 
 function collectKycFileIds(value: unknown, out: Set<string>, depth = 0): void {
   if (value == null || depth > 12) return;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('file:') && trimmed.length > 5) out.add(trimmed.slice(5));
+    return;
+  }
   if (Array.isArray(value)) {
     value.forEach((item) => collectKycFileIds(item, out, depth + 1));
     return;
@@ -52,7 +60,7 @@ function collectKycFileIds(value: unknown, out: Set<string>, depth = 0): void {
 async function unlinkKycRecord(file: { storagePath?: string }): Promise<void> {
   try {
     if (file.storagePath && fs.existsSync(file.storagePath)) {
-      const root = path.resolve(process.cwd(), 'uploads', 'kyc');
+      const root = path.resolve(process.cwd(), 'uploads');
       const resolved = path.resolve(file.storagePath);
       if (resolved.startsWith(root)) fs.unlinkSync(resolved);
     }
@@ -76,6 +84,10 @@ async function purgeDpr(dpr: any): Promise<void> {
   }
   const fileIds = new Set<string>();
   collectKycFileIds(snapshot, fileIds);
+  if (projectId) {
+    const project = await Project.findById(projectId).lean();
+    collectKycFileIds((project as any)?.images, fileIds);
+  }
   if (fileIds.size) {
     const files = await KycFile.find({ _id: { $in: Array.from(fileIds) } });
     for (const file of files) await unlinkKycRecord(file);
@@ -97,11 +109,14 @@ async function purgeDpr(dpr: any): Promise<void> {
 }
 
 /**
- * Warn, then delete idle DPRs. Never deletes the user account.
+ * Warn, then delete idle DPRs (draft, submitted, or approved).
+ * Clock is last edit of that DPR, not first save and not last login.
+ * Never deletes the user account.
  */
 export async function runRetentionJob(): Promise<RetentionResult> {
   const idleDays = retentionIdleDays();
   const warningDays = retentionWarningDays();
+  const auditDays = auditRetentionDays();
   const dayMs = 24 * 60 * 60 * 1000;
   const warnAgeDays = Math.max(0, idleDays - warningDays);
   const warnAgeBefore = new Date(Date.now() - warnAgeDays * dayMs);
@@ -111,11 +126,14 @@ export async function runRetentionJob(): Promise<RetentionResult> {
   const result: RetentionResult = {
     warned: 0,
     purged: 0,
+    auditPurged: 0,
     idleDays,
     warningDays,
+    auditDays,
     details: [],
   };
 
+  // No status filter: submitted copies use the same last-edit clock as drafts.
   const idle = await DPRVersion.find({ updatedAt: { $lte: warnAgeBefore } });
 
   for (const dpr of idle) {
@@ -139,8 +157,8 @@ export async function runRetentionJob(): Promise<RetentionResult> {
         step1?.clusterName ||
         dpr.content?.english?.clusterData?.unitName ||
         'your DPR draft';
-      const title = `Your DPR draft will be deleted in ${warningDays} days`;
-      const body = `Hello${user?.name ? ` ${user.name}` : ''}. You have not edited “${projectName}” for ${warnAgeDays} days. We will delete that draft (not your account) in ${warningDays} days unless you open and save it.`;
+      const title = `Your DPR will be deleted in ${warningDays} days`;
+      const body = `Hello${user?.name ? ` ${user.name}` : ''}. You have not edited “${projectName}” for ${warnAgeDays} days. We will delete that report (not your account) in ${warningDays} days unless you open and save it.`;
       if (userId) {
         await NotifyService.notify({
           userId,
@@ -181,6 +199,13 @@ export async function runRetentionJob(): Promise<RetentionResult> {
     });
     result.purged += 1;
     result.details.push({ dprId, action: 'purge', userId });
+  }
+
+  const auditCutoff = new Date(Date.now() - auditDays * dayMs);
+  const auditDelete = await AuditEvent.deleteMany({ at: { $lt: auditCutoff } });
+  result.auditPurged = auditDelete.deletedCount || 0;
+  if (result.auditPurged) {
+    console.info(`[retention] erased ${result.auditPurged} audit rows older than ${auditDays} days`);
   }
 
   return result;

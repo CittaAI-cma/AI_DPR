@@ -24,6 +24,24 @@ export function kycDir(): string {
   return dir;
 }
 
+export function clusterPhotoDir(): string {
+  const dir = path.join(process.cwd(), 'uploads', 'cluster');
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
+
+export class KycEncryptionRequiredError extends Error {
+  code = 'KYC_ENCRYPTION_REQUIRED';
+  constructor() {
+    super(
+      'KYC_ENCRYPTION_KEY is required in production to store identity files and cluster photos.'
+    );
+    this.name = 'KycEncryptionRequiredError';
+  }
+}
+
 function encryptionKey(): Buffer | null {
   const raw = process.env.KYC_ENCRYPTION_KEY;
   if (!raw || !raw.trim()) return null;
@@ -32,6 +50,12 @@ function encryptionKey(): Buffer | null {
 
 export function isKycEncryptionEnabled(): boolean {
   return !!encryptionKey();
+}
+
+export function assertKycEncryptionConfigured(): void {
+  if (process.env.NODE_ENV === 'production' && !encryptionKey()) {
+    throw new KycEncryptionRequiredError();
+  }
 }
 
 export function encryptBuffer(plain: Buffer): Buffer {
@@ -58,6 +82,7 @@ export function decryptBuffer(stored: Buffer): Buffer {
 }
 
 export function persistKycBytes(filePath: string, bytes: Buffer): { encrypted: boolean } {
+  assertKycEncryptionConfigured();
   const key = encryptionKey();
   if (!key) {
     fs.writeFileSync(filePath, bytes);
@@ -142,4 +167,23 @@ export function retentionWarningDays(): number {
   const n = Number(process.env.RETENTION_WARNING_DAYS);
   if (Number.isFinite(n) && n >= 0) return n;
   return 15;
+}
+
+/** Per-event audit lifetime. Default 24 months. Floor in the Rules is 1 year. */
+export function auditRetentionDays(): number {
+  const n = Number(process.env.AUDIT_RETENTION_DAYS);
+  if (Number.isFinite(n) && n > 0) return n;
+  return 730;
+}
+
+export function isPrivateFileRef(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith('file:') && value.length > 5;
+}
+
+export function fileIdFromRef(value: string): string {
+  return value.startsWith('file:') ? value.slice(5) : value;
+}
+
+export function privateFileRef(fileId: string): string {
+  return `file:${fileId}`;
 }

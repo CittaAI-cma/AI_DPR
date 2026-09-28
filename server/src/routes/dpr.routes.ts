@@ -58,6 +58,7 @@ router.get('/cluster/:dprId', ClusterDPRController.getClusterDPR);
 router.get('/cluster/:dprId/sections', ClusterDPRController.getClusterSections);
 
 router.post('/cluster/images/generate', requireAiConsent, ClusterDPRController.generateImage);
+router.get('/cluster/files/:fileId', ClusterDPRController.getFile);
 router.post('/cluster/images/upload', (req, res, next) => {
   const upload = ClusterDPRController.getImageUploadMiddleware();
   upload.single('image')(req, res, (err: any) => {
