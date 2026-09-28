@@ -237,6 +237,7 @@ class APIClient {
 
   // Auth endpoints
   async register(data: any) {
+    this.clearCache('/auth/profile');
     return this.handleRequest(
       async () => {
         const response = await this.client.post('/auth/register', data);
@@ -247,6 +248,7 @@ class APIClient {
   }
 
   async login(email: string, password: string) {
+    this.clearCache('/auth/profile');
     return this.handleRequest(
       async () => {
         const response = await this.client.post('/auth/login', { email, password });
@@ -254,6 +256,25 @@ class APIClient {
       },
       () => MockDataService.login(email, password)
     );
+  }
+
+  async logout() {
+    try {
+      await this.client.post('/auth/logout');
+    } catch {
+      /* still clear the client session */
+    }
+  }
+
+  async acceptConsent(data: {
+    accountConsent: boolean;
+    aiAssist: boolean;
+    analytics: boolean;
+    noticeVersion: string;
+  }) {
+    this.clearCache('/auth/profile');
+    const response = await this.client.post('/auth/consent', data);
+    return response.data;
   }
 
   async getProfile() {

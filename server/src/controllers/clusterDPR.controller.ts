@@ -7,6 +7,7 @@ import { CloudinaryService } from '../services/cloudinary.service';
 import { Project } from '../models/Project.model';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { ClusterSection } from '../models/ClusterSection.model';
+import { payloadHasUnder18Applicant, under18Response } from '../lib/under18';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -34,6 +35,11 @@ export class ClusterDPRController {
           success: false,
           message: 'Cluster data is required',
         });
+        return;
+      }
+
+      if (payloadHasUnder18Applicant(clusterData)) {
+        res.status(403).json(under18Response());
         return;
       }
 
@@ -662,6 +668,11 @@ export class ClusterDPRController {
           success: false,
           message: 'Draft data with a unit / project name is required',
         });
+        return;
+      }
+
+      if (payloadHasUnder18Applicant(clusterData)) {
+        res.status(403).json(under18Response());
         return;
       }
 

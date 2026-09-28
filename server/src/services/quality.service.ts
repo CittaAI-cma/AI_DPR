@@ -1,6 +1,5 @@
 // @ts-nocheck
-import OpenAI from 'openai';
-import dotenv from 'dotenv';
+import { openai } from '../lib/openaiClient';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { Project } from '../models/Project.model';
 import { MLService } from './ml.service';
@@ -9,12 +8,6 @@ import {
   groupSectionsForQuality,
   isIndividualDprRecord,
 } from './individualDprDocument';
-
-dotenv.config();
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export interface QualityAnalysisResult {
   score: number;

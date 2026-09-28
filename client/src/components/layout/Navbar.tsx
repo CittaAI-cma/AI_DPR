@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
+import { api } from '@/lib/api';
 import { canAccessAdmin } from '@/lib/rbac';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +19,8 @@ export const Navbar: React.FC = () => {
   const handleLinkClick = useLinkHandler();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await api.logout();
     logout();
     navigate('/login');
     setMobileMenuOpen(false);

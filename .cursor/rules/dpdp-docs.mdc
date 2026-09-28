@@ -1,0 +1,47 @@
+---
+description: Keep DPDP living markdown in sync with privacy/consent/audit code
+globs:
+  - server/src/lib/privacyNotice.ts
+  - server/src/lib/under18.ts
+  - server/src/lib/sanitizeForAi.ts
+  - server/src/lib/openaiClient.ts
+  - server/src/lib/jwtSecret.ts
+  - server/src/models/AuditEvent.model.ts
+  - server/src/models/User.model.ts
+  - server/src/services/audit.service.ts
+  - server/src/middleware/aiConsent.middleware.ts
+  - server/src/controllers/auth.controller.ts
+  - server/src/routes/auth.routes.ts
+  - server/src/routes/ai.routes.ts
+  - server/src/routes/dpr.routes.ts
+  - client/src/lib/privacy/**
+  - client/src/components/privacy/**
+  - client/src/pages/Privacy.tsx
+  - client/src/pages/Register.tsx
+  - client/src/pages/Login.tsx
+  - client/src/components/auth/ProtectedRoute.tsx
+  - client/src/store/authStore.ts
+alwaysApply: false
+---
+
+# DPDP → update docs/dpdp.md
+
+When you change **DPDP-related** behaviour (privacy notice, consent flags, under-18, AI consent gate, KYC strip, audit events, retention, grievance contact, JWT production guard), you **must** also update:
+
+`docs/dpdp.md`
+
+## What to update in the MD
+
+- Implemented rules and API/UI surfaces (not unimplemented ideas).
+- Locked Stage 0 values if they change (fiduciary name, mock/real mail, retention, AI copy).
+- Notice version string if the privacy page text changes.
+- How to test, if a new gate or route is added.
+
+## Do not
+
+- Skip the MD for “small” consent or age tweaks.
+- Claim DPDP compliance in the MD or in product copy until Stage 4 is done by people.
+
+## Done check
+
+Before finishing: `docs/dpdp.md` matches the new behaviour.

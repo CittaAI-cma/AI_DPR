@@ -1,5 +1,5 @@
 // @ts-nocheck
-import OpenAI from 'openai';
+import { openai } from '../lib/openaiClient';
 import { WhisperTeluguService } from './whisper-telugu.service';
 import { IProject } from '../types';
 import { VectorStore } from '../models/VectorStore.model';
@@ -7,20 +7,9 @@ import { RAGMetrics } from '../models/RAGMetrics.model';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import crypto from 'crypto';
-import dotenv from 'dotenv';
 import { promisify } from 'util';
 
 const readFileAsync = promisify(fs.readFile);
-
-dotenv.config();
-
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY environment variable is required. Please set it in your .env file.');
-}
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 // Template structure cache with TTL (Time To Live)
 interface CachedTemplateStructure {

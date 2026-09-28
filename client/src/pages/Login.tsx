@@ -126,6 +126,9 @@ export const Login: React.FC = () => {
                   {t('common.register')}
                 </a>
               </p>
+              <p className="text-center text-xs text-muted-foreground mt-3">
+                <a href="/privacy" className="hover:underline">{t('privacy.noticeLink')}</a>
+              </p>
             </div>
 
             {/* Quick Test Login Section */}

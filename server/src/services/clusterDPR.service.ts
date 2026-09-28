@@ -1,20 +1,9 @@
 // @ts-nocheck
-import OpenAI from 'openai';
+import { openai } from '../lib/openaiClient';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { Project } from '../models/Project.model';
 import { getStepFieldsMapping } from './stepFieldsMapping';
-import dotenv from 'dotenv';
 import { ClusterSection } from '../models/ClusterSection.model';
-
-dotenv.config();
-
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY environment variable is required.');
-}
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export class ClusterDPRService {
   /**

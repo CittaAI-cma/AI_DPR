@@ -20,6 +20,7 @@ import {
 import { evaluate, excludedSchemes, remainingCount } from '@/lib/ventureMatch/evaluate';
 import { saveHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { OWNER_EXCLUSIVE_TAGS, OwnerTag, QuestionId, VentureMatchAnswers } from '@/lib/ventureMatch/types';
+import { GuardianNotice } from '@/components/privacy/GuardianNotice';
 
 function isExclusiveOwner(id: string): boolean {
   return OWNER_EXCLUSIVE_TAGS.includes(id as OwnerTag);
@@ -166,12 +167,16 @@ export const VentureMatch: React.FC = () => {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const under18 = answers.age === 'under18';
+
   const handleCreateDprForScheme = (schemeCode: string) => {
+    if (under18) return;
     saveHandoff(answers, result.matches);
     navigate(`/individual-dpr/create?new=true&scheme=${encodeURIComponent(schemeCode)}`);
   };
 
   const handleCreateDpr = () => {
+    if (under18) return;
     saveHandoff(answers, result.matches);
     navigate('/individual-dpr/create?new=true');
   };
@@ -198,12 +203,19 @@ export const VentureMatch: React.FC = () => {
         </div>
         <h1 className="text-2xl font-bold mb-6">{t('ventureMatch.title')}</h1>
 
+        {(under18 || question?.id === 'age') && (
+          <div className="mb-4">
+            <GuardianNotice />
+          </div>
+        )}
+
         {done ? (
           <VentureMatchResults
             result={result}
             onCreateDpr={handleCreateDpr}
             onCreateDprForScheme={handleCreateDprForScheme}
             onRestart={handleRestart}
+            disableCreate={under18}
           />
         ) : (
           question && (

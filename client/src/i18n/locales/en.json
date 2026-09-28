@@ -62,7 +62,27 @@
     "professionalDPRs": "Professional DPRs for approval",
     "quickSetup": "Quick Setup",
     "getStartedMinutes": "Get started in minutes",
-    "chooseRole": "Choose how you will use the platform"
+    "chooseRole": "Choose how you will use the platform",
+    "dateOfBirth": "Date of birth"
+  },
+  "privacy": {
+    "noticeLink": "privacy notice",
+    "accountConsent": "I have read the",
+    "accountConsentAfter": "and I agree to create an account and store my DPR data",
+    "accountRequired": "You must agree to the privacy notice to create or use an account.",
+    "mustRead": "Read the full privacy notice in the box. Scroll to the last line.",
+    "scrollToEnable": "Scroll to the bottom of the notice. Then you can tick the agreement box.",
+    "noticeRead": "You have reached the end. You may now tick the box.",
+    "aiConsent": "Allow AI help. We may send your form text (not Aadhaar, PAN, or bank files) to an AI model for suggestions and scoring.",
+    "aiOffWarning": "If you do not allow AI, Fill with AI, model-based quality scoring, chat help, and similar AI tools will not work. You can still type, save, and download the DPR.",
+    "analyticsConsent": "Allow basic usage analytics (optional).",
+    "noticeVersion": "Notice version {{version}}",
+    "guardianMessage": "This site makes bank and scheme DPRs. The person named as the entrepreneur must be 18 or older. Ask a parent or guardian to register and create the DPR in their name.",
+    "reconsentTitle": "Please review how we use your data",
+    "reconsentBody": "The privacy notice has changed, or you have not accepted it yet. You need to agree before using the dashboard.",
+    "continue": "Agree and continue",
+    "saved": "Your choices were saved.",
+    "saveFailed": "Could not save your choices. Try again."
   },
   "rbac": {
     "selectRole": "Select your role",

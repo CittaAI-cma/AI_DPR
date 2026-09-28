@@ -9,6 +9,8 @@ import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/store/authStore';
 
 interface AISuggestionsProps {
   currentStep: number;
@@ -35,6 +37,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 }) => {
   const clusterStore = useClusterDPRStore();
   const tf = useClusterFormText();
+  const { t } = useTranslation();
+  const { user } = useAuthStore();
+  const aiAllowed = !!user?.privacy?.aiAssist;
   const data = dataProp ?? clusterStore.data;
   const setStepData = setStepDataProp ?? clusterStore.setStepData;
   const getStepData = getStepDataProp ?? clusterStore.getStepData;
@@ -90,6 +95,10 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
   // Function to generate AI suggestions
   const handleGenerateSuggestions = async () => {
+    if (!aiAllowed) {
+      toast.error(t('privacy.aiOffWarning'));
+      return;
+    }
     // For Step 1, we don't require previous data
     if (currentStep > 1 && !hasPreviousData) {
       return;
@@ -571,6 +580,14 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       setApplyingFields(new Set());
     }
   };
+
+  if (!aiAllowed) {
+    return (
+      <div className="mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
+        <p className="text-xs text-muted-foreground">{t('privacy.aiOffWarning')}</p>
+      </div>
+    );
+  }
 
   // Show button to generate suggestions if not generated yet
   if (!hasGenerated && !loading) {

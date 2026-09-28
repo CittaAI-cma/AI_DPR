@@ -1,13 +1,6 @@
 // @ts-nocheck
-import OpenAI from 'openai';
-import dotenv from 'dotenv';
+import { openai } from '../lib/openaiClient';
 import { DEFAULT_DPR_BUILDER_ASSIST_PROMPT } from '../constants/dprBuilderAssistPrompt';
-
-dotenv.config();
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const TEMPERATURE = 0.35;
 

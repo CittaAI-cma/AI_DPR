@@ -11,6 +11,10 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Sparkles, ArrowRight, CheckCircle, Building2 } from 'lucide-react';
 import { RolePicker } from '@/components/auth/RolePicker';
+import { ConsentFields, ConsentValues } from '@/components/privacy/ConsentFields';
+import { GuardianNotice } from '@/components/privacy/GuardianNotice';
+import { ageFromDob } from '@/lib/privacy/under18';
+import { PRIVACY_NOTICE_VERSION, UNDER_18_CODE } from '@/lib/privacy/constants';
 import { toBackendRole, type AppRole } from '@/lib/rbac';
 
 export const Register: React.FC = () => {
@@ -19,6 +23,7 @@ export const Register: React.FC = () => {
   const handleLinkClick = useLinkHandler();
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [under18, setUnder18] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,23 +31,52 @@ export const Register: React.FC = () => {
     phoneNumber: '',
     location: '',
     udyamNumber: '',
+    dateOfBirth: '',
     role: 'consultant' as AppRole,
+  });
+  const [consent, setConsent] = useState<ConsentValues>({
+    accountConsent: false,
+    aiAssist: false,
+    analytics: false,
+    noticeRead: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUnder18(false);
+
+    const age = ageFromDob(formData.dateOfBirth);
+    if (age != null && age < 18) {
+      setUnder18(true);
+      return;
+    }
+    if (!consent.noticeRead) {
+      toast.error(t('privacy.scrollToEnable'));
+      return;
+    }
+    if (!consent.accountConsent) {
+      toast.error(t('privacy.accountRequired'));
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const response = await api.register({
         ...formData,
         role: toBackendRole(formData.role),
+        accountConsent: consent.accountConsent,
+        aiAssist: consent.aiAssist,
+        analytics: consent.analytics,
+        noticeVersion: PRIVACY_NOTICE_VERSION,
       });
       login(response.data, response.data.token);
       toast.success(t('auth.registerSuccess'));
       navigate('/dashboard');
-    } catch (error) {
-      toast.error(t('auth.registerError'));
+    } catch (error: any) {
+      if (error?.response?.data?.code === UNDER_18_CODE) {
+        setUnder18(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -151,11 +185,24 @@ export const Register: React.FC = () => {
                   className="h-12"
                 />
               </div>
+              <Input
+                label={t('auth.dateOfBirth')}
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={(e) =>
+                  setFormData({ ...formData, dateOfBirth: e.target.value })
+                }
+                required
+                className="h-12"
+              />
+              {under18 && <GuardianNotice />}
+              <ConsentFields value={consent} onChange={setConsent} />
               <Button 
                 type="submit" 
                 variant="secondary"
                 className="w-full h-12 text-base font-semibold shadow-lg mt-6" 
                 isLoading={isLoading}
+                disabled={!consent.noticeRead || !consent.accountConsent}
               >
                 {!isLoading && <CheckCircle className="h-5 w-5 mr-2" />}
                 {t('common.register')}

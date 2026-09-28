@@ -18,6 +18,8 @@ import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
 import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
+import { hasUnder18Applicant } from '@/lib/privacy/under18';
+import { GuardianNotice } from '@/components/privacy/GuardianNotice';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
 import { SchemePickerGrid } from '@/components/individual-dpr/SchemePickerGrid';
 import {
@@ -208,6 +210,10 @@ export const IndividualDPRCreation: React.FC = () => {
 
   const saveToDatabase = useCallback(async () => {
     try {
+      if (hasUnder18Applicant(data)) {
+        toast.error(t('privacy.guardianMessage'));
+        return false;
+      }
       const hasAnyData = Object.keys(data).some((key) => {
         if (key.startsWith('step')) {
           const stepData = data[key];
@@ -236,7 +242,7 @@ export const IndividualDPRCreation: React.FC = () => {
       toast.error(t('individualDpr.toasts.saveFailedDb'));
       return false;
     }
-  }, [dprPayload, data, setDprIds]);
+  }, [dprPayload, data, setDprIds, t]);
 
   const goAdjacent = async (dir: 1 | -1) => {
     await saveToDatabase();
@@ -381,6 +387,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     </p>
                   ) : null}
                   <p className="text-sm text-muted-foreground">{headerSubtitle}</p>
+                  {hasUnder18Applicant(data) && <GuardianNotice className="mt-3" />}
                 </div>
               </div>
 

@@ -19,6 +19,7 @@ import path from 'path';
 import { Buffer } from 'buffer';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { openai } from '../lib/openaiClient';
 import os from 'os';
 
 const execAsync = promisify(exec);
@@ -5482,13 +5483,6 @@ export class DPRService {
         return await fs.promises.readFile(filePath, 'utf-8');
       }
 
-      // For PDF and DOCX, use OpenAI's file API to extract text
-      const { default: OpenAI } = await import('openai');
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-
-      // Upload file to OpenAI
       const fileStream = fs.createReadStream(filePath);
       const uploadedFile = await openai.files.create({
         file: fileStream,
@@ -5581,11 +5575,6 @@ export class DPRService {
     suggestions: string[];
   }> {
     try {
-      const { default: OpenAI } = await import('openai');
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-
       const prompt = `Analyze this uploaded DPR (Detailed Project Report) document and extract structured information.
 
 Document Name: ${fileName}

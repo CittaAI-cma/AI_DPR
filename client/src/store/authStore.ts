@@ -9,6 +9,14 @@ interface User {
   role: string;
   udyamNumber?: string;
   location?: string;
+  dateOfBirth?: string;
+  privacy?: {
+    noticeVersion?: string | null;
+    accountConsent?: boolean;
+    aiAssist?: boolean;
+    analytics?: boolean;
+    needsNoticeAcceptance?: boolean;
+  };
 }
 
 interface AuthState {

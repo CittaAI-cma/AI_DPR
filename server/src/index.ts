@@ -10,6 +10,7 @@ import path from 'path';
 import { connectDatabase } from './config/database';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler.middleware';
+import { getJwtSecret } from './lib/jwtSecret';
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +21,15 @@ if (!process.env.OPENAI_API_KEY) {
   console.error('   Please set OPENAI_API_KEY in your .env file.');
   console.error('   See .env.example for reference.');
   process.exit(1);
+}
+
+if (process.env.NODE_ENV === 'production') {
+  try {
+    getJwtSecret();
+  } catch (error: any) {
+    console.error('❌ ERROR:', error.message);
+    process.exit(1);
+  }
 }
 
 // Initialize Express app
