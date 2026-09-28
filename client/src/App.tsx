@@ -21,6 +21,7 @@ import { ClusterDPRCreation } from './pages/ClusterDPRCreation';
 import { IndividualDPRCreation } from './pages/IndividualDPRCreation';
 import { VentureMatch } from './pages/VentureMatch';
 import { Privacy } from './pages/Privacy';
+import { AccountPrivacy } from './pages/AccountPrivacy';
 import './i18n/config';
 
 function App() {
@@ -191,6 +192,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/account/privacy"
+          element={
+            <ProtectedRoute>
+              <AccountPrivacy />
             </ProtectedRoute>
           }
         />

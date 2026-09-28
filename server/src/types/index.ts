@@ -21,6 +21,11 @@ export interface IUser extends Document {
     aiAssistAt?: Date;
     analytics?: boolean;
     analyticsAt?: Date;
+    nominee?: {
+      name?: string;
+      phone?: string;
+      email?: string;
+    };
   };
   createdAt: Date;
   updatedAt: Date;

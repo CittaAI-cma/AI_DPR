@@ -8,6 +8,7 @@ import { Project } from '../models/Project.model';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { ClusterSection } from '../models/ClusterSection.model';
 import { payloadHasUnder18Applicant, under18Response } from '../lib/under18';
+import { AuditService } from '../services/audit.service';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -73,6 +74,15 @@ export class ClusterDPRController {
         language
       );
 
+      await AuditService.log({
+        action: 'dpr_create',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: result?.dprId ? String(result.dprId) : undefined,
+        req,
+      });
+
       res.status(200).json({
         success: true,
         message: 'Cluster DPR generated successfully',
@@ -107,10 +117,7 @@ export class ClusterDPRController {
       // Import DPRVersion model
       const { DPRVersion } = await import('../models/DPRVersion.model');
       
-      const dpr = await DPRVersion.findOne({
-        _id: dprId,
-        userId,
-      });
+      const dpr = await DPRVersion.findById(dprId);
 
       if (!dpr) {
         res.status(404).json({
@@ -120,10 +127,30 @@ export class ClusterDPRController {
         return;
       }
 
+      const isOwner = dpr.userId?.toString() === userId.toString();
+      const isStaff = req.user?.role === 'admin' || req.user?.role === 'officer';
+      if (!isOwner && !isStaff) {
+        res.status(403).json({
+          success: false,
+          message: 'Access denied: This DPR does not belong to you',
+        });
+        return;
+      }
+      if (!isOwner && isStaff) {
+        await AuditService.log({
+          action: 'admin_view',
+          userId,
+          role: req.user?.role,
+          targetType: 'dpr',
+          targetId: dprId,
+          req,
+        });
+      }
+
       // Fetch all cluster sections for this DPR
       const clusterSections = await ClusterSection.find({
         dprId,
-        userId,
+        ...(isOwner ? { userId } : {}),
       });
 
       // Organize sections by language and type
@@ -418,6 +445,15 @@ export class ClusterDPRController {
         }
         // Continue with local file path if Cloudinary upload fails
       }
+
+      await AuditService.log({
+        action: 'kyc_upload',
+        userId,
+        role: req.user?.role,
+        targetType: 'file',
+        targetId: cloudinaryPublicId || file.filename,
+        req,
+      });
 
       res.status(200).json({
         success: true,
@@ -780,6 +816,15 @@ export class ClusterDPRController {
         await dprVersion.save();
         console.log('✅ Updated DPRVersion record:', dprVersion._id);
       }
+
+      await AuditService.log({
+        action: 'dpr_change',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprVersion._id.toString(),
+        req,
+      });
 
       res.status(200).json({
         success: true,
@@ -1484,6 +1529,15 @@ export class ClusterDPRController {
         // Continue with local file path if Cloudinary upload fails
       }
 
+      await AuditService.log({
+        action: 'kyc_upload',
+        userId,
+        role: req.user?.role,
+        targetType: 'file',
+        targetId: cloudinaryPublicId || file.filename,
+        req,
+      });
+
       res.status(200).json({
         success: true,
         message: 'Document uploaded successfully',
@@ -1671,6 +1725,14 @@ export class ClusterDPRController {
       const deleted = await CloudinaryService.deleteImage(imagePublicId);
 
       if (deleted) {
+        await AuditService.log({
+          action: 'kyc_delete',
+          userId,
+          role: req.user?.role,
+          targetType: 'file',
+          targetId: imagePublicId,
+          req,
+        });
         res.status(200).json({
           success: true,
           message: 'Image deleted successfully',

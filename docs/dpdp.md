@@ -15,7 +15,7 @@ This is **not** a legal opinion and **not** a DPDP compliance certificate. After
 |-------|------------|--------|
 | 0 | Four locked notice lines | Locked (Sep 2026) |
 | 1 | Notice, consent, age 18, safer AI, first audit | **In code** |
-| 2 | Export, delete, nominee, complaint form, full audit UI | Not built |
+| 2 | Export, delete, nominee, complaint form, full audit UI | **In code** |
 | 3 | Private KYC storage, 12-month draft purge job | Not built |
 | 4 | Legal name on paper, real grievance inbox, vendor contracts, breach playbook | Org work |
 
@@ -105,7 +105,7 @@ Stage 1 actions: `register`, `login_success`, `login_failed`, `logout`, `consent
 
 Each row: time, userId (if known), role, action, optional targetType/targetId, IP. **Not** Aadhaar, **not** DPR text.
 
-There is **no admin audit screen yet** (Stage 2). Inspect in MongoDB (see test section).
+Stage 2 adds DPR/KYC/export/delete/admin screens (see §4.6).
 
 ### 3.6 JWT
 
@@ -113,7 +113,49 @@ There is **no admin audit screen yet** (Stage 2). Inspect in MongoDB (see test s
 
 ---
 
-## 4. Key files
+## 4. Stage 2 — what the code does
+
+Page: **`/account/privacy`** (navbar Privacy, Profile → Open privacy settings). Admin audit: **Admin → Audit log**.
+
+### 4.1 Export (access)
+
+`GET /api/privacy/export` (auth). JSON download: profile (no password), projects, DPR versions, sessions, own documents metadata, own complaints. Logs `data_export`.
+
+### 4.2 Turn AI off / correction
+
+`PATCH /api/privacy/consent` `{ aiAssist, analytics }`. Account consent stays required. AI off logs `consent_withdrawn`; AI on logs `consent_given`. Existing `POST /api/auth/consent` still used by the re-consent popup.
+
+Profile edits (`PUT /api/auth/profile`) log `profile_change`.
+
+### 4.3 Nominee
+
+Stored on `User.privacy.nominee` `{ name, phone, email }`. Name plus at least phone or email. `PUT /api/privacy/nominee`. Logs `nominee_change`.
+
+### 4.4 Erasure (complete delete)
+
+`DELETE /api/privacy/account` body `{ confirm: "DELETE" }`. Admin `DELETE /api/admin/users/:id` uses the **same** `eraseAccount()` (`server/src/services/accountErase.service.ts`).
+
+Cascade: Cloudinary public ids / upload URLs in projects and DPRs, local `/uploads/` files, OpenAI `file-*` ids, cluster sections, feedback, scheme matches, analytics, sessions, non-template documents, DPR versions, projects, then the user row.
+
+**Audit rows stay.** Processor delete failures are warnings; Mongo data is still removed.
+
+### 4.5 Grievance
+
+`POST /api/privacy/complaint` `{ subject, message }`. Saves `PrivacyComplaint` (inbox `privacy.grievance@msmeone.gov.in`). No SMTP yet — server log line only. Logs `complaint_submitted`. A human must still reply (~90 days for rights requests).
+
+### 4.6 Full audit
+
+Append-only `auditevents`. Stage 2 actions (in addition to Stage 1): `dpr_create`, `dpr_change`, `dpr_download`, `dpr_delete`, `kyc_upload`, `kyc_delete`, `data_export`, `account_delete`, `admin_view`, `profile_change`, `nominee_change`, `complaint_submitted`.
+
+- **User:** `GET /api/privacy/activity` — own logins, downloads, exports, consent, etc. No other people’s rows.
+- **Admin:** `GET /api/admin/audit?userId=&action=&from=&to=` and `GET /api/admin/audit/csv`.
+- Staff (`admin` / `officer`) opening another user’s DPR logs `admin_view`.
+
+Rows still store time, userId, role, action, optional targetType/targetId, IP. **Not** Aadhaar, **not** DPR text.
+
+---
+
+## 5. Key files
 
 | Area | Path |
 |------|------|
@@ -121,14 +163,17 @@ There is **no admin audit screen yet** (Stage 2). Inspect in MongoDB (see test s
 | Age helpers | `server/src/lib/under18.ts`, `client/src/lib/privacy/under18.ts` |
 | Sanitize + OpenAI wrap | `server/src/lib/sanitizeForAi.ts`, `server/src/lib/openaiClient.ts` |
 | Audit | `server/src/models/AuditEvent.model.ts`, `server/src/services/audit.service.ts` |
+| Erase | `server/src/services/accountErase.service.ts` |
+| Privacy APIs | `server/src/controllers/privacy.controller.ts`, `server/src/routes/privacy.routes.ts`, `server/src/models/PrivacyComplaint.model.ts` |
 | Auth | `server/src/controllers/auth.controller.ts`, `server/src/routes/auth.routes.ts`, `server/src/models/User.model.ts` |
 | AI gate | `server/src/middleware/aiConsent.middleware.ts`, `server/src/routes/ai.routes.ts`, `server/src/routes/dpr.routes.ts` |
-| UI | `client/src/pages/Privacy.tsx`, `Register.tsx`, `ConsentGate.tsx`, `ConsentFields.tsx`, `PrivacyNoticeScroll.tsx`, `GuardianNotice.tsx` |
+| UI | `client/src/pages/Privacy.tsx`, `AccountPrivacy.tsx`, `Register.tsx`, `ConsentGate.tsx`, `ConsentFields.tsx`, `PrivacyNoticeScroll.tsx`, `GuardianNotice.tsx` |
+| Admin audit | `client/src/pages/AdminDashboard.tsx` (Audit log tab) |
 | i18n | `client/src/i18n/locales/en.json` / `te.json` → `privacy.*` |
 
 ---
 
-## 5. How to test Stage 1
+## 6. How to test Stage 1
 
 Run **client** (`npm run dev` in `client`, usually http://localhost:5173) and **server** (`npm run dev` in `server`, usually http://localhost:5000) with MongoDB and `OPENAI_API_KEY` as you already do.
 
@@ -200,17 +245,54 @@ Do **not** point a production deploy at this app without `JWT_SECRET` set to a l
 
 ---
 
-## 6. What Stage 1 does not do
+## 7. How to test Stage 2
 
-- Download my data / delete my account / nominee / in-app complaint form (Stage 2)
-- Admin audit browser (Stage 2)
-- Automatic 12-month draft purge and private KYC file storage (Stage 3)
-- Real grievance inbox, gazette legal name, OpenAI/Cloudinary contracts (Stage 4)
+Use an **adult** account that already passed Stage 1 consent. Keep a **second** dummy account if you want to test admin delete.
+
+### A. Privacy settings
+
+1. Log in. Click **Privacy** in the header, or Profile → **Open privacy settings**. URL: `/account/privacy`.
+2. **Download my data** — a JSON file should download. Open it: name/email/projects/DPRs present, **no** `passwordHash`.
+3. Untick **Allow AI help** and wait for the saved toast. Open Latest DPR: Fill with AI should be off. Tick it again to restore.
+4. Fill **Nominee** name + phone or email → Save. Reload the page; nominee is still there.
+5. **Recent activity** should list login, export, consent change, nominee.
+
+### B. Complaint
+
+1. On the same page, send a short subject and message.
+2. Toast says it was saved. In Mongo: `db.privacycomplaints.find().sort({ createdAt: -1 }).limit(5)` — inbox is the mock mail.
+3. Activity shows `complaint_submitted` (or “Privacy request sent”).
+
+### C. Delete my account
+
+1. Use a **throwaway** account with at least one saved draft (and an upload if you can).
+2. Type `DELETE` (all caps) and click **Delete my account**. You should land on the public home page and cannot log in with that email.
+3. Mongo: user / projects / dprversions for that id gone. `db.auditevents.find({ action: 'account_delete' })` still has a row. Cloudinary/local files for that draft should be gone if they existed.
+
+### D. Admin audit
+
+1. Log in as **admin** (`authorize('admin')` on the API; UI tab is Super Admin).
+2. Admin Dashboard → **Audit log**. Filter by action `login_success` or the throwaway user’s id.
+3. **CSV** downloads `audit-log.csv` with at, userId, role, action, target, IP.
+4. Admin **delete user** on another dummy should cascade like C (not only the user row).
+
+### E. Officer view
+
+If an admin/officer opens another user’s DPR by id, expect `admin_view` in the audit list. Own DPR views are not logged as admin_view.
 
 ---
 
-## 7. What we may say after Stage 1
+## 8. What Stages 1–2 do not do
 
-We may say: we tell people and ask before collecting; children are not applicants; AI does not get KYC; login and consent are logged.
+- Automatic 12-month draft purge and private KYC file storage (Stage 3)
+- Real grievance inbox, gazette legal name, OpenAI/Cloudinary contracts (Stage 4)
+- A chatbot that “closes” a complaint — a person must reply
 
-We must **not** say: we comply with DPDP.
+---
+
+## 9. What we may say after Stage 2
+
+We may say: users can take a copy of their data and delete their account; we keep an audit trail they and an officer can use; a privacy request is saved in the app.
+
+We must **not** say: we comply with DPDP. We must **not** say vendors are contracted, or that Aadhaar is safe forever.
+

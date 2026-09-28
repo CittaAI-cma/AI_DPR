@@ -52,6 +52,11 @@ const userSchema = new Schema<IUser>(
       aiAssistAt: { type: Date },
       analytics: { type: Boolean, default: false },
       analyticsAt: { type: Date },
+      nominee: {
+        name: { type: String, trim: true },
+        phone: { type: String, trim: true },
+        email: { type: String, trim: true, lowercase: true },
+      },
     },
   },
   {

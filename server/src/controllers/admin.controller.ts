@@ -8,6 +8,9 @@ import { Feedback } from '../models/Feedback.model';
 import { DPRAnalytics } from '../models/DPRAnalytics.model';
 import { Policy } from '../models/Policy.model';
 import { MLService } from '../services/ml.service';
+import { AuditEvent } from '../models/AuditEvent.model';
+import { AuditService } from '../services/audit.service';
+import { eraseAccount } from '../services/accountErase.service';
 
 export class AdminController {
   /**
@@ -506,9 +509,8 @@ export class AdminController {
         return;
       }
 
-      const user = await User.findByIdAndDelete(id);
-
-      if (!user) {
+      const existing = await User.findById(id);
+      if (!existing) {
         res.status(404).json({
           success: false,
           message: 'User not found',
@@ -516,9 +518,21 @@ export class AdminController {
         return;
       }
 
+      await AuditService.log({
+        action: 'account_delete',
+        userId: req.user?.userId,
+        role: req.user?.role,
+        targetType: 'user',
+        targetId: id,
+        req,
+      });
+
+      const result = await eraseAccount(id);
+
       res.status(200).json({
         success: true,
-        message: 'User deleted successfully',
+        message: 'User and related files deleted. Audit records were kept.',
+        data: result,
       });
     } catch (error: any) {
       console.error('Delete user error:', error);
@@ -922,6 +936,99 @@ export class AdminController {
       res.status(500).json({
         success: false,
         message: 'Failed to approve policy',
+        error: error.message,
+      });
+    }
+  }
+
+  static async getAudit(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { userId, action, from, to, page = 1, limit = 50 } = req.query;
+      const filter: Record<string, unknown> = {};
+      if (userId) filter.userId = userId;
+      if (action) filter.action = action;
+      if (from || to) {
+        const at: Record<string, Date> = {};
+        if (from) at.$gte = new Date(String(from));
+        if (to) at.$lte = new Date(String(to));
+        filter.at = at;
+      }
+
+      const pageNum = Math.max(1, Number(page) || 1);
+      const limitNum = Math.min(200, Math.max(1, Number(limit) || 50));
+
+      const [events, total] = await Promise.all([
+        AuditEvent.find(filter).sort({ at: -1 }).skip((pageNum - 1) * limitNum).limit(limitNum).lean(),
+        AuditEvent.countDocuments(filter),
+      ]);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          events,
+          pagination: {
+            total,
+            page: pageNum,
+            limit: limitNum,
+            pages: Math.ceil(total / limitNum) || 1,
+          },
+        },
+      });
+    } catch (error: any) {
+      console.error('Get audit error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to load audit log',
+        error: error.message,
+      });
+    }
+  }
+
+  static async exportAuditCsv(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { userId, action, from, to } = req.query;
+      const filter: Record<string, unknown> = {};
+      if (userId) filter.userId = userId;
+      if (action) filter.action = action;
+      if (from || to) {
+        const at: Record<string, Date> = {};
+        if (from) at.$gte = new Date(String(from));
+        if (to) at.$lte = new Date(String(to));
+        filter.at = at;
+      }
+
+      const events = await AuditEvent.find(filter).sort({ at: -1 }).limit(5000).lean();
+
+      const escape = (value: unknown) => {
+        const text = value == null ? '' : String(value);
+        if (/[",\n]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+        return text;
+      };
+
+      const header = ['at', 'userId', 'role', 'action', 'targetType', 'targetId', 'ip'];
+      const rows = events.map((event) =>
+        [
+          event.at ? new Date(event.at).toISOString() : '',
+          event.userId,
+          event.role,
+          event.action,
+          event.targetType,
+          event.targetId,
+          event.ip,
+        ]
+          .map(escape)
+          .join(',')
+      );
+      const csv = [header.join(','), ...rows].join('\n');
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename="audit-log.csv"');
+      res.status(200).send(csv);
+    } catch (error: any) {
+      console.error('Export audit csv error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to export audit CSV',
         error: error.message,
       });
     }

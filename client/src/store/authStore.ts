@@ -16,6 +16,11 @@ interface User {
     aiAssist?: boolean;
     analytics?: boolean;
     needsNoticeAcceptance?: boolean;
+    nominee?: {
+      name?: string;
+      phone?: string;
+      email?: string;
+    };
   };
 }
 

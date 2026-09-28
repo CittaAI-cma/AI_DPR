@@ -7,8 +7,13 @@ globs:
   - server/src/lib/openaiClient.ts
   - server/src/lib/jwtSecret.ts
   - server/src/models/AuditEvent.model.ts
+  - server/src/models/PrivacyComplaint.model.ts
   - server/src/models/User.model.ts
   - server/src/services/audit.service.ts
+  - server/src/services/accountErase.service.ts
+  - server/src/controllers/privacy.controller.ts
+  - server/src/routes/privacy.routes.ts
+  - client/src/pages/AccountPrivacy.tsx
   - server/src/middleware/aiConsent.middleware.ts
   - server/src/controllers/auth.controller.ts
   - server/src/routes/auth.routes.ts

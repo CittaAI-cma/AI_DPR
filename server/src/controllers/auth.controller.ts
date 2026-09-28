@@ -32,6 +32,7 @@ function publicUser(user: any) {
     role: user.role,
     udyamNumber: user.udyamNumber,
     location: user.location,
+    phoneNumber: user.phoneNumber,
     dateOfBirth: user.dateOfBirth,
     privacy: {
       noticeVersion,
@@ -39,6 +40,11 @@ function publicUser(user: any) {
       aiAssist: !!user.privacy?.aiAssist,
       analytics: !!user.privacy?.analytics,
       needsNoticeAcceptance: noticeVersion !== PRIVACY_NOTICE_VERSION,
+      nominee: {
+        name: user.privacy?.nominee?.name || '',
+        phone: user.privacy?.nominee?.phone || '',
+        email: user.privacy?.nominee?.email || '',
+      },
     },
   };
 }
@@ -386,6 +392,13 @@ export class AuthController {
         });
         return;
       }
+
+      await AuditService.log({
+        action: 'profile_change',
+        userId,
+        role: authReq.user?.role,
+        req,
+      });
 
       res.status(200).json({
         success: true,

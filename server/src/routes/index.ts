@@ -9,6 +9,7 @@ import adminRoutes from './admin.routes';
 import aiRoutes from './ai.routes';
 import apmsmeRoutes from './apmsme.routes';
 import documentRoutes from './document.routes';
+import privacyRoutes from './privacy.routes';
 
 const router = Router();
 
@@ -31,6 +32,7 @@ router.use('/admin', adminRoutes);
 router.use('/ai', aiRoutes);
 router.use('/apmsme', apmsmeRoutes);
 router.use('/documents', documentRoutes);
+router.use('/privacy', privacyRoutes);
 
 export default router;
 

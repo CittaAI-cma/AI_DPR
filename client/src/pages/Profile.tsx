@@ -7,13 +7,15 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { User, Mail, Building2, MapPin, Save, Loader2, Shield } from 'lucide-react';
+import { User, Mail, Building2, MapPin, Save, Loader2, Shield, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { ROLE_META, toAppRole } from '@/lib/rbac';
+import { useNavigate } from 'react-router-dom';
 
 export const Profile: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user: authUser, updateUser } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -225,6 +227,21 @@ export const Profile: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5" />
+              {t('privacy.settingsTitle')}
+            </CardTitle>
+            <CardDescription>{t('privacy.settingsSubtitle')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="outline" onClick={() => navigate('/account/privacy')}>
+              {t('privacy.openSettings')}
+            </Button>
           </CardContent>
         </Card>
       </div>

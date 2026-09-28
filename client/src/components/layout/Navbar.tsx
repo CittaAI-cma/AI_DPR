@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 import { canAccessAdmin } from '@/lib/rbac';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { Button } from '@/components/ui/Button';
-import { Languages, LogOut, User, Menu, X } from 'lucide-react';
+import { Languages, LogOut, User, Menu, X, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 
 export const Navbar: React.FC = () => {
@@ -102,6 +102,12 @@ export const Navbar: React.FC = () => {
                       <RoleBadge role={user?.role} />
                     </Button>
                   </a>
+                  <a href="/account/privacy" onClick={(e) => handleLinkClick(e, '/account/privacy')}>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="font-medium">{t('nav.privacy')}</span>
+                    </Button>
+                  </a>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -179,6 +185,17 @@ export const Navbar: React.FC = () => {
                   <User className="h-4 w-4" />
                   <span>{user?.name}</span>
                   <RoleBadge role={user?.role} />
+                </a>
+                <a
+                  href="/account/privacy"
+                  onClick={(e) => {
+                    handleLinkClick(e, '/account/privacy');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-accent"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>{t('nav.privacy')}</span>
                 </a>
                 <button
                   onClick={handleLogout}

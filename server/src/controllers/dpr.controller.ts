@@ -9,6 +9,7 @@ import { DPRService } from '../services/dpr.service';
 import { QualityService } from '../services/quality.service';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { AuthRequest } from '../types';
+import { AuditService } from '../services/audit.service';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -564,6 +565,15 @@ export class DPRController {
 
       console.log(`✅ DPR generated and saved successfully: ${dpr.dprId}`);
 
+      await AuditService.log({
+        action: 'dpr_create',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: String(dpr.dprId),
+        req,
+      });
+
       res.status(200).json({
         success: true,
         message: 'DPR generated and saved successfully',
@@ -677,12 +687,24 @@ export class DPRController {
       }
 
       // Check if project belongs to the current user
-      if (project.userId?.toString() !== userId.toString()) {
+      const isOwner = project.userId?.toString() === userId.toString();
+      const isStaff = req.user?.role === 'admin' || req.user?.role === 'officer';
+      if (!isOwner && !isStaff) {
         res.status(403).json({
           success: false,
           message: 'Access denied: This DPR does not belong to you',
         });
         return;
+      }
+      if (!isOwner && isStaff) {
+        await AuditService.log({
+          action: 'admin_view',
+          userId,
+          role: req.user?.role,
+          targetType: 'dpr',
+          targetId: dprId,
+          req,
+        });
       }
 
       res.status(200).json({
@@ -758,6 +780,15 @@ export class DPRController {
       res.setHeader('Content-Length', pdfBuffer.length.toString());
       res.setHeader('Cache-Control', 'no-cache');
       
+      await AuditService.log({
+        action: 'dpr_download',
+        userId: req.user?.userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
+
       res.send(pdfBuffer);
       
       console.log(`✅ PDF sent successfully: ${pdfBuffer.length} bytes`);
@@ -832,6 +863,15 @@ export class DPRController {
       res.setHeader('Content-Length', pdfBuffer.length.toString());
       res.setHeader('Cache-Control', 'no-cache');
 
+      await AuditService.log({
+        action: 'dpr_download',
+        userId: req.user?.userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
+
       res.send(pdfBuffer);
       console.log(`✅ EXACT PDF sent successfully: ${pdfBuffer.length} bytes`);
     } catch (error: any) {
@@ -866,6 +906,14 @@ export class DPRController {
         'Content-Disposition',
         `attachment; filename="DPR_${dprId}.docx"`
       );
+      await AuditService.log({
+        action: 'dpr_download',
+        userId: req.user?.userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
       res.send(docxBuffer);
     } catch (error: any) {
       console.error('Error downloading DOCX:', error);
@@ -895,6 +943,14 @@ export class DPRController {
         'Content-Disposition',
         `attachment; filename="DPR_Session_${sessionId}.pdf"`
       );
+      await AuditService.log({
+        action: 'dpr_download',
+        userId: req.user?.userId,
+        role: req.user?.role,
+        targetType: 'session',
+        targetId: sessionId,
+        req,
+      });
       res.send(pdfBuffer);
     } catch (error: any) {
       console.error('Error downloading session PDF:', error);
@@ -1069,6 +1125,15 @@ export class DPRController {
 
       await dpr.save();
 
+      await AuditService.log({
+        action: 'dpr_change',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
+
       // Recalculate quality score
       QualityService.updateDPRQuality(dprId).catch(err => {
         console.error('Error recalculating quality score:', err);
@@ -1141,6 +1206,15 @@ export class DPRController {
       dpr.submittedAt = new Date();
       dpr.submittedTo = submittedTo || 'admin';
       await dpr.save();
+
+      await AuditService.log({
+        action: 'dpr_change',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
 
       res.status(200).json({
         success: true,
@@ -1295,6 +1369,15 @@ export class DPRController {
         });
         return;
       }
+
+      await AuditService.log({
+        action: 'dpr_download',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
 
       const { buildIndividualDocument, isIndividualDprRecord } = await import('../services/individualDprDocument');
       if (isIndividualDprRecord(dpr, project)) {

@@ -37,5 +37,8 @@ router.put('/policies/:id', AdminController.updatePolicy);
 router.delete('/policies/:id', AdminController.deletePolicy);
 router.post('/policies/:id/approve', AdminController.approvePolicy);
 
+router.get('/audit', AdminController.getAudit);
+router.get('/audit/csv', AdminController.exportAuditCsv);
+
 export default router;
 

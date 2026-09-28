@@ -9,7 +9,19 @@ export type AuditAction =
   | 'consent_given'
   | 'consent_withdrawn'
   | 'notice_accepted'
-  | 'ai_call';
+  | 'ai_call'
+  | 'dpr_create'
+  | 'dpr_change'
+  | 'dpr_download'
+  | 'dpr_delete'
+  | 'kyc_upload'
+  | 'kyc_delete'
+  | 'data_export'
+  | 'account_delete'
+  | 'admin_view'
+  | 'profile_change'
+  | 'nominee_change'
+  | 'complaint_submitted';
 
 function clientIp(req?: Request): string | undefined {
   if (!req) return undefined;

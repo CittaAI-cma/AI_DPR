@@ -295,6 +295,63 @@ class APIClient {
     return response.data;
   }
 
+  async exportMyData() {
+    const response = await this.client.get('/privacy/export', { responseType: 'blob' });
+    return response.data;
+  }
+
+  async updatePrivacyConsent(data: { aiAssist?: boolean; analytics?: boolean }) {
+    this.clearCache('/auth/profile');
+    const response = await this.client.patch('/privacy/consent', data);
+    return response.data;
+  }
+
+  async saveNominee(data: { name: string; phone?: string; email?: string }) {
+    this.clearCache('/auth/profile');
+    const response = await this.client.put('/privacy/nominee', data);
+    return response.data;
+  }
+
+  async deleteMyAccount(confirm: string) {
+    const response = await this.client.delete('/privacy/account', { data: { confirm } });
+    return response.data;
+  }
+
+  async submitPrivacyComplaint(data: { subject: string; message: string }) {
+    const response = await this.client.post('/privacy/complaint', data);
+    return response.data;
+  }
+
+  async getPrivacyActivity() {
+    const response = await this.client.get('/privacy/activity');
+    return response.data;
+  }
+
+  async getAuditLog(params?: {
+    userId?: string;
+    action?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const response = await this.client.get('/admin/audit', { params });
+    return response.data;
+  }
+
+  async downloadAuditCsv(params?: {
+    userId?: string;
+    action?: string;
+    from?: string;
+    to?: string;
+  }) {
+    const response = await this.client.get('/admin/audit/csv', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
   // Project endpoints
   async createProject(data: any) {
     // Clear projects cache when creating a new project
