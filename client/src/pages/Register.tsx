@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +24,7 @@ export const Register: React.FC = () => {
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [under18, setUnder18] = useState(false);
+  const guardianRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -41,15 +42,26 @@ export const Register: React.FC = () => {
     noticeRead: false,
   });
 
+  const dobAge = ageFromDob(formData.dateOfBirth);
+  const isUnder18Dob = dobAge != null && dobAge < 18;
+  const showGuardian = under18 || isUnder18Dob;
+
+  const scrollToGuardian = () => {
+    window.setTimeout(() => {
+      guardianRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUnder18(false);
 
     const age = ageFromDob(formData.dateOfBirth);
     if (age != null && age < 18) {
       setUnder18(true);
+      scrollToGuardian();
       return;
     }
+    setUnder18(false);
     if (!consent.noticeRead) {
       toast.error(t('privacy.scrollToEnable'));
       return;
@@ -76,6 +88,7 @@ export const Register: React.FC = () => {
     } catch (error: any) {
       if (error?.response?.data?.code === UNDER_18_CODE) {
         setUnder18(true);
+        scrollToGuardian();
       }
     } finally {
       setIsLoading(false);
@@ -195,14 +208,13 @@ export const Register: React.FC = () => {
                 required
                 className="h-12"
               />
-              {under18 && <GuardianNotice />}
+              {showGuardian && <GuardianNotice ref={guardianRef} />}
               <ConsentFields value={consent} onChange={setConsent} />
               <Button 
                 type="submit" 
                 variant="secondary"
                 className="w-full h-12 text-base font-semibold shadow-lg mt-6" 
                 isLoading={isLoading}
-                disabled={!consent.noticeRead || !consent.accountConsent}
               >
                 {!isLoading && <CheckCircle className="h-5 w-5 mr-2" />}
                 {t('common.register')}

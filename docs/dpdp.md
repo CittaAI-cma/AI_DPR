@@ -82,7 +82,7 @@ DPDP: under 18 cannot give adult consent. Product rule: the **named entrepreneur
 
 | Surface | Behaviour |
 |---------|-----------|
-| Register | DOB → age &lt; 18 → **no account**. Code `UNDER_18`. Guardian message. |
+| Register | DOB → age &lt; 18 → **no account**. Guardian banner under DOB. Clicking Register **scrolls to that banner**. Code `UNDER_18`. |
 | Latest DPR extras | `entrepreneurAge` / `promoterAge` / `applicantAge` / `age` &lt; 18 → no save, no generate, no Fill-all-AI. Banner. |
 | Server draft / generate | Same payload check on `/api/dpr/cluster/draft/save` and `/api/dpr/cluster/generate` |
 | Scheme Finder | Age question and results show guardian copy. Create-DPR buttons hidden if `age === under18`. Loan schemes already fail the 18+ test. |
@@ -144,7 +144,7 @@ Use a **new email** for each register test so you do not fight old users.
 
 1. `/register`. Fill name, email, password, **date of birth 18+**.
 2. The account tick is greyed until you **scroll the notice box to the bottom**. Then tick account consent. Leave **AI** unticked.
-3. Register stays disabled until both scroll-complete and the tick. Submit → land on dashboard. No extra privacy popup (notice already accepted).
+3. Register stays clickable. If the notice is not scrolled/ticked, you get a toast and stay on the form. After notice + tick, submit → land on dashboard. No extra privacy popup (notice already accepted).
 4. Open **Create New Latest DPR**, pick a scheme, fill unit name. **Generate all steps with AI** and **Get AI Suggestions** should be disabled / show the “AI will not work” warning.
 5. Open **AI Assistant** (`/chat`), send a message → should fail with the AI-off message (toast).
 6. You should still type fields, **Save draft**, and use the live preview.
@@ -157,8 +157,9 @@ Use a **new email** for each register test so you do not fight old users.
 
 ### D. Register — under 18
 
-1. DOB that makes the person 16 (or any date &lt; 18 years ago).
-2. Submit → **no account**. Yellow guardian box. Login with that email must fail (user was not created).
+1. DOB that makes the person 16 (or any date &lt; 18 years ago). The yellow guardian box appears under date of birth.
+2. Click **Register** (even if you are at the bottom of the form). The page **scrolls to the yellow warning**. No account is created.
+3. Login with that email must fail (user was not created).
 
 ### E. Old user (re-consent)
 
