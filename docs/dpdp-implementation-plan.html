@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>DPDP implementation plan — MSME DPR tool</title>
+  <style>
+    @page { size: A4; margin: 18mm 16mm 20mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      color: #1a2332;
+      font-size: 11pt;
+      line-height: 1.45;
+      max-width: 190mm;
+      margin: 0 auto;
+    }
+    h1 { font-size: 22pt; line-height: 1.2; margin: 0 0 8pt; color: #0f2744; }
+    h2 { font-size: 14pt; margin: 22pt 0 8pt; color: #0f2744; page-break-after: avoid; border-bottom: 1px solid #c5d0dc; padding-bottom: 4pt; }
+    h3 { font-size: 12pt; margin: 16pt 0 6pt; color: #1b4d7a; page-break-after: avoid; }
+    h4 { font-size: 11pt; margin: 12pt 0 4pt; color: #1b4d7a; page-break-after: avoid; }
+    p, li { margin: 0 0 8pt; }
+    ul, ol { margin: 0 0 10pt; padding-left: 18pt; }
+    .kicker { font-family: system-ui, sans-serif; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #5a6a7a; margin-bottom: 6pt; }
+    .meta { font-family: system-ui, sans-serif; font-size: 9.5pt; color: #4a5563; margin-bottom: 18pt; }
+    .box {
+      background: #f4f7fb;
+      border: 1px solid #d5dee8;
+      border-left: 4px solid #1b4d7a;
+      padding: 10pt 12pt;
+      margin: 10pt 0 14pt;
+      page-break-inside: avoid;
+    }
+    .warn {
+      background: #fbf6ee;
+      border: 1px solid #ead9b8;
+      border-left: 4px solid #b45309;
+      padding: 10pt 12pt;
+      margin: 10pt 0 14pt;
+      page-break-inside: avoid;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 8pt 0 14pt; page-break-inside: auto; }
+    th, td { border: 1px solid #cfd8e3; padding: 6pt 7pt; vertical-align: top; text-align: left; }
+    th { background: #e8eef5; font-family: system-ui, sans-serif; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr { page-break-inside: avoid; }
+    footer.note { font-family: system-ui, sans-serif; font-size: 8.5pt; color: #5a6a7a; margin-top: 24pt; border-top: 1px solid #d5dee8; padding-top: 8pt; }
+    strong { color: #0f2744; }
+    .toc li { margin-bottom: 4pt; }
+    .stage-label { font-family: system-ui, sans-serif; font-size: 8.5pt; letter-spacing: 0.06em; text-transform: uppercase; color: #5a6a7a; }
+  </style>
+</head>
+<body>
+  <div class="kicker">AI DPR · Data protection</div>
+  <h1>DPDP implementation plan for the MSME DPR tool</h1>
+  <p class="meta">Internal plan · September 2026 · Simple-language build guide for notice, consent, under-18, user rights, audit, and retention. Not a legal opinion and not a DPDP compliance certificate.</p>
+
+  <div class="box">
+    <p style="margin:0"><strong>One-line answer.</strong> The app is not aligned with India’s Digital Personal Data Protection Act, 2023 today. We can build most of the <em>product</em> controls in four code stages, plus one short decision stage and one legal/ops stage. Audit logging is part of the plan (Stage 1 for login and consent; Stage 2 for the full trail). After Stages 1–3 the <em>code</em> can be as aligned as this product can get. We still must not say “we comply with DPDP” until Stage 4 (contracts, named officer, breach process) is done by people, not only by software.</p>
+  </div>
+
+  <h2>Contents</h2>
+  <ol class="toc">
+    <li>What this paper is (and is not)</li>
+    <li>The situation today</li>
+    <li>If the user is under 18</li>
+    <li>Audit — yes, it is in the plan</li>
+    <li>What “aligned in code” means</li>
+    <li>Stage 0 — Four decisions (locked)</li>
+    <li>Stage 1 — Notice, consent, age 18, safer AI, first audit</li>
+    <li>Stage 2 — User rights, complaints, nominee, full audit</li>
+    <li>Stage 3 — Keep less data, keep it for less time</li>
+    <li>Stage 4 — Organisation work the code cannot finish</li>
+    <li>Order of work for the AI agent</li>
+    <li>What we may say after each stage</li>
+    <li>Problems we will still hit</li>
+  </ol>
+
+  <h2>1. What this paper is (and is not)</h2>
+  <p>This is a <strong>build plan</strong> so the MSME DPR tool handles people’s data in the way the DPDP Act expects — as far as software can.</p>
+  <p>It is <strong>not</strong> a lawyer’s certificate. After we build every screen and log in this paper, we still need:</p>
+  <ul>
+    <li>the legal gazette name behind “MSME One Department” (Stage 0 already names the department for the product);</li>
+    <li>written contracts with OpenAI, Cloudinary, and the database host;</li>
+    <li>a named human who reads <code>privacy.grievance@msmeone.gov.in</code> (mock address until a real inbox exists);</li>
+    <li>a written plan if data leaks.</li>
+  </ul>
+  <p>Until those exist, nobody should tell users, banks, or government that “we are DPDP compliant.”</p>
+
+  <h2>2. The situation today</h2>
+  <p>This tool helps entrepreneurs make <strong>Detailed Project Reports</strong> (DPRs) for banks and government schemes. To do that it collects:</p>
+  <ul>
+    <li>name, email, phone, location, Udyam number;</li>
+    <li>business answers, costs, loans, scheme extras;</li>
+    <li>often <strong>Aadhaar / PAN / bank passbook / UPI</strong> scans.</li>
+  </ul>
+  <p>That is personal data. Some of it is very sensitive (identity documents and money).</p>
+  <p><strong>What the app already has:</strong> login, password hashing, roles (entrepreneur / officer / admin), basic security headers.</p>
+  <p><strong>What it does not have:</strong></p>
+  <ul>
+    <li>a privacy notice before or at collection;</li>
+    <li>clear, itemised consent (including a way to say no to AI);</li>
+    <li>a user button to download or delete their own data;</li>
+    <li>an audit log (the README mentions audit; the code does not);</li>
+    <li>a rule that keeps Aadhaar and bank files out of AI prompts.</li>
+  </ul>
+  <p>Register collects name, email, phone, location and Udyam with no notice and no consent box. Quality scoring and “fill with AI” can send stored form data to OpenAI. Files can go to Cloudinary. So we are <strong>not</strong> aligned with DPDP today. README lines about GDPR, end-to-end encryption, anonymisation, and audit logging are claims, not features.</p>
+
+  <h2>3. If the user is under 18</h2>
+  <p>Two different questions get mixed up:</p>
+  <ol>
+    <li>Can a young person want to start a company? <strong>Yes.</strong></li>
+    <li>Can they be the <strong>applicant</strong> on this bank/scheme DPR, and can this app hold their Aadhaar? <strong>No — not in their own name.</strong></li>
+  </ol>
+  <p><strong>Why.</strong> Under DPDP, anyone under 18 is a child. They cannot give adult consent. A parent or guardian must consent. In this product, schemes such as PMEGP, MUDRA and PM SVANidhi need the borrower to be 18 or older. A minor generally cannot sign a normal bank loan.</p>
+  <p>Scheme Finder already has an age option “under 18” and those loan schemes fail the “age 18+” test. We keep that.</p>
+  <h3>What we will do in the product</h3>
+  <ul>
+    <li><strong>Do not</strong> create an account where the applicant is under 18.</li>
+    <li>Show a clear message: <em>This site makes bank and scheme DPRs. The person named as the entrepreneur must be 18 or older. Ask a parent or guardian to register and create the DPR in their name.</em></li>
+    <li>If someone types a promoter age under 18 inside the form, do not generate or save that person as the applicant. Same message.</li>
+  </ul>
+  <p>We are <strong>not</strong> building a special “child planning DPR” in this plan. The honest path is: the <strong>adult</strong> is the user and the promoter. The young person can be described as family or a future partner, not the borrower.</p>
+
+  <h2>4. Audit — yes, it is in the plan</h2>
+  <p>DPDP does not say “install a huge monitoring product.” It expects we can <strong>show who touched whose data, when, and why</strong> — especially KYC files, downloads, deletes, and when an officer opens someone else’s DPR.</p>
+  <p>We will store an <strong>append-only</strong> list of events. Nobody edits old rows. Each row stores only:</p>
+  <ul>
+    <li>date and time;</li>
+    <li>who did it (user id and role);</li>
+    <li>what they did (for example <code>login</code> or <code>dpr_download</code>);</li>
+    <li>what it was about (for example a DPR id) — <strong>not</strong> the Aadhaar number, <strong>not</strong> the full DPR text;</li>
+    <li>optional IP address.</li>
+  </ul>
+  <p>Keep these logs <strong>longer than the DPR files</strong> (for example 12–24 months). If we delete a user, we do <strong>not</strong> wipe the log. We may hide their display name and keep the id.</p>
+  <p><strong>Stage 1</strong> starts audit (login and consent). <strong>Stage 2</strong> completes it (DPR, KYC, AI, export, delete, admin views, and screens to read the log).</p>
+
+  <h2>5. What “aligned in code” means</h2>
+  <p>After Stages 1, 2 and 3, the <strong>product</strong> can:</p>
+  <ul>
+    <li>tell people what we collect and why;</li>
+    <li>get consent and let them take it back;</li>
+    <li>refuse child applicants;</li>
+    <li>keep KYC out of AI prompts;</li>
+    <li>let people take a copy of their data and delete their account;</li>
+    <li>take a complaint;</li>
+    <li>record a nominee;</li>
+    <li>keep an audit trail.</li>
+  </ul>
+  <p>That is <strong>as aligned as this codebase can be</strong>. It is still not a legal statement of compliance without Stage 4.</p>
+  <table>
+    <thead>
+      <tr><th>DPDP duty</th><th>Can we cover it in code?</th><th>Stage</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Notice (what, why, who, rights)</td><td>Yes — privacy page in English and Telugu</td><td>1</td></tr>
+      <tr><td>Consent and withdraw</td><td>Yes — flags on the user</td><td>1–2</td></tr>
+      <tr><td>Under-18 / guardian</td><td>Yes — block as applicant; parent message</td><td>1</td></tr>
+      <tr><td>Optional AI; purpose limit</td><td>Yes — AI switch + strip KYC from models</td><td>1</td></tr>
+      <tr><td>See my data (access)</td><td>Yes — export</td><td>2</td></tr>
+      <tr><td>Correction</td><td>Yes — profile and DPR edit, and log it</td><td>2</td></tr>
+      <tr><td>Erasure</td><td>Yes — full delete cascade</td><td>2</td></tr>
+      <tr><td>Grievance</td><td>Partial — form and email; a human must reply</td><td>2</td></tr>
+      <tr><td>Nomination (if user dies or cannot act)</td><td>Yes — name and contact on file</td><td>2</td></tr>
+      <tr><td>Security</td><td>Partial — login exists; tighten secrets and KYC storage</td><td>1 + 3</td></tr>
+      <tr><td>Audit / who touched what</td><td>Yes — append-only event list</td><td>1 + 2</td></tr>
+      <tr><td>Storage limit</td><td>Yes — delete old drafts on a schedule</td><td>3</td></tr>
+      <tr><td>Processors (OpenAI, Cloudinary)</td><td>Code: tell the user and send less. Legal: contracts</td><td>1 code, 4 legal</td></tr>
+      <tr><td>Data sent abroad</td><td>Say so in the notice; not a magic toggle</td><td>1 + 4</td></tr>
+      <tr><td>Breach notice to the Board</td><td>Log + written playbook; humans send the notice</td><td>2 log, 4 ops</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6. Stage 0 — Four decisions (locked September 2026)</h2>
+  <p class="stage-label">Not a software task · These four lines go on the notice</p>
+  <p>The notice must use the organisation’s real name. These four answers are now written down. Stage 1 uses them. Stage 4 still confirms the legal entity on paper (gazette / department order), not only this product name.</p>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Decision</th><th>What we will put on the notice</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Who is responsible (Data Fiduciary)</td>
+        <td><strong>MSME One Department</strong>. Stage 4 should still match this to the legal name of the body that actually runs the portal (for example the Industries department or the agency named in the government order). Until then, the product text is “MSME One Department”.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Grievance email</td>
+        <td><strong>privacy.grievance@msmeone.gov.in</strong> — mock inbox for now, so Stage 1–2 can ship. Replace with a real mailbox someone reads before we say the complaint path is live. A form still saves the complaint in the app so nothing is lost if mail is not yet real.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>How long unused drafts live</td>
+        <td><strong>12 months after last edit</strong> of that DPR draft. Then delete or strip personal fields, and log the purge. Warn the user by email a few days before (good practice; the 48-hour rule in the DPDP Rules is written for other classes of platforms, but we still warn).</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>AI rule</td>
+        <td>AI is <strong>optional</strong>. Aadhaar, PAN, and bank files never go into the model. If the user says no to AI, we say clearly: <em>Fill with AI, quality scoring that uses a model, and similar AI help will not work. You can still fill the DPR yourself, save, and download.</em> Account consent is separate. We do not block registration just because they refuse AI.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Does “12 months after last edit” match the law?</h3>
+  <p>Yes as a <strong>policy</strong>. It is not a number the Act forces on this product, and the Act also does not give us a longer “maximum allowance” we should stretch to.</p>
+  <ul>
+    <li><strong>DPDP Act, section 8(7).</strong> Keep personal data only while the stated purpose is still being served, or another law says we must keep it. When the user withdraws consent, or the purpose is over, we erase (and tell our processors to erase). There is no “keep for 12 months / 3 years / 10 years” line for a DPR tool.</li>
+    <li><strong>The 3-year inactivity clock in the DPDP Rules (Third Schedule)</strong> is only for huge e-commerce, social-media, and gaming platforms (crores of users). This MSME DPR tool is not in that list. That 3-year figure is <strong>not</strong> extra time the law “allows” us to take.</li>
+    <li><strong>What the law actually allows.</strong> We may keep a DPR while the purpose we wrote on the notice is true — for example while the person still uses the tool to finish or reuse that report. We may not keep it “just in case” after that purpose is over. So the ceiling is the purpose, not a gift of extra years.</li>
+    <li><strong>Why 12 months after last edit is still okay.</strong> It is a clear, conservative rule: if nobody has edited the draft for a year, we treat the drafting purpose as over. That is stricter than “keep forever while the account exists,” which would also be lawful if we said that purpose on the notice. We choose the shorter, cleaner clock.</li>
+    <li><strong>Do not mix this with logs.</strong> Processing logs (who logged in, who downloaded, who deleted) should be kept <strong>at least 12 months</strong> when the DPDP Rules on logs apply — that is a <em>minimum</em> for the trail, not a reason to keep Aadhaar scans. The plan already keeps audit rows longer than the draft files (12–24 months).</li>
+    <li><strong>Do not auto-delete the whole account</strong> only because one draft is old. Delete or strip that idle draft. If they still log in, the account stays. If they ask to delete the account, we erase (Stage 2).</li>
+    <li><strong>Submitted / downloaded copies</strong> used for a live bank or DIC file: say on the notice whether those follow the same 12-month last-edit rule or a longer “until the scheme file is closed” rule. Default in this plan: same 12-month last-edit rule unless Stage 4 writes a longer legal hold.</li>
+  </ul>
+  <div class="warn">
+    <p style="margin:0"><strong>Bottom line on time.</strong> Twelve months after last edit is aligned with DPDP because it is a stated purpose window, not because the Act says “12 months.” The law does not give this product a longer official bonus period. We are not leaving data sitting because we think we “may as well take 3 years.”</p>
+  </div>
+
+  <h2>7. Stage 1 — Notice, consent, age 18, safer AI, first audit</h2>
+  <p class="stage-label">First product slice · Stop silent collection</p>
+  <p><strong>Goal.</strong> From this moment we do not quietly collect data, we do not treat a child as the applicant, and we do not send KYC to OpenAI.</p>
+  <p><strong>Done when:</strong> a new user sees the notice and ticks consent; old users are blocked until they accept; a 16-year-old cannot be the DPR applicant; KYC is not in AI calls; login and consent appear in the audit table.</p>
+
+  <h3>7.1 Privacy notice page</h3>
+  <p>Add a page such as <code>/privacy</code> in English and Telugu, in simple language:</p>
+  <ul>
+    <li>who we are (from Stage 0);</li>
+    <li>what we collect (account, DPR answers, optional KYC files);</li>
+    <li>why (make a DPR, match schemes, optional AI help);</li>
+    <li>who else may see it (hosting, Cloudinary for files, OpenAI only if AI is on);</li>
+    <li>how long we keep it;</li>
+    <li>how to complain and how to delete.</li>
+  </ul>
+  <p>Link this page from Register, and from Create New Latest DPR.</p>
+
+  <h3>7.2 Consent stored on the user</h3>
+  <p>Save on each user:</p>
+  <ul>
+    <li><code>account</code> — needed to use the app (cannot skip);</li>
+    <li><code>aiAssist</code> — send form text (not KYC) to AI; can be off. Next to the box: if this is off, Fill with AI, model-based quality scoring, and other AI help will not run; the user can still type, save, and download the DPR;</li>
+    <li><code>analytics</code> — optional;</li>
+    <li>which notice version they agreed to, and when.</li>
+  </ul>
+  <p>Register cannot succeed without account consent and a working link to the notice.</p>
+
+  <h3>7.3 People already in the database</h3>
+  <p>Old users never saw a notice. On next login, show a <strong>blocking popup</strong> with the same notice and the same checkboxes. They cannot use the dashboard until they accept.</p>
+
+  <h3>7.4 Under 18</h3>
+  <ul>
+    <li>Ask age (or date of birth) at register.</li>
+    <li>If under 18: do not create them as the entrepreneur. Show the guardian message.</li>
+    <li>If promoter age in the DPR form is under 18: do not generate or save that person as the applicant. Same message.</li>
+    <li>Scheme Finder: under 18 still fails loan schemes; add the guardian line.</li>
+  </ul>
+
+  <h3>7.5 Stop sending secrets to AI</h3>
+  <p>One shared function used everywhere we call a model (suggestions, fill-all-steps, quality score, chat):</p>
+  <ul>
+    <li>remove Aadhaar, PAN, passbook, UPI, file URLs, ID numbers;</li>
+    <li>if AI consent is off, those APIs refuse in plain language: AI features are off; the rest of the DPR tool still works.</li>
+  </ul>
+
+  <h3>7.6 Small security in the same stage</h3>
+  <ul>
+    <li>Do not use a default JWT secret in production.</li>
+    <li>Do not print full DPR HTML or personal data in server logs.</li>
+  </ul>
+
+  <h3>7.7 Audit in Stage 1</h3>
+  <p>Create the append-only event list now. In this stage, record:</p>
+  <ul>
+    <li>register;</li>
+    <li>login success, login failed, logout;</li>
+    <li>consent given or withdrawn;</li>
+    <li>notice accepted.</li>
+  </ul>
+  <div class="warn">
+    <p style="margin:0"><strong>Not in Stage 1.</strong> Full “delete my account” screen, encrypting files on disk, or the admin audit browser. Those are Stage 2 and 3.</p>
+  </div>
+
+  <h2>8. Stage 2 — User rights, complaints, nominee, full audit</h2>
+  <p class="stage-label">Second product slice · People can leave, and we can prove what happened</p>
+  <p><strong>Goal.</strong> A person can see, take, fix, and erase their data. We can show an officer the trail.</p>
+  <p><strong>Done when:</strong> a test user can export, turn AI off, delete themselves (including files), and those actions appear in the admin audit list.</p>
+
+  <h3>8.1 Privacy settings page</h3>
+  <p>A page such as <code>/account/privacy</code>:</p>
+  <ul>
+    <li><strong>Download my data</strong> — JSON or ZIP: profile (no password), projects, DPR answers. Log it as data export.</li>
+    <li><strong>Turn AI off</strong> — we keep their DPR; we stop model calls. Log the consent change.</li>
+    <li><strong>Edit name, phone, email</strong> — already exists; start logging the change.</li>
+    <li><strong>Nominee</strong> — name plus phone or email of someone who may act if they die or cannot act (DPDP nomination).</li>
+    <li><strong>Delete my account</strong> — strong confirm, then really delete.</li>
+  </ul>
+
+  <h3>8.2 Delete must be complete</h3>
+  <p>One shared function. The user’s button and the admin’s delete both use it:</p>
+  <ol>
+    <li>their projects;</li>
+    <li>their DPR versions;</li>
+    <li>files on Cloudinary and on disk;</li>
+    <li>any stored OpenAI file or thread ids;</li>
+    <li>then the user row.</li>
+  </ol>
+  <p><strong>Keep audit rows.</strong> Incomplete delete is worse than no delete. Test with a dummy DPR that has a real upload.</p>
+
+  <h3>8.3 Full audit list (add to Stage 1)</h3>
+  <table>
+    <thead>
+      <tr><th>What we log</th><th>Why</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Create, change, download, or delete a DPR</td><td>Main personal file</td></tr>
+      <tr><td>KYC upload or delete (file id only)</td><td>Aadhaar / PAN</td></tr>
+      <tr><td>AI call (which feature, not the prompt text)</td><td>Use of a processor</td></tr>
+      <tr><td>Data export</td><td>Right of access</td></tr>
+      <tr><td>Account delete</td><td>Erasure</td></tr>
+      <tr><td>Admin opened another user’s DPR or profile</td><td>Highest risk</td></tr>
+      <tr><td>Admin deleted a user</td><td>Same</td></tr>
+      <tr><td>Privacy complaint submitted</td><td>Grievance path</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Admin:</strong> search by user, action, date; download CSV for a complaint.</p>
+  <p><strong>User:</strong> “Recent activity on my account” (logins, downloads, exports) — not other people’s data.</p>
+
+  <h3>8.4 Grievance</h3>
+  <p>A short form: “I have a privacy request.” It emails <code>privacy.grievance@msmeone.gov.in</code> (mock until a real inbox is live) and saves a row in the app so the request is not lost. Log it. A human must still reply. DPDP expects a reply path (the Rules speak of about 90 days for rights requests), not a chatbot that “closes” the Act.</p>
+
+  <h2>9. Stage 3 — Keep less data, keep it for less time</h2>
+  <p class="stage-label">Third product slice · Do not hold Aadhaar as an open link forever</p>
+  <p><strong>Goal.</strong> Scans are not public Mongo URLs; idle drafts do not live forever; logs still exist after a file is gone.</p>
+  <p><strong>Done when:</strong> a test upload is not world-readable, and an old draft disappears on schedule (and the purge is logged).</p>
+  <h3>9.1 Files</h3>
+  <ul>
+    <li>Store KYC privately (not a public URL inside the database).</li>
+    <li>In the DPR, show Uploaded or Pending, not the scan itself in JSON if we can avoid it.</li>
+    <li>Optional: encrypt files at rest with a key in environment variables.</li>
+    <li>Do not save the Aadhaar <strong>number</strong> as a field — only whether a document is present.</li>
+  </ul>
+  <p>Banks and DIC may still want an attachment on a PDF. That is a product choice: status in the report versus keeping the scan. Write the choice into the notice.</p>
+  <h3>9.2 Automatic clean-up</h3>
+  <ul>
+    <li>Drafts not edited for 12 months → delete or strip personal fields. Email a warning first. Do not delete the whole account only because one draft is old.</li>
+    <li>Log that purge.</li>
+    <li>Submitted DPRs: keep as long as the notice says, then delete and log.</li>
+  </ul>
+  <p>Audit logs stay after a draft is gone. No extra under-18 product in this stage.</p>
+
+  <h2>10. Stage 4 — Organisation work the code cannot finish</h2>
+  <p class="stage-label">Legal and ops · Required before anyone says “we comply”</p>
+  <p><strong>The agent may:</strong> list processors on the privacy page, use a grievance email from configuration, and <strong>remove</strong> README lines that claim GDPR, encryption, anonymisation, and audit until Stage 2 is actually live.</p>
+  <p><strong>You or a lawyer must:</strong></p>
+  <ul>
+    <li>contracts with OpenAI, Cloudinary, and the database host (purpose, no training on our users’ data, delete when we ask);</li>
+    <li>confirm the legal name behind “MSME One Department” and replace the mock grievance inbox with a mailbox a person reads;</li>
+    <li>write what you do if data leaks (tell the Board and the people affected).</li>
+  </ul>
+  <p>Without Stage 4, Stages 1–3 are good product hygiene, not a compliance certificate.</p>
+
+  <h2>11. Order of work for the AI agent</h2>
+  <p>One slice at a time. Do not merge the AI strip without the notice and consent screens.</p>
+  <ol>
+    <li><strong>1a</strong> — User consent and age fields; privacy page; register and re-consent popup; under-18 plus guardian text; audit for login and consent.</li>
+    <li><strong>1b</strong> — Strip KYC from every AI route; honour the AI switch; audit for AI calls.</li>
+    <li><strong>2</strong> — Privacy settings: export, nominee, withdraw, delete cascade, complaint form; full audit plus admin log screen.</li>
+    <li><strong>3</strong> — Private KYC, retention job, log purges.</li>
+  </ol>
+
+  <h2>12. What we may say after each stage</h2>
+  <table>
+    <thead>
+      <tr><th>After</th><th>We may say</th><th>We must not say</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Stage 1</td>
+        <td>We tell people and ask before collecting. Children are not applicants. AI does not get KYC. Login and consent are logged.</td>
+        <td>We comply with DPDP.</td>
+      </tr>
+      <tr>
+        <td>Stage 2</td>
+        <td>Users can take and delete their data. We keep an audit trail they and an officer can use.</td>
+        <td>Vendors are contracted. Aadhaar is safe forever.</td>
+      </tr>
+      <tr>
+        <td>Stage 3</td>
+        <td>We do not keep open KYC forever. Old drafts are cleaned up.</td>
+        <td>Legal compliance is complete.</td>
+      </tr>
+      <tr>
+        <td>Stage 4</td>
+        <td>Counsel may talk about DPDP alignment.</td>
+        <td>The software agent cannot sign that.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>13. Problems we will still hit</h2>
+  <ul>
+    <li>Wrong organisation name on the notice.</li>
+    <li>Delete that forgets Cloudinary or a local upload folder.</li>
+    <li>Old users without the blocking popup.</li>
+    <li>One AI caller still sending the full form if we miss it in Stage 1b.</li>
+    <li>Banks still wanting KYC attached to a PDF — Stage 3 must match what DIC actually files.</li>
+  </ul>
+
+  <div class="box">
+    <p style="margin:0"><strong>Start here.</strong> Stage 0 is locked (MSME One Department, mock grievance mail, 12-month last-edit drafts, optional AI with a clear “AI will not work” warning). Next is Stage 1a: notice, consent, under-18, login/consent audit. Do not skip 1a to “just add audit” or “just add delete.”</p>
+  </div>
+
+  <footer class="note">
+    AI-Enabled MSME DPR Generation Tool · DPDP implementation plan · Internal use. This document describes product stages. It does not replace current DPDP rules, Aadhaar / UIDAI rules, or legal advice.
+  </footer>
+</body>
+</html>
