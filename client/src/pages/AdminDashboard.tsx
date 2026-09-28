@@ -178,6 +178,17 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleRunRetention = async () => {
+    try {
+      const response = await api.runRetentionJob();
+      const data = response.data || {};
+      toast.success(`Retention: warned ${data.warned || 0}, purged ${data.purged || 0}`);
+      loadData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to run retention');
+    }
+  };
+
   const handleSavePolicy = async () => {
     if (!policyForm.title || !policyForm.description || !policyForm.content) {
       toast.error('Please fill in all required fields');
@@ -706,6 +717,9 @@ export const AdminDashboard: React.FC = () => {
               <Button variant="outline" onClick={handleDownloadAuditCsv}>
                 <Download className="h-4 w-4 mr-2" />
                 CSV
+              </Button>
+              <Button variant="outline" onClick={handleRunRetention}>
+                Run retention
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">{auditTotal} events (showing latest 100)</p>

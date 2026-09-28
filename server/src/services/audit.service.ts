@@ -21,7 +21,9 @@ export type AuditAction =
   | 'admin_view'
   | 'profile_change'
   | 'nominee_change'
-  | 'complaint_submitted';
+  | 'complaint_submitted'
+  | 'retention_warning'
+  | 'retention_purge';
 
 function clientIp(req?: Request): string | undefined {
   if (!req) return undefined;

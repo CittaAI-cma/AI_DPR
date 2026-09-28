@@ -1033,5 +1033,24 @@ export class AdminController {
       });
     }
   }
+
+  static async runRetention(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { runRetentionJob } = await import('../services/retention.service');
+      const result = await runRetentionJob();
+      res.status(200).json({
+        success: true,
+        message: 'Retention job finished',
+        data: result,
+      });
+    } catch (error: any) {
+      console.error('Run retention error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to run retention job',
+        error: error.message,
+      });
+    }
+  }
 }
 

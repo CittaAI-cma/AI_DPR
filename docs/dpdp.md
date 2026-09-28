@@ -16,7 +16,7 @@ This is **not** a legal opinion and **not** a DPDP compliance certificate. After
 | 0 | Four locked notice lines | Locked (Sep 2026) |
 | 1 | Notice, consent, age 18, safer AI, first audit | **In code** |
 | 2 | Export, delete, nominee, complaint form, full audit UI | **In code** |
-| 3 | Private KYC storage, 12-month draft purge job | Not built |
+| 3 | Private KYC storage, 12-month draft purge job | **In code** |
 | 4 | Legal name on paper, real grievance inbox, vendor contracts, breach playbook | Org work |
 
 ---
@@ -29,7 +29,7 @@ Keep `PRIVACY_NOTICE_VERSION` in sync on **both** sides when the notice text cha
 |----------|--------|
 | Data Fiduciary (product name) | MSME One Department |
 | Grievance email | `privacy.grievance@msmeone.gov.in` (**mock** until Stage 4) |
-| Unused draft life | **12 months after last edit** (policy; not a statutory clock). Do not delete the whole account because one draft is old. Audit logs stay ≥ 12 months. |
+| Unused draft life | **12 months after last edit** (policy; not a statutory clock). **15 days before delete**: in-app notification + SMS (mocked until Twilio). Do not delete the whole account because one draft is old. Audit logs stay ≥ 12 months. |
 | AI | Optional. KYC never in the model. If AI is off, say so: Fill with AI, model quality score, chat help will not run; type / save / download still work. |
 
 Constants:
@@ -37,7 +37,7 @@ Constants:
 - Server: `server/src/lib/privacyNotice.ts`
 - Client: `client/src/lib/privacy/constants.ts`
 
-Current notice version: **`2026-09-1`**. Bump this string when the privacy page content changes so old users re-consent.
+Current notice version: **`2026-09-3`**. Bump this string when the privacy page content changes so old users re-consent.
 
 ---
 
@@ -62,7 +62,7 @@ Stored on `User.privacy`:
 | `noticeVersion` / `noticeAcceptedAt` | Which notice they agreed to |
 | `dateOfBirth` | Register only; used to block under 18 |
 
-JWT / profile payload includes `privacy.needsNoticeAcceptance` when `noticeVersion !== 2026-09-1`.
+JWT / profile payload includes `privacy.needsNoticeAcceptance` when `noticeVersion !== 2026-09-3`.
 
 **APIs**
 
@@ -148,10 +148,40 @@ Cascade: Cloudinary public ids / upload URLs in projects and DPRs, local `/uploa
 Append-only `auditevents`. Stage 2 actions (in addition to Stage 1): `dpr_create`, `dpr_change`, `dpr_download`, `dpr_delete`, `kyc_upload`, `kyc_delete`, `data_export`, `account_delete`, `admin_view`, `profile_change`, `nominee_change`, `complaint_submitted`.
 
 - **User:** `GET /api/privacy/activity` — own logins, downloads, exports, consent, etc. No other people’s rows.
+- **User inbox:** `GET /api/privacy/notifications`, `POST /api/privacy/notifications/:id/read` (`id` can be `all`).
 - **Admin:** `GET /api/admin/audit?userId=&action=&from=&to=` and `GET /api/admin/audit/csv`.
 - Staff (`admin` / `officer`) opening another user’s DPR logs `admin_view`.
 
 Rows still store time, userId, role, action, optional targetType/targetId, IP. **Not** Aadhaar, **not** DPR text.
+
+---
+
+## 4.7 Stage 3 — private KYC and 12-month purge
+
+### Files
+
+- Step 18 / identity uploads go to `uploads/kyc/` as `KycFile` rows. They are **not** sent to public Cloudinary. `/uploads/kyc` and `/uploads/documents` are **not** served as static files.
+- Mongo stores `{ status: "uploaded", fileId, originalName }` — not a public URL. Aadhaar/PAN **numbers** typed into those keys are dropped on save.
+- The DPR preview/PDF shows **Uploaded** or **Pending**. It does not embed the scan. Banks/DIC still need the original attachment from the applicant.
+- Optional at-rest encryption: set `KYC_ENCRYPTION_KEY` (any passphrase; hashed to AES-256-GCM). Without it, files stay local and private, just unencrypted on disk.
+
+### Retention job
+
+`runRetentionJob()` (`server/src/services/retention.service.ts`). Starts ~20s after boot, then every 6 hours. Admin: **Audit log → Run retention** or `POST /api/admin/retention/run`.
+
+| Env | Default | Meaning |
+|-----|---------|---------|
+| `RETENTION_IDLE_DAYS` | 365 (12 months) | Delete after last **edit** (`DPRVersion.updatedAt`) |
+| `RETENTION_WARNING_DAYS` | **15** | Warn this many days **before** that delete |
+| `KYC_ENCRYPTION_KEY` | unset | Encrypt KYC files if set |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM` | unset | Real SMS. If any is missing, SMS is **mocked** (`[sms:mock]` in the server log) |
+
+1. When a DPR has been idle for `idle − 15` days (350 on defaults): set `retentionWarningAt` **without** bumping `updatedAt`, log `retention_warning`, write an in-app `UserNotification`, mock-SMS the user’s `phoneNumber` (or `[sms:skip]` if none), mock-email (`[email:mock]`). Bell in the header + Privacy page.
+2. After the 15-day warning **and** 12 months idle → delete that DPR, its cluster sections, KYC files, and the project **if** it has no other DPRs. **Never the user account.** Log `retention_purge`. Audit rows stay.
+
+`NotifyService` (`server/src/services/notify.service.ts`) is the Twilio plug: REST `Messages.json` only when all three Twilio env vars are set. Do not add the Twilio SDK until those keys exist.
+
+Submitted / approved copies use the **same** last-edit clock unless Stage 4 writes a longer hold.
 
 ---
 
@@ -164,10 +194,12 @@ Rows still store time, userId, role, action, optional targetType/targetId, IP. *
 | Sanitize + OpenAI wrap | `server/src/lib/sanitizeForAi.ts`, `server/src/lib/openaiClient.ts` |
 | Audit | `server/src/models/AuditEvent.model.ts`, `server/src/services/audit.service.ts` |
 | Erase | `server/src/services/accountErase.service.ts` |
+| KYC + retention | `server/src/lib/kycStorage.ts`, `server/src/models/KycFile.model.ts`, `server/src/services/retention.service.ts` |
+| Notify (in-app + mock SMS) | `server/src/services/notify.service.ts`, `server/src/models/UserNotification.model.ts` |
 | Privacy APIs | `server/src/controllers/privacy.controller.ts`, `server/src/routes/privacy.routes.ts`, `server/src/models/PrivacyComplaint.model.ts` |
 | Auth | `server/src/controllers/auth.controller.ts`, `server/src/routes/auth.routes.ts`, `server/src/models/User.model.ts` |
 | AI gate | `server/src/middleware/aiConsent.middleware.ts`, `server/src/routes/ai.routes.ts`, `server/src/routes/dpr.routes.ts` |
-| UI | `client/src/pages/Privacy.tsx`, `AccountPrivacy.tsx`, `Register.tsx`, `ConsentGate.tsx`, `ConsentFields.tsx`, `PrivacyNoticeScroll.tsx`, `GuardianNotice.tsx` |
+| UI | `client/src/pages/Privacy.tsx`, `AccountPrivacy.tsx`, `Register.tsx`, `ConsentGate.tsx`, `ConsentFields.tsx`, `PrivacyNoticeScroll.tsx`, `GuardianNotice.tsx`, `NotificationBell.tsx` |
 | Admin audit | `client/src/pages/AdminDashboard.tsx` (Audit log tab) |
 | i18n | `client/src/i18n/locales/en.json` / `te.json` → `privacy.*` |
 
@@ -282,17 +314,46 @@ If an admin/officer opens another user’s DPR by id, expect `admin_view` in the
 
 ---
 
-## 8. What Stages 1–2 do not do
+## 8. How to test Stage 3
 
-- Automatic 12-month draft purge and private KYC file storage (Stage 3)
-- Real grievance inbox, gazette legal name, OpenAI/Cloudinary contracts (Stage 4)
-- A chatbot that “closes” a complaint — a person must reply
+Old users will see the re-consent popup because the notice is now **`2026-09-3`**. Accept it, then:
+
+### A. Private upload
+
+1. Latest DPR → uploads step. Upload a dummy PDF as Aadhaar/PAN.
+2. Form shows **Uploaded** and the original filename, not a `https://res.cloudinary.com/…` link.
+3. Save draft. In Mongo the field should look like `{ status: "uploaded", fileId, originalName }` — no public URL.
+4. Open `http://localhost:5000/uploads/kyc/<filename>` in a logged-out browser — **404**.
+5. Preview/download the DPR: identity section is Uploaded / Pending, scan is not in the PDF.
+
+### B. No Aadhaar number field
+
+If a payload still sends `aadhaar: "1234 5678 9012"`, after save that value should be empty. The file status can remain.
+
+### C. Retention (short clock)
+
+1. Put a **phone number** on Profile (so SMS is mocked, not skipped).
+2. In the **server** `.env` set `RETENTION_IDLE_DAYS=0` and `RETENTION_WARNING_DAYS=0`. Restart the server.
+3. Have a saved draft. As admin, **Run retention** (or wait ~20s after boot).
+4. First run: `retention_warning`, Mongo `retentionWarningAt` on the DPR, header bell + Privacy → Notifications, server log `[sms:mock]` and `[email:mock]`. Account still logs in.
+5. Run again: that DPR (and its project if it was the only one) is gone. User can still log in. Audit has `retention_purge`.
+6. Remove the test env vars so production stays **365 + 15 days**. Leave Twilio env unset until a real SID/token/from exist.
+
+Optional: `KYC_ENCRYPTION_KEY=any-long-secret` then upload again; `uploads/kyc` bytes should not be a readable PDF (`KYC1` prefix).
 
 ---
 
-## 9. What we may say after Stage 2
+## 9. What Stages 1–3 do not do
 
-We may say: users can take a copy of their data and delete their account; we keep an audit trail they and an officer can use; a privacy request is saved in the app.
+- Real grievance inbox, gazette legal name, OpenAI/Cloudinary contracts, breach playbook (Stage 4)
+- A chatbot that “closes” a complaint — a person must reply
+- A legal statement of DPDP compliance
 
-We must **not** say: we comply with DPDP. We must **not** say vendors are contracted, or that Aadhaar is safe forever.
+---
+
+## 10. What we may say after Stage 3
+
+We may say: we do not keep identity scans as public links; old unused drafts are cleaned up after a warning; users can still take and delete their data.
+
+We must **not** say: legal compliance is complete. We must **not** say we comply with DPDP.
 

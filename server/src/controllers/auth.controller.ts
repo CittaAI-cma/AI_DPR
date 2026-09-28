@@ -372,18 +372,20 @@ export class AuthController {
     try {
       const authReq = req as any;
       const userId = authReq.user?.userId;
-      const updates = req.body;
-
-      delete updates.passwordHash;
-      delete updates.email;
-      delete updates.role;
-      delete updates.privacy;
-      delete updates.dateOfBirth;
-
-      const user = await User.findByIdAndUpdate(userId, updates, {
-        new: true,
-        runValidators: true,
-      }).select('-passwordHash');
+      const { name, udyamNumber, location, phoneNumber } = req.body;
+      const user = await User.findByIdAndUpdate(
+        userId,
+        {
+          ...(name !== undefined ? { name } : {}),
+          ...(udyamNumber !== undefined ? { udyamNumber } : {}),
+          ...(location !== undefined ? { location } : {}),
+          ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+        },
+        {
+          new: true,
+          runValidators: true,
+        }
+      ).select('-passwordHash');
 
       if (!user) {
         res.status(404).json({

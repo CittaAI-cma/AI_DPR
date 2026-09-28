@@ -11,6 +11,7 @@ import {
   Clock,
   Loader2,
   AlertTriangle,
+  Bell,
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
@@ -38,6 +39,8 @@ const ACTION_LABELS: Record<string, string> = {
   profile_change: 'Profile changed',
   nominee_change: 'Nominee updated',
   complaint_submitted: 'Privacy request sent',
+  retention_warning: 'Draft expiry warning',
+  retention_purge: 'Idle draft deleted',
 };
 
 export const AccountPrivacy: React.FC = () => {
@@ -52,6 +55,17 @@ export const AccountPrivacy: React.FC = () => {
   const [complaint, setComplaint] = useState({ subject: '', message: '' });
   const [sendingComplaint, setSendingComplaint] = useState(false);
   const [activity, setActivity] = useState<Array<{ at: string; action: string; targetId?: string }>>([]);
+  const [notifications, setNotifications] = useState<
+    Array<{
+      id: string;
+      title: string;
+      body: string;
+      at: string;
+      readAt?: string;
+      smsStatus?: string;
+      emailStatus?: string;
+    }>
+  >([]);
   const [exporting, setExporting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -59,9 +73,10 @@ export const AccountPrivacy: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [profileRes, activityRes] = await Promise.all([
+        const [profileRes, activityRes, notifyRes] = await Promise.all([
           api.getProfile(),
           api.getPrivacyActivity(),
+          api.getNotifications(50),
         ]);
         const profile = profileRes.data || profileRes;
         if (profile) {
@@ -74,6 +89,7 @@ export const AccountPrivacy: React.FC = () => {
           });
         }
         setActivity(activityRes.data || []);
+        setNotifications(notifyRes.data?.items || []);
       } catch (error: any) {
         toast.error(error.response?.data?.message || t('privacy.loadFailed'));
       } finally {
@@ -82,6 +98,13 @@ export const AccountPrivacy: React.FC = () => {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    if (window.location.hash === '#notifications') {
+      document.getElementById('notifications')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [loading]);
 
   const handleAiToggle = async (next: boolean) => {
     setSavingAi(true);
@@ -251,6 +274,34 @@ export const AccountPrivacy: React.FC = () => {
                 {t('privacy.saveNominee')}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card id="notifications">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Bell className="h-5 w-5" />
+              {t('privacy.notificationsHeading')}
+            </CardTitle>
+            <CardDescription>{t('privacy.notificationsHint')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {notifications.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('privacy.notificationsEmpty')}</p>
+            ) : (
+              <ul className="divide-y">
+                {notifications.map((item) => (
+                  <li key={item.id} className={`py-3 text-sm ${item.readAt ? '' : 'font-medium'}`}>
+                    <p>{item.title}</p>
+                    <p className="text-muted-foreground font-normal mt-1">{item.body}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {item.at ? new Date(item.at).toLocaleString('en-IN') : ''}
+                      {item.smsStatus ? ` · SMS ${t(`privacy.smsStatus.${item.smsStatus}`, item.smsStatus)}` : ''}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 

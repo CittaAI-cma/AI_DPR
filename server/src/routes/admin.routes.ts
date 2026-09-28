@@ -39,6 +39,7 @@ router.post('/policies/:id/approve', AdminController.approvePolicy);
 
 router.get('/audit', AdminController.getAudit);
 router.get('/audit/csv', AdminController.exportAuditCsv);
+router.post('/retention/run', AdminController.runRetention);
 
 export default router;
 

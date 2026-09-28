@@ -75,6 +75,7 @@ const dprVersionSchema = new Schema<IDPRVersion>(
     },
     approvedAt: Date,
     approvedBy: String,
+    retentionWarningAt: Date,
   },
   {
     timestamps: true,

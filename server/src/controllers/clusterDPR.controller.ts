@@ -9,6 +9,12 @@ import { DPRVersion } from '../models/DPRVersion.model';
 import { ClusterSection } from '../models/ClusterSection.model';
 import { payloadHasUnder18Applicant, under18Response } from '../lib/under18';
 import { AuditService } from '../services/audit.service';
+import { KycFile } from '../models/KycFile.model';
+import {
+  kycRefFromUpload,
+  persistKycBytes,
+  sanitizeStoredPayload,
+} from '../lib/kycStorage';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -20,7 +26,8 @@ export class ClusterDPRController {
    */
   static async generateClusterDPR(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { clusterData, language = 'bilingual' } = req.body;
+      const { clusterData: rawClusterData, language = 'bilingual' } = req.body;
+      const clusterData = sanitizeStoredPayload(rawClusterData);
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -290,7 +297,7 @@ export class ClusterDPRController {
     return multer({
       storage: multer.diskStorage({
         destination: (req, file, cb) => {
-          const uploadDir = path.join(process.cwd(), 'uploads', 'documents');
+          const uploadDir = path.join(process.cwd(), 'uploads', 'kyc');
           if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
           }
@@ -695,7 +702,8 @@ export class ClusterDPRController {
         return;
       }
 
-      const { clusterData } = req.body;
+      const { clusterData: rawClusterData } = req.body;
+      const clusterData = sanitizeStoredPayload(rawClusterData);
 
       const unitName =
         clusterData?.step1?.unitName || clusterData?.step1?.clusterName;
@@ -1500,54 +1508,34 @@ export class ClusterDPRController {
         return;
       }
 
-      // Upload to Cloudinary
-      let cloudinaryUrl = `/uploads/documents/${file.filename}`;
-      let cloudinaryPublicId = null;
-      try {
-        const cloudinaryResult = await CloudinaryService.uploadDocument(
-          file.path,
-          'msme-dpr/cluster-documents',
-          `document-${Date.now()}-${file.filename.replace(/\.[^/.]+$/, '')}`
-        );
-        cloudinaryUrl = cloudinaryResult.secureUrl;
-        cloudinaryPublicId = cloudinaryResult.publicId;
-        
-        // Delete local file after successful Cloudinary upload
-        fs.unlink(file.path, (err) => {
-          if (err) console.error('Error deleting local file:', err);
-        });
-        
-        console.log(`✅ Document uploaded to Cloudinary: ${cloudinaryPublicId}`);
-      } catch (cloudinaryError: any) {
-        // Check if it's a configuration error
-        if (cloudinaryError.message?.includes('not configured')) {
-          console.warn('⚠️ Cloudinary not configured. Using local file storage.');
-          console.warn('   To enable Cloudinary uploads, add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your .env file');
-        } else {
-          console.error('⚠️ Failed to upload to Cloudinary, using local file:', cloudinaryError.message || cloudinaryError);
-        }
-        // Continue with local file path if Cloudinary upload fails
-      }
+      const bytes = fs.readFileSync(file.path);
+      const { encrypted } = persistKycBytes(file.path, bytes);
+      const kyc = await KycFile.create({
+        userId,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        storagePath: file.path,
+        encrypted,
+        size: file.size,
+      });
 
       await AuditService.log({
         action: 'kyc_upload',
         userId,
         role: req.user?.role,
-        targetType: 'file',
-        targetId: cloudinaryPublicId || file.filename,
+        targetType: 'kyc',
+        targetId: kyc._id.toString(),
         req,
       });
 
+      const ref = kycRefFromUpload(kyc._id.toString(), file.originalname);
       res.status(200).json({
         success: true,
         message: 'Document uploaded successfully',
         data: {
-          documentUrl: cloudinaryUrl,
-          cloudinaryPublicId,
-          filename: file.filename,
-          originalName: file.originalname,
-          fileSize: file.size,
+          ...ref,
           mimeType: file.mimetype,
+          fileSize: file.size,
         },
       });
     } catch (error: any) {
@@ -1574,15 +1562,25 @@ export class ClusterDPRController {
         return;
       }
 
-      const { projectId, documentType, documentUrl } = req.body;
+      const { projectId, documentType, documentUrl, fileId, originalName } = req.body;
 
-      if (!projectId || !documentType || !documentUrl) {
+      if (!projectId || !documentType) {
         res.status(400).json({
           success: false,
-          message: 'Project ID, document type, and document URL are required',
+          message: 'Project ID and document type are required',
         });
         return;
       }
+
+      const stored =
+        fileId || documentUrl
+          ? sanitizeStoredPayload({
+              status: 'uploaded',
+              fileId,
+              originalName,
+              documentUrl,
+            })
+          : { status: 'uploaded' as const };
 
       // Find project
       const project = await Project.findOne({
@@ -1630,9 +1628,9 @@ export class ClusterDPRController {
         if (!Array.isArray(project.stepData.step18.supportingDocuments)) {
           project.stepData.step18.supportingDocuments = [];
         }
-        project.stepData.step18.supportingDocuments.push(documentUrl);
+        project.stepData.step18.supportingDocuments.push(stored);
       } else {
-        (project.stepData.step18 as any)[step18Field] = documentUrl;
+        (project.stepData.step18 as any)[step18Field] = stored;
       }
 
       await project.save();
@@ -1659,9 +1657,9 @@ export class ClusterDPRController {
           if (!Array.isArray(dprVersion.content[lang].clusterData.step18.supportingDocuments)) {
             dprVersion.content[lang].clusterData.step18.supportingDocuments = [];
           }
-          dprVersion.content[lang].clusterData.step18.supportingDocuments.push(documentUrl);
+          dprVersion.content[lang].clusterData.step18.supportingDocuments.push(stored);
         } else {
-          dprVersion.content[lang].clusterData.step18[step18Field] = documentUrl;
+          dprVersion.content[lang].clusterData.step18[step18Field] = stored;
         }
 
         await dprVersion.save();
@@ -1673,7 +1671,7 @@ export class ClusterDPRController {
         data: {
           projectId,
           documentType,
-          documentUrl,
+          ...stored,
         },
       });
     } catch (error: any) {

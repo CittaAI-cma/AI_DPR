@@ -7,6 +7,7 @@ import { DPRSession } from '../models/DPRSession.model';
 import { Document } from '../models/Document.model';
 import { AuditEvent } from '../models/AuditEvent.model';
 import { PrivacyComplaint } from '../models/PrivacyComplaint.model';
+import { UserNotification } from '../models/UserNotification.model';
 import { AuditService } from '../services/audit.service';
 import { eraseAccount } from '../services/accountErase.service';
 import { GRIEVANCE_EMAIL, PRIVACY_NOTICE_VERSION } from '../lib/privacyNotice';
@@ -54,6 +55,8 @@ const USER_ACTIVITY_ACTIONS = [
   'profile_change',
   'nominee_change',
   'complaint_submitted',
+  'retention_warning',
+  'retention_purge',
 ];
 
 export class PrivacyController {
@@ -396,6 +399,72 @@ export class PrivacyController {
       res.status(500).json({
         success: false,
         message: 'Failed to load activity',
+        error: error.message,
+      });
+    }
+  }
+
+  static async listNotifications(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+      const limit = Math.min(Number(req.query.limit) || 30, 100);
+      const items = await UserNotification.find({ userId }).sort({ createdAt: -1 }).limit(limit).lean();
+      const unread = await UserNotification.countDocuments({ userId, readAt: { $exists: false } });
+      res.status(200).json({
+        success: true,
+        data: {
+          unread,
+          items: items.map((row) => ({
+            id: row._id,
+            kind: row.kind,
+            title: row.title,
+            body: row.body,
+            at: row.createdAt,
+            readAt: row.readAt,
+            smsStatus: row.smsStatus,
+            emailStatus: row.emailStatus,
+          })),
+        },
+      });
+    } catch (error: any) {
+      console.error('List notifications error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to load notifications',
+        error: error.message,
+      });
+    }
+  }
+
+  static async markNotificationRead(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+      const { id } = req.params;
+      if (id === 'all') {
+        await UserNotification.updateMany(
+          { userId, readAt: { $exists: false } },
+          { $set: { readAt: new Date() } }
+        );
+      } else {
+        await UserNotification.findOneAndUpdate(
+          { _id: id, userId },
+          { $set: { readAt: new Date() } }
+        );
+      }
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      console.error('Mark notification read error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update notification',
         error: error.message,
       });
     }

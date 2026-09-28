@@ -137,6 +137,7 @@ import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
+import { isKycUploaded, kycDisplayName, kycUploadPayload } from '@/lib/privacy/kycField';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
@@ -4406,8 +4407,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         setUploadingFiles((prev) => ({ ...prev, [field]: true }));
         try {
           const uploadResult = await individualDprApi.uploadDocument(file);
-          if (uploadResult.success && uploadResult.data?.documentUrl) {
-            handleInputChange(field, uploadResult.data.documentUrl);
+          if (uploadResult.success && uploadResult.data) {
+            handleInputChange(field, kycUploadPayload(uploadResult.data, file.name));
             toast.success(`${file.name} uploaded successfully!`);
           } else {
             toast.error(uploadResult.message || 'Failed to upload document');
@@ -4422,13 +4423,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       }
     };
 
-    const getDisplayName = (urlOrName: string): string => {
-      if (urlOrName.startsWith('http://') || urlOrName.startsWith('https://')) {
-        const urlParts = urlOrName.split('/');
-        return urlParts[urlParts.length - 1] || urlOrName;
-      }
-      return urlOrName;
-    };
+    const getDisplayName = (urlOrName: unknown): string => kycDisplayName(urlOrName);
 
     const step12 = data.step12 || {};
     const totalCost = (step12.land || 0) + (step12.building || 0) + (step12.machinery || 0) +
@@ -4455,7 +4450,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 </div>
               )}
             </div>
-            {stepData[item.id] && (
+            {isKycUploaded(stepData[item.id]) && (
               <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData[item.id])}</p>
             )}
           </div>
@@ -4468,7 +4463,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => handleFileChange('educationCertificate', e.target.files?.[0] || null)}
             />
-            {stepData.educationCertificate && (
+            {isKycUploaded(stepData.educationCertificate) && (
               <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData.educationCertificate)}</p>
             )}
           </div>

@@ -327,6 +327,16 @@ class APIClient {
     return response.data;
   }
 
+  async getNotifications(limit = 30) {
+    const response = await this.client.get('/privacy/notifications', { params: { limit } });
+    return response.data;
+  }
+
+  async markNotificationRead(id: string) {
+    const response = await this.client.post(`/privacy/notifications/${id}/read`);
+    return response.data;
+  }
+
   async getAuditLog(params?: {
     userId?: string;
     action?: string;
@@ -349,6 +359,11 @@ class APIClient {
       params,
       responseType: 'blob',
     });
+    return response.data;
+  }
+
+  async runRetentionJob() {
+    const response = await this.client.post('/admin/retention/run');
     return response.data;
   }
 

@@ -33,7 +33,8 @@
     "appName": "MSME DPR టూల్",
     "allDPRs": "అన్ని DPRలు",
     "documents": "డాక్యుమెంట్లు",
-    "privacy": "గోప్యత"
+    "privacy": "గోప్యత",
+    "notifications": "నోటిఫికేషన్లు"
   },
   "auth": {
     "loginTitle": "మీ ఖాతాలోకి లాగిన్ అవ్వండి",
@@ -109,6 +110,20 @@
     "complaintMessage": "సందేశం",
     "sendComplaint": "అభ్యర్థన పంపండి",
     "complaintSent": "మీ అభ్యర్థన సేవ్ అయ్యింది.",
+    "notificationsHeading": "నోటిఫికేషన్లు",
+    "notificationsHint": "ఉపయోగించని DPR డ్రాఫ్ట్ తొలగించేందుకు 15 రోజుల ముందు హెచ్చరిస్తాము. అదే వచనం SMSగా లాగ్ అవుతుంది (Twilio కనెక్ట్ అయ్యే వరకు మాక్) మరియు ఇక్కడ కనిపిస్తుంది.",
+    "notificationsEmpty": "ఇంకా నోటిఫికేషన్లు లేవు.",
+    "bellTitle": "నోటిఫికేషన్లు",
+    "bellEmpty": "కొత్తవి లేవు.",
+    "markAllRead": "అన్నీ చదివినట్లు",
+    "viewAllNotifications": "అన్నీ చూడండి",
+    "phoneHint": "పాత డ్రాఫ్ట్ హెచ్చరికలు ఈ నంబర్‌కు వెళ్తాయి. Twilio కీలు పెట్టే వరకు SMS సర్వర్ లాగ్‌లో మాక్ అవుతుంది.",
+    "smsStatus": {
+      "mocked": "మాక్ (పంపలేదు)",
+      "sent": "పంపబడింది",
+      "skipped": "దాటవేయబడింది (ఫోన్ లేదు)",
+      "failed": "విఫలం"
+    },
     "deleteHeading": "నా ఖాతా తొలగించండి",
     "deleteHint": "మీ ప్రాజెక్టులు, DPRలు, అప్‌లోడ్ ఫైళ్లు తొలగుతాయి. ఆడిట్ రికార్డులు ఉంటాయి.",
     "deleteWarning": "దీన్ని రద్దు చేయలేరు. Cloudinary మరియు స్థానిక ఫైళ్లు కూడా తొలగుతాయి.",
@@ -132,7 +147,9 @@
       "data_export": "డేటా ఎగుమతి",
       "profile_change": "ప్రొఫైల్ మార్పు",
       "nominee_change": "నామినీ నవీకరణ",
-      "complaint_submitted": "గోప్యతా అభ్యర్థన"
+      "complaint_submitted": "గోప్యతా అభ్యర్థన",
+      "retention_warning": "డ్రాఫ్ట్ గడువు హెచ్చరిక",
+      "retention_purge": "పాత డ్రాఫ్ట్ తొలగింపు"
     }
   },
   "rbac": {

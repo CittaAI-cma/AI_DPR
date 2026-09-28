@@ -33,7 +33,8 @@
     "appName": "MSME DPR Tool",
     "allDPRs": "All DPRs",
     "documents": "Documents",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "notifications": "Notifications"
   },
   "auth": {
     "loginTitle": "Login to Your Account",
@@ -109,6 +110,20 @@
     "complaintMessage": "Message",
     "sendComplaint": "Send request",
     "complaintSent": "Your request was saved.",
+    "notificationsHeading": "Notifications",
+    "notificationsHint": "We warn you 15 days before an unused DPR draft is deleted. The same text is logged as SMS (mocked until Twilio is connected) and shown here.",
+    "notificationsEmpty": "No notifications yet.",
+    "bellTitle": "Notifications",
+    "bellEmpty": "Nothing new.",
+    "markAllRead": "Mark all read",
+    "viewAllNotifications": "View all",
+    "phoneHint": "Idle-draft warnings go to this number. SMS is mocked in the server log until Twilio keys are set.",
+    "smsStatus": {
+      "mocked": "mocked (not sent)",
+      "sent": "sent",
+      "skipped": "skipped (no phone)",
+      "failed": "failed"
+    },
     "deleteHeading": "Delete my account",
     "deleteHint": "Removes your projects, DPRs, and uploaded files. Audit records stay.",
     "deleteWarning": "This cannot be undone. Cloudinary and local files are deleted with the account.",
@@ -132,7 +147,9 @@
       "data_export": "Data exported",
       "profile_change": "Profile changed",
       "nominee_change": "Nominee updated",
-      "complaint_submitted": "Privacy request sent"
+      "complaint_submitted": "Privacy request sent",
+      "retention_warning": "Draft expiry warning",
+      "retention_purge": "Idle draft deleted"
     }
   },
   "rbac": {

@@ -12,6 +12,7 @@ import {
   sectionTitleFromStep,
   type IndividualDocField,
 } from '@/lib/individualDpr/individualDocModel';
+import { isKycUploaded } from '@/lib/privacy/kycField';
 
 export interface IndividualDPRDocumentViewProps {
   dpr: any;
@@ -159,7 +160,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   </thead>
                   <tbody>
                     {uploads.map((u) => {
-                      const present = !!(uploadStore[u.id] || uploadStore[u.label]);
+                      const present = isKycUploaded(uploadStore[u.id] || uploadStore[u.label]);
                       return (
                         <tr key={u.id}>
                           <td>{tf(u.label)}</td>

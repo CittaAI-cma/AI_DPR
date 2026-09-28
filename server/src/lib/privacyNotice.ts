@@ -1,4 +1,4 @@
-export const PRIVACY_NOTICE_VERSION = '2026-09-1';
+export const PRIVACY_NOTICE_VERSION = '2026-09-3';
 
 export const DATA_FIDUCIARY_NAME = 'MSME One Department';
 

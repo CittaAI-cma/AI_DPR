@@ -10,6 +10,7 @@ import { RoleBadge } from '@/components/auth/RolePicker';
 import { Button } from '@/components/ui/Button';
 import { Languages, LogOut, User, Menu, X, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 
 export const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -91,6 +92,8 @@ export const Navbar: React.FC = () => {
               <Languages className="h-4 w-4" />
               <span className="font-medium">{i18n.language.startsWith('te') ? 'English' : 'తెలుగు'}</span>
             </Button>
+
+            {isAuthenticated && <NotificationBell />}
 
             {isAuthenticated ? (
               <>

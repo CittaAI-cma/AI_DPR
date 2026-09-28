@@ -5416,126 +5416,43 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
                 });
               }
 
-              return annexureFiles.map((annexure, idx) => {
-                const fileUrl = getFileUrl(annexure.file);
-                const fileName = typeof annexure.file === 'string' ? annexure.file : annexure.file?.name || `Document ${annexure.index}`;
-                const isImage = isImageFile(fileName);
-                const isPdf = isPdfFile(fileName);
-
-                // Debug logging
-                if (fileUrl) {
-                  console.log(`📄 Annexure ${annexure.index} (${annexure.title}):`, {
-                    originalFile: annexure.file,
-                    fileName,
-                    fileUrl,
-                    isCloudinary: fileUrl.includes('cloudinary.com'),
-                    isStaticRoute: fileUrl.includes('/uploads/'),
-                  });
-                } else {
-                  console.warn(`⚠️ No file URL for Annexure ${annexure.index} (${annexure.title}):`, annexure.file);
-                }
-
-                return (
-                  <div
-                    key={idx}
-                    className="p-12 border-b-4 border-gray-800 page-break"
-                    style={{
-                      pageBreakAfter: idx < annexureFiles.length - 1 ? 'always' : 'auto',
-                      padding: '2cm',
-                      minHeight: '29.7cm',
-                      fontFamily: 'Times New Roman, serif'
-                    }}
-                  >
-                    <div className="mb-4">
-                      <h3 className="text-2xl font-bold mb-2" style={{ color: '#1F2937' }}>
-                        Annexure {annexure.index}: {annexure.title}
-                      </h3>
-                    </div>
-
-                    {fileUrl ? (
-                      <div className="w-full" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                        {isImage ? (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <img
-                              src={fileUrl}
-                              alt={annexure.title}
-                              className="max-w-full max-h-full object-contain"
-                              style={{ maxHeight: 'calc(29.7cm - 8cm)' }}
-                              onError={(e) => {
-                                console.error('Failed to load image:', fileUrl);
-                                e.currentTarget.style.display = 'none';
-                                const errorDiv = document.createElement('div');
-                                errorDiv.className = 'text-center text-gray-500';
-                                errorDiv.textContent = 'File could not be loaded. Please check the file path.';
-                                e.currentTarget.parentElement?.appendChild(errorDiv);
-                              }}
-                            />
-                          </div>
-                        ) : isPdf ? (
-                          <div className="w-full h-full" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                            {/* For Cloudinary PDFs, show a professional document card since direct embedding has CORS issues */}
-                            {fileUrl.includes('cloudinary.com') ? (
-                              <PDFViewer url={fileUrl} fileName={fileName} />
-                            ) : (
-                              <iframe
-                                src={`${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                                className="w-full border-0"
-                                style={{
-                                  minHeight: 'calc(29.7cm - 8cm)',
-                                  height: 'calc(29.7cm - 8cm)',
-                                }}
-                                title={`${annexure.title} PDF`}
-                                onLoad={() => {
-                                  console.log(`✅ Successfully loaded PDF: ${fileName}`);
-                                }}
-                                onError={(e) => {
-                                  console.error('❌ Failed to load PDF iframe:', {
-                                    fileUrl,
-                                    fileName,
-                                    originalFile: annexure.file,
-                                  });
-                                  // Show error message
-                                  const iframeElement = e.currentTarget;
-                                  const parent = iframeElement.parentElement;
-                                  if (parent) {
-                                    iframeElement.style.display = 'none';
-                                    const errorDiv = document.createElement('div');
-                                    errorDiv.className = 'text-center p-8 border-2 border-red-300 rounded-lg bg-red-50';
-                                    errorDiv.innerHTML = `
-                                    <p class="font-bold text-red-700 mb-2">Failed to load document</p>
-                                    <p class="text-sm text-red-600 mb-1">File: ${fileName}</p>
-                                    <p class="text-xs text-red-500 mb-4">URL: ${fileUrl}</p>
-                                    <p class="text-xs text-gray-600">Please check if the file exists at the specified location.</p>
-                                  `;
-                                    parent.appendChild(errorDiv);
-                                  }
-                                }}
-                              />
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                            <p className="text-gray-500 mb-2">Document Preview</p>
-                            <a
-                              href={fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              Click to view: {fileName}
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                        <p className="text-gray-500">File not available or path not found</p>
-                        <p className="text-sm text-gray-400 mt-2">{fileName}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              });
+              return (
+                <div
+                  className="p-12 border-b-4 border-gray-800 page-break"
+                  style={{
+                    padding: '2cm',
+                    minHeight: '29.7cm',
+                    fontFamily: 'Times New Roman, serif',
+                  }}
+                >
+                  <h3 className="text-2xl font-bold mb-4" style={{ color: '#1F2937' }}>
+                    Annexures — document status
+                  </h3>
+                  <p className="text-sm mb-6" style={{ color: '#4B5563' }}>
+                    Identity and supporting scans are stored privately. This report shows Uploaded or Pending only. Attach originals at the bank or DIC.
+                  </p>
+                  {annexureFiles.length === 0 ? (
+                    <p className="text-sm text-gray-500">No annexure files marked as uploaded.</p>
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr>
+                          <th className="text-left py-2 border-b">Document</th>
+                          <th className="text-left py-2 border-b">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {annexureFiles.map((annexure, idx) => (
+                          <tr key={idx} className="border-b">
+                            <td className="py-2">{annexure.title}</td>
+                            <td className="py-2">Uploaded</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
             })()}
           </>
         );

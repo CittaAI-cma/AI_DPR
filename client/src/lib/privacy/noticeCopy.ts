@@ -26,7 +26,7 @@ const EN: PrivacyNoticeCopy = {
     {
       id: 'what',
       heading: 'What we collect',
-      body: 'Account details (name, email, phone, location, optional Udyam number, date of birth). DPR answers about your unit, costs, and schemes. Optional identity files such as Aadhaar, PAN, or a bank passbook if you upload them.',
+      body: 'Account details (name, email, phone, location, optional Udyam number, date of birth). DPR answers about your unit, costs, and schemes. Optional identity scans (Aadhaar, PAN, passbook) if you upload them. We store whether a scan is present, not the Aadhaar or PAN number as a field.',
     },
     {
       id: 'why',
@@ -36,17 +36,17 @@ const EN: PrivacyNoticeCopy = {
     {
       id: 'others',
       heading: 'Who else may see it',
-      body: 'Our hosting provider stores the database. Cloudinary may store uploaded files. OpenAI receives form text only when AI help is switched on. We do not put Aadhaar, PAN, or bank scans in the AI prompt.',
+      body: 'Our hosting provider stores the database. Identity scans are kept privately on our server (not as a public web link). Cluster photos may still go to Cloudinary. OpenAI receives form text only when AI help is switched on. We do not put Aadhaar, PAN, or bank scans in the AI prompt. Downloaded DPRs show Uploaded or Pending for identity files — they do not attach the scan. Take originals to the bank or DIC.',
     },
     {
       id: 'howLong',
       heading: 'How long we keep it',
-      body: `Unused DPR drafts are deleted or stripped of personal fields ${DRAFT_RETENTION_MONTHS} months after the last edit. We email a warning first. Your account is not deleted only because one draft is old. Audit logs of who logged in or downloaded a file are kept at least as long as the draft, usually 12–24 months.`,
+      body: `A scheduled job deletes unused DPR drafts ${DRAFT_RETENTION_MONTHS} months after the last edit of that draft. Fifteen days before that, we warn you in the app and to the phone number on your account (SMS is mocked until a gateway such as Twilio is connected). Your account is not deleted only because one draft is old. The same last-edit clock applies to submitted copies unless a later legal hold says otherwise. Audit logs stay after a draft is gone, usually 12–24 months.`,
     },
     {
       id: 'rights',
       heading: 'Your choices',
-      body: 'You can download or delete your data from account privacy settings (coming in the next stage). You can turn AI off at any time. You can complain using the form in the app or by email.',
+      body: 'You can download or delete your data from Privacy and data in the header. You can turn AI off at any time. You can name a nominee. You can send a privacy request in the app or by email.',
     },
     {
       id: 'children',
@@ -75,7 +75,7 @@ const TE: PrivacyNoticeCopy = {
     {
       id: 'what',
       heading: 'మేము ఏమి సేకరిస్తాము',
-      body: 'ఖాతా వివరాలు (పేరు, ఇమెయిల్, ఫోన్, స్థానం, ఐచ్ఛిక ఉద్యమ్ నంబర్, పుట్టిన తేది). మీ యూనిట్, ఖర్చులు, పథకాల గురించి DPR సమాధానాలు. మీరు అప్‌లోడ్ చేస్తే ఆధార్, పాన్ లేదా పాస్‌బుక్ వంటి గుర్తింపు ఫైళ్లు.',
+      body: 'ఖాతా వివరాలు (పేరు, ఇమెయిల్, ఫోన్, స్థానం, ఐచ్ఛిక ఉద్యమ్ నంబర్, పుట్టిన తేది). మీ యూనిట్, ఖర్చులు, పథకాల గురించి DPR సమాధానాలు. మీరు అప్‌లోడ్ చేస్తే ఆధార్, పాన్ లేదా పాస్‌బుక్ స్కాన్లు. స్కాన్ ఉందో లేదో నిల్వ చేస్తాము; ఆధార్/పాన్ నంబర్‌ను ఫీల్డ్‌గా ఉంచము.',
     },
     {
       id: 'why',
@@ -85,17 +85,17 @@ const TE: PrivacyNoticeCopy = {
     {
       id: 'others',
       heading: 'ఇంకెవరు చూడవచ్చు',
-      body: 'హోస్టింగ్ ప్రొవైడర్ డేటాబేస్‌ను ఉంచుతుంది. Cloudinary అప్‌లోడ్ ఫైళ్లను ఉంచవచ్చు. AI సహాయం ఆన్ ఉన్నప్పుడు మాత్రమే OpenAI ఫారమ్ టెక్స్ట్‌ను పొందుతుంది. ఆధార్, పాన్, బ్యాంకు స్కాన్లను AI ప్రాంప్ట్‌లో పెట్టము.',
+      body: 'హోస్టింగ్ ప్రొవైడర్ డేటాబేస్‌ను ఉంచుతుంది. గుర్తింపు స్కాన్లు మా సర్వర్‌లో ప్రైవేట్‌గా ఉంటాయి (పబ్లిక్ వెబ్ లింక్ కాదు). క్లస్టర్ ఫోటోలు Cloudinaryకి వెళ్లవచ్చు. AI సహాయం ఆన్ ఉన్నప్పుడు మాత్రమే OpenAI ఫారమ్ టెక్స్ట్‌ను పొందుతుంది. ఆధార్, పాన్, బ్యాంకు స్కాన్లను AI ప్రాంప్ట్‌లో పెట్టము. డౌన్‌లోడ్ DPRలో గుర్తింపు ఫైళ్లు Uploaded లేదా Pendingగా కనిపిస్తాయి — స్కాన్ జత కాదు.',
     },
     {
       id: 'howLong',
       heading: 'ఎంతకాలం ఉంచుతాము',
-      body: `ఉపయోగించని DPR డ్రాఫ్ట్‌లు చివరి సవరణ తర్వాత ${DRAFT_RETENTION_MONTHS} నెలలకు తొలగించబడతాయి లేదా వ్యక్తిగత ఫీల్డ్‌లు తీసివేయబడతాయి. ముందుగా ఇమెయిల్ హెచ్చరిక పంపుతాము. ఒక డ్రాఫ్ట్ పాతది అని మాత్రమే ఖాతా తొలగించబడదు.`,
+      body: `ఉపయోగించని DPR డ్రాఫ్ట్‌లు చివరి సవరణ తర్వాత ${DRAFT_RETENTION_MONTHS} నెలలకు షెడ్యూల్ జాబ్ తొలగిస్తుంది. అంతకు 15 రోజుల ముందు యాప్‌లో మరియు మీ ఫోన్ నంబర్‌కు హెచ్చరిక (SMS ప్రస్తుతం మాక్; Twilio వంటి గేట్‌వే తర్వాత నిజం). ఒక డ్రాఫ్ట్ పాతది అని మాత్రమే ఖాతా తొలగించబడదు. ఆడిట్ లాగ్‌లు డ్రాఫ్ట్ పోయినా ఉంటాయి.`,
     },
     {
       id: 'rights',
       heading: 'మీ ఎంపికలు',
-      body: 'తదుపరి దశలో ఖాతా గోప్యతా సెట్టింగ్‌ల నుండి మీ డేటాను డౌన్‌లోడ్ లేదా తొలగించవచ్చు. AIని ఎప్పుడైనా ఆఫ్ చేయవచ్చు. యాప్‌లోని ఫారమ్ లేదా ఇమెయిల్ ద్వారా ఫిర్యాదు చేయవచ్చు.',
+      body: 'హెడర్‌లోని గోప్యత మరియు డేటా నుండి మీ డేటాను డౌన్‌లోడ్ లేదా తొలగించవచ్చు. AIని ఎప్పుడైనా ఆఫ్ చేయవచ్చు. నామినీ పేరు పెట్టవచ్చు. యాప్‌లోని ఫారమ్ లేదా ఇమెయిల్ ద్వారా అభ్యర్థన పంపవచ్చు.',
     },
     {
       id: 'children',

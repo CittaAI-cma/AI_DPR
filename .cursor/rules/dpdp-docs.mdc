@@ -10,7 +10,9 @@ globs:
   - server/src/models/PrivacyComplaint.model.ts
   - server/src/models/User.model.ts
   - server/src/services/audit.service.ts
-  - server/src/services/accountErase.service.ts
+  - server/src/lib/kycStorage.ts
+  - server/src/services/retention.service.ts
+  - server/src/models/KycFile.model.ts
   - server/src/controllers/privacy.controller.ts
   - server/src/routes/privacy.routes.ts
   - client/src/pages/AccountPrivacy.tsx

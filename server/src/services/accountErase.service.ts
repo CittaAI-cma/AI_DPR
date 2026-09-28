@@ -9,6 +9,8 @@ import { SchemeMatch } from '../models/SchemeMatch.model';
 import { DPRSession } from '../models/DPRSession.model';
 import { DPRAnalytics } from '../models/DPRAnalytics.model';
 import { Document } from '../models/Document.model';
+import { KycFile } from '../models/KycFile.model';
+import { UserNotification } from '../models/UserNotification.model';
 import { CloudinaryService } from './cloudinary.service';
 
 export type EraseResult = {
@@ -124,6 +126,10 @@ export async function eraseAccount(userId: string): Promise<EraseResult> {
     uploadedBy: uid,
     'metadata.isTemplate': { $ne: true },
   });
+  const kycFiles = await KycFile.find({ userId: uid });
+  kycFiles.forEach((file) => {
+    if (file.storagePath) refs.localPaths.add(file.storagePath);
+  });
   documents.forEach((doc) => {
     collectFileRefs(doc.toObject(), refs);
     if (doc.filePath) refs.localPaths.add(doc.filePath);
@@ -158,6 +164,8 @@ export async function eraseAccount(userId: string): Promise<EraseResult> {
     uploadedBy: uid,
     'metadata.isTemplate': { $ne: true },
   });
+  await KycFile.deleteMany({ userId: uid });
+  await UserNotification.deleteMany({ userId: uid });
   await DPRVersion.deleteMany({
     $or: [{ userId: uid }, { projectId: { $in: projectIds } }],
   });
