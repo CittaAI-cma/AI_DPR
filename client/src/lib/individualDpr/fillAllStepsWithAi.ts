@@ -2,7 +2,7 @@ import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { extraFieldsForScheme, VISHWAKARMA_CRAFTS, hideComplexCapex } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
-import { suggestionToFieldValue } from '@/lib/dprAiFieldNormalize';
+import { suggestionToFieldValue, isNumericDprField } from '@/lib/dprAiFieldNormalize';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
@@ -423,10 +423,16 @@ export async function suggestCurrentStepWithAi(options: {
       .concat(exclude);
 
     try {
+      const previousForField = isNumericDprField(field)
+        ? {
+            ...previous,
+            _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs (e.g. 15 or 10.5). No words, no currency symbol, no explanation.`,
+          }
+        : previous;
       const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
         contentStep,
         stepData,
-        previous,
+        previousForField,
         otherExcludes
       );
       const match = (aiSuggestions || []).find((s) => s.field === field);
@@ -529,6 +535,7 @@ export async function regenerateStepFieldSuggestion(options: {
 
 /**
  * Apply one catalog suggestion into step data or scheme extras (Latest DPR).
+ * Returns the normalized value written (or null if skipped).
  */
 export function applyCatalogSuggestionToForm(options: {
   contentStep: number;
@@ -538,7 +545,9 @@ export function applyCatalogSuggestionToForm(options: {
   setSchemeExtras?: (extras: Record<string, any>) => void;
   schemeExtras?: Record<string, any>;
   schemeCode: string | null;
-}): boolean {
+  /** When applying many fields, pass a shared mutable bag so we don't lose prior writes. */
+  stepPatch?: Record<string, any>;
+}): { ok: boolean; value: any } {
   const {
     contentStep,
     suggestion,
@@ -546,23 +555,36 @@ export function applyCatalogSuggestionToForm(options: {
     setStepData,
     setSchemeExtras,
     schemeCode,
+    stepPatch,
   } = options;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   let value = suggestionToFieldValue(suggestion.field, suggestion.suggestion);
-  if (value === null || value === undefined || value === '') {
-    // Plain text / short answers: use suggestion string as-is
+
+  // Never store prose in ₹ Lakhs / numeric buckets — that breaks totals via string concat.
+  if (isNumericDprField(suggestion.field)) {
+    if (value === null || value === undefined || value === '') {
+      return { ok: false, value: null };
+    }
+    value = Number(value);
+    if (!Number.isFinite(value)) return { ok: false, value: null };
+  } else if (value === null || value === undefined || value === '') {
     value = String(suggestion.suggestion || '').trim();
   }
-  if (value === null || value === undefined || value === '') return false;
+  if (value === null || value === undefined || value === '') return { ok: false, value: null };
 
   if (suggestion.source === 'extras' || extraFieldNames.includes(suggestion.field)) {
-    if (!setSchemeExtras) return false;
+    if (!setSchemeExtras) return { ok: false, value: null };
     const next = {
       ...(options.schemeExtras || {}),
       [suggestion.field]: normalizeExtraValue(suggestion.field, value),
     };
     setSchemeExtras(next);
-    return true;
+    return { ok: true, value: next[suggestion.field] };
+  }
+
+  if (stepPatch) {
+    stepPatch[suggestion.field] = value;
+    return { ok: true, value };
   }
 
   const latest = { ...(getStepData(contentStep) || {}) };
@@ -571,7 +593,66 @@ export function applyCatalogSuggestionToForm(options: {
     delete latest[name];
   });
   setStepData(contentStep, latest);
-  return true;
+  return { ok: true, value };
+}
+
+/**
+ * Apply many catalog suggestions in one step write (avoids lost updates).
+ */
+export function applyAllCatalogSuggestionsToForm(options: {
+  contentStep: number;
+  suggestions: StepFieldSuggestion[];
+  getStepData: (step: number) => any;
+  setStepData: (step: number, stepData: any) => void;
+  setSchemeExtras?: (extras: Record<string, any>) => void;
+  schemeExtras?: Record<string, any>;
+  schemeCode: string | null;
+}): { applied: number; values: Record<string, any> } {
+  const {
+    contentStep,
+    suggestions,
+    getStepData,
+    setStepData,
+    setSchemeExtras,
+    schemeCode,
+  } = options;
+  const extraFieldNames = extraFieldsForScheme(schemeCode);
+  let extras = { ...(options.schemeExtras || {}) };
+  const stepPatch: Record<string, any> = {};
+  const values: Record<string, any> = {};
+  let applied = 0;
+
+  for (const suggestion of suggestions) {
+    const result = applyCatalogSuggestionToForm({
+      contentStep,
+      suggestion,
+      getStepData,
+      setStepData: () => {},
+      setSchemeExtras: (next) => {
+        extras = next;
+      },
+      schemeExtras: extras,
+      schemeCode,
+      stepPatch,
+    });
+    if (result.ok) {
+      applied += 1;
+      values[suggestion.field] = result.value;
+    }
+  }
+
+  if (Object.keys(stepPatch).length) {
+    const latest = { ...(getStepData(contentStep) || {}), ...stepPatch };
+    extraFieldNames.forEach((name) => {
+      delete latest[name];
+    });
+    setStepData(contentStep, latest);
+  }
+  if (setSchemeExtras && Object.keys(extras).length) {
+    setSchemeExtras(extras);
+  }
+
+  return { applied, values };
 }
 
 /**

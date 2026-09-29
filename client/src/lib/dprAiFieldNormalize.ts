@@ -104,10 +104,62 @@ function firstJsonObject(text: string): Record<string, any> | null {
 }
 
 function asNumber(text: string): number | null {
+  // Prefer patterns like "15 Lakhs", "₹10.5 L", then first plain number
+  const lakh = text.match(
+    /(?:₹\s*)?(-?\d+(?:\.\d+)?)\s*(?:lakh|lakhs|lacs?|l)\b/i
+  );
+  if (lakh) {
+    const num = parseFloat(lakh[1]);
+    return Number.isFinite(num) ? num : null;
+  }
   const match = text.match(/-?\d+(?:\.\d+)?/);
   if (!match) return null;
   const num = parseFloat(match[0]);
   return Number.isFinite(num) ? num : null;
+}
+
+/** Fields that must store a number in the Latest / cluster form. */
+export const NUMERIC_DPR_FIELDS = new Set([
+  'yearOfEstablishment',
+  'yearOfIncorporation',
+  'land',
+  'building',
+  'machinery',
+  'utilitiesAndInfrastructure',
+  'preliminaryAndPreOperative',
+  'workingCapitalMargin',
+  'spvContribution',
+  'governmentGrant',
+  'bankLoan',
+  'otherSources',
+  'rawMaterialCost',
+  'powerCost',
+  'wages',
+  'maintenance',
+  'administrativeExpenses',
+  'marketingExpenses',
+  'annualProductionVolume',
+  'annualSalesRealization',
+  'breakEvenPoint',
+  'irr',
+  'npv',
+  'employmentGeneration',
+  'turnoverGrowth',
+  'exportGrowth',
+  'incomeEnhancement',
+  'sellingPrice',
+  'capacityUtilisationY1',
+  'entrepreneurAge',
+  'dailySales',
+  'yearsVending',
+  'yearsPractising',
+  'investmentPerUnit',
+  'turnoverPerUnit',
+  'increaseInUnits',
+]);
+
+export function isNumericDprField(field: string): boolean {
+  return NUMERIC_DPR_FIELDS.has(field);
 }
 
 /** Turn an AI suggestion string into a form field value without a second API call. */
@@ -117,6 +169,10 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
     if (field === 'milestones') return normalizeMilestones(suggestion);
     if (field === 'yearProjections') return normalizeYearProjections(suggestion);
     if (field === 'startDate' || field === 'endDate') return toDateInputValue(suggestion) || null;
+    if (isNumericDprField(field)) {
+      const n = Number(suggestion);
+      return Number.isFinite(n) ? n : asNumber(String(suggestion));
+    }
     return suggestion;
   }
 
@@ -167,35 +223,17 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
     return obj;
   }
 
-  const numericFields = new Set([
-    'yearOfEstablishment',
-    'yearOfIncorporation',
-    'land',
-    'building',
-    'machinery',
-    'utilitiesAndInfrastructure',
-    'preliminaryAndPreOperative',
-    'workingCapitalMargin',
-    'spvContribution',
-    'governmentGrant',
-    'bankLoan',
-    'otherSources',
-    'rawMaterialCost',
-    'powerCost',
-    'wages',
-    'maintenance',
-    'administrativeExpenses',
-    'marketingExpenses',
-    'annualProductionVolume',
-    'annualSalesRealization',
-    'breakEvenPoint',
-    'employmentGeneration',
-    'turnoverGrowth',
-    'sellingPrice',
-  ]);
-  if (numericFields.has(field)) {
+  if (isNumericDprField(field)) {
     return asNumber(text);
   }
 
   return text;
+}
+
+/** Coerce a stored cost / numeric field to a finite number (0 if unusable). */
+export function toFiniteNumber(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (value == null || value === '') return 0;
+  const n = asNumber(String(value));
+  return n == null ? 0 : n;
 }

@@ -143,7 +143,12 @@ import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { isKycUploaded, kycDisplayName, kycUploadPayload } from '@/lib/privacy/kycField';
-import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
+import {
+  normalizeMilestones,
+  toDateInputValue,
+  toFiniteNumber,
+  isNumericDprField,
+} from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 
 interface IndividualDPRFormProps {
@@ -321,6 +326,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     let nextValue = value;
     if (field === 'startDate' || field === 'endDate') nextValue = toDateInputValue(value) || value;
     if (field === 'milestones') nextValue = normalizeMilestones(value);
+    // Guard: never store AI prose in ₹ / numeric fields (breaks totals via string concat)
+    if (isNumericDprField(field) && (typeof nextValue === 'string' || typeof nextValue === 'number')) {
+      nextValue = toFiniteNumber(nextValue);
+    }
     if (field === 'unitName' || field === 'clusterName') {
       setStepData(contentStep, withSyncedUnitName(latestStepData, String(nextValue ?? '')));
       return;
@@ -3656,12 +3665,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const simpleCapex = hideComplexCapex(schemeCode, data.ventureMatchAnswers?.budget);
     const keepFci = schemeCode === 'AP_EDP';
     const showHeavy = keepFci || !simpleCapex;
-    const totalCost = (stepData.land || 0) +
-      (stepData.building || 0) +
-      (stepData.machinery || 0) +
-      (stepData.utilitiesAndInfrastructure || 0) +
-      (stepData.preliminaryAndPreOperative || 0) +
-      (stepData.workingCapitalMargin || 0);
+    const totalCost =
+      toFiniteNumber(stepData.land) +
+      toFiniteNumber(stepData.building) +
+      toFiniteNumber(stepData.machinery) +
+      toFiniteNumber(stepData.utilitiesAndInfrastructure) +
+      toFiniteNumber(stepData.preliminaryAndPreOperative) +
+      toFiniteNumber(stepData.workingCapitalMargin);
 
     return (
       <div className="space-y-6">
@@ -3689,7 +3699,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 )}
                 <Input
                   type="number"
-                  value={stepData.land || ''}
+                  value={stepData.land === '' || stepData.land == null ? '' : toFiniteNumber(stepData.land)}
                   onChange={(e) => handleInputChange('land', parseFloat(e.target.value) || 0)}
                   placeholder={tf("0")}
                 />
@@ -3701,7 +3711,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 )}
                 <Input
                   type="number"
-                  value={stepData.building || ''}
+                  value={stepData.building === '' || stepData.building == null ? '' : toFiniteNumber(stepData.building)}
                   onChange={(e) => handleInputChange('building', parseFloat(e.target.value) || 0)}
                   placeholder={tf("0")}
                 />
@@ -3712,7 +3722,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('machinery', 'Plant & machinery (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.machinery || ''}
+              value={stepData.machinery === '' || stepData.machinery == null ? '' : toFiniteNumber(stepData.machinery)}
               onChange={(e) => handleInputChange('machinery', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -3726,7 +3736,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 )}
                 <Input
                   type="number"
-                  value={stepData.utilitiesAndInfrastructure || ''}
+                  value={
+                    stepData.utilitiesAndInfrastructure === '' || stepData.utilitiesAndInfrastructure == null
+                      ? ''
+                      : toFiniteNumber(stepData.utilitiesAndInfrastructure)
+                  }
                   onChange={(e) =>
                     handleInputChange('utilitiesAndInfrastructure', parseFloat(e.target.value) || 0)
                   }
@@ -3742,7 +3756,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 )}
                 <Input
                   type="number"
-                  value={stepData.preliminaryAndPreOperative || ''}
+                  value={
+                    stepData.preliminaryAndPreOperative === '' || stepData.preliminaryAndPreOperative == null
+                      ? ''
+                      : toFiniteNumber(stepData.preliminaryAndPreOperative)
+                  }
                   onChange={(e) =>
                     handleInputChange('preliminaryAndPreOperative', parseFloat(e.target.value) || 0)
                   }
@@ -3758,7 +3776,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
             <Input
               type="number"
-              value={stepData.workingCapitalMargin || ''}
+              value={
+                stepData.workingCapitalMargin === '' || stepData.workingCapitalMargin == null
+                  ? ''
+                  : toFiniteNumber(stepData.workingCapitalMargin)
+              }
               onChange={(e) => handleInputChange('workingCapitalMargin', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -3778,10 +3800,19 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
   // Step 13: Means of Finance
   if (contentStep === 13) {
-    const total = (stepData.spvContribution || 0) +
-      (stepData.governmentGrant || 0) +
-      (stepData.bankLoan || 0) +
-      (stepData.otherSources || 0);
+    const total =
+      toFiniteNumber(stepData.spvContribution) +
+      toFiniteNumber(stepData.governmentGrant) +
+      toFiniteNumber(stepData.bankLoan) +
+      toFiniteNumber(stepData.otherSources);
+    const step12 = getStepData(12) || {};
+    const projectCostFromStep12 =
+      toFiniteNumber(step12.land) +
+      toFiniteNumber(step12.building) +
+      toFiniteNumber(step12.machinery) +
+      toFiniteNumber(step12.utilitiesAndInfrastructure) +
+      toFiniteNumber(step12.preliminaryAndPreOperative) +
+      toFiniteNumber(step12.workingCapitalMargin);
 
     return (
       <div className="space-y-6">
@@ -3815,7 +3846,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
             <Input
               type="number"
-              value={stepData.spvContribution || ''}
+              value={
+                stepData.spvContribution === '' || stepData.spvContribution == null
+                  ? ''
+                  : toFiniteNumber(stepData.spvContribution)
+              }
               onChange={(e) => handleInputChange('spvContribution', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -3847,7 +3882,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
             <Input
               type="number"
-              value={stepData.governmentGrant || ''}
+              value={
+                stepData.governmentGrant === '' || stepData.governmentGrant == null
+                  ? ''
+                  : toFiniteNumber(stepData.governmentGrant)
+              }
               onChange={(e) => handleInputChange('governmentGrant', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -3871,7 +3910,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
             <Input
               type="number"
-              value={stepData.bankLoan || ''}
+              value={
+                stepData.bankLoan === '' || stepData.bankLoan == null
+                  ? ''
+                  : toFiniteNumber(stepData.bankLoan)
+              }
               onChange={(e) => handleInputChange('bankLoan', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -3880,7 +3923,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('otherSources', 'Other Sources (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.otherSources || ''}
+              value={
+                stepData.otherSources === '' || stepData.otherSources == null
+                  ? ''
+                  : toFiniteNumber(stepData.otherSources)
+              }
               onChange={(e) => handleInputChange('otherSources', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -3902,12 +3949,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}{' '}
             ≈ ₹
             {pmegp2ndIndicativeMmLakhs(
-              (getStepData(12)?.land || 0) +
-                (getStepData(12)?.building || 0) +
-                (getStepData(12)?.machinery || 0) +
-                (getStepData(12)?.utilitiesAndInfrastructure || 0) +
-                (getStepData(12)?.preliminaryAndPreOperative || 0) +
-                (getStepData(12)?.workingCapitalMargin || 0),
+              projectCostFromStep12,
               extras.sectorBand,
               extras.nerHill
             ).toLocaleString('en-IN')}{' '}
@@ -3935,14 +3977,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {tf('Credit-linked grant')} {PMFME_SUBSIDY_PERCENT}% {tf('capped at')} ₹
             {PMFME_SUBSIDY_CAP_LAKHS} {tf('L')}. {tf('Min own')} {PMFME_MIN_OWN_PERCENT}%.{' '}
             {tf('Indicative grant for current project cost fields')} ≈ ₹
-            {pmfmeIndicativeGrantLakhs(
-              (getStepData(12)?.land || 0) +
-                (getStepData(12)?.building || 0) +
-                (getStepData(12)?.machinery || 0) +
-                (getStepData(12)?.utilitiesAndInfrastructure || 0) +
-                (getStepData(12)?.preliminaryAndPreOperative || 0) +
-                (getStepData(12)?.workingCapitalMargin || 0)
-            ).toLocaleString('en-IN')}{' '}
+            {pmfmeIndicativeGrantLakhs(projectCostFromStep12).toLocaleString('en-IN')}{' '}
             {tf('Lakhs')} · {extras.unitStage || '—'} / ODOP {extras.odopAligned || '—'}.
           </p>
         )}
@@ -3952,7 +3987,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'SCLCSS is 25% capital subsidy on eligible new P&M (cap ₹25 L), not PMEGP margin money. Indicative on machinery field'
             )}{' '}
             ≈ ₹
-            {sclcssIndicativeGrantLakhs(getStepData(12)?.machinery || 0).toLocaleString('en-IN')}{' '}
+            {sclcssIndicativeGrantLakhs(toFiniteNumber(step12.machinery)).toLocaleString('en-IN')}{' '}
             {tf('Lakhs')} · {extras.sclcssCategory || '—'} / stake {extras.controllingStakePercent || '—'}%.
           </p>
         )}
@@ -3963,12 +3998,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}{' '}
             ≈ ₹
             {apTechIndicativeGrantLakhs(
-              (getStepData(12)?.land || 0) +
-                (getStepData(12)?.building || 0) +
-                (getStepData(12)?.machinery || 0) +
-                (getStepData(12)?.utilitiesAndInfrastructure || 0) +
-                (getStepData(12)?.preliminaryAndPreOperative || 0) +
-                (getStepData(12)?.workingCapitalMargin || 0),
+              projectCostFromStep12,
               extras.enterpriseSize,
               extras.specialCategory
             ).toLocaleString('en-IN')}{' '}
@@ -3987,12 +4017,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}{' '}
             ≈ ₹
             {apEdpIndicativeGrantLakhs(
-              (getStepData(12)?.land || 0) +
-                (getStepData(12)?.building || 0) +
-                (getStepData(12)?.machinery || 0) +
-                (getStepData(12)?.utilitiesAndInfrastructure || 0) +
-                (getStepData(12)?.preliminaryAndPreOperative || 0) +
-                (getStepData(12)?.workingCapitalMargin || 0),
+              projectCostFromStep12,
               extras.enterpriseSize,
               extras.specialCategory
             ).toLocaleString('en-IN')}{' '}
@@ -4008,7 +4033,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               extras.enterpriseSize
             )
               ? ` · ${tf('APIIC land rebate')} ≈ ₹${apEdpIndicativeLandRebateLakhs(
-                  getStepData(12)?.land || 0,
+                  toFiniteNumber(step12.land),
                   extras.apiicPark,
                   extras.scStOwned,
                   extras.enterpriseSize
@@ -4104,7 +4129,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('rawMaterialCost', 'Raw Material Cost (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.rawMaterialCost || ''}
+              value={
+                stepData.rawMaterialCost === '' || stepData.rawMaterialCost == null
+                  ? ''
+                  : toFiniteNumber(stepData.rawMaterialCost)
+              }
               onChange={(e) => handleInputChange('rawMaterialCost', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4113,7 +4142,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('powerCost', 'Power Cost (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.powerCost || ''}
+              value={
+                stepData.powerCost === '' || stepData.powerCost == null
+                  ? ''
+                  : toFiniteNumber(stepData.powerCost)
+              }
               onChange={(e) => handleInputChange('powerCost', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4122,7 +4155,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('wages', 'Wages (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.wages || ''}
+              value={
+                stepData.wages === '' || stepData.wages == null ? '' : toFiniteNumber(stepData.wages)
+              }
               onChange={(e) => handleInputChange('wages', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4131,7 +4166,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('maintenance', 'Maintenance (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.maintenance || ''}
+              value={
+                stepData.maintenance === '' || stepData.maintenance == null
+                  ? ''
+                  : toFiniteNumber(stepData.maintenance)
+              }
               onChange={(e) => handleInputChange('maintenance', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4140,7 +4179,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('administrativeExpenses', 'Administrative Expenses (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.administrativeExpenses || ''}
+              value={
+                stepData.administrativeExpenses === '' || stepData.administrativeExpenses == null
+                  ? ''
+                  : toFiniteNumber(stepData.administrativeExpenses)
+              }
               onChange={(e) => handleInputChange('administrativeExpenses', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4149,7 +4192,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('marketingExpenses', 'Marketing Expenses (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.marketingExpenses || ''}
+              value={
+                stepData.marketingExpenses === '' || stepData.marketingExpenses == null
+                  ? ''
+                  : toFiniteNumber(stepData.marketingExpenses)
+              }
               onChange={(e) => handleInputChange('marketingExpenses', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4158,7 +4205,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('annualProductionVolume', 'Annual Production Volume')}
             <Input
               type="number"
-              value={stepData.annualProductionVolume || ''}
+              value={
+                stepData.annualProductionVolume === '' || stepData.annualProductionVolume == null
+                  ? ''
+                  : toFiniteNumber(stepData.annualProductionVolume)
+              }
               onChange={(e) => handleInputChange('annualProductionVolume', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4167,7 +4218,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {renderLabel('annualSalesRealization', 'Annual Sales Realization (₹ Lakhs)')}
             <Input
               type="number"
-              value={stepData.annualSalesRealization || ''}
+              value={
+                stepData.annualSalesRealization === '' || stepData.annualSalesRealization == null
+                  ? ''
+                  : toFiniteNumber(stepData.annualSalesRealization)
+              }
               onChange={(e) => handleInputChange('annualSalesRealization', parseFloat(e.target.value) || 0)}
               placeholder={tf("0")}
             />
@@ -4182,20 +4237,27 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const step12 = data.step12 || {};
     const step13 = data.step13 || {};
     const step14 = data.step14 || {};
-    const cost = (step12.land || 0) + (step12.building || 0) + (step12.machinery || 0) +
-      (step12.utilitiesAndInfrastructure || 0) + (step12.preliminaryAndPreOperative || 0) +
-      (step12.workingCapitalMargin || 0);
-    const finance = (step13.spvContribution || 0) + (step13.governmentGrant || 0) +
-      (step13.bankLoan || 0) + (step13.otherSources || 0);
-    const loan = step13.bankLoan || 0;
+    const cost =
+      toFiniteNumber(step12.land) +
+      toFiniteNumber(step12.building) +
+      toFiniteNumber(step12.machinery) +
+      toFiniteNumber(step12.utilitiesAndInfrastructure) +
+      toFiniteNumber(step12.preliminaryAndPreOperative) +
+      toFiniteNumber(step12.workingCapitalMargin);
+    const finance =
+      toFiniteNumber(step13.spvContribution) +
+      toFiniteNumber(step13.governmentGrant) +
+      toFiniteNumber(step13.bankLoan) +
+      toFiniteNumber(step13.otherSources);
+    const loan = toFiniteNumber(step13.bankLoan);
     const years = stepData.yearProjections?.length
       ? stepData.yearProjections
       : [1, 2, 3, 4, 5].map((year) => ({
           year,
-          sales: year === 1 ? (step14.annualSalesRealization || 0) : 0,
-          rm: year === 1 ? (step14.rawMaterialCost || 0) : 0,
-          wages: year === 1 ? (step14.wages || 0) : 0,
-          power: year === 1 ? (step14.powerCost || 0) : 0,
+          sales: year === 1 ? toFiniteNumber(step14.annualSalesRealization) : 0,
+          rm: year === 1 ? toFiniteNumber(step14.rawMaterialCost) : 0,
+          wages: year === 1 ? toFiniteNumber(step14.wages) : 0,
+          power: year === 1 ? toFiniteNumber(step14.powerCost) : 0,
           netProfit: 0,
         }));
     const updateYear = (index: number, field: string, value: number) => {
@@ -4205,7 +4267,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const annualEmi = loan > 0
       ? (loan * 0.12 * Math.pow(1.12, 7)) / (Math.pow(1.12, 7) - 1)
       : 0;
-    const dep = ((step12.machinery || 0) + (step12.building || 0)) * 0.1;
+    const dep = (toFiniteNumber(step12.machinery) + toFiniteNumber(step12.building)) * 0.1;
     const dscrs = years.map((row: any) => {
       const np = row.netProfit || 0;
       return annualEmi > 0 ? (np + dep) / annualEmi : 0;
@@ -4283,7 +4345,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           {renderLabel('breakEvenPoint', 'Break-even (capacity %)')}
           <Input
             type="number"
-            value={stepData.breakEvenPoint || ''}
+            value={
+              stepData.breakEvenPoint === '' || stepData.breakEvenPoint == null
+                ? ''
+                : toFiniteNumber(stepData.breakEvenPoint)
+            }
             onChange={(e) => handleInputChange('breakEvenPoint', parseFloat(e.target.value) || 0)}
             placeholder={tf("e.g. 55")}
           />
@@ -4473,9 +4539,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const getDisplayName = (urlOrName: unknown): string => kycDisplayName(urlOrName);
 
     const step12 = data.step12 || {};
-    const totalCost = (step12.land || 0) + (step12.building || 0) + (step12.machinery || 0) +
-      (step12.utilitiesAndInfrastructure || 0) + (step12.preliminaryAndPreOperative || 0) +
-      (step12.workingCapitalMargin || 0);
+    const totalCost =
+      toFiniteNumber(step12.land) +
+      toFiniteNumber(step12.building) +
+      toFiniteNumber(step12.machinery) +
+      toFiniteNumber(step12.utilitiesAndInfrastructure) +
+      toFiniteNumber(step12.preliminaryAndPreOperative) +
+      toFiniteNumber(step12.workingCapitalMargin);
     const uploads = getStep18Uploads(schemeCode, data.ventureMatchAnswers, extras);
     const needEdu = showPmegpEducationGate(schemeCode, data.ventureMatchAnswers?.activity, totalCost);
 
