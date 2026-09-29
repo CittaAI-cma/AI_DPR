@@ -343,130 +343,26 @@ function useExpandEditor(
   return { open, draft, setDraft, openEditor, cancel, confirm };
 }
 
-function ExpandHint() {
-  return (
-    <span
-      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/70"
-      aria-hidden
-    >
-      <Maximize2 className="h-3.5 w-3.5" />
-    </span>
-  );
-}
-
-/** Drop-in for `@/components/ui/Input` — click opens enlarged editor. */
+/** Drop-in for `@/components/ui/Input` — single-line; no enlarge modal. */
 export const ExpandableInput = React.forwardRef<
   HTMLInputElement,
   React.ComponentProps<typeof Input> & {
     enableSkillMatch?: boolean;
     expandTitle?: string;
-    /** Display transform only — stored value stays as `value`. */
+    /** Kept for API compat; display uses stored value directly for single-line edit. */
     formatDisplay?: (value: string) => string;
   }
 >(
   (
     {
-      className,
-      onChange,
-      value,
-      defaultValue,
-      type,
-      placeholder,
-      label,
-      error,
-      disabled,
-      readOnly,
-      onFocus,
-      onClick,
-      enableSkillMatch = false,
-      expandTitle,
-      formatDisplay,
+      enableSkillMatch: _enableSkillMatch,
+      expandTitle: _expandTitle,
+      formatDisplay: _formatDisplay,
       ...props
     },
     ref
   ) => {
-    const tf = useClusterFormText();
-    const resolvedValue = value ?? defaultValue ?? '';
-    const displayValue =
-      formatDisplay && resolvedValue !== '' && resolvedValue != null
-        ? formatDisplay(String(resolvedValue))
-        : resolvedValue;
-    const { open, draft, setDraft, openEditor, cancel, confirm } = useExpandEditor(resolvedValue, onChange);
-
-    // Native file / checkbox / radio stay as-is
-    if (type === 'file' || type === 'checkbox' || type === 'radio' || type === 'hidden') {
-      return (
-        <Input
-          ref={ref}
-          className={className}
-          onChange={onChange}
-          value={value}
-          defaultValue={defaultValue}
-          type={type}
-          placeholder={placeholder}
-          label={label}
-          error={error}
-          disabled={disabled}
-          readOnly={readOnly}
-          onFocus={onFocus}
-          onClick={onClick}
-          {...props}
-        />
-      );
-    }
-
-    const modalTitle =
-      expandTitle || (typeof label === 'string' ? label : undefined) || tf('Edit field');
-
-    return (
-      <>
-        <div className="w-full">
-          {label && (
-            <label className="block text-sm font-medium mb-2">{label}</label>
-          )}
-          <div className="relative w-full">
-            <input
-              ref={ref}
-              className={cn(
-                'flex h-10 w-full rounded-[10px] border border-input bg-background px-3 py-2 pr-9 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer',
-                error && 'border-destructive',
-                className
-              )}
-              onChange={onChange}
-              value={displayValue}
-              defaultValue={defaultValue}
-              type={type}
-              placeholder={placeholder}
-              disabled={disabled}
-              readOnly
-              onFocus={(e) => {
-                if (!disabled) openEditor(e);
-                onFocus?.(e);
-              }}
-              onClick={(e) => {
-                if (!disabled) openEditor(e);
-                onClick?.(e);
-              }}
-              {...props}
-            />
-            {!disabled && <ExpandHint />}
-          </div>
-          {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
-        </div>
-        <FieldExpandModal
-          open={open}
-          title={modalTitle}
-          kind="input"
-          draft={draft}
-          setDraft={setDraft}
-          inputType={type}
-          placeholder={placeholder}
-          onConfirm={confirm}
-          onCancel={cancel}
-          enableSkillMatch={enableSkillMatch}
-        />
-      </>
-    );
+    return <Input ref={ref} {...props} />;
   }
 );
 ExpandableInput.displayName = 'ExpandableInput';
@@ -475,7 +371,7 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string;
 };
 
-/** Drop-in for native `<textarea>` — click opens enlarged editor. */
+/** Drop-in for native `<textarea>` — click opens enlarged editor (descriptive answers only). */
 export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, onChange, value, defaultValue, placeholder, label, disabled, readOnly, onFocus, onClick, ...props }, ref) => {
     const tf = useClusterFormText();
@@ -530,54 +426,13 @@ type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string;
 };
 
-/** Drop-in for native `<select>` — click opens enlarged editor. */
+/** Drop-in for native `<select>` — normal dropdown; no enlarge modal. */
 export const ExpandableSelect = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, onChange, value, defaultValue, children, label, disabled, onFocus, onClick, ...props }, ref) => {
-    const tf = useClusterFormText();
-    const resolvedValue = value ?? defaultValue ?? '';
-    const { open, draft, setDraft, openEditor, cancel, confirm } = useExpandEditor(resolvedValue, onChange);
-
+  ({ className, children, label: _label, ...props }, ref) => {
     return (
-      <>
-        <div className="relative w-full">
-          <select
-            ref={ref}
-            className={cn('pr-9 cursor-pointer', className)}
-            onChange={onChange}
-            value={value}
-            defaultValue={defaultValue}
-            disabled={disabled}
-            onMouseDown={(e) => {
-              if (disabled) return;
-              // Prevent native dropdown; open enlarged editor instead
-              e.preventDefault();
-              openEditor(e);
-            }}
-            onFocus={(e) => {
-              if (!disabled) openEditor(e);
-              onFocus?.(e);
-            }}
-            onClick={(e) => {
-              if (!disabled) openEditor(e);
-              onClick?.(e);
-            }}
-            {...props}
-          >
-            {children}
-          </select>
-          {!disabled && <ExpandHint />}
-        </div>
-        <FieldExpandModal
-          open={open}
-          title={label || tf('Edit field')}
-          kind="select"
-          draft={draft}
-          setDraft={setDraft}
-          selectChildren={children}
-          onConfirm={confirm}
-          onCancel={cancel}
-        />
-      </>
+      <select ref={ref} className={className} {...props}>
+        {children}
+      </select>
     );
   }
 );
