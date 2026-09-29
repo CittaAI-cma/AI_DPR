@@ -2,7 +2,7 @@ import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { extraFieldsForScheme, VISHWAKARMA_CRAFTS, hideComplexCapex } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
-import { suggestionToFieldValue, isNumericDprField } from '@/lib/dprAiFieldNormalize';
+import { suggestionToFieldValue, isNumericDprField, isStructuredDprField, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
@@ -423,12 +423,33 @@ export async function suggestCurrentStepWithAi(options: {
       .concat(exclude);
 
     try {
-      const previousForField = isNumericDprField(field)
-        ? {
-            ...previous,
-            _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs (e.g. 15 or 10.5). No words, no currency symbol, no explanation.`,
-          }
-        : previous;
+      let previousForField = previous;
+      if (isNumericDprField(field)) {
+        previousForField = {
+          ...previous,
+          _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs (e.g. 15 or 10.5). No words, no currency symbol, no explanation.`,
+        };
+      } else if (field === 'yearProjections') {
+        previousForField = {
+          ...previous,
+          _promptContext: `For field "yearProjections": reply with ONLY a JSON array of 5 objects, values in ₹ Lakhs (not rupees). Example: [{"year":1,"sales":18,"rm":8,"wages":3,"power":1.5,"netProfit":4},{"year":2,"sales":20,"rm":9,"wages":3.2,"power":1.6,"netProfit":4.5},{"year":3,"sales":22,"rm":10,"wages":3.5,"power":1.7,"netProfit":5},{"year":4,"sales":24,"rm":11,"wages":3.8,"power":1.8,"netProfit":5.5},{"year":5,"sales":26,"rm":12,"wages":4,"power":2,"netProfit":6}]. Fill sales, rm, wages, power, and netProfit for EVERY year. No prose.`,
+        };
+      } else if (field === 'milestones') {
+        previousForField = {
+          ...previous,
+          _promptContext: `For field "milestones": reply with ONLY a JSON array of 3–5 objects. Example: [{"activity":"Machinery order / installation","timeRequired":"30 days","startDate":"2026-04-01","endDate":"2026-04-30"},{"activity":"Power connection","timeRequired":"15 days","startDate":"2026-05-01","endDate":"2026-05-15"},{"activity":"Trial run / commercial production","timeRequired":"15 days","startDate":"2026-05-16","endDate":"2026-05-31"}]. Dates must be YYYY-MM-DD. No prose.`,
+        };
+      } else if (field === 'startDate' || field === 'endDate') {
+        previousForField = {
+          ...previous,
+          _promptContext: `For field "${field}": reply with ONLY a date in YYYY-MM-DD format (e.g. 2026-06-01). No words.`,
+        };
+      } else if (field === 'employmentGeneration' || field === 'indirectEmployment') {
+        previousForField = {
+          ...previous,
+          _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a whole number (headcount), e.g. 4. No words.`,
+        };
+      }
       const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
         contentStep,
         stepData,
@@ -560,8 +581,14 @@ export function applyCatalogSuggestionToForm(options: {
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   let value = suggestionToFieldValue(suggestion.field, suggestion.suggestion);
 
-  // Never store prose in ₹ Lakhs / numeric buckets — that breaks totals via string concat.
-  if (isNumericDprField(suggestion.field)) {
+  // Structured / date fields must parse cleanly — never store raw AI prose.
+  if (isStructuredDprField(suggestion.field)) {
+    if (!Array.isArray(value) || value.length === 0) return { ok: false, value: null };
+  } else if (suggestion.field === 'startDate' || suggestion.field === 'endDate') {
+    value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion);
+    if (!value) return { ok: false, value: null };
+  } else if (isNumericDprField(suggestion.field)) {
+    // Never store prose in ₹ Lakhs / numeric buckets — that breaks totals via string concat.
     if (value === null || value === undefined || value === '') {
       return { ok: false, value: null };
     }
@@ -580,6 +607,19 @@ export function applyCatalogSuggestionToForm(options: {
     };
     setSchemeExtras(next);
     return { ok: true, value: next[suggestion.field] };
+  }
+
+  // PMEGP family: keep directEmployment extras in sync with employmentGeneration
+  if (
+    suggestion.field === 'employmentGeneration' &&
+    setSchemeExtras &&
+    (schemeCode === 'PMEGP' || schemeCode === 'PMEGP_2ND' || schemeCode === 'PMFME')
+  ) {
+    const nextExtras = {
+      ...(options.schemeExtras || {}),
+      directEmployment: String(value),
+    };
+    setSchemeExtras(nextExtras);
   }
 
   if (stepPatch) {

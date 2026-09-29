@@ -570,28 +570,32 @@ export function getIndividualDocFields(
   if (contentStep === 15) {
     return [
       stepField('yearProjections', 'Year-wise sales / costs / profit', 15),
-      stepField('breakEvenPoint', 'Break-even Point', 15),
-      stepField('irr', 'IRR (%)', 15),
-      stepField('npv', 'NPV (₹ Lakhs)', 15),
-      stepField('sensitivityAnalysis', 'Sensitivity Analysis', 15),
+      stepField('breakEvenPoint', 'Break-even (capacity %)', 15),
     ];
   }
 
   if (contentStep === 16) {
     return [
-      stepField('startDate', 'Start / commercial production date', 16),
-      stepField('totalImplementationPeriod', 'Total Implementation Period', 16),
+      stepField('startDate', 'Commercial production date (CoD)', 16),
       stepField('milestones', 'Milestones', 16),
     ];
   }
 
   if (contentStep === 17) {
+    if (
+      schemeCode === 'PMEGP' ||
+      schemeCode === 'PMEGP_2ND' ||
+      schemeCode === 'PMFME'
+    ) {
+      return [
+        stepField('employmentGeneration', 'Direct employment (count)', 17),
+        extraField('indirectEmployment'),
+        extraField('impactNote'),
+      ];
+    }
     return [
-      stepField('employmentGeneration', 'Employment Generation', 17),
-      stepField('turnoverGrowth', 'Turnover Growth (%)', 17),
-      stepField('exportGrowth', 'Export Growth (%)', 17),
-      stepField('incomeEnhancement', 'Income Enhancement (%)', 17),
-      stepField('sustainabilityOutcomes', 'Sustainability Outcomes', 17),
+      stepField('employmentGeneration', 'Direct employment (count)', 17),
+      stepField('turnoverGrowth', 'Expected annual turnover (₹ Lakhs)', 17),
     ];
   }
 
