@@ -186,7 +186,7 @@ export async function runRetentionJob(): Promise<RetentionResult> {
       continue;
     }
 
-    if (dpr.updatedAt > idleBefore) {
+    if (!dpr.updatedAt || dpr.updatedAt > idleBefore) {
       continue;
     }
 
