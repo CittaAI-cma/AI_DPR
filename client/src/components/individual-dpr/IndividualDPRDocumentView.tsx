@@ -175,8 +175,10 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <h1 className="cover-unit">
           {fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
         </h1>
-        <p className="cover-scheme">{cover.underLine}</p>
-        {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
+        <div className="cover-scheme-block">
+          <p className="cover-scheme">{cover.underLine}</p>
+          {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
+        </div>
         <div className="cover-meta">
           <div>
             <span>{tf('District')}</span>

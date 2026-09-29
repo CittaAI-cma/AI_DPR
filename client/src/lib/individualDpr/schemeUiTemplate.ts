@@ -15,6 +15,8 @@ export type SchemeUiTemplate = {
   bannerClass: string;
   /** Active step chip */
   stepActiveClass: string;
+  /** Idle step chip accent (border/text) */
+  stepIdleClass: string;
   /** Form card shell */
   formShellClass: string;
   /** Live preview / PDF document root modifier */
@@ -28,10 +30,11 @@ const TEMPLATES: Record<SchemeUiTemplateId, SchemeUiTemplate> = {
     id: 'PMEGP',
     badge: 'PMEGP · KVIC unit pack',
     tagline: 'Credit-linked margin money · bank-style single-unit DPR',
-    bannerClass:
-      'bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 border-b border-teal-200',
-    stepActiveClass: 'bg-teal-700 text-white shadow-sm',
-    formShellClass: 'scheme-tpl-pmegp border-teal-200/80 shadow-teal-900/5',
+    bannerClass: 'scheme-banner scheme-banner-pmegp border-b border-teal-300/80',
+    stepActiveClass: 'bg-teal-800 text-white shadow-sm ring-1 ring-teal-900/20',
+    stepIdleClass: 'border border-teal-200/80 text-teal-900 bg-teal-50/40 hover:bg-teal-50',
+    formShellClass:
+      'scheme-tpl-pmegp border-teal-300/70 shadow-md shadow-teal-900/5 ring-1 ring-teal-900/5',
     documentClass: 'tpl-pmegp',
     coverKicker: 'PMEGP DETAILED PROJECT REPORT',
   },
@@ -39,10 +42,11 @@ const TEMPLATES: Record<SchemeUiTemplateId, SchemeUiTemplate> = {
     id: 'AP_CMEP',
     badge: 'AP CMEP · State credit-linked',
     tagline: 'Andhra Pradesh CMEP · bank loan required · manufacturing / knowledge',
-    bannerClass:
-      'bg-gradient-to-r from-indigo-50 via-sky-50 to-amber-50 border-b border-indigo-200',
-    stepActiveClass: 'bg-indigo-800 text-white shadow-sm',
-    formShellClass: 'scheme-tpl-ap-cmep border-indigo-200/80 shadow-indigo-900/5',
+    bannerClass: 'scheme-banner scheme-banner-ap-cmep border-b border-indigo-300/80',
+    stepActiveClass: 'bg-indigo-900 text-white shadow-sm ring-1 ring-indigo-950/20',
+    stepIdleClass: 'border border-indigo-200/80 text-indigo-950 bg-indigo-50/40 hover:bg-indigo-50',
+    formShellClass:
+      'scheme-tpl-ap-cmep border-indigo-300/70 shadow-md shadow-indigo-900/5 ring-1 ring-indigo-950/5',
     documentClass: 'tpl-ap-cmep',
     coverKicker: 'AP CMEP DETAILED PROJECT REPORT',
   },

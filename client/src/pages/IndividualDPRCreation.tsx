@@ -505,7 +505,7 @@ export const IndividualDPRCreation: React.FC = () => {
                         ? (schemeUi?.stepActiveClass || 'bg-primary text-primary-foreground shadow-sm')
                         : isCompleted
                         ? 'bg-success/10 text-success border border-success/20 hover:bg-success/20'
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'}
+                        : (schemeUi?.stepIdleClass || 'bg-muted/50 text-muted-foreground hover:bg-muted')}
                     `}
                   >
                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent ? 'bg-primary-foreground/20' : isCompleted ? 'bg-success' : 'bg-muted-foreground/20'}`}>
@@ -520,24 +520,37 @@ export const IndividualDPRCreation: React.FC = () => {
         </div>
 
         <div className={schemeUi?.bannerClass || 'bg-amber-50 border-b border-amber-200'}>
-            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
               {schemeUi ? (
-                <div className="flex flex-wrap items-start gap-3 justify-between">
-                  <div>
-                    <p className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold tracking-wide uppercase bg-white/70 border border-black/5 text-foreground">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8 lg:justify-between">
+                  <div className="min-w-0 text-center lg:text-left">
+                    <p
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-[0.08em] uppercase border ${
+                        schemeUi.id === 'PMEGP'
+                          ? 'bg-teal-100/90 text-teal-900 border-teal-300'
+                          : 'bg-indigo-100/90 text-indigo-950 border-indigo-300 rounded-md'
+                      }`}
+                    >
                       {tf(schemeUi.badge)}
                     </p>
-                    <p className="text-sm font-semibold text-foreground mt-1.5">
-                      {t('individualDpr.scheme', {
-                        title: selectedSchemeLabel,
-                        defaultValue: 'Scheme: {{title}}',
-                      })}
+                    <p className="text-base font-semibold text-foreground mt-2 tracking-tight">
+                      {selectedSchemeLabel}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{tf(schemeUi.tagline)}</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xl mx-auto lg:mx-0">
+                      {tf(schemeUi.tagline)}
+                    </p>
                   </div>
-                  <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-0.5 max-w-xl">
-                    {schemeImpact.bullets.map((b) => (
-                      <li key={b}>{tf(b)}</li>
+                  <ul className="text-sm text-muted-foreground space-y-1 max-w-xl text-left">
+                    {schemeImpact.bullets.slice(0, 3).map((b) => (
+                      <li key={b} className="flex gap-2">
+                        <span
+                          className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+                            schemeUi.id === 'PMEGP' ? 'bg-teal-600' : 'bg-indigo-600'
+                          }`}
+                          aria-hidden
+                        />
+                        <span>{tf(b)}</span>
+                      </li>
                     ))}
                   </ul>
                 </div>

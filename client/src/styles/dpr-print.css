@@ -286,13 +286,42 @@
 }
 
 .individual-dpr-document .cover-scheme {
+  display: block;
   font-size: 12pt;
   font-weight: 600;
   max-width: 150mm;
-  margin: 8pt auto 0;
+  width: 100%;
+  margin: 0;
   line-height: 1.4;
   text-align: center;
   text-align-last: center;
+}
+
+.individual-dpr-document .cover-scheme-block {
+  display: block;
+  width: 100%;
+  max-width: 150mm;
+  margin: 10pt auto 0;
+  text-align: center;
+  text-align-last: center;
+}
+
+.individual-dpr-document .cover-tagline {
+  display: block;
+  width: 100%;
+  margin: 6pt 0 0;
+  font-size: 9.5pt;
+  line-height: 1.35;
+  text-align: center;
+  text-align-last: center;
+}
+
+.individual-dpr-document .cover-pack-badge {
+  display: block;
+  width: fit-content;
+  max-width: 90%;
+  margin: 0 auto 8pt;
+  text-align: center;
 }
 
 .individual-cover .cover-meta {
@@ -552,44 +581,60 @@
   }
 }
 
-/* PMEGP template — teal / KVIC bank-unit look */
+/* PMEGP template — formal teal / KVIC bank-unit look */
 .individual-dpr-document.tpl-pmegp {
-  color: #134e4a;
+  color: #0f3d3a;
 }
 
 .individual-dpr-document.tpl-pmegp .individual-cover {
-  border-bottom: 3px solid #0f766e;
-  background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 70%);
+  border-bottom: none;
+  background:
+    linear-gradient(#0f766e, #0f766e) top/100% 4pt no-repeat,
+    linear-gradient(180deg, #f0fdfa 0%, #ffffff 55%);
+  padding-top: 10mm;
+  padding-bottom: 12mm;
 }
 
 .individual-dpr-document.tpl-pmegp .cover-pack-badge {
-  display: inline-block;
-  margin: 0 auto 8pt;
-  padding: 3pt 10pt;
-  font-size: 8.5pt;
+  padding: 4pt 12pt;
+  font-size: 8pt;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #0f766e;
-  border: 1px solid #99f6e4;
+  border: 1px solid #5eead4;
   background: #ccfbf1;
   border-radius: 999px;
 }
 
 .individual-dpr-document.tpl-pmegp .cover-kicker {
   color: #115e59;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
+  font-size: 18pt;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-unit {
+  color: #0f766e;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-scheme {
+  color: #134e4a;
+  font-weight: 700;
 }
 
 .individual-dpr-document.tpl-pmegp .cover-tagline {
-  margin: 6pt 0 0;
-  font-size: 9.5pt;
   color: #0f766e;
   font-style: italic;
+  opacity: 0.9;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-sec-title {
+  border-bottom-color: #0f766e;
 }
 
 .individual-dpr-document.tpl-pmegp .individual-sec-num {
   background: #0f766e;
+  border-color: #0f766e;
   color: #fff;
 }
 
@@ -597,48 +642,72 @@
   color: #0f766e;
 }
 
-/* AP CMEP template — indigo / state programme look */
+.individual-dpr-document.tpl-pmegp .individual-meta-grid {
+  border-color: #0f766e;
+}
+
+/* AP CMEP template — indigo / state programme look (distinct from PMEGP) */
 .individual-dpr-document.tpl-ap-cmep {
   color: #1e1b4b;
 }
 
 .individual-dpr-document.tpl-ap-cmep .individual-cover {
-  border-bottom: 3px solid #3730a3;
-  background: linear-gradient(180deg, #eef2ff 0%, #fffbeb 45%, #ffffff 100%);
+  border-bottom: none;
+  background:
+    linear-gradient(90deg, #3730a3 0%, #3730a3 38%, #d97706 38%, #d97706 62%, #3730a3 62%, #3730a3 100%) top/100% 4pt no-repeat,
+    linear-gradient(180deg, #eef2ff 0%, #fffbeb 42%, #ffffff 100%);
+  padding-top: 10mm;
+  padding-bottom: 12mm;
 }
 
 .individual-dpr-document.tpl-ap-cmep .cover-pack-badge {
-  display: inline-block;
-  margin: 0 auto 8pt;
-  padding: 3pt 10pt;
-  font-size: 8.5pt;
+  padding: 4pt 12pt;
+  font-size: 8pt;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #312e81;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #a5b4fc;
   background: #e0e7ff;
-  border-radius: 4px;
+  border-radius: 3pt;
 }
 
 .individual-dpr-document.tpl-ap-cmep .cover-kicker {
   color: #312e81;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  font-size: 18pt;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-unit {
+  color: #3730a3;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-scheme {
+  color: #312e81;
+  font-weight: 700;
 }
 
 .individual-dpr-document.tpl-ap-cmep .cover-tagline {
-  margin: 6pt 0 0;
-  font-size: 9.5pt;
   color: #4338ca;
   font-style: italic;
+  opacity: 0.95;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-sec-title {
+  border-bottom-color: #3730a3;
 }
 
 .individual-dpr-document.tpl-ap-cmep .individual-sec-num {
   background: #3730a3;
+  border-color: #3730a3;
   color: #fff;
-  border-radius: 4px;
+  border-radius: 3pt;
 }
 
 .individual-dpr-document.tpl-ap-cmep .individual-qa-q {
   color: #3730a3;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-meta-grid {
+  border-color: #3730a3;
 }
