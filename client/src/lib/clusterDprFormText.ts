@@ -227,6 +227,11 @@ const TE: Record<string, string> = {
   'Apply All': 'అన్నీ వర్తింపజేయండి',
   'Applying...': 'వర్తింపజేస్తోంది...',
   Apply: 'వర్తింపజేయండి',
+  Confirm: 'నిర్ధారించండి',
+  Cancel: 'రద్దు చేయండి',
+  'Edit field': 'ఫీల్డ్‌ను సవరించండి',
+  'Edit the full text, then Confirm to save or Cancel to discard.':
+    'పూర్తి వచనాన్ని సవరించి, సేవ్ చేయడానికి నిర్ధారించండి లేదా విస్మరించడానికి రద్దు చేయండి.',
   Uploading: 'అప్‌లోడ్ అవుతోంది',
   Uploaded: 'అప్‌లోడ్ అయింది',
   'Raw Material': 'ముడి పదార్థం',
