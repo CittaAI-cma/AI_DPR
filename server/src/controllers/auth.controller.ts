@@ -102,6 +102,15 @@ export class AuthController {
         return;
       }
 
+      const phoneDigits = String(phoneNumber ?? '').replace(/\D/g, '');
+      if (!/^\d{10}$/.test(phoneDigits)) {
+        res.status(400).json({
+          success: false,
+          message: 'Phone number must be exactly 10 digits.',
+        });
+        return;
+      }
+
       const age = ageFromDob(dateOfBirth);
       if (age == null) {
         res.status(400).json({
@@ -136,7 +145,7 @@ export class AuthController {
         role: role || 'entrepreneur',
         udyamNumber,
         location,
-        phoneNumber,
+        phoneNumber: phoneDigits,
         dateOfBirth: new Date(dateOfBirth),
         privacy: {
           noticeVersion: PRIVACY_NOTICE_VERSION,

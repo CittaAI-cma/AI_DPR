@@ -43,6 +43,8 @@
     "password": "Password",
     "name": "Full Name",
     "phoneNumber": "Phone Number",
+    "phoneRequired": "Enter your 10-digit phone number.",
+    "phoneInvalid": "Phone number must be exactly 10 digits.",
     "location": "Location",
     "udyamNumber": "Udyam Number (Optional)",
     "forgotPassword": "Forgot Password?",

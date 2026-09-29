@@ -41,10 +41,13 @@ export const Register: React.FC = () => {
     analytics: false,
     noticeRead: false,
   });
+  const [phoneError, setPhoneError] = useState('');
 
   const dobAge = ageFromDob(formData.dateOfBirth);
   const isUnder18Dob = dobAge != null && dobAge < 18;
   const showGuardian = under18 || isUnder18Dob;
+
+  const isValidPhone = (value: string) => /^\d{10}$/.test(value);
 
   const scrollToGuardian = () => {
     window.setTimeout(() => {
@@ -52,8 +55,29 @@ export const Register: React.FC = () => {
     }, 50);
   };
 
+  const handlePhoneChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    setFormData({ ...formData, phoneNumber: digits });
+    if (!digits) {
+      setPhoneError(t('auth.phoneRequired'));
+    } else if (!isValidPhone(digits)) {
+      setPhoneError(t('auth.phoneInvalid'));
+    } else {
+      setPhoneError('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidPhone(formData.phoneNumber)) {
+      setPhoneError(
+        formData.phoneNumber
+          ? t('auth.phoneInvalid')
+          : t('auth.phoneRequired')
+      );
+      return;
+    }
 
     const age = ageFromDob(formData.dateOfBirth);
     if (age != null && age < 18) {
@@ -146,11 +170,23 @@ export const Register: React.FC = () => {
                 <Input
                   label={t('auth.phoneNumber')}
                   type="tel"
-                  placeholder="+91 9876543210"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  placeholder="9876543210"
                   value={formData.phoneNumber}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phoneNumber: e.target.value })
-                  }
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  onBlur={() => {
+                    if (!isValidPhone(formData.phoneNumber)) {
+                      setPhoneError(
+                        formData.phoneNumber
+                          ? t('auth.phoneInvalid')
+                          : t('auth.phoneRequired')
+                      );
+                    }
+                  }}
+                  maxLength={10}
+                  required
+                  error={phoneError}
                   className="h-12"
                 />
               </div>
