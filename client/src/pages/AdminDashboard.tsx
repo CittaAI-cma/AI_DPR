@@ -334,7 +334,7 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <>
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <Card>
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between">
@@ -376,21 +376,6 @@ export const AdminDashboard: React.FC = () => {
                           </p>
                         </div>
                         <TrendingUp className="h-12 w-12 text-purple-500 opacity-20" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Bankability Score</p>
-                          <h3 className="text-3xl font-bold mt-2">{summary.avgBankabilityScore || 0}%</h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Rating: {summary.averageRating || 0}/5
-                          </p>
-                        </div>
-                        <Award className="h-12 w-12 text-yellow-500 opacity-20" />
                       </div>
                     </CardContent>
                   </Card>
