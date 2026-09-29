@@ -1943,6 +1943,57 @@ export class ClusterDPRController {
   }
 
   /**
+   * Match free-text work description to one skill label
+   */
+  static async matchBusinessSkill(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+        return;
+      }
+
+      const { text, skills, context } = req.body;
+      if (!text || !String(text).trim()) {
+        res.status(400).json({
+          success: false,
+          message: 'Text is required to match a skill',
+        });
+        return;
+      }
+      if (!Array.isArray(skills) || !skills.length) {
+        res.status(400).json({
+          success: false,
+          message: 'Skills allowlist is required',
+        });
+        return;
+      }
+
+      const skill = await ClusterDPRService.matchBusinessSkill(
+        String(text),
+        skills.map(String),
+        context || {}
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Skill matched successfully',
+        data: { skill },
+      });
+    } catch (error: any) {
+      console.error('❌ Error matching business skill:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to match business skill',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
    * Generate field content based on suggestion
    */
   static async generateFieldContent(req: AuthRequest, res: Response): Promise<void> {

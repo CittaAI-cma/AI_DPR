@@ -3,12 +3,16 @@ import React from 'react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { ExpandableInput as Input, ExpandableTextarea, ExpandableSelect } from '@/components/ui/ExpandableField';
 import { Button } from '@/components/ui/Button';
-import { Plus, Trash2, Loader2, Wand2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, Wand2, Sparkles } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { FIELD_DESCRIPTIONS } from '@/data/fieldDescriptions';
 import { districtSelectOptions, townSelectOptions, isTownInDistrict } from '@/lib/individualDpr/apDistricts';
+import { BUSINESS_SKILLS, matchBusinessSkillLocal } from '@/lib/individualDpr/businessSkills';
+import { AISuggestionsService } from '@/services/aiSuggestions.service';
+import { useAuthStore } from '@/store/authStore';
+import { useTranslation } from 'react-i18next';
 import {
   extraFieldsForScheme,
   hideComplexCapex,
@@ -154,7 +158,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   onPrevious,
 }) => {
   const { data, setStepData, getStepData, setSchemeExtras } = useIndividualDPRStore();
+  const { user } = useAuthStore();
+  const aiAllowed = !!user?.privacy?.aiAssist;
   const tf = useClusterFormText();
+  const { t } = useTranslation();
+  const [matchingSkill, setMatchingSkill] = React.useState(false);
   const schemeCode = data.matchedSchemeCode || null;
   const isPmegp = schemeCode === 'PMEGP';
   const isPmegp2nd = schemeCode === 'PMEGP_2ND';
@@ -487,8 +495,74 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <Input
               value={stepData.natureOfBusiness || ''}
               onChange={(e) => handleInputChange('natureOfBusiness', e.target.value)}
-              placeholder={tf("Enter nature of business")}
+              placeholder={tf('What do you do')}
+              enableSkillMatch
+              expandTitle={tf('Nature of Business')}
             />
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={matchingSkill}
+                onClick={async () => {
+                  const text = String(stepData.natureOfBusiness || '').trim();
+                  if (!text) {
+                    toast.error(tf('Type what you do first, then Match me.'));
+                    return;
+                  }
+                  const local = matchBusinessSkillLocal(text);
+                  if (local) {
+                    handleInputChange('natureOfBusiness', local);
+                    toast.success(tf('Matched to: {skill}').replace('{skill}', local));
+                    return;
+                  }
+                  if (!aiAllowed) {
+                    toast.error(t('privacy.aiOffWarning'));
+                    return;
+                  }
+                  setMatchingSkill(true);
+                  try {
+                    const skill = await AISuggestionsService.matchBusinessSkill(
+                      text,
+                      [...BUSINESS_SKILLS],
+                      {
+                        unitName: getUnitName(stepData),
+                        district: stepData.district || '',
+                        location: stepData.location || '',
+                        schemeCode,
+                      }
+                    );
+                    if (!skill) {
+                      toast.error(
+                        tf('Could not match a skill. Try again with a clearer description.')
+                      );
+                      return;
+                    }
+                    handleInputChange('natureOfBusiness', skill);
+                    toast.success(tf('Matched to: {skill}').replace('{skill}', skill));
+                  } catch (err) {
+                    console.error(err);
+                    toast.error(
+                      tf('Could not match a skill. Try again with a clearer description.')
+                    );
+                  } finally {
+                    setMatchingSkill(false);
+                  }
+                }}
+              >
+                {matchingSkill ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {matchingSkill ? tf('Matching…') : tf('Match me')}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                {tf('Describe your work in a line, then Match me to map it to one skill.')}
+              </p>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">

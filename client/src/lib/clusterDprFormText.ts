@@ -234,6 +234,16 @@ const TE: Record<string, string> = {
     'పూర్తి వచనాన్ని సవరించి, సేవ్ చేయడానికి నిర్ధారించండి లేదా విస్మరించడానికి రద్దు చేయండి.',
   'Improve this': 'దీన్ని మెరుగుపరచండి',
   'Improving…': 'మెరుగుపరుస్తోంది…',
+  'Match me': 'నాకు సరిపోల్చు',
+  'Matching…': 'సరిపోలుస్తోంది…',
+  'What do you do': 'మీరు ఏం చేస్తారు',
+  'Type what you do first, then Match me.':
+    'ముందు మీరు ఏం చేస్తారో టైప్ చేసి, తర్వాత నాకు సరిపోల్చు నొక్కండి.',
+  'Matched to: {skill}': 'సరిపోలింది: {skill}',
+  'Could not match a skill. Try again with a clearer description.':
+    'నైపుణ్యాన్ని సరిపోల్చలేకపోయాం. స్పష్టంగా వివరించి మళ్లీ ప్రయత్నించండి.',
+  'Describe your work in a line, then Match me to map it to one skill.':
+    'మీ పనిని ఒక లైన్‌లో రాసి, ఒక నైపుణ్యానికి సరిపోల్చడానికి నాకు సరిపోల్చు నొక్కండి.',
   'Type something first, then Improve this.':
     'ముందు ఏదైనా టైప్ చేసి, తర్వాత మెరుగుపరచండి.',
   'Could not improve this text. Try again.':

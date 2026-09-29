@@ -9,7 +9,7 @@ export const FIELD_DESCRIPTIONS: Record<string, Record<string, string>> = {
     district: 'Specify the district where the cluster is located. This helps in regional analysis and government scheme eligibility.',
     location: 'Select the town where the unit is located (filtered by the district you chose).',
     geographicalSpread: 'Describe the geographical area covered by the cluster. Include details about villages, towns, or regions included in the cluster.',
-    natureOfBusiness: 'Describe the primary business activity or industry type of the cluster (e.g., Handloom, Food Processing, Engineering).',
+    natureOfBusiness: 'Describe what you do in plain words, then use Match me to map it to one skill (e.g. “I make pots” → Pottery).',
     majorProducts: 'List the main products manufactured or services provided by enterprises in the cluster.',
     enterpriseCount: 'Enter the number of enterprises categorized by size (Micro, Small, Medium) as per MSME classification.',
     ageOfEnterprises: 'Provide the distribution of enterprises based on their years of operation. This helps assess cluster maturity.',

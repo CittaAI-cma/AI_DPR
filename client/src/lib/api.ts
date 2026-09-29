@@ -880,6 +880,25 @@ class APIClient {
     );
   }
 
+  async matchBusinessSkill(text: string, skills: string[], context: Record<string, any> = {}) {
+    return this.handleRequest(
+      async () => {
+        const response = await this.client.post('/dpr/cluster/ai/match-skill', {
+          text,
+          skills,
+          context,
+        });
+        return response.data;
+      },
+      () => {
+        return Promise.resolve({
+          success: false,
+          message: 'Skill match failed',
+        });
+      }
+    );
+  }
+
   async generateFieldContent(
     fieldName: string,
     currentStep: number,

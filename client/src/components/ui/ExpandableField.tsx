@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
+import { BUSINESS_SKILLS, matchBusinessSkillLocal } from '@/lib/individualDpr/businessSkills';
 import { useTranslation } from 'react-i18next';
 
 type EditorKind = 'input' | 'textarea' | 'select';
@@ -36,6 +37,15 @@ function canImproveKind(kind: EditorKind, inputType?: string) {
   return true;
 }
 
+async function resolveSkillMatch(
+  text: string,
+  context: Record<string, any>
+): Promise<string | null> {
+  const local = matchBusinessSkillLocal(text);
+  if (local) return local;
+  return AISuggestionsService.matchBusinessSkill(text, [...BUSINESS_SKILLS], context);
+}
+
 function FieldExpandModal({
   open,
   title,
@@ -47,6 +57,7 @@ function FieldExpandModal({
   selectChildren,
   onConfirm,
   onCancel,
+  enableSkillMatch = false,
 }: {
   open: boolean;
   title?: string;
@@ -58,22 +69,27 @@ function FieldExpandModal({
   selectChildren?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
+  enableSkillMatch?: boolean;
 }) {
   const tf = useClusterFormText();
   const { t } = useTranslation();
   const titleId = useId();
   const editorRef = useRef<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement | null>(null);
   const [improving, setImproving] = useState(false);
+  const [matching, setMatching] = useState(false);
   const { user } = useAuthStore();
   const aiAllowed = !!user?.privacy?.aiAssist;
   const data = useIndividualDPRStore((s) => s.data);
   // Step 1 (cover / basics) is manual — no AI improve on any field.
   const onStep1 = (data?.currentStep ?? 1) === 1;
-  const showImprove = canImproveKind(kind, inputType) && !onStep1;
+  const showImprove = canImproveKind(kind, inputType) && !onStep1 && !enableSkillMatch;
+  const showMatchSkill = !!enableSkillMatch && canImproveKind(kind, inputType);
+  const busy = improving || matching;
 
   useEffect(() => {
     if (!open) {
       setImproving(false);
+      setMatching(false);
       return;
     }
     const tmr = window.setTimeout(() => editorRef.current?.focus?.(), 50);
@@ -93,6 +109,16 @@ function FieldExpandModal({
       window.removeEventListener('keydown', onKey);
     };
   }, [open, onCancel, onConfirm]);
+
+  const matchContext = () => {
+    const step1 = data?.step1 || {};
+    return {
+      unitName: getUnitName(step1),
+      district: step1.district || '',
+      location: step1.location || '',
+      schemeCode: data?.matchedSchemeCode || null,
+    };
+  };
 
   const handleImprove = async () => {
     if (!aiAllowed) {
@@ -131,6 +157,40 @@ function FieldExpandModal({
       toast.error(tf('Could not improve this text. Try again.'));
     } finally {
       setImproving(false);
+    }
+  };
+
+  const handleMatchSkill = async () => {
+    const text = String(draft || '').trim();
+    if (!text) {
+      toast.error(tf('Type what you do first, then Match me.'));
+      return;
+    }
+    // Local keyword match works offline / without AI consent
+    const local = matchBusinessSkillLocal(text);
+    if (local) {
+      setDraft(local);
+      toast.success(tf('Matched to: {skill}').replace('{skill}', local));
+      return;
+    }
+    if (!aiAllowed) {
+      toast.error(t('privacy.aiOffWarning'));
+      return;
+    }
+    setMatching(true);
+    try {
+      const skill = await resolveSkillMatch(text, matchContext());
+      if (!skill) {
+        toast.error(tf('Could not match a skill. Try again with a clearer description.'));
+        return;
+      }
+      setDraft(skill);
+      toast.success(tf('Matched to: {skill}').replace('{skill}', skill));
+    } catch (error) {
+      console.error(error);
+      toast.error(tf('Could not match a skill. Try again with a clearer description.'));
+    } finally {
+      setMatching(false);
     }
   };
 
@@ -176,7 +236,7 @@ function FieldExpandModal({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={placeholder}
-              disabled={improving}
+              disabled={busy}
               className="w-full min-h-[50vh] rounded-lg border border-input bg-background px-4 py-3 text-base leading-relaxed ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             />
           )}
@@ -187,7 +247,7 @@ function FieldExpandModal({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={placeholder}
-              disabled={improving}
+              disabled={busy}
               className="w-full h-14 rounded-lg border border-input bg-background px-4 py-3 text-lg ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             />
           )}
@@ -205,13 +265,29 @@ function FieldExpandModal({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3 sm:px-5">
-          <div>
+          <div className="flex flex-wrap items-center gap-2">
+            {showMatchSkill && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleMatchSkill}
+                disabled={busy}
+                className="gap-1.5"
+              >
+                {matching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {matching ? tf('Matching…') : tf('Match me')}
+              </Button>
+            )}
             {showImprove && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleImprove}
-                disabled={improving}
+                disabled={busy}
                 className="gap-1.5"
               >
                 {improving ? (
@@ -224,10 +300,10 @@ function FieldExpandModal({
             )}
           </div>
           <div className="flex items-center gap-2 ml-auto">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={improving}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
               {tf('Cancel')}
             </Button>
-            <Button type="button" onClick={onConfirm} disabled={improving}>
+            <Button type="button" onClick={onConfirm} disabled={busy}>
               {tf('Confirm')}
             </Button>
           </div>
@@ -279,8 +355,30 @@ function ExpandHint() {
 }
 
 /** Drop-in for `@/components/ui/Input` — click opens enlarged editor. */
-export const ExpandableInput = React.forwardRef<HTMLInputElement, React.ComponentProps<typeof Input>>(
-  ({ className, onChange, value, defaultValue, type, placeholder, label, error, disabled, readOnly, onFocus, onClick, ...props }, ref) => {
+export const ExpandableInput = React.forwardRef<
+  HTMLInputElement,
+  React.ComponentProps<typeof Input> & { enableSkillMatch?: boolean; expandTitle?: string }
+>(
+  (
+    {
+      className,
+      onChange,
+      value,
+      defaultValue,
+      type,
+      placeholder,
+      label,
+      error,
+      disabled,
+      readOnly,
+      onFocus,
+      onClick,
+      enableSkillMatch = false,
+      expandTitle,
+      ...props
+    },
+    ref
+  ) => {
     const tf = useClusterFormText();
     const resolvedValue = value ?? defaultValue ?? '';
     const { open, draft, setDraft, openEditor, cancel, confirm } = useExpandEditor(resolvedValue, onChange);
@@ -306,6 +404,9 @@ export const ExpandableInput = React.forwardRef<HTMLInputElement, React.Componen
         />
       );
     }
+
+    const modalTitle =
+      expandTitle || (typeof label === 'string' ? label : undefined) || tf('Edit field');
 
     return (
       <>
@@ -344,7 +445,7 @@ export const ExpandableInput = React.forwardRef<HTMLInputElement, React.Componen
         </div>
         <FieldExpandModal
           open={open}
-          title={typeof label === 'string' ? label : tf('Edit field')}
+          title={modalTitle}
           kind="input"
           draft={draft}
           setDraft={setDraft}
@@ -352,6 +453,7 @@ export const ExpandableInput = React.forwardRef<HTMLInputElement, React.Componen
           placeholder={placeholder}
           onConfirm={confirm}
           onCancel={cancel}
+          enableSkillMatch={enableSkillMatch}
         />
       </>
     );

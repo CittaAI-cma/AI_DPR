@@ -78,6 +78,26 @@ export class AISuggestionsService {
   }
 
   /**
+   * Map free-text work description to one skill from the allowlist.
+   */
+  static async matchBusinessSkill(
+    text: string,
+    skills: string[],
+    context: Record<string, any> = {}
+  ): Promise<string | null> {
+    try {
+      const response = await api.matchBusinessSkill(text, skills, context);
+      if (response.success && response.data?.skill) {
+        return String(response.data.skill);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error matching business skill:', error);
+      return null;
+    }
+  }
+
+  /**
    * Generate actual content for a field based on suggestion
    */
   static async generateFieldContent(

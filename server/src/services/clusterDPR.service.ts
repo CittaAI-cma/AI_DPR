@@ -1621,6 +1621,72 @@ Rules:
   }
 
   /**
+   * Map free-text "what I do" to exactly one skill label from the provided allowlist.
+   */
+  static async matchBusinessSkill(
+    text: string,
+    skills: string[],
+    context: Record<string, any> = {}
+  ): Promise<string | null> {
+    try {
+      const raw = String(text || '').trim();
+      if (!raw || !skills?.length) return null;
+
+      const allow = skills.map((s) => String(s).trim()).filter(Boolean);
+      const prompt = `You map a person's description of their work to EXACTLY ONE skill label from the allowed list.
+
+User description:
+"""
+${raw}
+"""
+
+Allowed skills (pick exactly one — copy the label character-for-character):
+${allow.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+${context.unitName ? `Unit name hint: ${context.unitName}` : ''}
+${context.district ? `District: ${context.district}` : ''}
+
+Rules:
+- Reply with ONLY the chosen skill label from the list — no quotes, no numbering, no explanation.
+- Prefer the closest practical livelihood / MSME skill.
+- Example: "i make pots" → Pottery (if Pottery is in the list).
+- If nothing fits well, pick the closest "Other …" option from the list.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You classify livelihood / MSME work into one allowed skill label. Reply with that label only.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 60,
+      });
+
+      let picked = (response.choices[0]?.message?.content || '').trim();
+      picked = picked.replace(/^["'`]|["'`]$/g, '').trim();
+      // Strip leading "12. " if model numbers
+      picked = picked.replace(/^\d+[\.)]\s*/, '').trim();
+
+      const exact = allow.find((s) => s.toLowerCase() === picked.toLowerCase());
+      if (exact) return exact;
+
+      const partial = allow.find(
+        (s) =>
+          picked.toLowerCase().includes(s.toLowerCase()) ||
+          s.toLowerCase().includes(picked.toLowerCase())
+      );
+      return partial || null;
+    } catch (error: any) {
+      console.error('Error matching business skill:', error);
+      return null;
+    }
+  }
+
+  /**
    * Generate actual content for a field based on suggestion and context
    */
   static async generateFieldContent(
