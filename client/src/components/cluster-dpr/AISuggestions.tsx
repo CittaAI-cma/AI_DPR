@@ -6,8 +6,10 @@ import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { toast } from 'react-hot-toast';
 import { extraFieldsForScheme } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
+import { EXTRA_FIELD_LABELS, getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
+import { fillCurrentStepWithAi, FillStepProgress } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
@@ -20,6 +22,7 @@ interface AISuggestionsProps {
   data?: any;
   setStepData?: (step: number, stepData: any) => void;
   getStepData?: (step: number) => any;
+  setSchemeExtras?: (extras: any) => void;
   contextHint?: string;
   isIndividualDPR?: boolean;
 }
@@ -32,6 +35,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   data: dataProp,
   setStepData: setStepDataProp,
   getStepData: getStepDataProp,
+  setSchemeExtras: setSchemeExtrasProp,
   contextHint,
   isIndividualDPR = false,
 }) => {
@@ -50,15 +54,37 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   const schemeExtraFields = extraFieldsForScheme(isIndividualDPR ? data?.matchedSchemeCode : null);
   const [applyingAll, setApplyingAll] = useState(false);
   const [applyingFields, setApplyingFields] = useState<Set<string>>(new Set());
+  const [fillProgress, setFillProgress] = useState<FillStepProgress | null>(null);
+  const fieldLabel = (field: string) => {
+    if (EXTRA_FIELD_LABELS[field]) return EXTRA_FIELD_LABELS[field];
+    const pretty: Record<string, string> = {
+      natureOfBusiness: 'Nature of Business',
+      majorProducts: 'Major Products',
+      unitName: 'Unit / Project Name',
+      district: 'District',
+      location: 'Location',
+      sectorType: 'Sector / industry type',
+      sectorDescription: 'Sector description',
+      processOfManufacture: 'Process of manufacture',
+      powerRequirement: 'Power requirement',
+      workplaceType: 'Workplace',
+      entrepreneurName: 'Vendor / entrepreneur name',
+      entrepreneurAge: 'Age',
+    };
+    return pretty[field] || field;
+  };
 
-  // For Step 1, we'll show AI suggestions but exclude certain fields (clusterName, location, district)
-  // These are basic identifiers that users should enter manually
+  const schemeCode = isIndividualDPR ? data?.matchedSchemeCode || null : null;
+  const budget = isIndividualDPR ? data?.ventureMatchAnswers?.budget : undefined;
+  const stepCatalogFields = isIndividualDPR
+    ? getIndividualDocFields(currentStep, schemeCode, budget).filter(
+        (f) => !excludeFields.includes(f.name)
+      )
+    : [];
 
-  // Collect previous steps data (in-memory) - use useMemo to avoid recalculating
   const previousStepsData = React.useMemo(() => {
     const previousData: Record<string, any> = {};
     if (isIndividualDPR) {
-      const schemeCode = data?.matchedSchemeCode || null;
       const catalog = getSchemeSteps(schemeCode);
       const currentLocal = catalog.find((s) => s.contentStep === currentStep)?.n ?? currentStep;
       for (const def of catalog) {
@@ -70,7 +96,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
       if (data.step1 && !previousData.step1) previousData.step1 = data.step1;
       previousData._isIndividualDPR = true;
-      if (data?.matchedSchemeCode) previousData._schemeCode = data.matchedSchemeCode;
+      if (schemeCode) previousData._schemeCode = schemeCode;
+      if (budget) previousData._budget = budget;
       return previousData;
     }
     for (let i = 1; i < currentStep; i++) {
@@ -80,40 +107,76 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
     }
     return previousData;
-  }, [currentStep, data, isIndividualDPR]);
+  }, [currentStep, data, isIndividualDPR, schemeCode, budget]);
 
   const hasPreviousData = Boolean(
     (previousStepsData.step1 && Object.keys(previousStepsData.step1).length > 0) ||
       (isIndividualDPR && getUnitName(data?.step1))
   );
 
-  // Reset suggestions when step changes
   useEffect(() => {
     setSuggestions([]);
     setHasGenerated(false);
+    setFillProgress(null);
   }, [currentStep]);
 
-  // Function to generate AI suggestions
+  const handleFillThisStep = async () => {
+    if (!aiAllowed) {
+      toast.error(t('privacy.aiOffWarning'));
+      return;
+    }
+    if (currentStep > 1 && !hasPreviousData) return;
+    if (!stepCatalogFields.length) {
+      toast.error(tf('No questions to fill on this step.'));
+      return;
+    }
+
+    setLoading(true);
+    setFillProgress(null);
+    try {
+      const result = await fillCurrentStepWithAi({
+        contentStep: currentStep,
+        data,
+        setStepData,
+        getStepData,
+        setSchemeExtras: setSchemeExtrasProp,
+        schemeCode,
+        answers: data?.ventureMatchAnswers,
+        excludeFields,
+        onProgress: setFillProgress,
+      });
+
+      if (result.filled.length === 0) {
+        toast.error(tf('Could not fill any fields for this step. Try again.'));
+        return;
+      }
+      if (result.failed.length) {
+        toast.success(
+          tf('Filled {filled} of {total} questions on this step.')
+            .replace('{filled}', String(result.filled.length))
+            .replace('{total}', String(result.filled.length + result.failed.length))
+        );
+      } else {
+        toast.success(
+          tf('Filled {n} questions on this step.').replace('{n}', String(result.filled.length))
+        );
+      }
+    } catch (error) {
+      console.error('Error filling step with AI:', error);
+      toast.error(tf('Failed to fill this step with AI'));
+    } finally {
+      setLoading(false);
+      setFillProgress(null);
+    }
+  };
+
   const handleGenerateSuggestions = async () => {
     if (!aiAllowed) {
       toast.error(t('privacy.aiOffWarning'));
       return;
     }
-    // For Step 1, we don't require previous data
     if (currentStep > 1 && !hasPreviousData) {
       return;
-    }
-
-    // Debug logging for Step 1
-    if (currentStep === 1) {
-      console.log('🔍 Step 1 AI Suggestions - Frontend Debug:', {
-        currentStepData,
-        clusterName: currentStepData?.clusterName || '(empty)',
-        location: currentStepData?.location || '(empty)',
-        district: currentStepData?.district || '(empty)',
-        excludeFields,
-        hasPreviousData,
-      });
     }
 
     setLoading(true);
@@ -123,45 +186,13 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         currentStepData,
         {
           ...previousStepsData,
-          ...(isIndividualDPR ? { _isIndividualDPR: true } : {}),
-          ...(isIndividualDPR && data?.matchedSchemeCode ? { _schemeCode: data.matchedSchemeCode } : {}),
           ...(contextHint ? { _promptContext: contextHint } : {}),
         },
         excludeFields
       );
-      
-      // Debug logging for Step 1
-      if (currentStep === 1) {
-        console.log('🔍 Step 1 AI Suggestions - Response:', {
-          suggestionsCount: aiSuggestions?.length || 0,
-          suggestions: aiSuggestions,
-        });
-      }
-      
-      // Filter out excluded fields from suggestions
+
       const filteredSuggestions = (aiSuggestions || []).filter((suggestion) => {
         if (excludeFields.includes(suggestion.field)) return false;
-        if (
-          isIndividualDPR &&
-          [
-            'enterpriseCount',
-            'ageOfEnterprises',
-            'employmentPerUnit',
-            'investmentPerUnit',
-            'turnoverPerUnit',
-            'marketServed',
-            'shareholdingPattern',
-            'memberUnits',
-            'rolesAndResponsibilities',
-            'statutoryRegistrations',
-            'irr',
-            'npv',
-            'sensitivityAnalysis',
-            'increaseInUnits',
-          ].includes(suggestion.field)
-        ) {
-          return false;
-        }
         return true;
       });
       setSuggestions(filteredSuggestions);
@@ -175,22 +206,17 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   };
 
   const parseAndTransformFieldContent = (field: string, content: string) => {
-    // Parse content if it's JSON (for array fields)
     let parsedContent: any = content;
     try {
       parsedContent = JSON.parse(content);
-      console.log(`✅ Parsed JSON content for ${field}:`, parsedContent);
 
-      // Handle object fields (like connectivity)
       if (typeof parsedContent === 'object' && !Array.isArray(parsedContent)) {
         if (field === 'connectivity') {
-          // Ensure connectivity has all required fields with proper structure
           parsedContent = {
             road: parsedContent.road || parsedContent.Road || '',
             rail: parsedContent.rail || parsedContent.Rail || '',
             port: parsedContent.port || parsedContent.Port || '',
           };
-          console.log(`✅ Formatted connectivity object:`, parsedContent);
         }
       }
 
@@ -201,7 +227,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
               stage,
               sellingPrice: 0,
             }));
-            console.log(`✅ Transformed valueAdditionStages to object format:`, parsedContent);
           }
         } else if (field === 'rawMaterials') {
           if (parsedContent.length > 0 && typeof parsedContent[0] === 'string') {
@@ -209,7 +234,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
               name: material,
               source: '',
             }));
-            console.log(`✅ Transformed rawMaterials to object format:`, parsedContent);
           }
         } else if (field === 'boardOfDirectors') {
           if (parsedContent.length > 0 && typeof parsedContent[0] === 'string') {
@@ -217,7 +241,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
               name: director,
               designation: '',
             }));
-            console.log(`✅ Transformed boardOfDirectors to object format:`, parsedContent);
           }
         } else if (field === 'shareholdingPattern') {
           if (parsedContent.length > 0 && typeof parsedContent[0] === 'string') {
@@ -225,7 +248,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
               stakeholder,
               percentage: 0,
             }));
-            console.log(`✅ Transformed shareholdingPattern to object format:`, parsedContent);
           }
         } else if (field === 'memberUnits') {
           if (parsedContent.length > 0 && typeof parsedContent[0] === 'string') {
@@ -233,7 +255,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
               name: unit,
               registration: '',
             }));
-            console.log(`✅ Transformed memberUnits to object format:`, parsedContent);
           }
         } else if (field === 'milestones') {
           parsedContent = normalizeMilestones(parsedContent);
@@ -241,7 +262,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
     } catch {
       parsedContent = content;
-      console.log(`✅ Using plain text content for ${field}:`, parsedContent);
     }
 
     if (field === 'startDate' || field === 'endDate') {
@@ -266,7 +286,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     return parsedContent;
   };
 
-  // Function to extract value directly from suggestion text (fast path)
   const extractValueFromSuggestion = (field: string, suggestionText: string): any => {
     if (!suggestionText) return null;
 
@@ -287,10 +306,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
     }
 
-    // Try to find JSON objects/arrays in the suggestion text
     try {
-      // Look for JSON objects like {"micro": 10, "small": 5} - handle nested objects
-      // Try to find complete JSON objects by looking for balanced braces
       let braceCount = 0;
       let startIndex = -1;
       for (let i = 0; i < suggestionText.length; i++) {
@@ -303,7 +319,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
             const jsonStr = suggestionText.substring(startIndex, i + 1);
             try {
               const parsed = JSON.parse(jsonStr);
-              // Validate the structure matches expected format
               if (field === 'enterpriseCount' && parsed.micro !== undefined && parsed.small !== undefined && parsed.medium !== undefined) {
                 return parsed;
               }
@@ -317,11 +332,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                 return parsed;
               }
               if (field === 'connectivity' && parsed.road !== undefined && parsed.rail !== undefined && parsed.port !== undefined) {
-                console.log('✅ Extracted connectivity object:', parsed);
                 return parsed;
               }
-              // Only return a generic object when this field is expected to be an object
-              // (never for date/text fields — a `{...}` in the reasoning text would wipe the input)
             } catch (e) {
               // Continue searching
             }
@@ -330,7 +342,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         }
       }
 
-      // Look for JSON arrays like ["item1", "item2"]
       const jsonArrayMatch = suggestionText.match(/\[[^\]]*\]/);
       if (jsonArrayMatch) {
         const parsed = JSON.parse(jsonArrayMatch[0]);
@@ -339,13 +350,10 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         }
       }
 
-      // Try to extract numbers (for number fields)
       if (field === 'investmentPerUnit' || field === 'turnoverPerUnit') {
-        // Look for numbers in the text (could be in lakhs or rupees)
         const numberMatch = suggestionText.match(/(\d+(?:\.\d+)?)\s*(?:lakh|lakhs|₹|rupees?)?/i);
         if (numberMatch) {
           let num = parseFloat(numberMatch[1]);
-          // If it says "lakhs", multiply by 100000, otherwise assume it's already in the right unit
           if (suggestionText.toLowerCase().includes('lakh')) {
             num = num * 100000;
           }
@@ -353,13 +361,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         }
       }
     } catch (e) {
-      // If parsing fails, return null to fall back to API call
+      // fall back to API
     }
 
     return null;
   };
 
-  // Function to apply a suggestion to a field
   const handleApplySuggestion = async (suggestion: AISuggestion) => {
     if (!suggestion.field) {
       toast.error('Field name is missing');
@@ -369,14 +376,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     setApplyingFields(prev => new Set(prev).add(suggestion.field));
 
     try {
-      // First, try to extract value directly from suggestion (fast path)
-      const suggestionText = typeof suggestion.suggestion === 'string' 
-        ? suggestion.suggestion 
+      const suggestionText = typeof suggestion.suggestion === 'string'
+        ? suggestion.suggestion
         : JSON.stringify(suggestion.suggestion);
-      
+
       let parsedContent = extractValueFromSuggestion(suggestion.field, suggestionText);
 
-      // If we couldn't extract directly, fall back to API call
       if (parsedContent === null) {
         const content = await AISuggestionsService.generateFieldContent(
           suggestion.field,
@@ -390,7 +395,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
           parsedContent = parseAndTransformFieldContent(suggestion.field, content);
         }
       } else {
-        // Transform the extracted content if needed
         parsedContent = parseAndTransformFieldContent(suggestion.field, JSON.stringify(parsedContent));
       }
 
@@ -399,19 +403,15 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         return;
       }
 
-      // Special handling for connectivity - ensure it's properly structured
       let finalContent = parsedContent;
       if (suggestion.field === 'connectivity') {
-        // Ensure connectivity has all required fields
         if (typeof parsedContent === 'object' && !Array.isArray(parsedContent)) {
           finalContent = {
             road: parsedContent.road || '',
             rail: parsedContent.rail || '',
             port: parsedContent.port || '',
           };
-          console.log('✅ Formatted connectivity object:', finalContent);
         } else {
-          console.error('❌ Connectivity content is not an object:', parsedContent);
           toast.error('Connectivity data format is invalid. Please try again.');
           return;
         }
@@ -423,18 +423,14 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         return;
       }
 
-      // Get the latest stepData from store to avoid stale data
       const latestStepData = getStepData(currentStep) || {};
-      
-      // Update the form data
+
       const updatedStepData = {
         ...latestStepData,
         [suggestion.field]: finalContent,
       };
       setStepData(currentStep, updatedStepData);
-      console.log(`✅ Applied suggestion to ${suggestion.field}:`, finalContent);
 
-      // Call the optional callback (but data is already saved to store above)
       if (onApplySuggestion) {
         onApplySuggestion(suggestion.field, finalContent);
       }
@@ -463,34 +459,29 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     }
 
     setApplyingAll(true);
-    // Mark all fields as applying (disables individual Apply buttons)
     setApplyingFields(new Set(validSuggestions.map((s) => s.field)));
 
     try {
-      // Get the latest stepData from store to avoid stale data
       const latestStepData = getStepData(currentStep) || {};
       let updatedStepData = { ...latestStepData };
       let appliedCount = 0;
       const fieldsNeedingAPI: typeof validSuggestions = [];
 
-      // First pass: Try to extract values directly (fast path)
       for (const suggestion of validSuggestions) {
         try {
-          const suggestionText = typeof suggestion.suggestion === 'string' 
-            ? suggestion.suggestion 
+          const suggestionText = typeof suggestion.suggestion === 'string'
+            ? suggestion.suggestion
             : JSON.stringify(suggestion.suggestion);
-          
+
           let parsedContent = extractValueFromSuggestion(suggestion.field, suggestionText);
 
           if (parsedContent === null) {
-            // Mark for API call in second pass
             fieldsNeedingAPI.push(suggestion);
             continue;
           }
 
-          // Transform the extracted content if needed
           parsedContent = parseAndTransformFieldContent(suggestion.field, JSON.stringify(parsedContent));
-          
+
           if (parsedContent === null) {
             fieldsNeedingAPI.push(suggestion);
             continue;
@@ -518,9 +509,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         }
       }
 
-      // Second pass: Generate content via API for fields that couldn't be extracted directly
       if (fieldsNeedingAPI.length > 0) {
-        // Make API calls in parallel for better performance
         const apiPromises = fieldsNeedingAPI.map(async (suggestion) => {
           try {
             const content = await AISuggestionsService.generateFieldContent(
@@ -544,7 +533,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         });
 
         const results = await Promise.all(apiPromises);
-        
+
         for (const result of results) {
           if (result) {
             if (schemeExtraFields.includes(result.field)) {
@@ -572,7 +561,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         return;
       }
 
-      // Single store update for the step (final state)
       setStepData(currentStep, updatedStepData);
       toast.success(`Applied ${appliedCount} suggestion${appliedCount !== 1 ? 's' : ''}`);
     } finally {
@@ -589,9 +577,67 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     );
   }
 
-  // Show button to generate suggestions if not generated yet
+  // Latest DPR: fill only this step's catalog questions, one field at a time
+  if (isIndividualDPR) {
+    if (currentStep > 1 && !hasPreviousData) {
+      return (
+        <div className="mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Sparkles className="h-4 w-4" />
+            <span className="text-xs">{tf('Complete Step 1 first to get AI suggestions for this step.')}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (!stepCatalogFields.length) {
+      return null;
+    }
+
+    return (
+      <div className="mb-4 p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900">{tf('Fill this step with AI')}</p>
+              <p className="text-xs text-muted-foreground">
+                {loading && fillProgress
+                  ? tf('Filling {index}/{total}: {label}')
+                      .replace('{index}', String(fillProgress.index))
+                      .replace('{total}', String(fillProgress.total))
+                      .replace('{label}', fillProgress.label)
+                  : tf('Asks only this step’s questions ({n}), one at a time.').replace(
+                      '{n}',
+                      String(stepCatalogFields.length)
+                    )}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleFillThisStep}
+            disabled={loading || (currentStep > 1 && !hasPreviousData)}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm font-medium"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {loading ? tf('Filling…') : tf('Fill this step')}
+          </button>
+        </div>
+        {!loading && (
+          <ul className="mt-3 text-xs text-muted-foreground list-disc pl-5 space-y-0.5">
+            {stepCatalogFields.slice(0, 12).map((f) => (
+              <li key={f.name}>{f.label}</li>
+            ))}
+            {stepCatalogFields.length > 12 && (
+              <li>+{stepCatalogFields.length - 12} more</li>
+            )}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
   if (!hasGenerated && !loading) {
-    // For Step 1, we don't require previous data
     if (currentStep > 1 && !hasPreviousData) {
       return (
         <div className="mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
@@ -628,7 +674,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     );
   }
 
-  // Show loading state
   if (loading) {
     return (
       <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
@@ -640,7 +685,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     );
   }
 
-  // Don't show anything if no suggestions generated
   if (suggestions.length === 0 && hasGenerated) {
     return (
       <div className="mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
@@ -661,7 +705,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     );
   }
 
-  // Show suggestions if generated
   if (suggestions.length > 0 && hasGenerated) {
     return (
       <div className="mb-4 border border-primary/20 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 overflow-hidden">
@@ -726,21 +769,21 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                     <div className="flex-1">
                       {suggestion.field && (
                         <p className="text-xs font-semibold text-primary mb-1">
-                          {suggestion.field}:
+                          {fieldLabel(suggestion.field)}:
                         </p>
                       )}
                       <p className="text-sm text-gray-700">
-                        {typeof suggestion.suggestion === 'string' 
-                          ? suggestion.suggestion 
-                          : typeof suggestion.suggestion === 'object' 
+                        {typeof suggestion.suggestion === 'string'
+                          ? suggestion.suggestion
+                          : typeof suggestion.suggestion === 'object'
                             ? JSON.stringify(suggestion.suggestion, null, 2)
                             : String(suggestion.suggestion || '')}
                       </p>
                       {suggestion.reasoning && (
                         <p className="text-xs text-muted-foreground mt-1 italic">
-                          {typeof suggestion.reasoning === 'string' 
-                            ? suggestion.reasoning 
-                            : typeof suggestion.reasoning === 'object' 
+                          {typeof suggestion.reasoning === 'string'
+                            ? suggestion.reasoning
+                            : typeof suggestion.reasoning === 'object'
                               ? JSON.stringify(suggestion.reasoning, null, 2)
                               : String(suggestion.reasoning || '')}
                         </p>

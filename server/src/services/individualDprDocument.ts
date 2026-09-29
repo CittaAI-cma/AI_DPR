@@ -317,7 +317,8 @@ function getSchemeSteps(schemeCode?: string | null): SchemeStepDef[] {
   return (CATALOG_BY_CODE[schemeCode] || catalogs.VANILLA_STEPS) as SchemeStepDef[];
 }
 
-function getIndividualDocFields(
+/** Same field list as Latest DPR form / PDF — use this for AI suggestions too. */
+export function getIndividualDocFields(
   contentStep: number,
   schemeCode?: string | null,
   budget?: string

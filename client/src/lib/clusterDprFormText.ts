@@ -204,6 +204,19 @@ const TE: Record<string, string> = {
   'Get contextual recommendations based on your previous step data':
     'మునుపటి దశ డేటా ఆధారంగా సందర్భోచిత సిఫార్సులు పొందండి',
   'Generate Suggestions': 'సూచనలు రూపొందించండి',
+  'Fill this step with AI': 'ఈ దశను AIతో నింపండి',
+  'Fill this step': 'ఈ దశను నింపండి',
+  'Filling…': 'నింపుతోంది…',
+  'Asks only this step’s questions ({n}), one at a time.':
+    'ఈ దశ ప్రశ్నలు ({n}) మాత్రమే, ఒక్కొక్కటిగా అడుగుతుంది.',
+  'Filling {index}/{total}: {label}': 'నింపుతోంది {index}/{total}: {label}',
+  'No questions to fill on this step.': 'ఈ దశలో నింపడానికి ప్రశ్నలు లేవు.',
+  'Could not fill any fields for this step. Try again.':
+    'ఈ దశలో ఏ ఫీల్డ్‌నూ నింపలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Filled {filled} of {total} questions on this step.':
+    'ఈ దశలో {total}లో {filled} ప్రశ్నలు నింపబడ్డాయి.',
+  'Filled {n} questions on this step.': 'ఈ దశలో {n} ప్రశ్నలు నింపబడ్డాయి.',
+  'Failed to fill this step with AI': 'ఈ దశను AIతో నింపడం విఫలమైంది',
   'Complete Step 1 first to get AI suggestions for this step.':
     'ఈ దశకు AI సూచనల కోసం ముందుగా దశ 1ని పూర్తి చేయండి.',
   'No suggestions available. Try generating again or fill in more fields.':

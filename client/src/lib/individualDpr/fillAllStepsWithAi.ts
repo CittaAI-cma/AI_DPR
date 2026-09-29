@@ -1,6 +1,7 @@
 import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { extraFieldsForScheme, VISHWAKARMA_CRAFTS, hideComplexCapex } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
+import { getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
 import { suggestionToFieldValue } from '@/lib/dprAiFieldNormalize';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
@@ -322,6 +323,146 @@ export type FillAllResult = {
   failedSteps: number[];
 };
 
+export type FillStepProgress = {
+  field: string;
+  label: string;
+  index: number;
+  total: number;
+};
+
+export type FillStepResult = {
+  filled: string[];
+  failed: string[];
+};
+
+/**
+ * Fill only the current scheme step's catalog questions (getIndividualDocFields),
+ * one field at a time. Does not touch other steps.
+ */
+export async function fillCurrentStepWithAi(options: {
+  contentStep: number;
+  data: Record<string, any>;
+  setStepData: (step: number, stepData: any) => void;
+  getStepData: (step: number) => any;
+  setSchemeExtras?: (extras: Record<string, any>) => void;
+  schemeCode: string | null;
+  answers?: VentureMatchAnswers | null;
+  excludeFields?: string[];
+  onProgress?: (progress: FillStepProgress) => void;
+}): Promise<FillStepResult> {
+  const {
+    contentStep,
+    setStepData,
+    getStepData,
+    setSchemeExtras,
+    schemeCode,
+    answers,
+    onProgress,
+  } = options;
+  let data = { ...options.data };
+  const budget = answers?.budget;
+  const exclude = [
+    ...excludeForStep(contentStep, schemeCode, budget),
+    ...(options.excludeFields || []),
+  ];
+  const excludeSet = new Set(exclude);
+  const extraFieldNames = extraFieldsForScheme(schemeCode);
+  let extras = { ...(data.schemeExtras || {}) };
+
+  const catalogFields = getIndividualDocFields(contentStep, schemeCode, budget).filter(
+    (f) => !excludeSet.has(f.name) && !IDENTITY_FIELDS.includes(f.name)
+  );
+
+  if (!catalogFields.length) {
+    return { filled: [], failed: [] };
+  }
+
+  const schemeSteps = getSchemeSteps(schemeCode);
+  const currentLocal = schemeSteps.find((s) => s.contentStep === contentStep)?.n ?? contentStep;
+  const priorContent = schemeSteps
+    .filter((s) => s.n < currentLocal)
+    .map((s) => s.contentStep);
+  const previous = previousStepsPayload(data, priorContent, schemeCode, budget);
+
+  let stepData = { ...(getStepData(contentStep) || data[`step${contentStep}`] || {}) };
+  // Give the model visibility into scheme extras already on the form
+  if (contentStep === 1 || extraFieldNames.length) {
+    stepData = { ...extras, ...stepData };
+  }
+  const filled: string[] = [];
+  const failed: string[] = [];
+
+  for (let i = 0; i < catalogFields.length; i++) {
+    const fieldDef = catalogFields[i];
+    const field = fieldDef.name;
+    onProgress?.({
+      field,
+      label: fieldDef.label,
+      index: i + 1,
+      total: catalogFields.length,
+    });
+
+    const otherExcludes = catalogFields
+      .map((f) => f.name)
+      .filter((name) => name !== field)
+      .concat(exclude);
+
+    try {
+      const suggestions = await AISuggestionsService.getSuggestionsForStep(
+        contentStep,
+        stepData,
+        previous,
+        otherExcludes
+      );
+      const match = (suggestions || []).find((s) => s.field === field);
+      if (!match) {
+        failed.push(field);
+        continue;
+      }
+
+      const text =
+        typeof match.suggestion === 'string'
+          ? match.suggestion
+          : JSON.stringify(match.suggestion);
+      let value = suggestionToFieldValue(field, text);
+      if (value === null || value === undefined || value === '') {
+        failed.push(field);
+        continue;
+      }
+
+      if (fieldDef.source === 'extras' || extraFieldNames.includes(field)) {
+        value = normalizeExtraValue(field, value);
+        extras = { ...extras, [field]: value };
+        if (setSchemeExtras) setSchemeExtras(extras);
+        data = { ...data, schemeExtras: extras };
+        stepData = { ...stepData, [field]: value };
+        filled.push(field);
+        continue;
+      }
+
+      stepData = { ...stepData, [field]: value };
+      // Persist only store step fields (strip extras keys from step bucket)
+      const persistStep = { ...stepData };
+      extraFieldNames.forEach((name) => {
+        delete persistStep[name];
+      });
+      setStepData(contentStep, persistStep);
+      data = { ...data, [`step${contentStep}`]: persistStep };
+      filled.push(field);
+    } catch (error) {
+      console.error(`AI fill failed for ${field} on content step ${contentStep}:`, error);
+      failed.push(field);
+    }
+  }
+
+  if (contentStep === 1 && extraFieldNames.length && setSchemeExtras) {
+    extras = inferMissingExtras(schemeCode, stepData, extras);
+    setSchemeExtras(extras);
+  }
+
+  return { filled, failed };
+}
+
 function excludeForStep(
   contentStep: number,
   schemeCode: string | null,
@@ -337,11 +478,13 @@ function excludeForStep(
 function previousStepsPayload(
   data: Record<string, any>,
   beforeContentSteps: number[],
-  schemeCode: string | null
+  schemeCode: string | null,
+  budget?: string | null
 ) {
   const previous: Record<string, any> = {
     _isIndividualDPR: true,
     ...(schemeCode ? { _schemeCode: schemeCode } : {}),
+    ...(budget ? { _budget: budget } : {}),
   };
   for (const contentStep of beforeContentSteps) {
     const key = `step${contentStep}`;
@@ -382,7 +525,7 @@ export async function fillAllStepsWithAi(options: {
       ...(getStepData(contentStep) || data[`step${contentStep}`] || {}),
     };
     const priorContent = catalog.slice(0, index).map((s) => s.contentStep);
-    const previous = previousStepsPayload(data, priorContent, schemeCode);
+    const previous = previousStepsPayload(data, priorContent, schemeCode, answers?.budget);
     const exclude = excludeForStep(contentStep, schemeCode, answers?.budget);
 
     try {

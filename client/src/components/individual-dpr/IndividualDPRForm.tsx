@@ -3,7 +3,7 @@ import React from 'react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Plus, Trash2, Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, Wand2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
@@ -133,17 +133,14 @@ import { MSE_SPICE_SECTOR_OPTIONS } from '@/lib/individualDpr/mseSpiceQuestions'
 import { AP_PARKS_REBATE_OPTIONS, AP_PARKS_YES_NO } from '@/lib/individualDpr/apParksQuestions';
 import { RAMP_TEAM_ONDC_OPTIONS } from '@/lib/individualDpr/rampTeamQuestions';
 import { EPM_NIRYAT_CREDIT_OPTIONS } from '@/lib/individualDpr/epmNiryatQuestions';
-import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
+import { normalizeExtraValue } from '@/lib/individualDpr/fillAllStepsWithAi';
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { isKycUploaded, kycDisplayName, kycUploadPayload } from '@/lib/privacy/kycField';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
-import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/store/authStore';
-import { hasUnder18Applicant } from '@/lib/privacy/under18';
-import { GuardianNotice } from '@/components/privacy/GuardianNotice';
+
 interface IndividualDPRFormProps {
   currentStep: number;
   onNext: () => void;
@@ -155,12 +152,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   onNext,
   onPrevious,
 }) => {
-  const { data, setStepData, getStepData, setSchemeExtras, setCurrentStep } = useIndividualDPRStore();
-  const { user } = useAuthStore();
-  const aiAllowed = !!user?.privacy?.aiAssist;
-  const under18Applicant = hasUnder18Applicant(data);
+  const { data, setStepData, getStepData, setSchemeExtras } = useIndividualDPRStore();
   const tf = useClusterFormText();
-  const { t } = useTranslation();
   const schemeCode = data.matchedSchemeCode || null;
   const isPmegp = schemeCode === 'PMEGP';
   const isPmegp2nd = schemeCode === 'PMEGP_2ND';
@@ -235,6 +228,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     data,
     setStepData,
     getStepData,
+    setSchemeExtras,
     isIndividualDPR: true,
     contextHint: 'This is an individual entrepreneur unit (one firm), not a multi-unit CFC / SPV report.',
   };
@@ -250,8 +244,6 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
   // State for Step 18 file uploads (must be at top level due to React hooks rules)
   const [uploadingFiles, setUploadingFiles] = React.useState<Record<string, boolean>>({});
-  const [isFillingAll, setIsFillingAll] = React.useState(false);
-  const [fillProgress, setFillProgress] = React.useState<FillAllProgress | null>(null);
 
   // Debug: Log when step data changes (reduced frequency)
   // React.useEffect(() => {
@@ -328,53 +320,6 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       ...latestStepData,
       [field]: nextValue,
     });
-  };
-
-  const handleGenerateAllSteps = async () => {
-    if (under18Applicant) {
-      toast.error(t('privacy.guardianMessage'));
-      return;
-    }
-    if (!aiAllowed) {
-      toast.error(t('privacy.aiOffWarning'));
-      return;
-    }
-    if (!getUnitName(data.step1)) {
-      toast.error(t('individualDpr.toasts.needNameForAi'));
-      return;
-    }
-    setIsFillingAll(true);
-    setFillProgress({ step: 1, index: 1, total: 1 });
-    try {
-      const result = await fillAllStepsWithAi({
-        data,
-        setStepData,
-        getStepData,
-        setSchemeExtras,
-        schemeCode,
-        answers: data.ventureMatchAnswers,
-        onProgress: setFillProgress,
-      });
-      if (result.filledSteps.length === 0) {
-        toast.error(t('individualDpr.toasts.fillNone'));
-        return;
-      }
-      if (result.failedSteps.length) {
-        toast.error(t('individualDpr.toasts.fillPartial', { filled: result.filledSteps.length, failed: result.failedSteps.join(', ') }));
-      } else {
-        toast.success(t('individualDpr.toasts.fillSuccess', { filled: result.filledSteps.length }));
-      }
-      if (!['VISHWAKARMA', 'SVANIDHI', 'PMFME', 'AP_EDP'].includes(schemeCode || '')) {
-        setCurrentStep(2);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error(t('individualDpr.toasts.generateAllFailed'));
-    } finally {
-      setIsFillingAll(false);
-      setFillProgress(null);
-    }
   };
 
   // Handle comma-separated input fields (for array fields)
@@ -532,35 +477,6 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               placeholder={tf("Enter major products")}
             />
           </div>
-        </div>
-
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
-          <p className="text-sm font-medium">{tf("Generate the rest of this DPR with AI")}</p>
-          <p className="text-sm text-muted-foreground">
-            {aiAllowed
-              ? tf('Uses the unit name, district, and location to fill every visible step except document uploads. You can edit anything afterwards.')
-              : t('privacy.aiOffWarning')}
-          </p>
-          {under18Applicant && <GuardianNotice />}
-          <Button
-            type="button"
-            onClick={handleGenerateAllSteps}
-            disabled={isFillingAll || !aiAllowed || under18Applicant}
-            className="gap-2"
-          >
-            {isFillingAll ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
-            {isFillingAll && fillProgress
-              ? t('individualDpr.toasts.fillingStep', {
-                  step: fillProgress.step,
-                  index: fillProgress.index,
-                  total: fillProgress.total,
-                })
-              : tf('Generate all steps with AI')}
-          </Button>
         </div>
 
         {isVishwakarma && (

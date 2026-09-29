@@ -3,6 +3,7 @@
  * Mapping of each step to its actual form fields
  * Used to generate field-specific AI suggestions
  */
+import { getIndividualDocFields } from './individualDprDocument';
 export const STEP_FIELDS_MAPPING: Record<number, { stepName: string; fields: Array<{ name: string; type: string; label: string; sampleValue?: string }> }> = {
   1: {
     stepName: 'Executive Summary - Basic Cluster Details',
@@ -298,20 +299,69 @@ export const INDIVIDUAL_STEP_FIELDS_MAPPING: Record<number, { stepName: string; 
   },
 };
 
+const ARRAY_FIELD_NAMES = new Set([
+  'keyProducts',
+  'stakeholders',
+  'rawMaterials',
+  'intermediateProducts',
+  'finalProducts',
+  'valueAdditionStages',
+  'majorBuyers',
+  'strengths',
+  'weaknesses',
+  'opportunities',
+  'threats',
+  'objectives',
+  'expectedBenefits',
+  'boardOfDirectors',
+  'milestones',
+  'yearProjections',
+  'supportingDocuments',
+]);
+
+const NUMBER_FIELD_NAMES = new Set([
+  'yearOfEstablishment',
+  'yearOfIncorporation',
+  'investmentPerUnit',
+  'turnoverPerUnit',
+  'spvContribution',
+  'governmentGrant',
+  'bankLoan',
+  'otherSources',
+  'breakEvenPoint',
+  'employmentGeneration',
+  'turnoverGrowth',
+  'irr',
+  'npv',
+]);
+
+function inferAiFieldType(name: string): string {
+  if (ARRAY_FIELD_NAMES.has(name)) return 'array';
+  if (NUMBER_FIELD_NAMES.has(name)) return 'number';
+  if (name === 'connectivity' || name === 'enterpriseCount' || name === 'marketServed') return 'object';
+  return 'text';
+}
+
 export function getStepFieldsMapping(
   step: number,
   isIndividualDPR = false,
-  schemeCode?: string | null
+  schemeCode?: string | null,
+  budget?: string | null
 ): { stepName: string; fields: Array<{ name: string; type: string; label: string; sampleValue?: string }> } | undefined {
   if (!isIndividualDPR) return STEP_FIELDS_MAPPING[step];
-  const base = INDIVIDUAL_STEP_FIELDS_MAPPING[step];
-  if (!base) return undefined;
-  if (step !== 1) return base;
-  const extras = getIndividualSchemeExtraFields(schemeCode);
-  if (!extras.length) return base;
+
+  // Drive Latest DPR AI from the same catalog as the form / PDF (lean + scheme extras).
+  const docFields = getIndividualDocFields(step, schemeCode, budget || undefined);
+  const baseMeta = INDIVIDUAL_STEP_FIELDS_MAPPING[step];
+  if (!docFields.length && !baseMeta) return undefined;
+
   return {
-    stepName: base.stepName,
-    fields: [...base.fields, ...extras],
+    stepName: baseMeta?.stepName || `Step ${step}`,
+    fields: docFields.map((f) => ({
+      name: f.name,
+      type: inferAiFieldType(f.name),
+      label: f.label,
+    })),
   };
 }
 
