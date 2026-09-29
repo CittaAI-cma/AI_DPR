@@ -498,6 +498,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               placeholder={tf('What do you do')}
               enableSkillMatch
               expandTitle={tf('Nature of Business')}
+              formatDisplay={(v) => tf(v)}
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Button

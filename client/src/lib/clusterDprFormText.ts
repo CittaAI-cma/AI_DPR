@@ -1,9 +1,14 @@
 import { SCHEME_FORM_TE } from '@/lib/individualDpr/schemeFormTe';
+import { SCHEME_STEP_TITLES_TE } from '@/lib/individualDpr/schemeStepTitlesTe';
+import { BUSINESS_SKILLS_TE } from '@/lib/individualDpr/businessSkillsTe';
 import { useTranslation } from 'react-i18next';
+import { useCallback } from 'react';
 
 /** English UI string → Telugu. Missing keys fall back to English. */
 const TE: Record<string, string> = {
   ...SCHEME_FORM_TE,
+  ...SCHEME_STEP_TITLES_TE,
+  ...BUSINESS_SKILLS_TE,
   'Cluster Name *': 'క్లస్టర్ పేరు *',
   'District *': 'జిల్లా *',
   'Location *': 'స్థలం *',
@@ -250,6 +255,28 @@ const TE: Record<string, string> = {
     'ఈ వచనాన్ని మెరుగుపరచలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
   'Improved — review, then Confirm to save.':
     'మెరుగుపరచబడింది — సమీక్షించి, సేవ్ చేయడానికి నిర్ధారించండి.',
+  // Step-1 field tooltips
+  'Enter the unit or project cover name used in official documents.':
+    'అధికారిక పత్రాల్లో ఉపయోగించే యూనిట్ లేదా ప్రాజెక్ట్ కవర్ పేరు నమోదు చేయండి.',
+  'Enter the official name of the industrial cluster. This should be the name used in official documents and registrations.':
+    'పారిశ్రామిక క్లస్టర్ అధికారిక పేరు నమోదు చేయండి. అధికారిక పత్రాలు మరియు నమోదుల్లో ఉపయోగించే పేరు ఉండాలి.',
+  'Select the Andhra Pradesh district where the unit is located.':
+    'యూనిట్ ఉన్న ఆంధ్రప్రదేశ్ జిల్లాను ఎంచుకోండి.',
+  'Specify the district where the cluster is located. This helps in regional analysis and government scheme eligibility.':
+    'క్లస్టర్ ఉన్న జిల్లాను పేర్కొనండి. ప్రాంతీయ విశ్లేషణ మరియు ప్రభుత్వ పథక అర్హతకు ఇది సహాయపడుతుంది.',
+  'Select the town where the unit is located (filtered by the district you chose).':
+    'యూనిట్ ఉన్న పట్టణాన్ని ఎంచుకోండి (మీరు ఎంచుకున్న జిల్లా ఆధారంగా ఫిల్టర్ చేయబడుతుంది).',
+  'Describe what you do in plain words, then use Match me to map it to one skill (e.g. “I make pots” → Pottery).':
+    'మీరు ఏం చేస్తారో సాధారణ మాటల్లో రాసి, ఒక నైపుణ్యానికి సరిపోల్చడానికి నాకు సరిపోల్చు వాడండి (ఉదా. “నేను కుండలు చేస్తాను” → Pottery).',
+  'List the main products you sell or make (e.g. pani puri, bhel puri).':
+    'మీరు అమ్మే లేదా తయారు చేసే ప్రధాన ఉత్పత్తులు జాబితా చేయండి (ఉదా. పానీపూరి, భేల్ పూరి).',
+  'List the main products manufactured or services provided by enterprises in the cluster.':
+    'క్లస్టర్‌లోని సంస్థలు తయారు చేసే ప్రధాన ఉత్పత్తులు లేదా అందించే సేవలను జాబితా చేయండి.',
+  // Common matched skills (display)
+  'Street food / food stall': 'స్ట్రీట్ ఫుడ్ / ఫుడ్ స్టాల్',
+  Pottery: 'కుమ్మరి / కుండల తయారీ',
+  'Kirana / general store': 'కిరాణా / జనరల్ స్టోర్',
+  'Tailoring / stitching': 'టైలరింగ్ / కుట్టు పని',
   Uploading: 'అప్‌లోడ్ అవుతోంది',
   Uploaded: 'అప్‌లోడ్ అయింది',
   'Raw Material': 'ముడి పదార్థం',
@@ -347,10 +374,14 @@ const TE: Record<string, string> = {
 
 export function useClusterFormText() {
   const { i18n } = useTranslation();
-  const isTe = i18n.language.startsWith('te');
-  return (en: string) => {
-    if (!en) return en;
-    if (!isTe) return en;
-    return TE[en] || en;
-  };
+  const lang = (i18n.resolvedLanguage || i18n.language || 'en').toLowerCase();
+  const isTe = lang.startsWith('te');
+  return useCallback(
+    (en: string) => {
+      if (!en) return en;
+      if (!isTe) return en;
+      return TE[en] || en;
+    },
+    [isTe]
+  );
 }

@@ -357,7 +357,12 @@ function ExpandHint() {
 /** Drop-in for `@/components/ui/Input` — click opens enlarged editor. */
 export const ExpandableInput = React.forwardRef<
   HTMLInputElement,
-  React.ComponentProps<typeof Input> & { enableSkillMatch?: boolean; expandTitle?: string }
+  React.ComponentProps<typeof Input> & {
+    enableSkillMatch?: boolean;
+    expandTitle?: string;
+    /** Display transform only — stored value stays as `value`. */
+    formatDisplay?: (value: string) => string;
+  }
 >(
   (
     {
@@ -375,12 +380,17 @@ export const ExpandableInput = React.forwardRef<
       onClick,
       enableSkillMatch = false,
       expandTitle,
+      formatDisplay,
       ...props
     },
     ref
   ) => {
     const tf = useClusterFormText();
     const resolvedValue = value ?? defaultValue ?? '';
+    const displayValue =
+      formatDisplay && resolvedValue !== '' && resolvedValue != null
+        ? formatDisplay(String(resolvedValue))
+        : resolvedValue;
     const { open, draft, setDraft, openEditor, cancel, confirm } = useExpandEditor(resolvedValue, onChange);
 
     // Native file / checkbox / radio stay as-is
@@ -423,7 +433,7 @@ export const ExpandableInput = React.forwardRef<
                 className
               )}
               onChange={onChange}
-              value={value}
+              value={displayValue}
               defaultValue={defaultValue}
               type={type}
               placeholder={placeholder}
