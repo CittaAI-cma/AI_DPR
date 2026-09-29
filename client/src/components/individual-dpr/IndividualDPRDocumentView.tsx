@@ -168,7 +168,20 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       className={`dpr-document individual-dpr-document${schemeUi ? ` ${schemeUi.documentClass}` : ''}`}
     >
       <header className="individual-cover">
-        {schemeUi ? <p className="cover-pack-badge">{tf(schemeUi.badge)}</p> : null}
+        {schemeUi?.id === 'PMEGP' ? (
+          <>
+            <div className="pmegp-flag-band" aria-hidden="true" />
+            <div className="pmegp-cover-top">
+              <div className="pmegp-agency">
+                <span className="pmegp-agency-mark">KVIC</span>
+                <span className="pmegp-agency-text">Khadi &amp; Village Industries Commission</span>
+              </div>
+              <p className="cover-pack-badge">{tf(schemeUi.badge)}</p>
+            </div>
+          </>
+        ) : schemeUi ? (
+          <p className="cover-pack-badge">{tf(schemeUi.badge)}</p>
+        ) : null}
         <p className="cover-kicker">{schemeUi ? tf(schemeUi.coverKicker) : 'DETAILED PROJECT REPORT'}</p>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
@@ -179,7 +192,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           <p className="cover-scheme">{cover.underLine}</p>
           {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
         </div>
-        <div className="cover-meta">
+        <div className={`cover-meta${schemeUi?.id === 'PMEGP' ? ' pmegp-cover-meta' : ''}`}>
           <div>
             <span>{tf('District')}</span>
             {fieldHit('step1.district', step1.district || '—', trackFieldHits)}
@@ -195,6 +208,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             </div>
           )}
         </div>
+        {schemeUi?.id === 'PMEGP' ? <div className="pmegp-cover-rule" aria-hidden="true" /> : null}
       </header>
 
       <section className="individual-toc">
@@ -255,6 +269,13 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           </section>
         );
       })}
+
+      {schemeUi?.id === 'PMEGP' ? (
+        <footer className="pmegp-doc-footer">
+          <span>PMEGP · Bank-unit Detailed Project Report</span>
+          <span>Confidential — for lending appraisal</span>
+        </footer>
+      ) : null}
     </div>
   );
 };
