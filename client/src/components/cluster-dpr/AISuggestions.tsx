@@ -125,6 +125,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       toast.error(t('privacy.aiOffWarning'));
       return;
     }
+    if (currentStep === 1) return;
     if (currentStep > 1 && !hasPreviousData) return;
     if (!stepCatalogFields.length) {
       toast.error(tf('No questions to fill on this step.'));
@@ -579,7 +580,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
   // Latest DPR: fill only this step's catalog questions, one field at a time
   if (isIndividualDPR) {
-    if (currentStep > 1 && !hasPreviousData) {
+    // Step 1 (cover / basics) is always manual — no AI fill for any scheme.
+    if (currentStep === 1) {
+      return null;
+    }
+
+    if (!hasPreviousData) {
       return (
         <div className="mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
           <div className="flex items-center gap-2 text-muted-foreground">
