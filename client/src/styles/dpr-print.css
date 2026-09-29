@@ -551,3 +551,94 @@
     border-right: none;
   }
 }
+
+/* PMEGP template — teal / KVIC bank-unit look */
+.individual-dpr-document.tpl-pmegp {
+  color: #134e4a;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-cover {
+  border-bottom: 3px solid #0f766e;
+  background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 70%);
+}
+
+.individual-dpr-document.tpl-pmegp .cover-pack-badge {
+  display: inline-block;
+  margin: 0 auto 8pt;
+  padding: 3pt 10pt;
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  background: #ccfbf1;
+  border-radius: 999px;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-kicker {
+  color: #115e59;
+  letter-spacing: 0.06em;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-tagline {
+  margin: 6pt 0 0;
+  font-size: 9.5pt;
+  color: #0f766e;
+  font-style: italic;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-sec-num {
+  background: #0f766e;
+  color: #fff;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-qa-q {
+  color: #0f766e;
+}
+
+/* AP CMEP template — indigo / state programme look */
+.individual-dpr-document.tpl-ap-cmep {
+  color: #1e1b4b;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-cover {
+  border-bottom: 3px solid #3730a3;
+  background: linear-gradient(180deg, #eef2ff 0%, #fffbeb 45%, #ffffff 100%);
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-pack-badge {
+  display: inline-block;
+  margin: 0 auto 8pt;
+  padding: 3pt 10pt;
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #312e81;
+  border: 1px solid #c7d2fe;
+  background: #e0e7ff;
+  border-radius: 4px;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-kicker {
+  color: #312e81;
+  letter-spacing: 0.05em;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-tagline {
+  margin: 6pt 0 0;
+  font-size: 9.5pt;
+  color: #4338ca;
+  font-style: italic;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-sec-num {
+  background: #3730a3;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-qa-q {
+  color: #3730a3;
+}

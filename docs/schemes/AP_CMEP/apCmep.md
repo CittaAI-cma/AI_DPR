@@ -34,7 +34,10 @@ Confirm live CMEP GOs / AP Industries notifications for subsidy % and booster ca
 ## 4. Form questions (13 steps)
 
 1. Cover (`activityBand`, `boosterCategory`, `apDomicile`, …)  
-2–12. Story → … → cost → MoF → operating → viability → schedule  
+2. Executive summary & process (`executiveSummary`, `processOfManufacture`, sector intro)  
+3–12. Location → … → cost → MoF → operating → viability → schedule  
 13. Uploads: Udyam (or application), quotations, bank sanction path, AP domicile  
+
+**UI:** AP CMEP uses its own form / live-DPR template (indigo state pack), distinct from PMEGP’s teal KVIC pack.
 
 Update this file + `apCmepQuestions.ts` + `AP_CMEP_STEPS` together.

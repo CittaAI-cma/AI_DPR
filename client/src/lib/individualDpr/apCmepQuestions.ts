@@ -9,6 +9,7 @@ export const AP_CMEP_EXTRA_FIELDS = [
   'boosterCategory',
   'apDomicile',
   'entrepreneurName',
+  'executiveSummary',
   'processOfManufacture',
   'premisesType',
 ] as const;
@@ -34,7 +35,8 @@ export const AP_CMEP_YES_NO = [
 ];
 
 export const AP_CMEP_IMPACT_BULLETS = [
-  'Own 13-step greenfield pack for AP CMEP.',
+  'Own 13-step greenfield pack for AP CMEP (distinct UI from PMEGP / other schemes).',
   'Step 1 asks mfg vs knowledge + booster (woman/PwD/ex-serviceman/transgender).',
+  'Step 2 includes Executive summary + process of manufacture.',
   'Must be bank-linked — zero-loan projects are out of scope.',
 ];

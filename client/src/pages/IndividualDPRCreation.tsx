@@ -22,6 +22,7 @@ import { hasUnder18Applicant } from '@/lib/privacy/under18';
 import { GuardianNotice } from '@/components/privacy/GuardianNotice';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
 import { SchemePickerGrid } from '@/components/individual-dpr/SchemePickerGrid';
+import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import {
   collectFieldHits,
   diffPayloadFieldPaths,
@@ -338,6 +339,7 @@ export const IndividualDPRCreation: React.FC = () => {
   const selectedSchemeLabel =
     SCHEME_OPTIONS.find((o) => o.code === (data.matchedSchemeCode || ''))?.label ||
     tf(schemeImpact.title);
+  const schemeUi = getSchemeUiTemplate(data.matchedSchemeCode || null);
 
   const headerSubtitle =
     setupPhase === 'pick'
@@ -500,7 +502,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     className={`
                       flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap
                       ${isCurrent
-                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        ? (schemeUi?.stepActiveClass || 'bg-primary text-primary-foreground shadow-sm')
                         : isCompleted
                         ? 'bg-success/10 text-success border border-success/20 hover:bg-success/20'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted'}
@@ -517,19 +519,43 @@ export const IndividualDPRCreation: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-amber-50 border-b border-amber-200">
+        <div className={schemeUi?.bannerClass || 'bg-amber-50 border-b border-amber-200'}>
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-              <p className="text-sm font-semibold text-foreground">
-                {t('individualDpr.scheme', {
-                  title: selectedSchemeLabel,
-                  defaultValue: 'Scheme: {{title}}',
-                })}
-              </p>
-              <ul className="mt-1 text-sm text-muted-foreground list-disc pl-5 space-y-0.5">
-                {schemeImpact.bullets.map((b) => (
-                  <li key={b}>{tf(b)}</li>
-                ))}
-              </ul>
+              {schemeUi ? (
+                <div className="flex flex-wrap items-start gap-3 justify-between">
+                  <div>
+                    <p className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold tracking-wide uppercase bg-white/70 border border-black/5 text-foreground">
+                      {tf(schemeUi.badge)}
+                    </p>
+                    <p className="text-sm font-semibold text-foreground mt-1.5">
+                      {t('individualDpr.scheme', {
+                        title: selectedSchemeLabel,
+                        defaultValue: 'Scheme: {{title}}',
+                      })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{tf(schemeUi.tagline)}</p>
+                  </div>
+                  <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-0.5 max-w-xl">
+                    {schemeImpact.bullets.map((b) => (
+                      <li key={b}>{tf(b)}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-foreground">
+                    {t('individualDpr.scheme', {
+                      title: selectedSchemeLabel,
+                      defaultValue: 'Scheme: {{title}}',
+                    })}
+                  </p>
+                  <ul className="mt-1 text-sm text-muted-foreground list-disc pl-5 space-y-0.5">
+                    {schemeImpact.bullets.map((b) => (
+                      <li key={b}>{tf(b)}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           </div>
 
@@ -547,11 +573,14 @@ export const IndividualDPRCreation: React.FC = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card>
+                  <Card className={schemeUi?.formShellClass || undefined}>
                     <CardHeader>
                       <CardTitle>
                         {tf(getStepTitle(currentStep, data.matchedSchemeCode))}
                       </CardTitle>
+                      {schemeUi ? (
+                        <p className="text-xs text-muted-foreground mt-1">{tf(schemeUi.badge)}</p>
+                      ) : null}
                     </CardHeader>
                     <CardContent>
                       <IndividualDPRForm

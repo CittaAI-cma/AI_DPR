@@ -12,6 +12,7 @@ import {
   sectionTitleFromStep,
   type IndividualDocField,
 } from '@/lib/individualDpr/individualDocModel';
+import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import { isKycUploaded } from '@/lib/privacy/kycField';
 
 export interface IndividualDPRDocumentViewProps {
@@ -99,6 +100,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
   const schemeCode = extractSchemeCode(dpr, project, data);
+  const schemeUi = getSchemeUiTemplate(schemeCode);
   const steps = getSchemeDocSteps(schemeCode);
   const step1 = data.step1 || {};
   const extras = data.schemeExtras || {};
@@ -162,15 +164,19 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   };
 
   return (
-    <div className="dpr-document individual-dpr-document">
+    <div
+      className={`dpr-document individual-dpr-document${schemeUi ? ` ${schemeUi.documentClass}` : ''}`}
+    >
       <header className="individual-cover">
-        <p className="cover-kicker">DETAILED PROJECT REPORT</p>
+        {schemeUi ? <p className="cover-pack-badge">{tf(schemeUi.badge)}</p> : null}
+        <p className="cover-kicker">{schemeUi ? tf(schemeUi.coverKicker) : 'DETAILED PROJECT REPORT'}</p>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
         <h1 className="cover-unit">
           {fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
         </h1>
         <p className="cover-scheme">{cover.underLine}</p>
+        {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
         <div className="cover-meta">
           <div>
             <span>{tf('District')}</span>

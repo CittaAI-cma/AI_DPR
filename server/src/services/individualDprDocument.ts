@@ -100,7 +100,7 @@ const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   SVANIDHI: ['covOrLor', 'upiQr', 'entrepreneurName', 'entrepreneurAge', 'yearsVending', 'loanTranche', 'vendingType', 'dailySales', 'processOfManufacture', 'workplaceType', 'powerRequirement'],
   PMFME: ['fssai', 'unitStage', 'odopAligned', 'entrepreneurName', 'entrepreneurAge', 'existingTurnover', 'processOfManufacture', 'installedCapacity', 'capacityUtilisationY1', 'proposedWorkers', 'rawMaterialSources', 'premisesType', 'powerRequirement', 'directEmployment', 'indirectEmployment', 'impactNote'],
   AP_EDP: ['enterpriseSize', 'specialCategory', 'scStOwned', 'apDomicile', 'apiicPark', 'entrepreneurName', 'entrepreneurAge', 'processOfManufacture', 'installedCapacity', 'capacityUtilisationY1', 'premisesType', 'powerRequirement'],
-  PMEGP: ['pmegpCategory', 'pmegpArea', 'pmegpAgency', 'entrepreneurName', 'entrepreneurAge', 'educationStatus', 'processOfManufacture', 'installedCapacity', 'capacityUtilisationY1', 'powerRequirement', 'pmegpSubsidyPercent', 'pmegpOwnPercent', 'directEmployment', 'indirectEmployment', 'impactNote'],
+  PMEGP: ['pmegpCategory', 'pmegpArea', 'pmegpAgency', 'entrepreneurName', 'entrepreneurAge', 'educationStatus', 'executiveSummary', 'processOfManufacture', 'installedCapacity', 'capacityUtilisationY1', 'powerRequirement', 'pmegpSubsidyPercent', 'pmegpOwnPercent', 'directEmployment', 'indirectEmployment', 'impactNote'],
   MUDRA: ['mudraCategory', 'entrepreneurName', 'entrepreneurAge', 'experienceYears', 'premisesType', 'loanPurpose'],
   STANDUP: ['standupCategory', 'entrepreneurName', 'entrepreneurAge', 'controllingStakePercent', 'loanAmountSought', 'processOfManufacture', 'installedCapacity', 'capacityUtilisationY1', 'premisesType'],
   PMEGP_2ND: ['priorScheme', 'priorSanctionAmount', 'firstSubsidyYear', 'marginMoneyAdjusted', 'firstLoanRepaid', 'yearsProfitable', 'existingTurnover', 'pmegpAgency', 'nerHill', 'sectorBand', 'entrepreneurName', 'entrepreneurAge', 'processOfManufacture', 'existingCapacity', 'installedCapacity', 'capacityUtilisationY1', 'powerRequirement', 'existingTech', 'proposedTech', 'directEmployment', 'indirectEmployment', 'impactNote'],
@@ -120,7 +120,7 @@ const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   ECLGS: ['existingLimit', 'peakWcOutstanding', 'additionalWcSought', 'accountStatus', 'entrepreneurName', 'liquidityReason'],
   CGTMSE: ['loanPurpose', 'womenOwned', 'entrepreneurName', 'proposedLimit'],
   AP_FPP: ['enterpriseSize', 'specialCategory', 'apDomicile', 'fpoShg', 'entrepreneurName', 'processOfManufacture', 'installedCapacity', 'premisesType'],
-  AP_CMEP: ['activityBand', 'boosterCategory', 'apDomicile', 'entrepreneurName', 'processOfManufacture', 'premisesType'],
+  AP_CMEP: ['activityBand', 'boosterCategory', 'apDomicile', 'entrepreneurName', 'executiveSummary', 'processOfManufacture', 'premisesType'],
   OBMMS: ['welfareCorporation', 'whiteRiceCard', 'entrepreneurName', 'entrepreneurAge', 'activityTrade'],
   MSE_SPICE: ['circularSector', 'existingUnitYears', 'entrepreneurName', 'proposedPmCost', 'processOfManufacture'],
   AP_PARKS: ['apiicParkName', 'plotArea', 'landRebateClaim', 'scStOrWomen', 'entrepreneurName', 'apDomicile'],
@@ -133,6 +133,7 @@ const EXTRA_FIELD_LABELS: Record<string, string> = {
   entrepreneurAge: 'Age',
   premisesType: 'Premises type',
   processOfManufacture: 'Process of manufacture',
+  executiveSummary: 'Executive summary',
   installedCapacity: 'Installed / proposed capacity',
   existingCapacity: 'Existing capacity (before upgrade)',
   capacityUtilisationY1: 'Capacity utilisation Year 1 (%)',
@@ -334,7 +335,25 @@ export function getIndividualDocFields(
       stepField('natureOfBusiness', 'Nature of Business', 1),
       stepField('majorProducts', 'Major Products', 1),
     ];
-    extraFieldsForScheme(schemeCode).forEach((name) => fields.push(extraField(name)));
+    const skipOnStep1 = new Set([
+      'executiveSummary',
+      'processOfManufacture',
+      'existingTech',
+      'proposedTech',
+      'productivityGain',
+      'installedCapacity',
+      'capacityUtilisationY1',
+      'powerRequirement',
+      'directEmployment',
+      'indirectEmployment',
+      'impactNote',
+      'pmegpSubsidyPercent',
+      'pmegpOwnPercent',
+      'premisesType',
+    ]);
+    extraFieldsForScheme(schemeCode).forEach((name) => {
+      if (!skipOnStep1.has(name)) fields.push(extraField(name));
+    });
     return fields;
   }
 
@@ -350,11 +369,23 @@ export function getIndividualDocFields(
         stepField('keyProducts', 'Key Products', 2)
       );
     }
+    if (schemeCode === 'PMEGP' || schemeCode === 'AP_CMEP') {
+      fields.push(extraField('executiveSummary'));
+    }
     if (
       schemeCode &&
-      ['PMEGP', 'PMEGP_2ND', 'STANDUP', 'PMFME', 'SCLCSS', 'AP_TECH_UPGRADE', 'AP_EDP', 'VISHWAKARMA', 'SVANIDHI'].includes(
-        schemeCode
-      )
+      [
+        'PMEGP',
+        'PMEGP_2ND',
+        'STANDUP',
+        'PMFME',
+        'SCLCSS',
+        'AP_TECH_UPGRADE',
+        'AP_EDP',
+        'AP_CMEP',
+        'VISHWAKARMA',
+        'SVANIDHI',
+      ].includes(schemeCode)
     ) {
       fields.push(extraField('processOfManufacture'));
     }

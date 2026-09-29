@@ -16,6 +16,7 @@ export const PMEGP_EXTRA_FIELDS = [
   'entrepreneurName',
   'entrepreneurAge',
   'educationStatus',
+  'executiveSummary',
   'processOfManufacture',
   'installedCapacity',
   'capacityUtilisationY1',
@@ -71,6 +72,7 @@ export function pmegpOwnPercent(category?: string): number {
 export const PMEGP_IMPACT_BULLETS = [
   'Own 14-step bank-unit DPR (not the vanilla 18-step skeleton). Steps are numbered 1–14 consecutively.',
   'Step 1 asks category, rural/urban, agency, entrepreneur — drives margin-money %.',
+  'Step 2 includes Executive summary + process of manufacture (Fill this step suggests only these catalog questions).',
   'Step 9 treats Government Grant as PMEGP margin money; own + subsidy + bank must equal project cost.',
   'Step 14: quotations, building estimate, caste cert (special), 8th-pass if education gate applies.',
 ];

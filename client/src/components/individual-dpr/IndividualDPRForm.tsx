@@ -1542,9 +1542,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
 
         {isApCmep && (
-          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">{tf('AP CMEP — credit-linked')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/AP_CMEP/apCmep.md — bank loan required')}</p>
+          <div className="border border-indigo-200 rounded-lg p-4 space-y-4 bg-indigo-50/50">
+            <h3 className="text-lg font-semibold text-indigo-950">{tf('AP CMEP — credit-linked')}</h3>
+            <p className="text-xs text-indigo-900/70">{tf('Spec: docs/schemes/AP_CMEP/apCmep.md — bank loan required')}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Activity band')}</label>
@@ -1754,8 +1754,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
 
         {schemeCode === 'PMEGP' && (
-          <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
-            <h3 className="text-lg font-semibold">{tf('PMEGP — entrepreneur & subsidy inputs')}</h3>
+          <div className="border border-teal-200 rounded-lg p-4 space-y-4 bg-teal-50/50">
+            <h3 className="text-lg font-semibold text-teal-950">{tf('PMEGP — entrepreneur & subsidy inputs')}</h3>
             <p className="text-xs text-muted-foreground">
               {tf(
                 'These fields drive margin-money % (category × rural/urban). Spec: docs/schemes/PMEGP/pmegp.md'
@@ -2421,6 +2421,33 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
 
+        {(isPmegp || isApCmep) && (
+          <div
+            className={
+              isPmegp
+                ? 'rounded-lg border border-teal-200 bg-teal-50/40 p-4 space-y-2'
+                : 'rounded-lg border border-indigo-200 bg-indigo-50/40 p-4 space-y-2'
+            }
+          >
+            <label className="block text-sm font-semibold text-foreground">
+              {tf('Executive summary')}
+            </label>
+            <p className="text-xs text-muted-foreground">
+              {tf(
+                'Write a short bank-style overview: unit, location, products, project cost, own + bank + subsidy, and jobs.'
+              )}
+            </p>
+            <ExpandableTextarea
+              className="w-full min-h-[160px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={extras.executiveSummary || ''}
+              onChange={(e) => updateExtras({ executiveSummary: e.target.value })}
+              placeholder={tf(
+                'Write a short bank-style overview: unit, location, products, project cost, own + bank + subsidy, and jobs.'
+              )}
+            />
+          </div>
+        )}
+
         {(isPmegp ||
           isPmegp2nd ||
           isStandup ||
@@ -2428,6 +2455,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           isSclcss ||
           isApTech ||
           isApEdp ||
+          isApCmep ||
           isVishwakarma ||
           isSvanidhi) && (
           <div>
@@ -2439,6 +2467,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               placeholder={
                 isApEdp
                   ? tf('Process of manufacture for the new greenfield unit')
+                  : isApCmep
+                  ? tf('Process of manufacture / service delivery for the new CMEP unit')
                   : isSvanidhi
                   ? tf('How you source, prepare (if food), and sell — daily routine')
                   : isVishwakarma

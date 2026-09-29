@@ -16,7 +16,7 @@ Banks, DICs, KVIB and KVIC appraise PMEGP as a **single-unit, credit-linked subs
 - Built around **project cost + means of finance (incl. margin money) + projections**
 - Free of **multi-unit CFC / SPV** chapters
 
-Our Create Latest DPR used a shared multi-unit skeleton. For `PMEGP` we replace that with the bank unit skeleton below.
+Our Create Latest DPR used a shared multi-unit skeleton. For `PMEGP` we replace that with the bank unit skeleton below. The **form + live preview** use a distinct teal **PMEGP · KVIC unit pack** template (separate from AP CMEP’s indigo template).
 
 ---
 
@@ -58,12 +58,13 @@ Each row is a question the entrepreneur must answer when scheme = `PMEGP`.
 | `entrepreneurAge` | Age (must be ≥ 18) | Hard eligibility |
 | `educationStatus` | Below 8th / 8th pass or higher | Education gate if cost high |
 
-### Step 2 — Introduction & process
+### Step 2 — Executive summary & process
 
 | ID | Question | Why |
 |----|----------|-----|
 | `sectorType` | Sector / industry type | Intro heading |
 | `sectorDescription` | Short intro — why this unit | Local demand narrative |
+| `executiveSummary` | Executive summary (bank-style overview) | Opens the DPR like a KVIC/bank appraisal note |
 | `processOfManufacture` | Process of manufacture (step-by-step) | Present in every KVIC sample |
 
 ### Step 3 — Location

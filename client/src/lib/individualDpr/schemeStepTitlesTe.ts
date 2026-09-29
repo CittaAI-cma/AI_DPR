@@ -20,6 +20,7 @@ export const SCHEME_STEP_TITLES_TE: Record<string, string> = {
   'Step 18: Document uploads': 'దశ 18: పత్రాల అప్‌లోడ్',
   'Step 1: Cover & entrepreneur': 'దశ 1: కవర్ & వ్యవస్థాపకుడు',
   'Step 2: Introduction & process': 'దశ 2: పరిచయం & ప్రక్రియ',
+  'Step 2: Executive summary & process': 'దశ 2: కార్యనిర్వాహక సారాంశం & ప్రక్రియ',
   'Step 3: Location': 'దశ 3: స్థలం',
   'Step 4: Unit profile & capacity': 'దశ 4: యూనిట్ ప్రొఫైల్ & సామర్థ్యం',
   'Step 5: Market & sales assumptions': 'దశ 5: మార్కెట్ & అమ్మకాల అంచనాలు',
