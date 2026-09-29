@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { FIELD_DESCRIPTIONS } from '@/data/fieldDescriptions';
-import { districtSelectOptions } from '@/lib/individualDpr/apDistricts';
+import { districtSelectOptions, townSelectOptions, isTownInDistrict } from '@/lib/individualDpr/apDistricts';
 import {
   extraFieldsForScheme,
   hideComplexCapex,
@@ -433,7 +433,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <ExpandableSelect
               className="w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm"
               value={stepData.district || ''}
-              onChange={(e) => handleInputChange('district', e.target.value)}
+              onChange={(e) => {
+                const nextDistrict = e.target.value;
+                handleInputChange('district', nextDistrict);
+                if (!isTownInDistrict(nextDistrict, stepData.location)) {
+                  handleInputChange('location', '');
+                }
+              }}
               label={tf('District *')}
             >
               <option value="">{tf('Select district')}</option>
@@ -451,11 +457,22 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 <InfoTooltip content={tf(stepDescriptions.location)} />
               )}
             </label>
-            <Input
+            <ExpandableSelect
+              className="w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm"
               value={stepData.location || ''}
               onChange={(e) => handleInputChange('location', e.target.value)}
-              placeholder={tf("Village / town / industrial park")}
-            />
+              label={tf('Location *')}
+              disabled={!stepData.district}
+            >
+              <option value="">
+                {stepData.district ? tf('Select town') : tf('Select district first')}
+              </option>
+              {townSelectOptions(stepData.district, stepData.location).map((town) => (
+                <option key={town} value={town}>
+                  {town}
+                </option>
+              ))}
+            </ExpandableSelect>
           </div>
         </div>
 

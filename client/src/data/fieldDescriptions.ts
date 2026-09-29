@@ -7,7 +7,7 @@ export const FIELD_DESCRIPTIONS: Record<string, Record<string, string>> = {
   step1: {
     clusterName: 'Enter the official name of the industrial cluster. This should be the name used in official documents and registrations.',
     district: 'Specify the district where the cluster is located. This helps in regional analysis and government scheme eligibility.',
-    location: 'Provide the specific location or address of the cluster. Include village/town, mandal/taluk, and any landmark details.',
+    location: 'Select the town where the unit is located (filtered by the district you chose).',
     geographicalSpread: 'Describe the geographical area covered by the cluster. Include details about villages, towns, or regions included in the cluster.',
     natureOfBusiness: 'Describe the primary business activity or industry type of the cluster (e.g., Handloom, Food Processing, Engineering).',
     majorProducts: 'List the main products manufactured or services provided by enterprises in the cluster.',
