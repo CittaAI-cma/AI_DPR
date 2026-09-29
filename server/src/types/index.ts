@@ -216,6 +216,10 @@ export interface IDPRVersion extends Document {
   submittedTo?: 'admin' | 'bank' | 'apmsme';
   approvedAt?: Date;
   approvedBy?: string;
+  /** Set when the 15-day idle-delete warning was sent; used by retention job */
+  retentionWarningAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface IFeedback extends Document {
