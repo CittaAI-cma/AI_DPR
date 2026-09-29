@@ -51,7 +51,11 @@ export const Navbar: React.FC = () => {
     <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <a href="/" onClick={(e) => handleLinkClick(e, '/')} className="flex items-center space-x-3">
+          <a
+            href={isAuthenticated ? '/dashboard' : '/'}
+            onClick={(e) => handleLinkClick(e, isAuthenticated ? '/dashboard' : '/')}
+            className="flex items-center space-x-3"
+          >
             <img 
               src="/apmsme_logo.png" 
               alt="APMSME Logo" 
