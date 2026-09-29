@@ -6,7 +6,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, HeadingLevel, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, HeadingLevel, AlignmentType, BorderStyle } from 'docx';
 import catalogs from './individualDprCatalog.json';
 
 export type SchemeStepDef = {
@@ -796,26 +796,136 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-export function renderIndividualDprHtml(doc: IndividualDocument): string {
-  const qaTable = (rows: DocRow[]) => {
-    if (!rows.length) return '<p>—</p>';
-    const body = rows
-      .map(
-        (r) =>
-          `<tr><td class="q">${escapeHtml(r.label)}</td><td>${escapeHtml(r.value).replace(/\n/g, '<br/>')}</td></tr>`
-      )
-      .join('');
-    return `<table><colgroup><col style="width:36%"/><col style="width:64%"/></colgroup><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>${body}</tbody></table>`;
-  };
+/** Short / numeric-ish fields → compact meta grid; long prose → stacked Q&A block (matches live preview). */
+const SHORT_FIELD_NAMES = new Set([
+  'unitName',
+  'district',
+  'location',
+  'yearOfEstablishment',
+  'yearOfIncorporation',
+  'entrepreneurName',
+  'entrepreneurAge',
+  'craft',
+  'loanTranche',
+  'trainingStage',
+  'covOrLor',
+  'vendingType',
+  'workplaceType',
+  'fssai',
+  'unitStage',
+  'odopAligned',
+  'sectorType',
+  'land',
+  'building',
+  'machinery',
+  'utilitiesAndInfrastructure',
+  'preliminaryAndPreOperative',
+  'workingCapitalMargin',
+  'ownContribution',
+  'spvContribution',
+  'governmentGrant',
+  'bankLoan',
+  'otherSources',
+  'subsidy',
+  'startDate',
+  'endDate',
+  'irr',
+  'npv',
+  'dscr',
+  'breakEvenPoint',
+  'upiQr',
+  'dailySales',
+  'yearsVending',
+  'yearsPractising',
+  'employmentGeneration',
+  'indirectEmployment',
+  'directEmployment',
+  'turnoverGrowth',
+  'rawMaterialCost',
+  'powerCost',
+  'wages',
+  'maintenance',
+  'administrativeExpenses',
+  'marketingExpenses',
+  'annualProductionVolume',
+  'annualSalesRealization',
+]);
 
+function fieldNameFromPath(path: string): string {
+  const parts = String(path || '').split('.');
+  return parts[parts.length - 1] || '';
+}
+
+function isExpansiveRow(row: DocRow): boolean {
+  const name = fieldNameFromPath(row.path);
+  if (SHORT_FIELD_NAMES.has(name)) return false;
+  const text = String(row.value || '');
+  if (!text || text === '—') return false;
+  if (text.includes('\n') || text.length > 48) return true;
+  const label = row.label.toLowerCase();
+  return (
+    label.includes('description') ||
+    label.includes('intro') ||
+    label.includes('summary') ||
+    label.includes('process') ||
+    label.includes('analysis') ||
+    label.includes('importance') ||
+    label.includes('justification') ||
+    label.includes('gap') ||
+    label.includes('story') ||
+    label.includes('activity') ||
+    label.includes('note') ||
+    label.includes('outcome')
+  );
+}
+
+function renderSectionRowsHtml(rows: DocRow[]): string {
+  if (!rows.length) return '<p class="empty">—</p>';
+
+  const shortRows: DocRow[] = [];
+  const longRows: DocRow[] = [];
+  for (const row of rows) {
+    if (isExpansiveRow(row)) longRows.push(row);
+    else shortRows.push(row);
+  }
+
+  const parts: string[] = ['<div class="sec-body">'];
+
+  if (shortRows.length) {
+    parts.push('<dl class="meta-grid">');
+    for (const row of shortRows) {
+      const empty = !row.value || row.value === '—';
+      parts.push(
+        `<div class="meta-item"><dt>${escapeHtml(row.label)}</dt>` +
+          `<dd class="${empty ? 'is-empty' : ''}">${escapeHtml(empty ? 'Not filled' : row.value).replace(/\n/g, '<br/>')}</dd></div>`
+      );
+    }
+    parts.push('</dl>');
+  }
+
+  for (const row of longRows) {
+    const empty = !row.value || row.value === '—';
+    parts.push(
+      `<article class="qa-block"><h3 class="qa-q">${escapeHtml(row.label)}</h3>` +
+        `<div class="qa-a${empty ? ' is-empty' : ''}">${escapeHtml(
+          empty ? 'Not filled yet — complete this in the form.' : row.value
+        ).replace(/\n/g, '<br/>')}</div></article>`
+    );
+  }
+
+  parts.push('</div>');
+  return parts.join('');
+}
+
+export function renderIndividualDprHtml(doc: IndividualDocument): string {
   const toc = doc.sections
-    .map((s) => `<tr><td class="num">${s.n}</td><td>${escapeHtml(s.title)}</td></tr>`)
+    .map((s) => `<li><span class="toc-num">${s.n}</span><span class="toc-label">${escapeHtml(s.title)}</span></li>`)
     .join('');
 
   const sectionsHtml = doc.sections
     .map(
       (s) =>
-        `<section class="sec"><h2>${s.n}. ${escapeHtml(s.title)}</h2>${qaTable(s.rows)}</section>`
+        `<section class="sec"><h2><span class="sec-num">${s.n}</span>${escapeHtml(s.title)}</h2>${renderSectionRowsHtml(s.rows)}</section>`
     )
     .join('\n');
 
@@ -832,16 +942,29 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
   .on, .action { font-size: 13pt; font-weight: 600; margin: 2pt 0; }
   .unit { color: #059669; font-size: 20pt; font-weight: 700; text-transform: uppercase; margin: 10pt 6mm; line-height: 1.25; }
   .scheme { font-size: 12pt; font-weight: 600; max-width: 150mm; margin: 8pt auto 0; line-height: 1.4; }
-  .meta { display: table; margin: 14pt auto 0; text-align: left; font-size: 11pt; }
-  .meta div { display: table-row; }
-  .meta span { display: table-cell; font-weight: 700; padding: 2pt 10pt 2pt 0; white-space: nowrap; }
-  h2 { font-size: 13pt; margin: 0 0 8pt; padding-bottom: 3pt; border-bottom: 1px solid #D1D5DB; }
-  table { width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0 0 6mm; font-size: 10pt; }
-  th, td { border: 1px solid #1F2937; padding: 6pt 7pt; vertical-align: top; text-align: left; overflow-wrap: anywhere; word-break: break-word; }
-  thead th { background: #F3F4F6; }
-  td.q { font-weight: 600; background: #FAFAFA; }
-  td.num { text-align: center; width: 12%; }
-  .sec { margin-bottom: 7mm; page-break-inside: avoid; }
+  .cover-meta { display: table; margin: 14pt auto 0; text-align: left; font-size: 11pt; }
+  .cover-meta div { display: table-row; }
+  .cover-meta span { display: table-cell; font-weight: 700; padding: 2pt 10pt 2pt 0; white-space: nowrap; }
+  h2 { font-size: 13.5pt; font-weight: 700; margin: 0 0 10pt; padding-bottom: 4pt; border-bottom: 1.5px solid #1F2937; display: flex; align-items: baseline; gap: 8pt; line-height: 1.3; }
+  .sec-num { display: inline-flex; align-items: center; justify-content: center; min-width: 1.6em; height: 1.6em; padding: 0 4pt; border: 1.5px solid #1F2937; border-radius: 2pt; font-size: 11pt; font-weight: 700; flex-shrink: 0; }
+  .sec { margin-bottom: 9mm; page-break-inside: avoid; }
+  .sec-body { display: flex; flex-direction: column; gap: 10pt; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0; border: 1px solid #1F2937; }
+  .meta-item { display: flex; flex-direction: column; gap: 2pt; padding: 7pt 8pt; border-right: 1px solid #D1D5DB; border-bottom: 1px solid #D1D5DB; min-width: 0; }
+  .meta-item:nth-child(2n) { border-right: none; }
+  .meta-item dt { margin: 0; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #4B5563; }
+  .meta-item dd { margin: 0; font-size: 11pt; font-weight: 600; color: #111827; overflow-wrap: anywhere; word-break: break-word; }
+  .meta-item dd.is-empty { color: #9CA3AF; font-style: italic; font-weight: 500; }
+  .qa-block { border: 1px solid #1F2937; background: #fff; page-break-inside: avoid; }
+  .qa-q { margin: 0; padding: 6pt 9pt; font-size: 10pt; font-weight: 700; background: #F3F4F6; border-bottom: 1px solid #D1D5DB; color: #111827; }
+  .qa-a { margin: 0; padding: 10pt 11pt 12pt; font-size: 11pt; line-height: 1.65; color: #1F2937; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; min-height: 2.8em; text-align: justify; }
+  .qa-a.is-empty { color: #9CA3AF; font-style: italic; text-align: left; }
+  .empty { color: #9CA3AF; font-style: italic; }
+  .toc-list { list-style: none; margin: 0; padding: 0; border: 1px solid #1F2937; }
+  .toc-list li { display: flex; gap: 10pt; padding: 6pt 8pt; border-bottom: 1px solid #E5E7EB; font-size: 11pt; }
+  .toc-list li:last-child { border-bottom: none; }
+  .toc-num { font-weight: 700; min-width: 1.5em; }
+  .toc-label { flex: 1; }
 </style>
 </head>
 <body>
@@ -851,52 +974,91 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
     <div class="action">${escapeHtml(doc.actionLine)}</div>
     <div class="unit">${escapeHtml(doc.unitName)}</div>
     <div class="scheme">${escapeHtml(doc.underLine)}</div>
-    <div class="meta">
+    <div class="cover-meta">
       <div><span>District</span>${escapeHtml(doc.district || '—')}</div>
       <div><span>Location</span>${escapeHtml(doc.location || '—')}</div>
       ${doc.entrepreneurName ? `<div><span>Entrepreneur name</span>${escapeHtml(doc.entrepreneurName)}</div>` : ''}
     </div>
   </div>
-  <h2>Table of Contents</h2>
-  <table><colgroup><col style="width:12%"/><col style="width:88%"/></colgroup><thead><tr><th>#</th><th>Section</th></tr></thead><tbody>${toc}</tbody></table>
+  <section class="sec">
+    <h2><span class="sec-num">0</span>Table of Contents</h2>
+    <ol class="toc-list">${toc}</ol>
+  </section>
   ${sectionsHtml}
 </body>
 </html>`;
 }
 
 export async function generateIndividualDprDocx(doc: IndividualDocument): Promise<Buffer> {
-  const qaTable = (rows: DocRow[]) =>
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({
-          tableHeader: true,
+  const sectionBlocks = (rows: DocRow[]): (Paragraph | Table)[] => {
+    if (!rows.length) {
+      return [new Paragraph({ children: [new TextRun({ text: '—', italics: true, color: '9CA3AF' })] })];
+    }
+    const shortRows: DocRow[] = [];
+    const longRows: DocRow[] = [];
+    for (const row of rows) {
+      if (isExpansiveRow(row)) longRows.push(row);
+      else shortRows.push(row);
+    }
+    const out: (Paragraph | Table)[] = [];
+
+    // Compact facts as stacked label-above-value (not side-by-side Q|A)
+    for (const row of shortRows) {
+      out.push(
+        new Paragraph({
+          spacing: { before: 120, after: 40 },
+          children: [new TextRun({ text: row.label.toUpperCase(), bold: true, size: 16, color: '4B5563' })],
+        })
+      );
+      out.push(
+        new Paragraph({
+          spacing: { after: 80 },
           children: [
-            new TableCell({
-              width: { size: 40, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ children: [new TextRun({ text: 'Question', bold: true })] })],
-            }),
-            new TableCell({
-              width: { size: 60, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ children: [new TextRun({ text: 'Answer', bold: true })] })],
+            new TextRun({
+              text: !row.value || row.value === '—' ? 'Not filled' : row.value,
+              bold: true,
+              size: 22,
+              italics: !row.value || row.value === '—',
+              color: !row.value || row.value === '—' ? '9CA3AF' : '111827',
             }),
           ],
-        }),
-        ...rows.map(
-          (r) =>
-            new TableRow({
-              children: [
-                new TableCell({
-                  children: [new Paragraph({ text: r.label })],
-                }),
-                new TableCell({
-                  children: [new Paragraph({ text: r.value })],
-                }),
-              ],
-            })
-        ),
-      ],
-    });
+        })
+      );
+    }
+
+    for (const row of longRows) {
+      out.push(
+        new Paragraph({
+          spacing: { before: 160, after: 60 },
+          shading: { type: 'clear', fill: 'F3F4F6' },
+          border: {
+            bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D1D5DB' },
+          },
+          children: [new TextRun({ text: row.label, bold: true, size: 20 })],
+        })
+      );
+      const answer =
+        !row.value || row.value === '—'
+          ? 'Not filled yet — complete this in the form.'
+          : row.value;
+      for (const line of String(answer).split(/\n/)) {
+        out.push(
+          new Paragraph({
+            spacing: { after: 60 },
+            children: [
+              new TextRun({
+                text: line || ' ',
+                size: 22,
+                italics: !row.value || row.value === '—',
+                color: !row.value || row.value === '—' ? '9CA3AF' : '1F2937',
+              }),
+            ],
+          })
+        );
+      }
+    }
+    return out;
+  };
 
   const children: (Paragraph | Table)[] = [
     new Paragraph({
@@ -918,28 +1080,19 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
       : []),
     new Paragraph({ text: '' }),
     new Paragraph({ text: 'Table of Contents', heading: HeadingLevel.HEADING_2 }),
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({
-          tableHeader: true,
-          children: [
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '#', bold: true })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Section', bold: true })] })] }),
-          ],
-        }),
-        ...doc.sections.map(
-          (s) =>
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: String(s.n) })] }),
-                new TableCell({ children: [new Paragraph({ text: s.title })] }),
-              ],
-            })
-        ),
-      ],
-    }),
   ];
+
+  for (const s of doc.sections) {
+    children.push(
+      new Paragraph({
+        spacing: { after: 60 },
+        children: [
+          new TextRun({ text: `${s.n}. `, bold: true }),
+          new TextRun({ text: s.title }),
+        ],
+      })
+    );
+  }
 
   for (const section of doc.sections) {
     children.push(new Paragraph({ text: '' }));
@@ -949,7 +1102,7 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
         heading: HeadingLevel.HEADING_2,
       })
     );
-    children.push(qaTable(section.rows));
+    children.push(...sectionBlocks(section.rows));
   }
 
   const word = new Document({
