@@ -975,6 +975,11 @@ Use exact values from the data above. Write in a formal, persuasive tone suitabl
         return [];
       }
 
+      const userPromptContext =
+        typeof previousStepsData?._promptContext === 'string'
+          ? previousStepsData._promptContext.trim()
+          : '';
+
       const previousForText = { ...previousStepsData };
       delete previousForText._isIndividualDPR;
       delete previousForText._promptContext;
@@ -1115,6 +1120,12 @@ FIELD STATUS:
 FILLED FIELDS: ${filledFields.length > 0 ? filledFields.join(', ') : 'None'}
 EMPTY FIELDS (PRIORITY): ${emptyFields.length > 0 ? emptyFields.join(', ') : 'All fields are filled'}
 
+${userPromptContext ? `═══════════════════════════════════════════════════════════════
+USER DIRECTION (follow this when regenerating / refining):
+═══════════════════════════════════════════════════════════════
+${userPromptContext}
+Incorporate these points into the suggestion(s). Keep field keys unchanged.
+` : ''}
 ═══════════════════════════════════════════════════════════════
 TASK:
 ═══════════════════════════════════════════════════════════════

@@ -335,6 +335,245 @@ export type FillStepResult = {
   failed: string[];
 };
 
+export type StepFieldSuggestion = {
+  field: string;
+  label: string;
+  suggestion: string;
+  source: 'step' | 'extras';
+};
+
+export type SuggestStepResult = {
+  suggestions: StepFieldSuggestion[];
+  failed: string[];
+};
+
+function buildStepSuggestContext(options: {
+  contentStep: number;
+  data: Record<string, any>;
+  getStepData: (step: number) => any;
+  schemeCode: string | null;
+  answers?: VentureMatchAnswers | null;
+  excludeFields?: string[];
+}) {
+  const { contentStep, getStepData, schemeCode, answers } = options;
+  const data = { ...options.data };
+  const budget = answers?.budget;
+  const exclude = [
+    ...excludeForStep(contentStep, schemeCode, budget),
+    ...(options.excludeFields || []),
+  ];
+  const excludeSet = new Set(exclude);
+  const extraFieldNames = extraFieldsForScheme(schemeCode);
+  const catalogFields = getIndividualDocFields(contentStep, schemeCode, budget).filter(
+    (f) => !excludeSet.has(f.name) && !IDENTITY_FIELDS.includes(f.name)
+  );
+
+  const schemeSteps = getSchemeSteps(schemeCode);
+  const currentLocal = schemeSteps.find((s) => s.contentStep === contentStep)?.n ?? contentStep;
+  const priorContent = schemeSteps
+    .filter((s) => s.n < currentLocal)
+    .map((s) => s.contentStep);
+  const previous = previousStepsPayload(data, priorContent, schemeCode, budget);
+
+  let stepData = { ...(getStepData(contentStep) || data[`step${contentStep}`] || {}) };
+  if (contentStep === 1 || extraFieldNames.length) {
+    stepData = { ...(data.schemeExtras || {}), ...stepData };
+  }
+
+  return { catalogFields, previous, stepData, extraFieldNames, exclude, budget };
+}
+
+/**
+ * Fetch AI suggestions for this step's catalog questions only — does not write to the form.
+ * One API call per field so the model cannot invent keys from other steps.
+ */
+export async function suggestCurrentStepWithAi(options: {
+  contentStep: number;
+  data: Record<string, any>;
+  getStepData: (step: number) => any;
+  schemeCode: string | null;
+  answers?: VentureMatchAnswers | null;
+  excludeFields?: string[];
+  onProgress?: (progress: FillStepProgress) => void;
+}): Promise<SuggestStepResult> {
+  const { contentStep, onProgress } = options;
+  const ctx = buildStepSuggestContext(options);
+  const { catalogFields, previous, stepData, exclude } = ctx;
+
+  if (!catalogFields.length) {
+    return { suggestions: [], failed: [] };
+  }
+
+  const suggestions: StepFieldSuggestion[] = [];
+  const failed: string[] = [];
+
+  for (let i = 0; i < catalogFields.length; i++) {
+    const fieldDef = catalogFields[i];
+    const field = fieldDef.name;
+    onProgress?.({
+      field,
+      label: fieldDef.label,
+      index: i + 1,
+      total: catalogFields.length,
+    });
+
+    const otherExcludes = catalogFields
+      .map((f) => f.name)
+      .filter((name) => name !== field)
+      .concat(exclude);
+
+    try {
+      const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
+        contentStep,
+        stepData,
+        previous,
+        otherExcludes
+      );
+      const match = (aiSuggestions || []).find((s) => s.field === field);
+      if (!match) {
+        failed.push(field);
+        continue;
+      }
+      const text =
+        typeof match.suggestion === 'string'
+          ? match.suggestion
+          : JSON.stringify(match.suggestion);
+      if (!String(text || '').trim()) {
+        failed.push(field);
+        continue;
+      }
+      suggestions.push({
+        field,
+        label: fieldDef.label,
+        suggestion: String(text).trim(),
+        source: fieldDef.source === 'extras' ? 'extras' : 'step',
+      });
+    } catch (error) {
+      console.error(`AI suggest failed for ${field} on content step ${contentStep}:`, error);
+      failed.push(field);
+    }
+  }
+
+  return { suggestions, failed };
+}
+
+/**
+ * Regenerate one catalog field suggestion using optional user "add these points" instructions.
+ */
+export async function regenerateStepFieldSuggestion(options: {
+  contentStep: number;
+  field: string;
+  label: string;
+  source?: 'step' | 'extras';
+  instruction: string;
+  currentSuggestion?: string;
+  data: Record<string, any>;
+  getStepData: (step: number) => any;
+  schemeCode: string | null;
+  answers?: VentureMatchAnswers | null;
+  excludeFields?: string[];
+}): Promise<StepFieldSuggestion | null> {
+  const {
+    contentStep,
+    field,
+    label,
+    instruction,
+    currentSuggestion,
+  } = options;
+  const ctx = buildStepSuggestContext(options);
+  const { catalogFields, previous, stepData, exclude } = ctx;
+  const fieldDef = catalogFields.find((f) => f.name === field);
+  if (!fieldDef) return null;
+
+  const otherExcludes = catalogFields
+    .map((f) => f.name)
+    .filter((name) => name !== field)
+    .concat(exclude);
+
+  const promptParts = [
+    `Regenerate ONLY the suggestion for field "${field}" ("${label}").`,
+    instruction.trim()
+      ? `The user wants these points included or reflected:\n${instruction.trim()}`
+      : 'Produce a fresh alternative suggestion for this field.',
+    currentSuggestion?.trim()
+      ? `Previous suggestion to improve upon:\n"""\n${currentSuggestion.trim()}\n"""`
+      : '',
+  ].filter(Boolean);
+
+  const previousWithHint = {
+    ...previous,
+    _promptContext: promptParts.join('\n\n'),
+  };
+
+  const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
+    contentStep,
+    stepData,
+    previousWithHint,
+    otherExcludes
+  );
+  const match = (aiSuggestions || []).find((s) => s.field === field);
+  if (!match) return null;
+  const text =
+    typeof match.suggestion === 'string'
+      ? match.suggestion
+      : JSON.stringify(match.suggestion);
+  if (!String(text || '').trim()) return null;
+
+  return {
+    field,
+    label: fieldDef.label || label,
+    suggestion: String(text).trim(),
+    source: options.source || (fieldDef.source === 'extras' ? 'extras' : 'step'),
+  };
+}
+
+/**
+ * Apply one catalog suggestion into step data or scheme extras (Latest DPR).
+ */
+export function applyCatalogSuggestionToForm(options: {
+  contentStep: number;
+  suggestion: StepFieldSuggestion;
+  getStepData: (step: number) => any;
+  setStepData: (step: number, stepData: any) => void;
+  setSchemeExtras?: (extras: Record<string, any>) => void;
+  schemeExtras?: Record<string, any>;
+  schemeCode: string | null;
+}): boolean {
+  const {
+    contentStep,
+    suggestion,
+    getStepData,
+    setStepData,
+    setSchemeExtras,
+    schemeCode,
+  } = options;
+  const extraFieldNames = extraFieldsForScheme(schemeCode);
+  let value = suggestionToFieldValue(suggestion.field, suggestion.suggestion);
+  if (value === null || value === undefined || value === '') {
+    // Plain text / short answers: use suggestion string as-is
+    value = String(suggestion.suggestion || '').trim();
+  }
+  if (value === null || value === undefined || value === '') return false;
+
+  if (suggestion.source === 'extras' || extraFieldNames.includes(suggestion.field)) {
+    if (!setSchemeExtras) return false;
+    const next = {
+      ...(options.schemeExtras || {}),
+      [suggestion.field]: normalizeExtraValue(suggestion.field, value),
+    };
+    setSchemeExtras(next);
+    return true;
+  }
+
+  const latest = { ...(getStepData(contentStep) || {}) };
+  latest[suggestion.field] = value;
+  extraFieldNames.forEach((name) => {
+    delete latest[name];
+  });
+  setStepData(contentStep, latest);
+  return true;
+}
+
 /**
  * Fill only the current scheme step's catalog questions (getIndividualDocFields),
  * one field at a time. Does not touch other steps.

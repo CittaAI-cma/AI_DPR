@@ -212,16 +212,49 @@ const TE: Record<string, string> = {
   'Fill this step with AI': 'ఈ దశను AIతో నింపండి',
   'Fill this step': 'ఈ దశను నింపండి',
   'Filling…': 'నింపుతోంది…',
+  'Getting suggestions…': 'సూచనలు పొందుతోంది…',
+  'Suggests answers only for this step’s questions ({n}). Apply the ones you like.':
+    'ఈ దశ ప్రశ్నలకు ({n}) మాత్రమే సమాధానాలు సూచిస్తుంది. మీకు నచ్చినవి వర్తింపజేయండి.',
+  'Asking only this step’s catalog questions, one at a time.':
+    'ఈ దశ కేటలాగ్ ప్రశ్నలు మాత్రమే, ఒక్కొక్కటిగా అడుగుతోంది.',
+  'Suggesting {index}/{total}: {label}': 'సూచిస్తోంది {index}/{total}: {label}',
   'Asks only this step’s questions ({n}), one at a time.':
     'ఈ దశ ప్రశ్నలు ({n}) మాత్రమే, ఒక్కొక్కటిగా అడుగుతుంది.',
   'Filling {index}/{total}: {label}': 'నింపుతోంది {index}/{total}: {label}',
   'No questions to fill on this step.': 'ఈ దశలో నింపడానికి ప్రశ్నలు లేవు.',
   'Could not fill any fields for this step. Try again.':
     'ఈ దశలో ఏ ఫీల్డ్‌నూ నింపలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Could not get suggestions for this step. Try again.':
+    'ఈ దశకు సూచనలు పొందలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Suggested {filled} of {total} questions on this step.':
+    'ఈ దశలో {total}లో {filled} ప్రశ్నలకు సూచనలు వచ్చాయి.',
+  'Suggested {n} questions on this step.': 'ఈ దశలో {n} ప్రశ్నలకు సూచనలు వచ్చాయి.',
+  'Failed to get suggestions for this step': 'ఈ దశకు సూచనలు పొందడం విఫలమైంది',
   'Filled {filled} of {total} questions on this step.':
     'ఈ దశలో {total}లో {filled} ప్రశ్నలు నింపబడ్డాయి.',
   'Filled {n} questions on this step.': 'ఈ దశలో {n} ప్రశ్నలు నింపబడ్డాయి.',
   'Failed to fill this step with AI': 'ఈ దశను AIతో నింపడం విఫలమైంది',
+  'Could not apply this suggestion. Try again.':
+    'ఈ సూచనను వర్తింపజేయలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Could not apply suggestions. Try again.':
+    'సూచనలను వర్తింపజేయలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Applied suggestion for {label}': '{label} కోసం సూచన వర్తింపజేయబడింది',
+  'Applied {n} suggestions.': '{n} సూచనలు వర్తింపజేయబడ్డాయి.',
+  'Failed to apply suggestion': 'సూచనను వర్తింపజేయడం విఫలమైంది',
+  'Tell us what you want to add': 'మీరు ఏమి జోడించాలనుకుంటున్నారో చెప్పండి',
+  'For: {label}': 'కోసం: {label}',
+  'List the points or changes you want in the new answer. We will regenerate only this question.':
+    'కొత్త సమాధానంలో కావాల్సిన పాయింట్లు లేదా మార్పులు రాయండి. ఈ ప్రశ్నను మాత్రమే మళ్లీ రూపొందిస్తాం.',
+  'e.g. Mention local raw materials, add 2 more workers, keep it under 80 words':
+    'ఉదా. స్థానిక ముడి పదార్థాలు చెప్పండి, మరో 2 కార్మికులు జోడించండి, 80 పదాలలోపు ఉంచండి',
+  'Tell us what you want to add before regenerating.':
+    'మళ్లీ రూపొందించే ముందు ఏమి జోడించాలో చెప్పండి.',
+  'Could not regenerate this suggestion. Try again.':
+    'ఈ సూచనను మళ్లీ రూపొందించలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Suggestion regenerated.': 'సూచన మళ్లీ రూపొందించబడింది.',
+  'Failed to regenerate suggestion': 'సూచనను మళ్లీ రూపొందించడం విఫలమైంది',
+  'Regenerating…': 'మళ్లీ రూపొందిస్తోంది…',
+  'Regenerate all suggestions for this step': 'ఈ దశ సూచనలన్నీ మళ్లీ రూపొందించండి',
   'Complete Step 1 first to get AI suggestions for this step.':
     'ఈ దశకు AI సూచనల కోసం ముందుగా దశ 1ని పూర్తి చేయండి.',
   'No suggestions available. Try generating again or fill in more fields.':
@@ -232,6 +265,7 @@ const TE: Record<string, string> = {
   'Apply All': 'అన్నీ వర్తింపజేయండి',
   'Applying...': 'వర్తింపజేస్తోంది...',
   Apply: 'వర్తింపజేయండి',
+  Retry: 'మళ్లీ ప్రయత్నించండి',
   Confirm: 'నిర్ధారించండి',
   Cancel: 'రద్దు చేయండి',
   'Edit field': 'ఫీల్డ్‌ను సవరించండి',

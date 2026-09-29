@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Loader2, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Sparkles, Loader2, ChevronDown, ChevronUp, Check, RefreshCw, X } from 'lucide-react';
 import { AISuggestionsService, AISuggestion } from '@/services/aiSuggestions.service';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { toast } from 'react-hot-toast';
@@ -9,7 +10,13 @@ import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { EXTRA_FIELD_LABELS, getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
-import { fillCurrentStepWithAi, FillStepProgress } from '@/lib/individualDpr/fillAllStepsWithAi';
+import {
+  suggestCurrentStepWithAi,
+  regenerateStepFieldSuggestion,
+  applyCatalogSuggestionToForm,
+  FillStepProgress,
+  StepFieldSuggestion,
+} from '@/lib/individualDpr/fillAllStepsWithAi';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
@@ -48,6 +55,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   const setStepData = setStepDataProp ?? clusterStore.setStepData;
   const getStepData = getStepDataProp ?? clusterStore.getStepData;
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [stepSuggestions, setStepSuggestions] = useState<StepFieldSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -55,6 +63,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   const [applyingAll, setApplyingAll] = useState(false);
   const [applyingFields, setApplyingFields] = useState<Set<string>>(new Set());
   const [fillProgress, setFillProgress] = useState<FillStepProgress | null>(null);
+  const [regenTarget, setRegenTarget] = useState<StepFieldSuggestion | null>(null);
+  const [regenInstructions, setRegenInstructions] = useState('');
+  const [regeneratingField, setRegeneratingField] = useState<string | null>(null);
   const fieldLabel = (field: string) => {
     if (EXTRA_FIELD_LABELS[field]) return EXTRA_FIELD_LABELS[field];
     const pretty: Record<string, string> = {
@@ -116,8 +127,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
   useEffect(() => {
     setSuggestions([]);
+    setStepSuggestions([]);
     setHasGenerated(false);
     setFillProgress(null);
+    setRegenTarget(null);
+    setRegenInstructions('');
+    setRegeneratingField(null);
   }, [currentStep]);
 
   const handleFillThisStep = async () => {
@@ -134,40 +149,170 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
     setLoading(true);
     setFillProgress(null);
+    setStepSuggestions([]);
+    setHasGenerated(false);
     try {
-      const result = await fillCurrentStepWithAi({
+      const result = await suggestCurrentStepWithAi({
         contentStep: currentStep,
         data,
-        setStepData,
         getStepData,
-        setSchemeExtras: setSchemeExtrasProp,
         schemeCode,
         answers: data?.ventureMatchAnswers,
         excludeFields,
         onProgress: setFillProgress,
       });
 
-      if (result.filled.length === 0) {
-        toast.error(tf('Could not fill any fields for this step. Try again.'));
+      setStepSuggestions(result.suggestions);
+      setHasGenerated(true);
+
+      if (result.suggestions.length === 0) {
+        toast.error(tf('Could not get suggestions for this step. Try again.'));
         return;
       }
       if (result.failed.length) {
         toast.success(
-          tf('Filled {filled} of {total} questions on this step.')
-            .replace('{filled}', String(result.filled.length))
-            .replace('{total}', String(result.filled.length + result.failed.length))
+          tf('Suggested {filled} of {total} questions on this step.')
+            .replace('{filled}', String(result.suggestions.length))
+            .replace('{total}', String(result.suggestions.length + result.failed.length))
         );
       } else {
         toast.success(
-          tf('Filled {n} questions on this step.').replace('{n}', String(result.filled.length))
+          tf('Suggested {n} questions on this step.').replace(
+            '{n}',
+            String(result.suggestions.length)
+          )
         );
       }
     } catch (error) {
-      console.error('Error filling step with AI:', error);
-      toast.error(tf('Failed to fill this step with AI'));
+      console.error('Error suggesting step with AI:', error);
+      toast.error(tf('Failed to get suggestions for this step'));
     } finally {
       setLoading(false);
       setFillProgress(null);
+    }
+  };
+
+  const handleApplyStepSuggestion = (item: StepFieldSuggestion) => {
+    setApplyingFields((prev) => new Set(prev).add(item.field));
+    try {
+      const ok = applyCatalogSuggestionToForm({
+        contentStep: currentStep,
+        suggestion: item,
+        getStepData,
+        setStepData,
+        setSchemeExtras: setSchemeExtrasProp,
+        schemeExtras: data?.schemeExtras,
+        schemeCode,
+      });
+      if (!ok) {
+        toast.error(tf('Could not apply this suggestion. Try again.'));
+        return;
+      }
+      if (onApplySuggestion) onApplySuggestion(item.field, item.suggestion);
+      toast.success(tf('Applied suggestion for {label}').replace('{label}', item.label));
+    } catch (error) {
+      console.error('Error applying step suggestion:', error);
+      toast.error(tf('Failed to apply suggestion'));
+    } finally {
+      setApplyingFields((prev) => {
+        const next = new Set(prev);
+        next.delete(item.field);
+        return next;
+      });
+    }
+  };
+
+  const handleApplyAllStepSuggestions = () => {
+    if (!stepSuggestions.length || applyingAll) return;
+    setApplyingAll(true);
+    setApplyingFields(new Set(stepSuggestions.map((s) => s.field)));
+    let applied = 0;
+    let extras = { ...(data?.schemeExtras || {}) };
+    try {
+      for (const item of stepSuggestions) {
+        const ok = applyCatalogSuggestionToForm({
+          contentStep: currentStep,
+          suggestion: item,
+          getStepData,
+          setStepData,
+          setSchemeExtras: (next) => {
+            extras = next;
+            if (setSchemeExtrasProp) setSchemeExtrasProp(next);
+          },
+          schemeExtras: extras,
+          schemeCode,
+        });
+        if (ok) {
+          applied += 1;
+          if (onApplySuggestion) onApplySuggestion(item.field, item.suggestion);
+        }
+      }
+      if (applied === 0) {
+        toast.error(tf('Could not apply suggestions. Try again.'));
+      } else {
+        toast.success(
+          tf('Applied {n} suggestions.').replace('{n}', String(applied))
+        );
+      }
+    } finally {
+      setApplyingAll(false);
+      setApplyingFields(new Set());
+    }
+  };
+
+  const openRegenerateModal = (item: StepFieldSuggestion) => {
+    setRegenTarget(item);
+    setRegenInstructions('');
+  };
+
+  const closeRegenerateModal = () => {
+    if (regeneratingField) return;
+    setRegenTarget(null);
+    setRegenInstructions('');
+  };
+
+  const handleConfirmRegenerate = async () => {
+    if (!regenTarget) return;
+    if (!aiAllowed) {
+      toast.error(t('privacy.aiOffWarning'));
+      return;
+    }
+    const instruction = regenInstructions.trim();
+    if (!instruction) {
+      toast.error(tf('Tell us what you want to add before regenerating.'));
+      return;
+    }
+
+    setRegeneratingField(regenTarget.field);
+    try {
+      const next = await regenerateStepFieldSuggestion({
+        contentStep: currentStep,
+        field: regenTarget.field,
+        label: regenTarget.label,
+        source: regenTarget.source,
+        instruction,
+        currentSuggestion: regenTarget.suggestion,
+        data,
+        getStepData,
+        schemeCode,
+        answers: data?.ventureMatchAnswers,
+        excludeFields,
+      });
+      if (!next) {
+        toast.error(tf('Could not regenerate this suggestion. Try again.'));
+        return;
+      }
+      setStepSuggestions((prev) =>
+        prev.map((s) => (s.field === next.field ? next : s))
+      );
+      setRegenTarget(null);
+      setRegenInstructions('');
+      toast.success(tf('Suggestion regenerated.'));
+    } catch (error) {
+      console.error('Error regenerating suggestion:', error);
+      toast.error(tf('Failed to regenerate suggestion'));
+    } finally {
+      setRegeneratingField(null);
     }
   };
 
@@ -578,7 +723,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     );
   }
 
-  // Latest DPR: fill only this step's catalog questions, one field at a time
+  // Latest DPR: suggest only this step's catalog questions; Apply / Regenerate per card
   if (isIndividualDPR) {
     // Step 1 (cover / basics) is always manual — no AI fill for any scheme.
     if (currentStep === 1) {
@@ -600,46 +745,278 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       return null;
     }
 
-    return (
-      <div className="mb-4 p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900">{tf('Fill this step with AI')}</p>
+    const regenModal =
+      regenTarget &&
+      createPortal(
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="regen-suggestion-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50"
+            aria-label={tf('Cancel')}
+            onClick={closeRegenerateModal}
+            disabled={!!regeneratingField}
+          />
+          <div className="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-xl border border-gray-200 p-5">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <h2 id="regen-suggestion-title" className="text-base font-semibold text-gray-900">
+                  {tf('Tell us what you want to add')}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {tf('For: {label}').replace('{label}', regenTarget.label)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeRegenerateModal}
+                disabled={!!regeneratingField}
+                className="p-1 rounded-md text-muted-foreground hover:bg-muted disabled:opacity-50"
+                aria-label={tf('Cancel')}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-2">
+              {tf('List the points or changes you want in the new answer. We will regenerate only this question.')}
+            </p>
+            <textarea
+              value={regenInstructions}
+              onChange={(e) => setRegenInstructions(e.target.value)}
+              rows={5}
+              disabled={!!regeneratingField}
+              placeholder={tf('e.g. Mention local raw materials, add 2 more workers, keep it under 80 words')}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeRegenerateModal}
+                disabled={!!regeneratingField}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 hover:bg-muted disabled:opacity-50"
+              >
+                {tf('Cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRegenerate}
+                disabled={!!regeneratingField || !regenInstructions.trim()}
+                className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {regeneratingField ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    {tf('Regenerating…')}
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    {tf('Regenerate')}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      );
+
+    if (!hasGenerated && !loading) {
+      return (
+        <>
+          <div className="mb-4 p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">{tf('Fill this step with AI')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {tf('Suggests answers only for this step’s questions ({n}). Apply the ones you like.')
+                      .replace('{n}', String(stepCatalogFields.length))}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleFillThisStep}
+                disabled={loading || (currentStep > 1 && !hasPreviousData)}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <Sparkles className="h-4 w-4" />
+                {tf('Fill this step')}
+              </button>
+            </div>
+            <ul className="mt-3 text-xs text-muted-foreground list-disc pl-5 space-y-0.5">
+              {stepCatalogFields.slice(0, 12).map((f) => (
+                <li key={f.name}>{f.label}</li>
+              ))}
+              {stepCatalogFields.length > 12 && (
+                <li>+{stepCatalogFields.length - 12} more</li>
+              )}
+            </ul>
+          </div>
+          {regenModal}
+        </>
+      );
+    }
+
+    if (loading) {
+      return (
+        <div className="mb-4 p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 text-primary animate-spin" />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{tf('Getting suggestions…')}</p>
               <p className="text-xs text-muted-foreground">
-                {loading && fillProgress
-                  ? tf('Filling {index}/{total}: {label}')
+                {fillProgress
+                  ? tf('Suggesting {index}/{total}: {label}')
                       .replace('{index}', String(fillProgress.index))
                       .replace('{total}', String(fillProgress.total))
                       .replace('{label}', fillProgress.label)
-                  : tf('Asks only this step’s questions ({n}), one at a time.').replace(
-                      '{n}',
-                      String(stepCatalogFields.length)
-                    )}
+                  : tf('Asking only this step’s catalog questions, one at a time.')}
               </p>
             </div>
           </div>
-          <button
-            onClick={handleFillThisStep}
-            disabled={loading || (currentStep > 1 && !hasPreviousData)}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm font-medium"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {loading ? tf('Filling…') : tf('Fill this step')}
-          </button>
         </div>
-        {!loading && (
-          <ul className="mt-3 text-xs text-muted-foreground list-disc pl-5 space-y-0.5">
-            {stepCatalogFields.slice(0, 12).map((f) => (
-              <li key={f.name}>{f.label}</li>
-            ))}
-            {stepCatalogFields.length > 12 && (
-              <li>+{stepCatalogFields.length - 12} more</li>
-            )}
-          </ul>
-        )}
-      </div>
+      );
+    }
+
+    if (hasGenerated && stepSuggestions.length === 0) {
+      return (
+        <>
+          <div className="mb-4 p-4 bg-muted/50 border border-muted rounded-lg">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs">
+                  {tf('No suggestions available. Try generating again or fill in more fields.')}
+                </span>
+              </div>
+              <button
+                onClick={handleFillThisStep}
+                disabled={loading}
+                className="px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              >
+                {tf('Retry')}
+              </button>
+            </div>
+          </div>
+          {regenModal}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <div className="mb-4 border border-primary/20 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 overflow-hidden">
+          <div className="flex items-center justify-between p-4 gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setExpanded(!expanded)}
+              className="flex-1 min-w-[12rem] flex items-center justify-between hover:bg-primary/10 transition-colors rounded-lg p-2 -m-2"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-sm">{tf('AI Suggestions')}</span>
+                <span className="text-xs text-muted-foreground">
+                  ({stepSuggestions.length})
+                </span>
+              </div>
+              {expanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleFillThisStep}
+                disabled={loading}
+                className="px-3 py-1.5 text-xs bg-primary/10 text-primary rounded-lg hover:bg-primary/20 disabled:opacity-50 transition-colors flex items-center gap-1"
+                title={tf('Regenerate all suggestions for this step')}
+              >
+                <Sparkles className="h-3 w-3" />
+                {tf('Fill this step')}
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyAllStepSuggestions}
+                disabled={loading || applyingAll || !stepSuggestions.length}
+                className="px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+              >
+                {applyingAll ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {tf('Applying...')}
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-3 w-3" />
+                    {tf('Apply All')}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {expanded && (
+            <div className="px-4 pb-4 space-y-3">
+              {stepSuggestions.map((item) => {
+                const isApplying = applyingFields.has(item.field);
+                const isRegen = regeneratingField === item.field;
+                return (
+                  <div
+                    key={item.field}
+                    className="p-3 bg-white/50 rounded-lg border border-primary/10"
+                  >
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-primary mb-1">{item.label}</p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.suggestion}</p>
+                      </div>
+                      <div className="flex flex-col gap-1.5 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleApplyStepSuggestion(item)}
+                          disabled={isApplying || isRegen}
+                          className="px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                        >
+                          {isApplying ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              {tf('Applying...')}
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-3 w-3" />
+                              {tf('Apply')}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openRegenerateModal(item)}
+                          disabled={isApplying || !!regeneratingField}
+                          className="px-3 py-1.5 text-xs bg-white border border-primary/30 text-primary rounded-lg hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          {tf('Regenerate')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        {regenModal}
+      </>
     );
   }
 
