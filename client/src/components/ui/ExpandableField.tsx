@@ -67,7 +67,9 @@ function FieldExpandModal({
   const { user } = useAuthStore();
   const aiAllowed = !!user?.privacy?.aiAssist;
   const data = useIndividualDPRStore((s) => s.data);
-  const showImprove = canImproveKind(kind, inputType);
+  // Step 1 (cover / basics) is manual — no AI improve on any field.
+  const onStep1 = (data?.currentStep ?? 1) === 1;
+  const showImprove = canImproveKind(kind, inputType) && !onStep1;
 
   useEffect(() => {
     if (!open) {
