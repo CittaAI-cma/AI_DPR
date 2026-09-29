@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
@@ -22,24 +22,33 @@ export const ConsentGate: React.FC<ConsentGateProps> = ({ children }) => {
     analytics: false,
     noticeRead: false,
   });
+  const acceptedRef = useRef(false);
 
-  const needsNotice = !!token && (!user?.privacy || user.privacy.needsNoticeAcceptance);
+  const needsNotice =
+    !!token &&
+    !acceptedRef.current &&
+    (!user?.privacy || user.privacy.needsNoticeAcceptance);
 
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
     (async () => {
       try {
-        const response = await api.getProfile();
+        // Never use mock profile here — mock users have no privacy and would
+        // reopen this modal forever / overwrite the logged-in admin.
+        const response = await api.getProfileLive();
         const profile = response.data || response;
-        if (!cancelled && profile) {
-          updateUser(profile);
-          setConsent((prev) => ({
-            ...prev,
-            aiAssist: !!profile.privacy?.aiAssist,
-            analytics: !!profile.privacy?.analytics,
-          }));
-        }
+        if (cancelled || !profile) return;
+        const currentId = String(user?.userId || '');
+        const profileId = String(profile.userId || profile._id || '');
+        if (currentId && profileId && currentId !== profileId) return;
+        if (acceptedRef.current) return;
+        updateUser(profile);
+        setConsent((prev) => ({
+          ...prev,
+          aiAssist: !!profile.privacy?.aiAssist,
+          analytics: !!profile.privacy?.analytics,
+        }));
       } catch {
         /* keep stored user; modal still shows if notice is missing */
       }
@@ -65,14 +74,31 @@ export const ConsentGate: React.FC<ConsentGateProps> = ({ children }) => {
     setBusy(true);
     try {
       const response = await api.acceptConsent({
-        ...consent,
+        accountConsent: consent.accountConsent,
+        aiAssist: consent.aiAssist,
+        analytics: consent.analytics,
         noticeVersion: PRIVACY_NOTICE_VERSION,
       });
       const next = response.data || response;
-      updateUser(next);
+      acceptedRef.current = true;
+      updateUser({
+        ...next,
+        privacy: {
+          ...(next.privacy || {}),
+          noticeVersion: next.privacy?.noticeVersion || PRIVACY_NOTICE_VERSION,
+          accountConsent: true,
+          needsNoticeAcceptance: false,
+          aiAssist: !!consent.aiAssist,
+          analytics: !!consent.analytics,
+        },
+      });
       toast.success(t('privacy.saved'));
-    } catch {
-      toast.error(t('privacy.saveFailed'));
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        t('privacy.saveFailed');
+      toast.error(message);
     } finally {
       setBusy(false);
     }

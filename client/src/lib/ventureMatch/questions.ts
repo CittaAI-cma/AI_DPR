@@ -151,3 +151,9 @@ export function pruneInvisibleAnswers(answers: VentureMatchAnswers): VentureMatc
 
 export const STORAGE_KEY = 'venture-match-progress';
 export const HANDOFF_KEY = 'venture-match-handoff';
+
+/** Scope browser progress to the logged-in user so accounts on the same device do not share answers. */
+export function scopedVentureMatchKey(base: string, userId?: string | null): string {
+  const id = (userId || '').trim();
+  return id ? `${base}:${id}` : base;
+}

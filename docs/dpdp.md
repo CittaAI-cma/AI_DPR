@@ -1,7 +1,8 @@
 # DPDP — implemented product logic
 
 > Living source of truth for **DPDP-related code** in this repo.  
-> Plan / PDF (stages, legal caveats): [dpdp-implementation-plan.html](./dpdp-implementation-plan.html) · [dpdp-implementation-plan.pdf](./dpdp-implementation-plan.pdf)
+> Plan / PDF (stages, legal caveats): [dpdp-implementation-plan.html](./dpdp-implementation-plan.html) · [dpdp-implementation-plan.pdf](./dpdp-implementation-plan.pdf)  
+> Printable requirements checklist: [dpdp-requirements-checklist.html](./dpdp-requirements-checklist.html) (File → Print → Save as PDF)
 
 **Maintenance:** Any change to DPDP behaviour (notice, consent, age 18, AI strip, audit, retention, grievance, under-18 copy) **must** update this file. Cursor rule: `.cursor/rules/dpdp-docs.mdc`.
 
@@ -74,7 +75,7 @@ JWT / profile payload includes `privacy.needsNoticeAcceptance` when `noticeVersi
 | POST | `/api/auth/logout` | Auth required. Audit only |
 | GET | `/api/auth/profile` | Public user + privacy (no password) |
 
-Old users: blocking modal (`ConsentGate` on every `ProtectedRoute`) until they accept. Logout is the only way out without accepting.
+Old users: blocking modal (`ConsentGate` on every `ProtectedRoute`) until they accept. Logout is the only way out without accepting. The gate loads profile with a **live** API call (not mock fallback) so offline mock users cannot reopen the modal or overwrite the logged-in account.
 
 ### 3.3 Under 18
 

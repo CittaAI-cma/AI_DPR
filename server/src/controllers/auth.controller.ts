@@ -64,6 +64,9 @@ function applyConsent(user: any, body: any, now: Date) {
   user.privacy.analyticsAt = analytics ? now : user.privacy.analyticsAt;
   user.privacy.noticeVersion = PRIVACY_NOTICE_VERSION;
   user.privacy.noticeAcceptedAt = now;
+  if (typeof user.markModified === 'function') {
+    user.markModified('privacy');
+  }
 
   return { accountConsent, aiAssist, prevAi };
 }

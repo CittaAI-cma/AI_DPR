@@ -16,11 +16,13 @@ import {
   getVisibleQuestions,
   pruneInvisibleAnswers,
   STORAGE_KEY,
+  scopedVentureMatchKey,
 } from '@/lib/ventureMatch/questions';
 import { evaluate, excludedSchemes, remainingCount } from '@/lib/ventureMatch/evaluate';
 import { saveHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { OWNER_EXCLUSIVE_TAGS, OwnerTag, QuestionId, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 import { GuardianNotice } from '@/components/privacy/GuardianNotice';
+import { useAuthStore } from '@/store/authStore';
 
 function isExclusiveOwner(id: string): boolean {
   return OWNER_EXCLUSIVE_TAGS.includes(id as OwnerTag);
@@ -35,6 +37,8 @@ interface SavedProgress {
 export const VentureMatch: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const userId = useAuthStore((s) => s.user?.userId);
+  const progressKey = scopedVentureMatchKey(STORAGE_KEY, userId);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<VentureMatchAnswers>({});
   const [done, setDone] = useState(false);
@@ -42,7 +46,11 @@ export const VentureMatch: React.FC = () => {
   const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    setHydrated(false);
+    setAnswers({});
+    setStep(0);
+    setDone(false);
+    const raw = localStorage.getItem(progressKey);
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as SavedProgress;
@@ -54,14 +62,16 @@ export const VentureMatch: React.FC = () => {
         /* ignore */
       }
     }
+    // Old shared key leaked answers across accounts on the same browser — remove it
+    localStorage.removeItem(STORAGE_KEY);
     setHydrated(true);
-  }, []);
+  }, [progressKey]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !userId) return;
     const payload: SavedProgress = { answers, step, done };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [answers, step, done, hydrated]);
+    localStorage.setItem(progressKey, JSON.stringify(payload));
+  }, [answers, step, done, hydrated, progressKey, userId]);
 
   useEffect(() => {
     setHelpOpen(false);
@@ -164,6 +174,7 @@ export const VentureMatch: React.FC = () => {
     setAnswers({});
     setStep(0);
     setDone(false);
+    localStorage.removeItem(progressKey);
     localStorage.removeItem(STORAGE_KEY);
   };
 

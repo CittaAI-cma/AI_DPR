@@ -277,6 +277,13 @@ class APIClient {
     return response.data;
   }
 
+  /** Live profile only — never mock. Used by the re-consent gate. */
+  async getProfileLive() {
+    this.clearCache('/auth/profile');
+    const response = await this.client.get('/auth/profile');
+    return response.data;
+  }
+
   async getProfile() {
     const cacheKey = this.getCacheKey('GET', '/auth/profile');
     return this.handleRequest(

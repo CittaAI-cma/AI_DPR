@@ -14,6 +14,14 @@ export const mockUsers = {
     location: 'Hyderabad, Telangana',
     udyamNumber: 'UDYAM-TG-01-0001234',
     createdAt: new Date('2024-01-15').toISOString(),
+    privacy: {
+      noticeVersion: '2026-09-4',
+      accountConsent: true,
+      aiAssist: false,
+      analytics: false,
+      needsNoticeAcceptance: false,
+      nominee: { name: '', phone: '', email: '' },
+    },
   },
   adminUser: {
     userId: 'admin_001',
@@ -23,6 +31,14 @@ export const mockUsers = {
     phoneNumber: '+91 9876543211',
     location: 'Amaravati, Andhra Pradesh',
     createdAt: new Date('2023-12-01').toISOString(),
+    privacy: {
+      noticeVersion: '2026-09-4',
+      accountConsent: true,
+      aiAssist: false,
+      analytics: false,
+      needsNoticeAcceptance: false,
+      nominee: { name: '', phone: '', email: '' },
+    },
   },
 };
 
