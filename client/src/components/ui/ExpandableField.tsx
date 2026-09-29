@@ -210,23 +210,54 @@ function FieldExpandModal({
         onClick={onCancel}
       />
       <div className="relative z-10 flex w-full max-w-3xl max-h-[90vh] flex-col rounded-xl border border-border bg-background shadow-2xl">
-        <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
-          <div className="min-w-0">
-            <p id={titleId} className="text-base font-semibold text-foreground truncate">
-              {title || tf('Edit field')}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {tf('Edit the full text, then Confirm to save or Cancel to discard.')}
-            </p>
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
+          <p id={titleId} className="min-w-0 flex-1 text-base font-semibold text-foreground truncate">
+            {title || tf('Edit field')}
+          </p>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {showMatchSkill && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleMatchSkill}
+                disabled={busy}
+                className="gap-1.5"
+              >
+                {matching ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {matching ? tf('Matching…') : tf('Match me')}
+              </Button>
+            )}
+            {showImprove && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleImprove}
+                disabled={busy}
+                className="gap-1.5"
+              >
+                {improving ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {improving ? tf('Improving…') : tf('Improve this')}
+              </Button>
+            )}
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label={tf('Cancel')}
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={tf('Cancel')}
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
 
         <div className="flex-1 overflow-auto px-4 py-4 sm:px-5">
@@ -264,54 +295,54 @@ function FieldExpandModal({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3 sm:px-5">
-          <div className="flex flex-wrap items-center gap-2">
-            {showMatchSkill && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleMatchSkill}
-                disabled={busy}
-                className="gap-1.5"
-              >
-                {matching ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-                {matching ? tf('Matching…') : tf('Match me')}
-              </Button>
-            )}
-            {showImprove && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleImprove}
-                disabled={busy}
-                className="gap-1.5"
-              >
-                {improving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-                {improving ? tf('Improving…') : tf('Improve this')}
-              </Button>
-            )}
-          </div>
-          <div className="flex items-center gap-2 ml-auto">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
-              {tf('Cancel')}
-            </Button>
-            <Button type="button" onClick={onConfirm} disabled={busy}>
-              {tf('Confirm')}
-            </Button>
-          </div>
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-4 py-3 sm:px-5">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
+            {tf('Cancel')}
+          </Button>
+          <Button type="button" onClick={onConfirm} disabled={busy}>
+            {tf('Confirm')}
+          </Button>
         </div>
       </div>
     </div>,
     document.body
   );
+}
+
+function cleanLabelText(raw: string): string {
+  return raw
+    .replace(/\s*\*\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Pick the visible field title near a control (sibling / parent label). */
+function findNearbyFieldTitle(el: HTMLElement | null): string {
+  if (!el) return '';
+  const aria = el.getAttribute('aria-label');
+  if (aria?.trim()) return cleanLabelText(aria);
+
+  const labelledBy = el.getAttribute('aria-labelledby');
+  if (labelledBy) {
+    const node = document.getElementById(labelledBy);
+    if (node?.textContent) return cleanLabelText(node.textContent);
+  }
+
+  const wrap = el.closest('div');
+  const container = wrap?.parentElement || wrap;
+  const labelInContainer = container?.querySelector('label');
+  if (labelInContainer?.textContent) return cleanLabelText(labelInContainer.textContent);
+
+  let sibling = wrap?.previousElementSibling as HTMLElement | null;
+  while (sibling) {
+    if (sibling.tagName === 'LABEL' || sibling.classList.contains('font-medium') || sibling.classList.contains('font-semibold')) {
+      if (sibling.textContent) return cleanLabelText(sibling.textContent);
+    }
+    const nested = sibling.querySelector?.('label');
+    if (nested?.textContent) return cleanLabelText(nested.textContent);
+    sibling = sibling.previousElementSibling as HTMLElement | null;
+  }
+  return '';
 }
 
 function useExpandEditor(
@@ -320,10 +351,14 @@ function useExpandEditor(
 ) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
+  const [resolvedTitle, setResolvedTitle] = useState('');
 
-  const openEditor = (e?: React.SyntheticEvent) => {
+  const openEditor = (e?: React.SyntheticEvent, explicitTitle?: string) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
+    const target = (e?.currentTarget || e?.target) as HTMLElement | null;
+    const fromDom = findNearbyFieldTitle(target);
+    setResolvedTitle((explicitTitle || fromDom || '').trim());
     setDraft(value == null ? '' : String(value));
     setOpen(true);
   };
@@ -340,7 +375,7 @@ function useExpandEditor(
     setOpen(false);
   };
 
-  return { open, draft, setDraft, openEditor, cancel, confirm };
+  return { open, draft, setDraft, openEditor, cancel, confirm, resolvedTitle };
 }
 
 /** Drop-in for `@/components/ui/Input` — single-line; no enlarge modal. */
@@ -369,14 +404,35 @@ ExpandableInput.displayName = 'ExpandableInput';
 
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string;
+  expandTitle?: string;
 };
 
 /** Drop-in for native `<textarea>` — click opens enlarged editor (descriptive answers only). */
 export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, onChange, value, defaultValue, placeholder, label, disabled, readOnly, onFocus, onClick, ...props }, ref) => {
+  (
+    {
+      className,
+      onChange,
+      value,
+      defaultValue,
+      placeholder,
+      label,
+      expandTitle,
+      disabled,
+      readOnly,
+      onFocus,
+      onClick,
+      ...props
+    },
+    ref
+  ) => {
     const tf = useClusterFormText();
     const resolvedValue = value ?? defaultValue ?? '';
-    const { open, draft, setDraft, openEditor, cancel, confirm } = useExpandEditor(resolvedValue, onChange);
+    const { open, draft, setDraft, openEditor, cancel, confirm, resolvedTitle } = useExpandEditor(
+      resolvedValue,
+      onChange
+    );
+    const modalTitle = (expandTitle || label || resolvedTitle || '').trim() || tf('Edit field');
 
     return (
       <>
@@ -391,14 +447,15 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
             disabled={disabled}
             readOnly
             onFocus={(e) => {
-              if (!disabled) openEditor(e);
+              if (!disabled) openEditor(e, expandTitle || label);
               onFocus?.(e);
             }}
             onClick={(e) => {
-              if (!disabled) openEditor(e);
+              if (!disabled) openEditor(e, expandTitle || label);
               onClick?.(e);
             }}
             {...props}
+            aria-label={expandTitle || label || props['aria-label']}
           />
           {!disabled && (
             <span className="pointer-events-none absolute right-2 top-2 text-muted-foreground/70" aria-hidden>
@@ -408,7 +465,7 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
         </div>
         <FieldExpandModal
           open={open}
-          title={label || tf('Edit field')}
+          title={modalTitle}
           kind="textarea"
           draft={draft}
           setDraft={setDraft}
