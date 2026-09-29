@@ -57,7 +57,7 @@ export const VANILLA_STEPS: SchemeStepDef[] = catalog([
  */
 export const PMEGP_STEPS: SchemeStepDef[] = catalog([
   { id: 'cover', title: 'Cover & entrepreneur', contentStep: 1 },
-  { id: 'intro', title: 'Introduction & process', contentStep: 2 },
+  { id: 'intro', title: 'Executive summary & process', contentStep: 2 },
   { id: 'location', title: 'Location', contentStep: 3 },
   { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
   { id: 'market', title: 'Market & sales assumptions', contentStep: 6 },
@@ -479,7 +479,7 @@ export const AP_FPP_STEPS: SchemeStepDef[] = catalog([
  */
 export const AP_CMEP_STEPS: SchemeStepDef[] = catalog([
   { id: 'cover', title: 'Cover & eligibility', contentStep: 1 },
-  { id: 'intro', title: 'Upgrade / process story', contentStep: 2 },
+  { id: 'intro', title: 'Executive summary & process', contentStep: 2 },
   { id: 'location', title: 'Location', contentStep: 3 },
   { id: 'unit', title: 'Unit profile & capacity', contentStep: 4 },
   { id: 'market', title: 'Market & offtake', contentStep: 6 },

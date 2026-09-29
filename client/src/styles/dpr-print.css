@@ -286,13 +286,42 @@
 }
 
 .individual-dpr-document .cover-scheme {
+  display: block;
   font-size: 12pt;
   font-weight: 600;
   max-width: 150mm;
-  margin: 8pt auto 0;
+  width: 100%;
+  margin: 0;
   line-height: 1.4;
   text-align: center;
   text-align-last: center;
+}
+
+.individual-dpr-document .cover-scheme-block {
+  display: block;
+  width: 100%;
+  max-width: 150mm;
+  margin: 10pt auto 0;
+  text-align: center;
+  text-align-last: center;
+}
+
+.individual-dpr-document .cover-tagline {
+  display: block;
+  width: 100%;
+  margin: 6pt 0 0;
+  font-size: 9.5pt;
+  line-height: 1.35;
+  text-align: center;
+  text-align-last: center;
+}
+
+.individual-dpr-document .cover-pack-badge {
+  display: block;
+  width: fit-content;
+  max-width: 90%;
+  margin: 0 auto 8pt;
+  text-align: center;
 }
 
 .individual-cover .cover-meta {
@@ -315,16 +344,184 @@
 
 .individual-toc,
 .individual-sec {
-  margin: 0 0 7mm;
+  margin: 0 0 9mm;
   page-break-inside: avoid;
 }
 
-.individual-dpr-document h2 {
-  font-size: 13pt;
+.individual-dpr-document h2,
+.individual-dpr-document .individual-sec-title {
+  font-size: 13.5pt;
   font-weight: 700;
-  margin: 0 0 8pt;
-  padding-bottom: 3pt;
+  margin: 0 0 10pt;
+  padding-bottom: 4pt;
+  border-bottom: 1.5px solid #1f2937;
+  display: flex;
+  align-items: baseline;
+  gap: 8pt;
+  line-height: 1.3;
+}
+
+.individual-sec-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 4pt;
+  border: 1.5px solid #1f2937;
+  border-radius: 2pt;
+  font-size: 11pt;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.individual-sec-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10pt;
+}
+
+/* Compact facts — PDF-style two-column meta */
+.individual-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 0;
+  border: 1px solid #1f2937;
+}
+
+.individual-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2pt;
+  padding: 7pt 8pt;
+  border-right: 1px solid #d1d5db;
   border-bottom: 1px solid #d1d5db;
+  min-width: 0;
+}
+
+.individual-meta-item:nth-child(2n) {
+  border-right: none;
+}
+
+.individual-meta-item dt {
+  margin: 0;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #4b5563;
+}
+
+.individual-meta-item dd {
+  margin: 0;
+  font-size: 11pt;
+  font-weight: 600;
+  color: #111827;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Expansive Q&A blocks for description answers */
+.individual-qa-block {
+  border: 1px solid #1f2937;
+  background: #fff;
+  page-break-inside: avoid;
+}
+
+.individual-qa-q {
+  margin: 0;
+  padding: 6pt 9pt;
+  font-size: 10pt;
+  font-weight: 700;
+  background: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.individual-qa-a {
+  margin: 0;
+  padding: 10pt 11pt 12pt;
+  font-size: 11pt;
+  line-height: 1.65;
+  color: #1f2937;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-height: 2.8em;
+  text-align: justify;
+}
+
+.individual-qa-a.is-empty {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: left;
+}
+
+.individual-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #1f2937;
+}
+
+.individual-toc-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10pt;
+  padding: 7pt 9pt;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 11pt;
+}
+
+.individual-toc-list li:last-child {
+  border-bottom: none;
+}
+
+.individual-toc-list .toc-num {
+  font-weight: 700;
+  min-width: 1.5em;
+}
+
+.individual-toc-list .toc-label {
+  flex: 1;
+}
+
+.individual-doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #1f2937;
+}
+
+.individual-doc-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12pt;
+  padding: 7pt 9pt;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 10.5pt;
+}
+
+.individual-doc-list li:last-child {
+  border-bottom: none;
+}
+
+.individual-doc-list .doc-label {
+  font-weight: 600;
+}
+
+.individual-doc-list .doc-status {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.individual-doc-list li.is-uploaded .doc-status {
+  color: #059669;
+}
+
+.individual-doc-list li.is-pending .doc-status {
+  color: #b45309;
 }
 
 .individual-dpr-document table.individual-qa {
@@ -360,10 +557,157 @@
   text-align: center;
 }
 
-.individual-dpr-document tr.is-clickable {
+.individual-dpr-document tr.is-clickable,
+.individual-toc-list li.is-clickable {
   cursor: pointer;
 }
 
-.individual-dpr-document .empty {
+.individual-dpr-document .empty,
+.individual-empty {
   text-align: left;
+  color: #6b7280;
+  font-style: italic;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .individual-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .individual-meta-item,
+  .individual-meta-item:nth-child(2n) {
+    border-right: none;
+  }
+}
+
+/* PMEGP template — formal teal / KVIC bank-unit look */
+.individual-dpr-document.tpl-pmegp {
+  color: #0f3d3a;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-cover {
+  border-bottom: none;
+  background:
+    linear-gradient(#0f766e, #0f766e) top/100% 4pt no-repeat,
+    linear-gradient(180deg, #f0fdfa 0%, #ffffff 55%);
+  padding-top: 10mm;
+  padding-bottom: 12mm;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-pack-badge {
+  padding: 4pt 12pt;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
+  border: 1px solid #5eead4;
+  background: #ccfbf1;
+  border-radius: 999px;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-kicker {
+  color: #115e59;
+  letter-spacing: 0.1em;
+  font-size: 18pt;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-unit {
+  color: #0f766e;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-scheme {
+  color: #134e4a;
+  font-weight: 700;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-tagline {
+  color: #0f766e;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-sec-title {
+  border-bottom-color: #0f766e;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-sec-num {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-qa-q {
+  color: #0f766e;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-meta-grid {
+  border-color: #0f766e;
+}
+
+/* AP CMEP template — indigo / state programme look (distinct from PMEGP) */
+.individual-dpr-document.tpl-ap-cmep {
+  color: #1e1b4b;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-cover {
+  border-bottom: none;
+  background:
+    linear-gradient(90deg, #3730a3 0%, #3730a3 38%, #d97706 38%, #d97706 62%, #3730a3 62%, #3730a3 100%) top/100% 4pt no-repeat,
+    linear-gradient(180deg, #eef2ff 0%, #fffbeb 42%, #ffffff 100%);
+  padding-top: 10mm;
+  padding-bottom: 12mm;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-pack-badge {
+  padding: 4pt 12pt;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #312e81;
+  border: 1px solid #a5b4fc;
+  background: #e0e7ff;
+  border-radius: 3pt;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-kicker {
+  color: #312e81;
+  letter-spacing: 0.08em;
+  font-size: 18pt;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-unit {
+  color: #3730a3;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-scheme {
+  color: #312e81;
+  font-weight: 700;
+}
+
+.individual-dpr-document.tpl-ap-cmep .cover-tagline {
+  color: #4338ca;
+  font-style: italic;
+  opacity: 0.95;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-sec-title {
+  border-bottom-color: #3730a3;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-sec-num {
+  background: #3730a3;
+  border-color: #3730a3;
+  color: #fff;
+  border-radius: 3pt;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-qa-q {
+  color: #3730a3;
+}
+
+.individual-dpr-document.tpl-ap-cmep .individual-meta-grid {
+  border-color: #3730a3;
 }

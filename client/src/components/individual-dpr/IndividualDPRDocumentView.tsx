@@ -12,6 +12,7 @@ import {
   sectionTitleFromStep,
   type IndividualDocField,
 } from '@/lib/individualDpr/individualDocModel';
+import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import { isKycUploaded } from '@/lib/privacy/kycField';
 
 export interface IndividualDPRDocumentViewProps {
@@ -22,6 +23,43 @@ export interface IndividualDPRDocumentViewProps {
   onSectionClick?: (localStep: number) => void;
 }
 
+const SHORT_FIELD_NAMES = new Set([
+  'unitName',
+  'district',
+  'location',
+  'yearOfEstablishment',
+  'entrepreneurName',
+  'entrepreneurAge',
+  'craft',
+  'loanTranche',
+  'trainingStage',
+  'covOrLor',
+  'vendingType',
+  'workplaceType',
+  'fssai',
+  'unitStage',
+  'odopAligned',
+  'sectorType',
+  'land',
+  'building',
+  'machinery',
+  'utilitiesAndInfrastructure',
+  'preliminaryAndPreOperative',
+  'workingCapitalMargin',
+  'ownContribution',
+  'bankLoan',
+  'subsidy',
+  'startDate',
+  'endDate',
+  'irr',
+  'npv',
+  'dscr',
+  'upiQr',
+  'dailySales',
+  'yearsVending',
+  'yearsPractising',
+]);
+
 function fieldHit(
   path: string,
   children: React.ReactNode,
@@ -29,6 +67,27 @@ function fieldHit(
 ): React.ReactNode {
   if (!track) return children;
   return <span data-dpr-field={path}>{children}</span>;
+}
+
+function isExpansiveField(field: IndividualDocField, formatted: string): boolean {
+  if (SHORT_FIELD_NAMES.has(field.name)) return false;
+  if (formatted === '—' || formatted.length <= 48) return false;
+  // Multi-line / paragraph answers get the wide PDF block
+  if (formatted.includes('\n') || formatted.length > 48) return true;
+  // Description-ish labels
+  const label = field.label.toLowerCase();
+  return (
+    label.includes('description') ||
+    label.includes('intro') ||
+    label.includes('summary') ||
+    label.includes('process') ||
+    label.includes('analysis') ||
+    label.includes('importance') ||
+    label.includes('justification') ||
+    label.includes('gap') ||
+    label.includes('story') ||
+    label.includes('activity')
+  );
 }
 
 export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps> = ({
@@ -41,6 +100,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
   const schemeCode = extractSchemeCode(dpr, project, data);
+  const schemeUi = getSchemeUiTemplate(schemeCode);
   const steps = getSchemeDocSteps(schemeCode);
   const step1 = data.step1 || {};
   const extras = data.schemeExtras || {};
@@ -53,45 +113,72 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const uploads = getIndividualUploads(schemeCode, data);
   const uploadStore = data.step18 || data.uploads || {};
 
-  const renderQaTable = (fields: IndividualDocField[]) => {
-    if (!fields.length) return null;
+  const renderSectionFields = (fields: IndividualDocField[]) => {
+    if (!fields.length) {
+      return <p className="individual-empty">{tf('No answers for this section yet.')}</p>;
+    }
+
+    const shortFields: Array<{ field: IndividualDocField; text: string }> = [];
+    const longFields: Array<{ field: IndividualDocField; text: string }> = [];
+
+    for (const field of fields) {
+      const raw = readDocField(field, data);
+      const text = formatDocValue(raw);
+      if (isExpansiveField(field, text)) longFields.push({ field, text });
+      else shortFields.push({ field, text });
+    }
+
     return (
-      <table className="individual-qa">
-        <colgroup>
-          <col style={{ width: '36%' }} />
-          <col style={{ width: '64%' }} />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>{tf('Question')}</th>
-            <th>{tf('Answer')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {fields.map((field) => {
-            const raw = readDocField(field, data);
-            return (
-              <tr key={field.path}>
-                <td className="q">{tf(field.label)}</td>
-                <td className="a">{fieldHit(field.path, formatDocValue(raw), trackFieldHits)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="individual-sec-body">
+        {shortFields.length > 0 && (
+          <dl className="individual-meta-grid">
+            {shortFields.map(({ field, text }) => (
+              <div key={field.path} className="individual-meta-item">
+                <dt>{tf(field.label)}</dt>
+                <dd>
+                  {fieldHit(
+                    field.path,
+                    text === '—' ? tf('Not filled') : tf(text),
+                    trackFieldHits
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {longFields.map(({ field, text }) => (
+          <article key={field.path} className="individual-qa-block">
+            <h3 className="individual-qa-q">{tf(field.label)}</h3>
+            <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
+              {fieldHit(
+                field.path,
+                text === '—' ? tf('Not filled yet — complete this in the form.') : text,
+                trackFieldHits
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
     );
   };
 
   return (
-    <div className="dpr-document individual-dpr-document">
+    <div
+      className={`dpr-document individual-dpr-document${schemeUi ? ` ${schemeUi.documentClass}` : ''}`}
+    >
       <header className="individual-cover">
-        <p className="cover-kicker">DETAILED PROJECT REPORT</p>
+        {schemeUi ? <p className="cover-pack-badge">{tf(schemeUi.badge)}</p> : null}
+        <p className="cover-kicker">{schemeUi ? tf(schemeUi.coverKicker) : 'DETAILED PROJECT REPORT'}</p>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
         <h1 className="cover-unit">
           {fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
         </h1>
-        <p className="cover-scheme">{cover.underLine}</p>
+        <div className="cover-scheme-block">
+          <p className="cover-scheme">{cover.underLine}</p>
+          {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
+        </div>
         <div className="cover-meta">
           <div>
             <span>{tf('District')}</span>
@@ -111,65 +198,47 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       </header>
 
       <section className="individual-toc">
-        <h2>{tf('Table of Contents')}</h2>
-        <table className="individual-qa toc">
-          <colgroup>
-            <col style={{ width: '12%' }} />
-            <col style={{ width: '88%' }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>{tf('Section')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {steps.map((def) => (
-              <tr
-                key={def.id}
-                className={onSectionClick ? 'is-clickable' : undefined}
-                onClick={() => onSectionClick?.(def.n)}
-              >
-                <td className="num">{def.n}</td>
-                <td>{tf(sectionTitleFromStep(def))}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2 className="individual-sec-title">
+          <span className="individual-sec-num">0</span>
+          {tf('Table of Contents')}
+        </h2>
+        <ol className="individual-toc-list">
+          {steps.map((def) => (
+            <li
+              key={def.id}
+              className={onSectionClick ? 'is-clickable' : undefined}
+              onClick={() => onSectionClick?.(def.n)}
+            >
+              <span className="toc-num">{def.n}</span>
+              <span className="toc-label">{tf(sectionTitleFromStep(def))}</span>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {steps.map((def) => {
-        const heading = `${def.n}. ${tf(sectionTitleFromStep(def))}`;
+        const title = tf(sectionTitleFromStep(def));
         if (def.id === 'uploads' || def.contentStep === 18) {
           return (
             <section key={def.id} id={`individual-section-${def.n}`} className="individual-sec">
-              <h2>{heading}</h2>
+              <h2 className="individual-sec-title">
+                <span className="individual-sec-num">{def.n}</span>
+                {title}
+              </h2>
               {uploads.length === 0 ? (
-                <p className="empty">—</p>
+                <p className="individual-empty">—</p>
               ) : (
-                <table className="individual-qa">
-                  <colgroup>
-                    <col style={{ width: '72%' }} />
-                    <col style={{ width: '28%' }} />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>{tf('Document')}</th>
-                      <th>{tf('Status')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {uploads.map((u) => {
-                      const present = isKycUploaded(uploadStore[u.id] || uploadStore[u.label]);
-                      return (
-                        <tr key={u.id}>
-                          <td>{tf(u.label)}</td>
-                          <td>{tf(present ? 'Uploaded' : 'Pending')}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <ul className="individual-doc-list">
+                  {uploads.map((u) => {
+                    const present = isKycUploaded(uploadStore[u.id] || uploadStore[u.label]);
+                    return (
+                      <li key={u.id} className={present ? 'is-uploaded' : 'is-pending'}>
+                        <span className="doc-label">{tf(u.label)}</span>
+                        <span className="doc-status">{tf(present ? 'Uploaded' : 'Pending')}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </section>
           );
@@ -178,8 +247,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
         return (
           <section key={def.id} id={`individual-section-${def.n}`} className="individual-sec">
-            <h2>{heading}</h2>
-            {renderQaTable(fields)}
+            <h2 className="individual-sec-title">
+              <span className="individual-sec-num">{def.n}</span>
+              {title}
+            </h2>
+            {renderSectionFields(fields)}
           </section>
         );
       })}

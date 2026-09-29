@@ -5,12 +5,13 @@
  */
 export const FIELD_DESCRIPTIONS: Record<string, Record<string, string>> = {
   step1: {
+    unitName: 'Enter the unit or project cover name used in official documents.',
     clusterName: 'Enter the official name of the industrial cluster. This should be the name used in official documents and registrations.',
-    district: 'Specify the district where the cluster is located. This helps in regional analysis and government scheme eligibility.',
-    location: 'Provide the specific location or address of the cluster. Include village/town, mandal/taluk, and any landmark details.',
+    district: 'Select the Andhra Pradesh district where the unit is located.',
+    location: 'Select the town where the unit is located (filtered by the district you chose).',
     geographicalSpread: 'Describe the geographical area covered by the cluster. Include details about villages, towns, or regions included in the cluster.',
-    natureOfBusiness: 'Describe the primary business activity or industry type of the cluster (e.g., Handloom, Food Processing, Engineering).',
-    majorProducts: 'List the main products manufactured or services provided by enterprises in the cluster.',
+    natureOfBusiness: 'Describe what you do in plain words, then use Match me to map it to one skill (e.g. “I make pots” → Pottery).',
+    majorProducts: 'List the main products you sell or make (e.g. pani puri, bhel puri).',
     enterpriseCount: 'Enter the number of enterprises categorized by size (Micro, Small, Medium) as per MSME classification.',
     ageOfEnterprises: 'Provide the distribution of enterprises based on their years of operation. This helps assess cluster maturity.',
     employmentPerUnit: 'Enter the number of employees per enterprise unit, categorized by employment size ranges.',

@@ -88,6 +88,7 @@ export const EXTRA_FIELD_LABELS: Record<string, string> = {
   entrepreneurAge: 'Age',
   premisesType: 'Premises type',
   processOfManufacture: 'Process of manufacture',
+  executiveSummary: 'Executive summary',
   installedCapacity: 'Installed / proposed capacity',
   existingCapacity: 'Existing capacity (before upgrade)',
   capacityUtilisationY1: 'Capacity utilisation Year 1 (%)',
@@ -302,7 +303,26 @@ export function getIndividualDocFields(
       stepField('natureOfBusiness', 'Nature of Business', 1),
       stepField('majorProducts', 'Major Products', 1),
     ];
-    extraFieldsForScheme(schemeCode).forEach((name) => fields.push(extraField(name)));
+    // Narrative / later-step extras are attached on the steps where the form asks them.
+    const skipOnStep1 = new Set([
+      'executiveSummary',
+      'processOfManufacture',
+      'existingTech',
+      'proposedTech',
+      'productivityGain',
+      'installedCapacity',
+      'capacityUtilisationY1',
+      'powerRequirement',
+      'directEmployment',
+      'indirectEmployment',
+      'impactNote',
+      'pmegpSubsidyPercent',
+      'pmegpOwnPercent',
+      'premisesType',
+    ]);
+    extraFieldsForScheme(schemeCode).forEach((name) => {
+      if (!skipOnStep1.has(name)) fields.push(extraField(name));
+    });
     return fields;
   }
 
@@ -318,11 +338,23 @@ export function getIndividualDocFields(
         stepField('keyProducts', 'Key Products', 2)
       );
     }
+    if (schemeCode === 'PMEGP' || schemeCode === 'AP_CMEP') {
+      fields.push(extraField('executiveSummary'));
+    }
     if (
       schemeCode &&
-      ['PMEGP', 'PMEGP_2ND', 'STANDUP', 'PMFME', 'SCLCSS', 'AP_TECH_UPGRADE', 'AP_EDP', 'VISHWAKARMA', 'SVANIDHI'].includes(
-        schemeCode
-      )
+      [
+        'PMEGP',
+        'PMEGP_2ND',
+        'STANDUP',
+        'PMFME',
+        'SCLCSS',
+        'AP_TECH_UPGRADE',
+        'AP_EDP',
+        'AP_CMEP',
+        'VISHWAKARMA',
+        'SVANIDHI',
+      ].includes(schemeCode)
     ) {
       fields.push(extraField('processOfManufacture'));
     }

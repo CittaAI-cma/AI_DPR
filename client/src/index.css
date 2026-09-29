@@ -158,3 +158,17 @@
   transition: background-color 0.2s ease, outline-color 0.2s ease;
 }
 
+/* Latest DPR scheme form banners (PMEGP / AP CMEP) */
+.scheme-banner-pmegp {
+  background:
+    linear-gradient(#0f766e, #0f766e) top / 100% 3px no-repeat,
+    linear-gradient(90deg, #f0fdfa 0%, #ecfdf5 45%, #f0fdfa 100%);
+}
+
+.scheme-banner-ap-cmep {
+  background:
+    linear-gradient(90deg, #3730a3 0%, #3730a3 40%, #d97706 40%, #d97706 60%, #3730a3 60%, #3730a3 100%)
+      top / 100% 3px no-repeat,
+    linear-gradient(90deg, #eef2ff 0%, #fffbeb 50%, #eef2ff 100%);
+}
+

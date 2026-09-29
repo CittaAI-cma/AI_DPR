@@ -959,19 +959,32 @@ Use exact values from the data above. Write in a formal, persuasive tone suitabl
 
       const isIndividualDPR = previousStepsData?._isIndividualDPR === true;
       const schemeCode = previousStepsData?._schemeCode || null;
-      const stepMapping = getStepFieldsMapping(currentStep, isIndividualDPR, schemeCode);
-      if (!stepMapping) {
+      const budget = previousStepsData?._budget || null;
+      const stepMappingRaw = getStepFieldsMapping(currentStep, isIndividualDPR, schemeCode, budget);
+      if (!stepMappingRaw) {
         console.log(`No field mapping found for step ${currentStep}`);
         return [];
       }
+      // Exclude before prompting so the model only sees this step's asked questions.
+      const excludeSet = new Set(excludeFields || []);
+      const stepMapping = {
+        ...stepMappingRaw,
+        fields: stepMappingRaw.fields.filter((f) => !excludeSet.has(f.name)),
+      };
       if (!stepMapping.fields.length) {
         return [];
       }
+
+      const userPromptContext =
+        typeof previousStepsData?._promptContext === 'string'
+          ? previousStepsData._promptContext.trim()
+          : '';
 
       const previousForText = { ...previousStepsData };
       delete previousForText._isIndividualDPR;
       delete previousForText._promptContext;
       delete previousForText._schemeCode;
+      delete previousForText._budget;
 
       const contextText = this.formatStepDataAsText(previousForText);
       const currentStepText = this.formatStepDataAsText({ [`step${currentStep}`]: currentStepData });
@@ -979,7 +992,7 @@ Use exact values from the data above. Write in a formal, persuasive tone suitabl
       // Extract key information from Step 1 for quick reference
       // For Step 1, use currentStepData; for other steps, use previousStepsData.step1
       const step1Data = currentStep === 1 ? currentStepData : (previousStepsData.step1 || {});
-      const clusterName = step1Data.clusterName || '';
+      const clusterName = step1Data.unitName || step1Data.clusterName || '';
       const district = step1Data.district || '';
       const location = step1Data.location || '';
       const natureOfBusiness = step1Data.natureOfBusiness || '';
@@ -1037,7 +1050,7 @@ ${natureOfBusiness ? `Nature of business (already filled): ${natureOfBusiness}` 
 ${majorProducts ? `Major products (already filled): ${majorProducts}` : ''}
 
 CRITICAL:
-- Suggest only the fields listed for this step (nature of business and major products).
+- Suggest ONLY the fields listed for this step (exact \`field\` keys below). Do not invent other keys.
 - Never suggest enterpriseCount, ageOfEnterprises, employmentPerUnit, investmentPerUnit, turnoverPerUnit, or marketServed — those are cluster-only.
 - Major products must be specific goods (e.g. "turned wooden toys, lacquerware") — do NOT copy the sector word such as "Manufacturing".
 - Write as if this is a single unit in ${location || 'the stated location'}${district ? `, ${district}` : ''}.
@@ -1082,7 +1095,8 @@ CURRENT STEP TO COMPLETE:
 ═══════════════════════════════════════════════════════════════
 Step Number: ${currentStep}
 Step Name: "${stepMapping.stepName}"
-Required Fields: ${stepMapping.fields.map(f => f.name).join(', ')}
+Required Fields (use these exact \`field\` keys; labels are for humans):
+${stepMapping.fields.map((f) => `- ${f.name} — ${f.label} (${f.type})`).join('\n')}
 ${step1Context}═══════════════════════════════════════════════════════════════
 COMPLETED PREVIOUS STEPS (${previousStepsSummary.length} steps):
 ═══════════════════════════════════════════════════════════════
@@ -1106,20 +1120,27 @@ FIELD STATUS:
 FILLED FIELDS: ${filledFields.length > 0 ? filledFields.join(', ') : 'None'}
 EMPTY FIELDS (PRIORITY): ${emptyFields.length > 0 ? emptyFields.join(', ') : 'All fields are filled'}
 
+${userPromptContext ? `═══════════════════════════════════════════════════════════════
+USER DIRECTION (follow this when regenerating / refining):
+═══════════════════════════════════════════════════════════════
+${userPromptContext}
+Incorporate these points into the suggestion(s). Keep field keys unchanged.
+` : ''}
 ═══════════════════════════════════════════════════════════════
 TASK:
 ═══════════════════════════════════════════════════════════════
 Provide suggestions for ALL ${stepMapping.fields.length} fields in Step ${currentStep}: "${stepMapping.stepName}".
 
 MANDATORY REQUIREMENT: You MUST provide exactly ${stepMapping.fields.length} suggestions - one for EACH field:
-${stepMapping.fields.map((f, idx) => `${idx + 1}. ${f.name} (${f.type})`).join('\n')}
+${stepMapping.fields.map((f, idx) => `${idx + 1}. ${f.name} — ${f.label} (${f.type})`).join('\n')}
 
 CRITICAL REQUIREMENTS:
 
 1. **MANDATORY: SUGGEST ALL FIELDS**
    - You MUST provide suggestions for EVERY field in Step ${currentStep}
    - Total fields to suggest: ${stepMapping.fields.length}
-   - Field list: ${stepMapping.fields.map(f => `${f.name} (${f.type})`).join(', ')}
+   - Field list: ${stepMapping.fields.map(f => `${f.name} ("${f.label}")`).join(', ')}
+   - The JSON "field" value MUST be the exact key (e.g. natureOfBusiness), never a paraphrase
    - Provide ONE suggestion per field - NO EXCEPTIONS
    - If a field is already filled, suggest improvements or additional details based on previous steps
 
@@ -1127,10 +1148,10 @@ CRITICAL REQUIREMENTS:
    ${currentStep === 1 
      ? (isIndividualDPR
        ? `   - This is STEP 1 for a SINGLE UNIT. Unit name: "${clusterName}"${location ? `, Location: ${location}` : ''}${district ? `, District: ${district}` : ''}
-   - Suggest natureOfBusiness (what this one unit does) and majorProducts (named goods, not the word Manufacturing/Services).
+   - Suggest every field listed above for this scheme pack (natureOfBusiness, majorProducts, and any scheme extras such as vendor age, UPI, vending type).
    - Do not invent a cluster of many enterprises.
    ${schemeCode === 'VISHWAKARMA' ? `- This unit is for PM Vishwakarma. You MUST also suggest craft (exact trade name from the field label list), currentTools (what they use today), and newTools (what to buy with the ₹15,000 voucher). Put the actual values in "suggestion", not instructions.` : ''}
-   ${schemeCode === 'SVANIDHI' ? `- This unit is for PM SVANidhi. You MUST suggest covOrLor as exactly "cov" or "lor", and upiQr as a plausible UPI ID.` : ''}
+   ${schemeCode === 'SVANIDHI' ? `- This unit is for PM SVANidhi street vendors. Use exact keys: covOrLor ("cov" or "lor"), loanTranche ("first"/"second"/"third"), vendingType (footpath/cart/stall/market/moving/other), upiQr (plausible UPI ID), entrepreneurName, entrepreneurAge (18-60), yearsVending, dailySales (₹ number), processOfManufacture, workplaceType, powerRequirement.` : ''}
    ${schemeCode === 'PMFME' ? `- This unit is for PMFME. You MUST suggest fssai as exactly "yes" or "planned".` : ''}
    ${schemeCode === 'AP_EDP' ? `- This unit is for AP MSME-EDP 4.0 new-unit capital subsidy. You MUST suggest enterpriseSize (micro/small/medium), specialCategory (yes/no), scStOwned (yes/no), apDomicile (yes/no), and apiicPark (yes/no).` : ''}`
        : `   - This is STEP 1 - you have the CLUSTER CONTEXT provided above (Cluster Name: "${clusterName}"${location ? `, Location: ${location}` : ''}${district ? `, District: ${district}` : ''})
@@ -1212,13 +1233,13 @@ Return suggestions in JSON format with EXACTLY ${stepMapping.fields.length} sugg
   "suggestions": [
     ${stepMapping.fields.map(f => `{
       "field": "${f.name}",
-      "suggestion": "specific, actionable guidance for ${f.name} (${f.type}) that references actual data from relevant previous steps (use actual values like '${clusterName}', '${natureOfBusiness}', '${majorProducts}', etc.)",
-      "reasoning": "explain why this field is important and how specific data from previous steps (mention which steps) relates to it"
+      "suggestion": "specific value or text for ${f.label} (key ${f.name})",
+      "reasoning": "brief why this fits the unit / scheme"
     }`).join(',\n    ')}
   ]
 }
 
-CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one for each field: ${stepMapping.fields.map(f => f.name).join(', ')}`;
+CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one for each field key: ${stepMapping.fields.map(f => f.name).join(', ')}. Never rename those keys.`;
 
       // Use OpenAI chat completions directly
       const response = await openai.chat.completions.create({
@@ -1226,7 +1247,7 @@ CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one
         messages: [
           {
             role: 'system',
-            content: `You are an expert consultant helping create Detailed Project Reports (DPR) for MSME clusters. 
+            content: `You are an expert consultant helping create Detailed Project Reports (DPR) for MSME ${isIndividualDPR ? 'individual units' : 'clusters'}. 
 
 Your task is to analyze ALL data from previous steps (Steps 1-${currentStep - 1}) and provide field-specific suggestions for Step ${currentStep}.
 
@@ -1235,6 +1256,7 @@ CRITICAL:
 - Use information from ALL completed steps, not just Step 1
 - Each suggestion must reference specific data from relevant previous steps
 - Provide accurate, contextual suggestions that connect previous step data to current step fields
+- JSON "field" keys must match the exact field names supplied in the user prompt
 
 Return suggestions in JSON format only.`,
           },
@@ -1261,24 +1283,50 @@ Return suggestions in JSON format only.`,
             if (excludeFields.length > 0) {
               aiSuggestions = aiSuggestions.filter((s: any) => !excludeFields.includes(s.field));
             }
-            
-            // Validate that we have suggestions for all fields (excluding excluded ones)
-            const suggestedFields = new Set(aiSuggestions.map((s: any) => s.field));
-            const allFields = stepMapping.fields.map(f => f.name).filter(f => !excludeFields.includes(f));
-            const missingFields = allFields.filter(f => !suggestedFields.has(f));
-            
-            if (missingFields.length > 0) {
-              console.log(`⚠️ AI did not provide suggestions for all fields. Missing: ${missingFields.join(', ')}`);
-              // Add fallback suggestions for missing fields
-              missingFields.forEach(field => {
-                const fieldInfo = stepMapping.fields.find(f => f.name === field);
-                aiSuggestions.push({
-                  field,
-                  suggestion: `Fill in the ${field} field (${fieldInfo?.type || 'field'}) based on ${clusterName}${district ? ` in ${district}` : ''}${natureOfBusiness ? ` (${natureOfBusiness})` : ''} data from all previous steps.`,
-                  reasoning: 'Ensure consistency with all previous step data.',
-                });
-              });
+
+            // Only keep fields that exist on this step's form. Models often invent
+            // names (nameOfBusiness, interestInHobby, …) that break Apply.
+            const FIELD_ALIASES: Record<string, string> = {
+              nameOfBusiness: 'natureOfBusiness',
+              businessName: 'natureOfBusiness',
+              businessNature: 'natureOfBusiness',
+              mainProducts: 'majorProducts',
+              products: 'majorProducts',
+              productList: 'majorProducts',
+              unitOrProjectName: 'unitName',
+              projectName: 'unitName',
+              vendorName: 'entrepreneurName',
+              vendorFullName: 'entrepreneurName',
+              age: 'entrepreneurAge',
+              yearsInStreetVending: 'yearsVending',
+              yearsInVending: 'yearsVending',
+              approxDailySales: 'dailySales',
+              upiId: 'upiQr',
+              upi: 'upiQr',
+              vendingProof: 'covOrLor',
+              loanScheme: 'loanTranche',
+              locationStatus: 'workplaceType',
+              workplace: 'workplaceType',
+            };
+
+            const allowedNames = stepMapping.fields.map((f) => f.name);
+            const allowedSet = new Set(allowedNames);
+            const byField = new Map<string, any>();
+
+            for (const s of aiSuggestions) {
+              let field = typeof s.field === 'string' ? s.field.trim() : '';
+              if (!field) continue;
+              if (!allowedSet.has(field) && FIELD_ALIASES[field]) {
+                field = FIELD_ALIASES[field];
+              }
+              if (!allowedSet.has(field) || byField.has(field)) continue;
+              byField.set(field, { ...s, field });
             }
+
+            // Keep allowlisted order; skip inventing placeholder text for missing keys.
+            aiSuggestions = allowedNames
+              .map((field) => byField.get(field))
+              .filter(Boolean);
             
             // Normalize suggestions to ensure suggestion and reasoning are strings
             const normalizedSuggestions = aiSuggestions.map((s: any) => ({
@@ -1305,7 +1353,9 @@ Return suggestions in JSON format only.`,
             
             // If we have suggestions, return them; otherwise fall through to fallback
             if (normalizedSuggestions.length > 0) {
-              console.log(`✅ Returning ${normalizedSuggestions.length} AI suggestions for step ${currentStep}`);
+              console.log(
+                `✅ Returning ${normalizedSuggestions.length} AI suggestions for step ${currentStep} (allowed: ${allowedNames.join(', ')})`
+              );
               return normalizedSuggestions;
             } else {
               console.log(`⚠️ AI returned empty suggestions for step ${currentStep}, using fallback`);
@@ -1517,6 +1567,137 @@ Return only the suggestion text, no JSON or formatting.`;
   }
 
   /**
+   * Improve / polish existing text for a DPR form field.
+   * Returns only the improved field value (no commentary).
+   */
+  static async improveFieldText(
+    fieldName: string,
+    fieldValue: string,
+    context: Record<string, any> = {}
+  ): Promise<string | null> {
+    try {
+      const text = String(fieldValue || '').trim();
+      if (!text) return null;
+
+      const label = context.fieldLabel || fieldName || 'form field';
+      const schemeCode = context.schemeCode || '';
+      const unitName = context.unitName || context.clusterName || '';
+      const district = context.district || '';
+      const location = context.location || '';
+      const natureOfBusiness = context.natureOfBusiness || '';
+
+      const prompt = `You improve text for a Detailed Project Report (DPR) form used for MSME bank / scheme applications in India.
+
+Field: ${label}${fieldName ? ` (key: ${fieldName})` : ''}
+${schemeCode ? `Scheme: ${schemeCode}` : ''}
+${unitName ? `Unit / project: ${unitName}` : ''}
+${[location, district].filter(Boolean).length ? `Place: ${[location, district].filter(Boolean).join(', ')}` : ''}
+${natureOfBusiness ? `Nature of business: ${natureOfBusiness}` : ''}
+
+Current text to improve:
+"""
+${text}
+"""
+
+Rules:
+- Return ONLY the improved text for this field — no quotes, no markdown, no preamble.
+- Keep the same facts and meaning; do not invent loans, subsidies, registrations, or numbers that are not implied.
+- Make it clearer, more professional, and suitable for a bank reviewer.
+- Match length roughly to the input (short notes stay short; paragraphs can be polished).
+- For codes / enums / yes-no / single words (e.g. "cov", "first", "yes"), return a cleaned equivalent — do not expand into an essay.
+- Write as one individual unit / entrepreneur — never as a multi-unit cluster or SPV.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You polish DPR form field text. Reply with the improved field value only — no explanations.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.4,
+        max_tokens: 800,
+      });
+
+      const improved = (response.choices[0]?.message?.content || '').trim();
+      if (!improved) return null;
+      // Strip accidental wrapping quotes
+      return improved.replace(/^["'`]|["'`]$/g, '').trim() || null;
+    } catch (error: any) {
+      console.error('Error improving field text:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Map free-text "what I do" to exactly one skill label from the provided allowlist.
+   */
+  static async matchBusinessSkill(
+    text: string,
+    skills: string[],
+    context: Record<string, any> = {}
+  ): Promise<string | null> {
+    try {
+      const raw = String(text || '').trim();
+      if (!raw || !skills?.length) return null;
+
+      const allow = skills.map((s) => String(s).trim()).filter(Boolean);
+      const prompt = `You map a person's description of their work to EXACTLY ONE skill label from the allowed list.
+
+User description:
+"""
+${raw}
+"""
+
+Allowed skills (pick exactly one — copy the label character-for-character):
+${allow.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+${context.unitName ? `Unit name hint: ${context.unitName}` : ''}
+${context.district ? `District: ${context.district}` : ''}
+
+Rules:
+- Reply with ONLY the chosen skill label from the list — no quotes, no numbering, no explanation.
+- Prefer the closest practical livelihood / MSME skill.
+- Example: "i make pots" → Pottery (if Pottery is in the list).
+- If nothing fits well, pick the closest "Other …" option from the list.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You classify livelihood / MSME work into one allowed skill label. Reply with that label only.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 60,
+      });
+
+      let picked = (response.choices[0]?.message?.content || '').trim();
+      picked = picked.replace(/^["'`]|["'`]$/g, '').trim();
+      // Strip leading "12. " if model numbers
+      picked = picked.replace(/^\d+[\.)]\s*/, '').trim();
+
+      const exact = allow.find((s) => s.toLowerCase() === picked.toLowerCase());
+      if (exact) return exact;
+
+      const partial = allow.find(
+        (s) =>
+          picked.toLowerCase().includes(s.toLowerCase()) ||
+          s.toLowerCase().includes(picked.toLowerCase())
+      );
+      return partial || null;
+    } catch (error: any) {
+      console.error('Error matching business skill:', error);
+      return null;
+    }
+  }
+
+  /**
    * Generate actual content for a field based on suggestion and context
    */
   static async generateFieldContent(
@@ -1529,7 +1710,8 @@ Return only the suggestion text, no JSON or formatting.`;
     try {
       const isIndividualDPR = previousStepsData?._isIndividualDPR === true;
       const schemeCode = previousStepsData?._schemeCode || null;
-      const stepMapping = getStepFieldsMapping(currentStep, isIndividualDPR, schemeCode);
+      const budget = previousStepsData?._budget || null;
+      const stepMapping = getStepFieldsMapping(currentStep, isIndividualDPR, schemeCode, budget);
       if (!stepMapping) {
         console.log(`No field mapping found for step ${currentStep}`);
         return null;
@@ -1539,6 +1721,7 @@ Return only the suggestion text, no JSON or formatting.`;
       delete previousForText._isIndividualDPR;
       delete previousForText._promptContext;
       delete previousForText._schemeCode;
+      delete previousForText._budget;
 
       // Build context from all previous steps
       const contextText = this.formatStepDataAsText(previousForText);
@@ -1553,6 +1736,10 @@ Return only the suggestion text, no JSON or formatting.`;
 
       // Get field info to determine the expected format
       const fieldInfo = stepMapping.fields.find(f => f.name === fieldName);
+      if (!fieldInfo) {
+        console.log(`Field ${fieldName} is not on step ${currentStep} for this scheme`);
+        return null;
+      }
       const fieldType = fieldInfo?.type || 'text';
       const sampleValue = fieldInfo?.sampleValue || '';
 

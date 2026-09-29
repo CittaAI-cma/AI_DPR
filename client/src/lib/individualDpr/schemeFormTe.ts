@@ -16,6 +16,19 @@ export const SCHEME_FORM_TE: Record<string, string> = {
   'Already filed': 'ఇప్పటికే దాఖలు',
   'Already have FSSAI': 'FSSAI ఇప్పటికే ఉంది',
   'AP CMEP — credit-linked': 'AP CMEP — క్రెడిట్-లింక్డ్',
+  'PMEGP · KVIC unit pack': 'PMEGP · KVIC యూనిట్ ప్యాక్',
+  'AP CMEP · State credit-linked': 'AP CMEP · రాష్ట్ర క్రెడిట్-లింక్డ్',
+  'Credit-linked margin money · bank-style single-unit DPR':
+    'క్రెడిట్-లింక్డ్ మార్జిన్ మనీ · బ్యాంకు-శైలి సింగిల్-యూనిట్ DPR',
+  'Andhra Pradesh CMEP · bank loan required · manufacturing / knowledge':
+    'ఆంధ్రప్రదేశ్ CMEP · బ్యాంకు రుణం అవసరం · తయారీ / నాలెడ్జ్',
+  'Executive summary': 'కార్యనిర్వాహక సారాంశం',
+  'Write a short bank-style overview: unit, location, products, project cost, own + bank + subsidy, and jobs.':
+    'చిన్న బ్యాంకు-శైలి అవలోకనం రాయండి: యూనిట్, స్థలం, ఉత్పత్తులు, ప్రాజెక్ట్ ఖర్చు, స్వంతం + బ్యాంకు + సబ్సిడీ, మరియు ఉద్యోగాలు.',
+  'Process of manufacture / service delivery for the new CMEP unit':
+    'కొత్త CMEP యూనిట్ కోసం తయారీ / సేవా డెలివరీ ప్రక్రియ',
+  'Spec: docs/schemes/AP_CMEP/apCmep.md — bank loan required':
+    'స్పెక్: docs/schemes/AP_CMEP/apCmep.md — బ్యాంకు రుణం అవసరం',
   'AP domicile': 'AP నివాసం',
   'AP domicile confirmed?': 'AP నివాసం నిర్ధారించబడిందా?',
   'AP EDP capital subsidy on new-unit FCI — mutually exclusive with tech-upgrade; total incentives ≤ 75% FCI. Indicative': 'కొత్త-యూనిట్ FCIపై AP EDP క్యాపిటల్ సబ్సిడీ — టెక్-అప్‌గ్రేడ్‌తో విరుద్ధం; మొత్తం ≤ 75% FCI. సూచన',

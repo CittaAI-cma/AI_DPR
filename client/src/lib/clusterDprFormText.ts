@@ -1,9 +1,14 @@
 import { SCHEME_FORM_TE } from '@/lib/individualDpr/schemeFormTe';
+import { SCHEME_STEP_TITLES_TE } from '@/lib/individualDpr/schemeStepTitlesTe';
+import { BUSINESS_SKILLS_TE } from '@/lib/individualDpr/businessSkillsTe';
 import { useTranslation } from 'react-i18next';
+import { useCallback } from 'react';
 
 /** English UI string → Telugu. Missing keys fall back to English. */
 const TE: Record<string, string> = {
   ...SCHEME_FORM_TE,
+  ...SCHEME_STEP_TITLES_TE,
+  ...BUSINESS_SKILLS_TE,
   'Cluster Name *': 'క్లస్టర్ పేరు *',
   'District *': 'జిల్లా *',
   'Location *': 'స్థలం *',
@@ -204,6 +209,52 @@ const TE: Record<string, string> = {
   'Get contextual recommendations based on your previous step data':
     'మునుపటి దశ డేటా ఆధారంగా సందర్భోచిత సిఫార్సులు పొందండి',
   'Generate Suggestions': 'సూచనలు రూపొందించండి',
+  'Fill this step with AI': 'ఈ దశను AIతో నింపండి',
+  'Fill this step': 'ఈ దశను నింపండి',
+  'Filling…': 'నింపుతోంది…',
+  'Getting suggestions…': 'సూచనలు పొందుతోంది…',
+  'Suggests answers only for this step’s questions ({n}). Apply the ones you like.':
+    'ఈ దశ ప్రశ్నలకు ({n}) మాత్రమే సమాధానాలు సూచిస్తుంది. మీకు నచ్చినవి వర్తింపజేయండి.',
+  'Asking only this step’s catalog questions, one at a time.':
+    'ఈ దశ కేటలాగ్ ప్రశ్నలు మాత్రమే, ఒక్కొక్కటిగా అడుగుతోంది.',
+  'Suggesting {index}/{total}: {label}': 'సూచిస్తోంది {index}/{total}: {label}',
+  'Asks only this step’s questions ({n}), one at a time.':
+    'ఈ దశ ప్రశ్నలు ({n}) మాత్రమే, ఒక్కొక్కటిగా అడుగుతుంది.',
+  'Filling {index}/{total}: {label}': 'నింపుతోంది {index}/{total}: {label}',
+  'No questions to fill on this step.': 'ఈ దశలో నింపడానికి ప్రశ్నలు లేవు.',
+  'Could not fill any fields for this step. Try again.':
+    'ఈ దశలో ఏ ఫీల్డ్‌నూ నింపలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Could not get suggestions for this step. Try again.':
+    'ఈ దశకు సూచనలు పొందలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Suggested {filled} of {total} questions on this step.':
+    'ఈ దశలో {total}లో {filled} ప్రశ్నలకు సూచనలు వచ్చాయి.',
+  'Suggested {n} questions on this step.': 'ఈ దశలో {n} ప్రశ్నలకు సూచనలు వచ్చాయి.',
+  'Failed to get suggestions for this step': 'ఈ దశకు సూచనలు పొందడం విఫలమైంది',
+  'Filled {filled} of {total} questions on this step.':
+    'ఈ దశలో {total}లో {filled} ప్రశ్నలు నింపబడ్డాయి.',
+  'Filled {n} questions on this step.': 'ఈ దశలో {n} ప్రశ్నలు నింపబడ్డాయి.',
+  'Failed to fill this step with AI': 'ఈ దశను AIతో నింపడం విఫలమైంది',
+  'Could not apply this suggestion. Try again.':
+    'ఈ సూచనను వర్తింపజేయలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Could not apply suggestions. Try again.':
+    'సూచనలను వర్తింపజేయలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Applied suggestion for {label}': '{label} కోసం సూచన వర్తింపజేయబడింది',
+  'Applied {n} suggestions.': '{n} సూచనలు వర్తింపజేయబడ్డాయి.',
+  'Failed to apply suggestion': 'సూచనను వర్తింపజేయడం విఫలమైంది',
+  'Tell us what you want to add': 'మీరు ఏమి జోడించాలనుకుంటున్నారో చెప్పండి',
+  'For: {label}': 'కోసం: {label}',
+  'List the points or changes you want in the new answer. We will regenerate only this question.':
+    'కొత్త సమాధానంలో కావాల్సిన పాయింట్లు లేదా మార్పులు రాయండి. ఈ ప్రశ్నను మాత్రమే మళ్లీ రూపొందిస్తాం.',
+  'e.g. Mention local raw materials, add 2 more workers, keep it under 80 words':
+    'ఉదా. స్థానిక ముడి పదార్థాలు చెప్పండి, మరో 2 కార్మికులు జోడించండి, 80 పదాలలోపు ఉంచండి',
+  'Tell us what you want to add before regenerating.':
+    'మళ్లీ రూపొందించే ముందు ఏమి జోడించాలో చెప్పండి.',
+  'Could not regenerate this suggestion. Try again.':
+    'ఈ సూచనను మళ్లీ రూపొందించలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Suggestion regenerated.': 'సూచన మళ్లీ రూపొందించబడింది.',
+  'Failed to regenerate suggestion': 'సూచనను మళ్లీ రూపొందించడం విఫలమైంది',
+  'Regenerating…': 'మళ్లీ రూపొందిస్తోంది…',
+  'Regenerate all suggestions for this step': 'ఈ దశ సూచనలన్నీ మళ్లీ రూపొందించండి',
   'Complete Step 1 first to get AI suggestions for this step.':
     'ఈ దశకు AI సూచనల కోసం ముందుగా దశ 1ని పూర్తి చేయండి.',
   'No suggestions available. Try generating again or fill in more fields.':
@@ -214,6 +265,52 @@ const TE: Record<string, string> = {
   'Apply All': 'అన్నీ వర్తింపజేయండి',
   'Applying...': 'వర్తింపజేస్తోంది...',
   Apply: 'వర్తింపజేయండి',
+  Retry: 'మళ్లీ ప్రయత్నించండి',
+  Confirm: 'నిర్ధారించండి',
+  Cancel: 'రద్దు చేయండి',
+  'Edit field': 'ఫీల్డ్‌ను సవరించండి',
+  'Edit the full text, then Confirm to save or Cancel to discard.':
+    'పూర్తి వచనాన్ని సవరించి, సేవ్ చేయడానికి నిర్ధారించండి లేదా విస్మరించడానికి రద్దు చేయండి.',
+  'Improve this': 'దీన్ని మెరుగుపరచండి',
+  'Improving…': 'మెరుగుపరుస్తోంది…',
+  'Match me': 'నాకు సరిపోల్చు',
+  'Matching…': 'సరిపోలుస్తోంది…',
+  'What do you do': 'మీరు ఏం చేస్తారు',
+  'Type what you do first, then Match me.':
+    'ముందు మీరు ఏం చేస్తారో టైప్ చేసి, తర్వాత నాకు సరిపోల్చు నొక్కండి.',
+  'Matched to: {skill}': 'సరిపోలింది: {skill}',
+  'Could not match a skill. Try again with a clearer description.':
+    'నైపుణ్యాన్ని సరిపోల్చలేకపోయాం. స్పష్టంగా వివరించి మళ్లీ ప్రయత్నించండి.',
+  'Describe your work in a line, then Match me to map it to one skill.':
+    'మీ పనిని ఒక లైన్‌లో రాసి, ఒక నైపుణ్యానికి సరిపోల్చడానికి నాకు సరిపోల్చు నొక్కండి.',
+  'Type something first, then Improve this.':
+    'ముందు ఏదైనా టైప్ చేసి, తర్వాత మెరుగుపరచండి.',
+  'Could not improve this text. Try again.':
+    'ఈ వచనాన్ని మెరుగుపరచలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Improved — review, then Confirm to save.':
+    'మెరుగుపరచబడింది — సమీక్షించి, సేవ్ చేయడానికి నిర్ధారించండి.',
+  // Step-1 field tooltips
+  'Enter the unit or project cover name used in official documents.':
+    'అధికారిక పత్రాల్లో ఉపయోగించే యూనిట్ లేదా ప్రాజెక్ట్ కవర్ పేరు నమోదు చేయండి.',
+  'Enter the official name of the industrial cluster. This should be the name used in official documents and registrations.':
+    'పారిశ్రామిక క్లస్టర్ అధికారిక పేరు నమోదు చేయండి. అధికారిక పత్రాలు మరియు నమోదుల్లో ఉపయోగించే పేరు ఉండాలి.',
+  'Select the Andhra Pradesh district where the unit is located.':
+    'యూనిట్ ఉన్న ఆంధ్రప్రదేశ్ జిల్లాను ఎంచుకోండి.',
+  'Specify the district where the cluster is located. This helps in regional analysis and government scheme eligibility.':
+    'క్లస్టర్ ఉన్న జిల్లాను పేర్కొనండి. ప్రాంతీయ విశ్లేషణ మరియు ప్రభుత్వ పథక అర్హతకు ఇది సహాయపడుతుంది.',
+  'Select the town where the unit is located (filtered by the district you chose).':
+    'యూనిట్ ఉన్న పట్టణాన్ని ఎంచుకోండి (మీరు ఎంచుకున్న జిల్లా ఆధారంగా ఫిల్టర్ చేయబడుతుంది).',
+  'Describe what you do in plain words, then use Match me to map it to one skill (e.g. “I make pots” → Pottery).':
+    'మీరు ఏం చేస్తారో సాధారణ మాటల్లో రాసి, ఒక నైపుణ్యానికి సరిపోల్చడానికి నాకు సరిపోల్చు వాడండి (ఉదా. “నేను కుండలు చేస్తాను” → Pottery).',
+  'List the main products you sell or make (e.g. pani puri, bhel puri).':
+    'మీరు అమ్మే లేదా తయారు చేసే ప్రధాన ఉత్పత్తులు జాబితా చేయండి (ఉదా. పానీపూరి, భేల్ పూరి).',
+  'List the main products manufactured or services provided by enterprises in the cluster.':
+    'క్లస్టర్‌లోని సంస్థలు తయారు చేసే ప్రధాన ఉత్పత్తులు లేదా అందించే సేవలను జాబితా చేయండి.',
+  // Common matched skills (display)
+  'Street food / food stall': 'స్ట్రీట్ ఫుడ్ / ఫుడ్ స్టాల్',
+  Pottery: 'కుమ్మరి / కుండల తయారీ',
+  'Kirana / general store': 'కిరాణా / జనరల్ స్టోర్',
+  'Tailoring / stitching': 'టైలరింగ్ / కుట్టు పని',
   Uploading: 'అప్‌లోడ్ అవుతోంది',
   Uploaded: 'అప్‌లోడ్ అయింది',
   'Raw Material': 'ముడి పదార్థం',
@@ -228,6 +325,10 @@ const TE: Record<string, string> = {
   'Enter manpower requirements': 'మానవశక్తి అవసరాలు నమోదు చేయండి',
   'Unit / Project Name *': 'యూనిట్ / ప్రాజెక్ట్ పేరు *',
   'Enter unit or project name': 'యూనిట్ లేదా ప్రాజెక్ట్ పేరు నమోదు చేయండి',
+  'Select district': 'జిల్లాను ఎంచుకోండి',
+  'Select town': 'పట్టణం ఎంచుకోండి',
+  'Select district first': 'ముందుగా జిల్లాను ఎంచుకోండి',
+  Town: 'పట్టణం',
   'Village / town / industrial park': 'గ్రామం / పట్టణం / పారిశ్రామిక పార్క్',
   'Generate the rest of this DPR with AI': 'ఈ DPR మిగిలిన దశలను AIతో నింపండి',
   'Generate all steps with AI': 'అన్ని దశలను AIతో నింపండి',
@@ -303,14 +404,21 @@ const TE: Record<string, string> = {
   Pending: 'పెండింగ్',
   On: 'పై',
   'Table of Contents': 'విషయ సూచిక',
+  'No answers for this section yet.': 'ఈ విభాగానికి ఇంకా సమాధానాలు లేవు.',
+  'Not filled': 'నింపలేదు',
+  'Not filled yet — complete this in the form.': 'ఇంకా నింపలేదు — ఫారమ్‌లో దీన్ని పూర్తి చేయండి.',
 };
 
 export function useClusterFormText() {
   const { i18n } = useTranslation();
-  const isTe = i18n.language.startsWith('te');
-  return (en: string) => {
-    if (!en) return en;
-    if (!isTe) return en;
-    return TE[en] || en;
-  };
+  const lang = (i18n.resolvedLanguage || i18n.language || 'en').toLowerCase();
+  const isTe = lang.startsWith('te');
+  return useCallback(
+    (en: string) => {
+      if (!en) return en;
+      if (!isTe) return en;
+      return TE[en] || en;
+    },
+    [isTe]
+  );
 }

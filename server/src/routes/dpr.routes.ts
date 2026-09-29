@@ -76,6 +76,8 @@ router.post('/cluster/sections/enhance', requireAiConsent, ClusterDPRController.
 
 router.post('/cluster/ai/suggestions', requireAiConsent, ClusterDPRController.getAISuggestions);
 router.post('/cluster/ai/field-suggestion', requireAiConsent, ClusterDPRController.getFieldSuggestion);
+router.post('/cluster/ai/improve-field', requireAiConsent, ClusterDPRController.improveFieldText);
+router.post('/cluster/ai/match-skill', requireAiConsent, ClusterDPRController.matchBusinessSkill);
 router.post('/cluster/ai/generate-field-content', requireAiConsent, ClusterDPRController.generateFieldContent);
 router.post('/cluster/financial-statements/generate', requireAiConsent, ClusterDPRController.generateFinancialStatements);
 
