@@ -370,6 +370,9 @@ const TE: Record<string, string> = {
   Pending: 'పెండింగ్',
   On: 'పై',
   'Table of Contents': 'విషయ సూచిక',
+  'No answers for this section yet.': 'ఈ విభాగానికి ఇంకా సమాధానాలు లేవు.',
+  'Not filled': 'నింపలేదు',
+  'Not filled yet — complete this in the form.': 'ఇంకా నింపలేదు — ఫారమ్‌లో దీన్ని పూర్తి చేయండి.',
 };
 
 export function useClusterFormText() {
