@@ -581,69 +581,308 @@
   }
 }
 
-/* PMEGP template — formal teal / KVIC bank-unit look */
+/* PMEGP template — premium KVIC / bank-appraisal document (preview + PDF) */
 .individual-dpr-document.tpl-pmegp {
-  color: #0f3d3a;
+  --pmegp-ink: #0b2f2c;
+  --pmegp-teal: #0f766e;
+  --pmegp-teal-deep: #115e59;
+  --pmegp-teal-soft: #ccfbf1;
+  --pmegp-mint: #f0fdfa;
+  --pmegp-gold: #b45309;
+  --pmegp-paper: #fbfaf6;
+  color: var(--pmegp-ink);
+  background:
+    linear-gradient(180deg, #ffffff 0%, var(--pmegp-paper) 100%);
+  padding: 0 0 8mm;
+  border: 1px solid #99f6e4;
+  box-shadow:
+    inset 0 0 0 3px #fff,
+    inset 0 0 0 5px #99f6e4;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-flag-band {
+  height: 5pt;
+  margin: -8mm -4mm 8pt;
+  background: linear-gradient(
+    90deg,
+    #ff9933 0%,
+    #ff9933 33.33%,
+    #ffffff 33.33%,
+    #ffffff 66.66%,
+    #138808 66.66%,
+    #138808 100%
+  );
+  border-bottom: 1px solid rgba(15, 61, 58, 0.12);
 }
 
 .individual-dpr-document.tpl-pmegp .individual-cover {
+  position: relative;
   border-bottom: none;
   background:
-    linear-gradient(#0f766e, #0f766e) top/100% 4pt no-repeat,
-    linear-gradient(180deg, #f0fdfa 0%, #ffffff 55%);
-  padding-top: 10mm;
-  padding-bottom: 12mm;
+    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(15, 118, 110, 0.1), transparent 70%),
+    linear-gradient(180deg, #ecfdf5 0%, #ffffff 62%);
+  padding: 8mm 5mm 11mm;
+  margin-bottom: 10mm;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-cover-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8pt;
+  margin-bottom: 10pt;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-agency {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8pt;
+  flex-wrap: wrap;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-agency-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4em;
+  height: 2.4em;
+  padding: 0 6pt;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #0f766e, #134e4a);
+  color: #fff;
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  box-shadow: 0 2pt 6pt rgba(15, 118, 110, 0.28);
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-agency-text {
+  font-size: 8.5pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pmegp-teal-deep);
 }
 
 .individual-dpr-document.tpl-pmegp .cover-pack-badge {
-  padding: 4pt 12pt;
+  padding: 4pt 14pt;
   font-size: 8pt;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #0f766e;
+  color: var(--pmegp-teal-deep);
   border: 1px solid #5eead4;
-  background: #ccfbf1;
+  background: linear-gradient(180deg, #ffffff, var(--pmegp-teal-soft));
   border-radius: 999px;
+  box-shadow: 0 1pt 0 rgba(15, 118, 110, 0.08);
 }
 
 .individual-dpr-document.tpl-pmegp .cover-kicker {
-  color: #115e59;
-  letter-spacing: 0.1em;
-  font-size: 18pt;
+  color: var(--pmegp-teal-deep);
+  letter-spacing: 0.14em;
+  font-size: 17pt;
+  margin-top: 4pt;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-on {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 11pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-action {
+  color: var(--pmegp-ink);
+  font-size: 12.5pt;
 }
 
 .individual-dpr-document.tpl-pmegp .cover-unit {
-  color: #0f766e;
+  color: var(--pmegp-teal);
+  font-size: 22pt;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1pt 0 rgba(255, 255, 255, 0.8);
+  margin: 12pt 6mm 8pt;
+}
+
+.individual-dpr-document.tpl-pmegp .cover-scheme-block {
+  padding: 8pt 12pt;
+  border-top: 1px solid rgba(15, 118, 110, 0.2);
+  border-bottom: 1px solid rgba(15, 118, 110, 0.2);
+  background: rgba(240, 253, 250, 0.65);
 }
 
 .individual-dpr-document.tpl-pmegp .cover-scheme {
-  color: #134e4a;
+  color: var(--pmegp-teal-deep);
   font-weight: 700;
+  font-size: 12.5pt;
 }
 
 .individual-dpr-document.tpl-pmegp .cover-tagline {
-  color: #0f766e;
+  color: var(--pmegp-teal);
   font-style: italic;
-  opacity: 0.9;
+  opacity: 0.95;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-cover-meta {
+  margin-top: 14pt;
+  border: 1px solid #99f6e4;
+  background: #fff;
+  box-shadow: 0 2pt 8pt rgba(15, 118, 110, 0.06);
+  padding: 2pt 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  width: min(120mm, 100%);
+  text-align: left;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-cover-meta > div {
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  gap: 8pt;
+  padding: 7pt 12pt;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 10.5pt;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-cover-meta > div:last-child {
+  border-bottom: none;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-cover-meta span {
+  display: block;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 8pt;
+  color: #64748b;
+  padding: 0;
+  white-space: normal;
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-cover-rule {
+  width: 48mm;
+  height: 2.5pt;
+  margin: 14pt auto 0;
+  background: linear-gradient(90deg, transparent, var(--pmegp-gold), var(--pmegp-teal), var(--pmegp-gold), transparent);
+  border-radius: 2pt;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-toc,
+.individual-dpr-document.tpl-pmegp .individual-sec {
+  margin: 0 4mm 10mm;
+  padding: 0;
 }
 
 .individual-dpr-document.tpl-pmegp .individual-sec-title {
-  border-bottom-color: #0f766e;
+  border-bottom: none;
+  align-items: center;
+  gap: 10pt;
+  padding: 0 0 8pt;
+  margin-bottom: 10pt;
+  background: linear-gradient(90deg, rgba(15, 118, 110, 0.08), transparent 72%);
+  border-left: 3.5pt solid var(--pmegp-teal);
+  padding-left: 8pt;
 }
 
 .individual-dpr-document.tpl-pmegp .individual-sec-num {
-  background: #0f766e;
-  border-color: #0f766e;
+  background: linear-gradient(145deg, #0f766e, #134e4a);
+  border-color: transparent;
   color: #fff;
-}
-
-.individual-dpr-document.tpl-pmegp .individual-qa-q {
-  color: #0f766e;
+  border-radius: 999px;
+  min-width: 1.75em;
+  height: 1.75em;
+  box-shadow: 0 1pt 3pt rgba(15, 118, 110, 0.35);
 }
 
 .individual-dpr-document.tpl-pmegp .individual-meta-grid {
-  border-color: #0f766e;
+  border: 1px solid #5eead4;
+  border-radius: 4pt;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1pt 4pt rgba(15, 118, 110, 0.05);
+}
+
+.individual-dpr-document.tpl-pmegp .individual-meta-item {
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+  border-right-color: #99f6e4;
+  border-bottom-color: #99f6e4;
+  padding: 8pt 9pt;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-meta-item dt {
+  color: var(--pmegp-teal-deep);
+}
+
+.individual-dpr-document.tpl-pmegp .individual-meta-item dd {
+  color: var(--pmegp-ink);
+}
+
+.individual-dpr-document.tpl-pmegp .individual-qa-block {
+  border: 1px solid #99f6e4;
+  border-left: 3.5pt solid var(--pmegp-teal);
+  border-radius: 0 4pt 4pt 0;
+  overflow: hidden;
+  box-shadow: 0 1pt 4pt rgba(15, 118, 110, 0.04);
+}
+
+.individual-dpr-document.tpl-pmegp .individual-qa-q {
+  color: var(--pmegp-teal-deep);
+  background: linear-gradient(90deg, #ecfdf5, #f8fafc);
+  border-bottom-color: #99f6e4;
+  letter-spacing: 0.01em;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-qa-a {
+  background: #fff;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-toc-list,
+.individual-dpr-document.tpl-pmegp .individual-doc-list {
+  border: 1px solid #5eead4;
+  border-radius: 4pt;
+  overflow: hidden;
+  background: #fff;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-toc-list li {
+  border-bottom-color: #e6fffa;
+}
+
+.individual-dpr-document.tpl-pmegp .individual-toc-list li:nth-child(odd),
+.individual-dpr-document.tpl-pmegp .individual-doc-list li:nth-child(odd) {
+  background: rgba(240, 253, 250, 0.55);
+}
+
+.individual-dpr-document.tpl-pmegp .individual-toc-list .toc-num {
+  color: var(--pmegp-teal);
+}
+
+.individual-dpr-document.tpl-pmegp .individual-doc-list li.is-uploaded .doc-status {
+  color: var(--pmegp-teal);
+}
+
+.individual-dpr-document.tpl-pmegp .pmegp-doc-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12pt;
+  flex-wrap: wrap;
+  margin: 6mm 4mm 0;
+  padding: 8pt 10pt;
+  border-top: 2pt solid var(--pmegp-teal);
+  font-size: 8pt;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pmegp-teal-deep);
+  background: linear-gradient(180deg, #ecfdf5, transparent);
+}
+
+@media print {
+  .individual-dpr-document.tpl-pmegp {
+    box-shadow: none;
+    border: none;
+  }
 }
 
 /* AP CMEP template — indigo / state programme look (distinct from PMEGP) */

@@ -9,11 +9,12 @@ import { extraFieldsForScheme } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { EXTRA_FIELD_LABELS, getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
-import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
+import { normalizeMilestones, toDateInputValue, isNumericDprField, suggestionToFieldValue } from '@/lib/dprAiFieldNormalize';
 import {
   suggestCurrentStepWithAi,
   regenerateStepFieldSuggestion,
   applyCatalogSuggestionToForm,
+  applyAllCatalogSuggestionsToForm,
   FillStepProgress,
   StepFieldSuggestion,
 } from '@/lib/individualDpr/fillAllStepsWithAi';
@@ -195,7 +196,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   const handleApplyStepSuggestion = (item: StepFieldSuggestion) => {
     setApplyingFields((prev) => new Set(prev).add(item.field));
     try {
-      const ok = applyCatalogSuggestionToForm({
+      const result = applyCatalogSuggestionToForm({
         contentStep: currentStep,
         suggestion: item,
         getStepData,
@@ -204,11 +205,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         schemeExtras: data?.schemeExtras,
         schemeCode,
       });
-      if (!ok) {
+      if (!result.ok) {
         toast.error(tf('Could not apply this suggestion. Try again.'));
         return;
       }
-      if (onApplySuggestion) onApplySuggestion(item.field, item.suggestion);
+      // Do NOT call onApplySuggestion with raw AI text — that overwrites numbers with prose.
+      setStepSuggestions((prev) => prev.filter((s) => s.field !== item.field));
       toast.success(tf('Applied suggestion for {label}').replace('{label}', item.label));
     } catch (error) {
       console.error('Error applying step suggestion:', error);
@@ -226,30 +228,20 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     if (!stepSuggestions.length || applyingAll) return;
     setApplyingAll(true);
     setApplyingFields(new Set(stepSuggestions.map((s) => s.field)));
-    let applied = 0;
-    let extras = { ...(data?.schemeExtras || {}) };
     try {
-      for (const item of stepSuggestions) {
-        const ok = applyCatalogSuggestionToForm({
-          contentStep: currentStep,
-          suggestion: item,
-          getStepData,
-          setStepData,
-          setSchemeExtras: (next) => {
-            extras = next;
-            if (setSchemeExtrasProp) setSchemeExtrasProp(next);
-          },
-          schemeExtras: extras,
-          schemeCode,
-        });
-        if (ok) {
-          applied += 1;
-          if (onApplySuggestion) onApplySuggestion(item.field, item.suggestion);
-        }
-      }
+      const { applied } = applyAllCatalogSuggestionsToForm({
+        contentStep: currentStep,
+        suggestions: stepSuggestions,
+        getStepData,
+        setStepData,
+        setSchemeExtras: setSchemeExtrasProp,
+        schemeExtras: data?.schemeExtras,
+        schemeCode,
+      });
       if (applied === 0) {
         toast.error(tf('Could not apply suggestions. Try again.'));
       } else {
+        setStepSuggestions([]);
         toast.success(
           tf('Applied {n} suggestions.').replace('{n}', String(applied))
         );
@@ -429,11 +421,25 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       return null;
     }
 
+    if (isNumericDprField(field)) {
+      const n = suggestionToFieldValue(field, parsedContent);
+      return n == null || n === '' ? null : n;
+    }
+
     return parsedContent;
   };
 
   const extractValueFromSuggestion = (field: string, suggestionText: string): any => {
     if (!suggestionText) return null;
+
+    // Prefer shared numeric / date / structured parsers (₹ Lakhs prose → number)
+    const normalized = suggestionToFieldValue(field, suggestionText);
+    if (normalized !== null && normalized !== undefined && normalized !== '') {
+      if (isNumericDprField(field) || field === 'startDate' || field === 'endDate' || field === 'milestones') {
+        return normalized;
+      }
+      if (typeof normalized === 'object') return normalized;
+    }
 
     if (field === 'startDate' || field === 'endDate') {
       return toDateInputValue(suggestionText) || null;
@@ -643,11 +649,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
             ...updatedStepData,
             [suggestion.field]: parsedContent,
           };
-
-          if (onApplySuggestion) {
-            onApplySuggestion(suggestion.field, parsedContent);
-          }
-
+          // Do not call onApplySuggestion here — it re-reads stale step data and
+          // overwrites sibling fields applied earlier in this batch.
           appliedCount += 1;
         } catch (e) {
           console.error(`Error extracting value for ${suggestion.field}:`, e);
@@ -692,11 +695,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
               ...updatedStepData,
               [result.field]: result.content,
             };
-
-            if (onApplySuggestion) {
-              onApplySuggestion(result.field, result.content);
-            }
-
             appliedCount += 1;
           }
         }
@@ -977,7 +975,16 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                       <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-primary mb-1">{item.label}</p>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.suggestion}</p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {isNumericDprField(item.field)
+                            ? (() => {
+                                const n = suggestionToFieldValue(item.field, item.suggestion);
+                                return n == null || n === ''
+                                  ? item.suggestion
+                                  : String(n);
+                              })()
+                            : item.suggestion}
+                        </p>
                       </div>
                       <div className="flex flex-col gap-1.5 flex-shrink-0">
                         <button

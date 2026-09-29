@@ -6,7 +6,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, HeadingLevel, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, HeadingLevel, AlignmentType, BorderStyle } from 'docx';
 import catalogs from './individualDprCatalog.json';
 
 export type SchemeStepDef = {
@@ -570,28 +570,32 @@ export function getIndividualDocFields(
   if (contentStep === 15) {
     return [
       stepField('yearProjections', 'Year-wise sales / costs / profit', 15),
-      stepField('breakEvenPoint', 'Break-even Point', 15),
-      stepField('irr', 'IRR (%)', 15),
-      stepField('npv', 'NPV (₹ Lakhs)', 15),
-      stepField('sensitivityAnalysis', 'Sensitivity Analysis', 15),
+      stepField('breakEvenPoint', 'Break-even (capacity %)', 15),
     ];
   }
 
   if (contentStep === 16) {
     return [
-      stepField('startDate', 'Start / commercial production date', 16),
-      stepField('totalImplementationPeriod', 'Total Implementation Period', 16),
+      stepField('startDate', 'Commercial production date (CoD)', 16),
       stepField('milestones', 'Milestones', 16),
     ];
   }
 
   if (contentStep === 17) {
+    if (
+      schemeCode === 'PMEGP' ||
+      schemeCode === 'PMEGP_2ND' ||
+      schemeCode === 'PMFME'
+    ) {
+      return [
+        stepField('employmentGeneration', 'Direct employment (count)', 17),
+        extraField('indirectEmployment'),
+        extraField('impactNote'),
+      ];
+    }
     return [
-      stepField('employmentGeneration', 'Employment Generation', 17),
-      stepField('turnoverGrowth', 'Turnover Growth (%)', 17),
-      stepField('exportGrowth', 'Export Growth (%)', 17),
-      stepField('incomeEnhancement', 'Income Enhancement (%)', 17),
-      stepField('sustainabilityOutcomes', 'Sustainability Outcomes', 17),
+      stepField('employmentGeneration', 'Direct employment (count)', 17),
+      stepField('turnoverGrowth', 'Expected annual turnover (₹ Lakhs)', 17),
     ];
   }
 
@@ -792,28 +796,324 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-export function renderIndividualDprHtml(doc: IndividualDocument): string {
-  const qaTable = (rows: DocRow[]) => {
-    if (!rows.length) return '<p>—</p>';
-    const body = rows
-      .map(
-        (r) =>
-          `<tr><td class="q">${escapeHtml(r.label)}</td><td>${escapeHtml(r.value).replace(/\n/g, '<br/>')}</td></tr>`
-      )
-      .join('');
-    return `<table><colgroup><col style="width:36%"/><col style="width:64%"/></colgroup><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>${body}</tbody></table>`;
-  };
+/** Short / numeric-ish fields → compact meta grid; long prose → stacked Q&A block (matches live preview). */
+const SHORT_FIELD_NAMES = new Set([
+  'unitName',
+  'district',
+  'location',
+  'yearOfEstablishment',
+  'yearOfIncorporation',
+  'entrepreneurName',
+  'entrepreneurAge',
+  'craft',
+  'loanTranche',
+  'trainingStage',
+  'covOrLor',
+  'vendingType',
+  'workplaceType',
+  'fssai',
+  'unitStage',
+  'odopAligned',
+  'sectorType',
+  'land',
+  'building',
+  'machinery',
+  'utilitiesAndInfrastructure',
+  'preliminaryAndPreOperative',
+  'workingCapitalMargin',
+  'ownContribution',
+  'spvContribution',
+  'governmentGrant',
+  'bankLoan',
+  'otherSources',
+  'subsidy',
+  'startDate',
+  'endDate',
+  'irr',
+  'npv',
+  'dscr',
+  'breakEvenPoint',
+  'upiQr',
+  'dailySales',
+  'yearsVending',
+  'yearsPractising',
+  'employmentGeneration',
+  'indirectEmployment',
+  'directEmployment',
+  'turnoverGrowth',
+  'rawMaterialCost',
+  'powerCost',
+  'wages',
+  'maintenance',
+  'administrativeExpenses',
+  'marketingExpenses',
+  'annualProductionVolume',
+  'annualSalesRealization',
+]);
 
+function fieldNameFromPath(path: string): string {
+  const parts = String(path || '').split('.');
+  return parts[parts.length - 1] || '';
+}
+
+function isExpansiveRow(row: DocRow): boolean {
+  const name = fieldNameFromPath(row.path);
+  if (SHORT_FIELD_NAMES.has(name)) return false;
+  const text = String(row.value || '');
+  if (!text || text === '—') return false;
+  if (text.includes('\n') || text.length > 48) return true;
+  const label = row.label.toLowerCase();
+  return (
+    label.includes('description') ||
+    label.includes('intro') ||
+    label.includes('summary') ||
+    label.includes('process') ||
+    label.includes('analysis') ||
+    label.includes('importance') ||
+    label.includes('justification') ||
+    label.includes('gap') ||
+    label.includes('story') ||
+    label.includes('activity') ||
+    label.includes('note') ||
+    label.includes('outcome')
+  );
+}
+
+function renderSectionRowsHtml(rows: DocRow[]): string {
+  if (!rows.length) return '<p class="empty">—</p>';
+
+  const shortRows: DocRow[] = [];
+  const longRows: DocRow[] = [];
+  for (const row of rows) {
+    if (isExpansiveRow(row)) longRows.push(row);
+    else shortRows.push(row);
+  }
+
+  const parts: string[] = ['<div class="sec-body">'];
+
+  if (shortRows.length) {
+    parts.push('<dl class="meta-grid">');
+    for (const row of shortRows) {
+      const empty = !row.value || row.value === '—';
+      parts.push(
+        `<div class="meta-item"><dt>${escapeHtml(row.label)}</dt>` +
+          `<dd class="${empty ? 'is-empty' : ''}">${escapeHtml(empty ? 'Not filled' : row.value).replace(/\n/g, '<br/>')}</dd></div>`
+      );
+    }
+    parts.push('</dl>');
+  }
+
+  for (const row of longRows) {
+    const empty = !row.value || row.value === '—';
+    parts.push(
+      `<article class="qa-block"><h3 class="qa-q">${escapeHtml(row.label)}</h3>` +
+        `<div class="qa-a${empty ? ' is-empty' : ''}">${escapeHtml(
+          empty ? 'Not filled yet — complete this in the form.' : row.value
+        ).replace(/\n/g, '<br/>')}</div></article>`
+    );
+  }
+
+  parts.push('</div>');
+  return parts.join('');
+}
+
+export function renderIndividualDprHtml(doc: IndividualDocument): string {
+  const isPmegp = doc.schemeCode === 'PMEGP';
   const toc = doc.sections
-    .map((s) => `<tr><td class="num">${s.n}</td><td>${escapeHtml(s.title)}</td></tr>`)
+    .map((s) => `<li><span class="toc-num">${s.n}</span><span class="toc-label">${escapeHtml(s.title)}</span></li>`)
     .join('');
 
   const sectionsHtml = doc.sections
     .map(
       (s) =>
-        `<section class="sec"><h2>${s.n}. ${escapeHtml(s.title)}</h2>${qaTable(s.rows)}</section>`
+        `<section class="sec"><h2><span class="sec-num">${s.n}</span>${escapeHtml(s.title)}</h2>${renderSectionRowsHtml(s.rows)}</section>`
     )
     .join('\n');
+
+  const coverMeta = `
+      <div><span>District</span>${escapeHtml(doc.district || '—')}</div>
+      <div><span>Location</span>${escapeHtml(doc.location || '—')}</div>
+      ${doc.entrepreneurName ? `<div><span>Entrepreneur name</span>${escapeHtml(doc.entrepreneurName)}</div>` : ''}`;
+
+  if (isPmegp) {
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 14mm; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    color: #0b2f2c;
+    font-family: 'Times New Roman', Times, Georgia, serif;
+    background: #fbfaf6;
+  }
+  .page {
+    border: 1px solid #99f6e4;
+    box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 5px #99f6e4;
+    padding: 0 0 6mm;
+    min-height: 100%;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfaf6 100%);
+  }
+  .flag-band {
+    height: 5pt;
+    background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.33%, #ffffff 33.33%, #ffffff 66.66%, #138808 66.66%, #138808 100%);
+  }
+  .cover {
+    text-align: center;
+    padding: 7mm 5mm 10mm;
+    margin-bottom: 8mm;
+    background:
+      radial-gradient(ellipse 80% 55% at 50% 0%, rgba(15,118,110,0.10), transparent 70%),
+      linear-gradient(180deg, #ecfdf5 0%, #ffffff 62%);
+  }
+  .agency { display: flex; align-items: center; justify-content: center; gap: 8pt; margin: 8pt 0 6pt; flex-wrap: wrap; }
+  .agency-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 2.4em; height: 2.4em; padding: 0 6pt; border-radius: 999px;
+    background: linear-gradient(145deg, #0f766e, #134e4a); color: #fff;
+    font-size: 8.5pt; font-weight: 800; letter-spacing: 0.06em;
+  }
+  .agency-text { font-size: 8.5pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #115e59; }
+  .badge {
+    display: inline-block; margin: 0 auto 8pt; padding: 4pt 14pt;
+    font-size: 8pt; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #115e59; border: 1px solid #5eead4;
+    background: linear-gradient(180deg, #ffffff, #ccfbf1); border-radius: 999px;
+  }
+  .kicker { font-size: 17pt; font-weight: 700; letter-spacing: 0.14em; color: #115e59; margin: 6pt 0 8pt; }
+  .on { font-size: 10pt; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b; margin: 0; }
+  .action { font-size: 12.5pt; font-weight: 600; margin: 4pt 0 8pt; color: #0b2f2c; }
+  .unit {
+    color: #0f766e; font-size: 21pt; font-weight: 700; text-transform: uppercase;
+    margin: 8pt 6mm; line-height: 1.25; letter-spacing: 0.02em;
+  }
+  .scheme-block {
+    max-width: 150mm; margin: 8pt auto 0; padding: 8pt 12pt;
+    border-top: 1px solid rgba(15,118,110,0.2); border-bottom: 1px solid rgba(15,118,110,0.2);
+    background: rgba(240,253,250,0.65);
+  }
+  .scheme { font-size: 12.5pt; font-weight: 700; color: #115e59; margin: 0; line-height: 1.4; }
+  .tagline { font-size: 9.5pt; font-style: italic; color: #0f766e; margin: 5pt 0 0; }
+  .cover-meta {
+    width: min(120mm, 92%); margin: 14pt auto 0; text-align: left;
+    border: 1px solid #99f6e4; background: #fff;
+  }
+  .cover-meta div {
+    display: grid; grid-template-columns: 38% 1fr; gap: 8pt;
+    padding: 7pt 12pt; border-bottom: 1px solid #e5e7eb; font-size: 10.5pt;
+  }
+  .cover-meta div:last-child { border-bottom: none; }
+  .cover-meta span {
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    font-size: 8pt; color: #64748b;
+  }
+  .cover-rule {
+    width: 48mm; height: 2.5pt; margin: 12pt auto 0; border-radius: 2pt;
+    background: linear-gradient(90deg, transparent, #b45309, #0f766e, #b45309, transparent);
+  }
+  .sec { margin: 0 4mm 9mm; page-break-inside: avoid; }
+  h2 {
+    font-size: 13pt; font-weight: 700; margin: 0 0 10pt; padding: 0 0 8pt 8pt;
+    display: flex; align-items: center; gap: 10pt; line-height: 1.3;
+    border-left: 3.5pt solid #0f766e;
+    background: linear-gradient(90deg, rgba(15,118,110,0.08), transparent 72%);
+  }
+  .sec-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.75em; height: 1.75em; padding: 0 4pt; border-radius: 999px;
+    background: linear-gradient(145deg, #0f766e, #134e4a); color: #fff;
+    font-size: 10.5pt; font-weight: 700; flex-shrink: 0;
+  }
+  .sec-body { display: flex; flex-direction: column; gap: 10pt; }
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0;
+    border: 1px solid #5eead4; border-radius: 4pt; overflow: hidden; background: #fff;
+  }
+  .meta-item {
+    display: flex; flex-direction: column; gap: 2pt; padding: 8pt 9pt;
+    border-right: 1px solid #99f6e4; border-bottom: 1px solid #99f6e4; min-width: 0;
+    background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+  }
+  .meta-item:nth-child(2n) { border-right: none; }
+  .meta-item dt {
+    margin: 0; font-size: 8pt; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: #115e59;
+  }
+  .meta-item dd {
+    margin: 0; font-size: 11pt; font-weight: 600; color: #0b2f2c;
+    overflow-wrap: anywhere; word-break: break-word;
+  }
+  .meta-item dd.is-empty { color: #9CA3AF; font-style: italic; font-weight: 500; }
+  .qa-block {
+    border: 1px solid #99f6e4; border-left: 3.5pt solid #0f766e;
+    border-radius: 0 4pt 4pt 0; background: #fff; page-break-inside: avoid; overflow: hidden;
+  }
+  .qa-q {
+    margin: 0; padding: 6pt 9pt; font-size: 10pt; font-weight: 700;
+    background: linear-gradient(90deg, #ecfdf5, #f8fafc);
+    border-bottom: 1px solid #99f6e4; color: #115e59;
+  }
+  .qa-a {
+    margin: 0; padding: 10pt 11pt 12pt; font-size: 11pt; line-height: 1.65;
+    color: #0b2f2c; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
+    min-height: 2.8em; text-align: justify; background: #fff;
+  }
+  .qa-a.is-empty { color: #9CA3AF; font-style: italic; text-align: left; }
+  .empty { color: #9CA3AF; font-style: italic; }
+  .toc-list {
+    list-style: none; margin: 0; padding: 0; border: 1px solid #5eead4;
+    border-radius: 4pt; overflow: hidden; background: #fff;
+  }
+  .toc-list li {
+    display: flex; gap: 10pt; padding: 7pt 9pt; border-bottom: 1px solid #e6fffa; font-size: 11pt;
+  }
+  .toc-list li:nth-child(odd) { background: rgba(240,253,250,0.55); }
+  .toc-list li:last-child { border-bottom: none; }
+  .toc-num { font-weight: 700; min-width: 1.5em; color: #0f766e; }
+  .toc-label { flex: 1; }
+  .doc-footer {
+    display: flex; justify-content: space-between; gap: 12pt; flex-wrap: wrap;
+    margin: 4mm 4mm 0; padding: 8pt 10pt; border-top: 2pt solid #0f766e;
+    font-size: 8pt; letter-spacing: 0.04em; text-transform: uppercase; color: #115e59;
+    background: linear-gradient(180deg, #ecfdf5, transparent);
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="flag-band"></div>
+    <div class="cover">
+      <div class="agency">
+        <span class="agency-mark">KVIC</span>
+        <span class="agency-text">Khadi &amp; Village Industries Commission</span>
+      </div>
+      <div class="badge">PMEGP · KVIC unit pack</div>
+      <div class="kicker">PMEGP DETAILED PROJECT REPORT</div>
+      <div class="on">On</div>
+      <div class="action">${escapeHtml(doc.actionLine)}</div>
+      <div class="unit">${escapeHtml(doc.unitName)}</div>
+      <div class="scheme-block">
+        <div class="scheme">${escapeHtml(doc.underLine)}</div>
+        <div class="tagline">Credit-linked margin money · bank-style single-unit DPR</div>
+      </div>
+      <div class="cover-meta">${coverMeta}</div>
+      <div class="cover-rule"></div>
+    </div>
+    <section class="sec">
+      <h2><span class="sec-num">0</span>Table of Contents</h2>
+      <ol class="toc-list">${toc}</ol>
+    </section>
+    ${sectionsHtml}
+    <footer class="doc-footer">
+      <span>PMEGP · Bank-unit Detailed Project Report</span>
+      <span>Confidential — for lending appraisal</span>
+    </footer>
+  </div>
+</body>
+</html>`;
+  }
 
   return `<!DOCTYPE html>
 <html>
@@ -828,16 +1128,29 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
   .on, .action { font-size: 13pt; font-weight: 600; margin: 2pt 0; }
   .unit { color: #059669; font-size: 20pt; font-weight: 700; text-transform: uppercase; margin: 10pt 6mm; line-height: 1.25; }
   .scheme { font-size: 12pt; font-weight: 600; max-width: 150mm; margin: 8pt auto 0; line-height: 1.4; }
-  .meta { display: table; margin: 14pt auto 0; text-align: left; font-size: 11pt; }
-  .meta div { display: table-row; }
-  .meta span { display: table-cell; font-weight: 700; padding: 2pt 10pt 2pt 0; white-space: nowrap; }
-  h2 { font-size: 13pt; margin: 0 0 8pt; padding-bottom: 3pt; border-bottom: 1px solid #D1D5DB; }
-  table { width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0 0 6mm; font-size: 10pt; }
-  th, td { border: 1px solid #1F2937; padding: 6pt 7pt; vertical-align: top; text-align: left; overflow-wrap: anywhere; word-break: break-word; }
-  thead th { background: #F3F4F6; }
-  td.q { font-weight: 600; background: #FAFAFA; }
-  td.num { text-align: center; width: 12%; }
-  .sec { margin-bottom: 7mm; page-break-inside: avoid; }
+  .cover-meta { display: table; margin: 14pt auto 0; text-align: left; font-size: 11pt; }
+  .cover-meta div { display: table-row; }
+  .cover-meta span { display: table-cell; font-weight: 700; padding: 2pt 10pt 2pt 0; white-space: nowrap; }
+  h2 { font-size: 13.5pt; font-weight: 700; margin: 0 0 10pt; padding-bottom: 4pt; border-bottom: 1.5px solid #1F2937; display: flex; align-items: baseline; gap: 8pt; line-height: 1.3; }
+  .sec-num { display: inline-flex; align-items: center; justify-content: center; min-width: 1.6em; height: 1.6em; padding: 0 4pt; border: 1.5px solid #1F2937; border-radius: 2pt; font-size: 11pt; font-weight: 700; flex-shrink: 0; }
+  .sec { margin-bottom: 9mm; page-break-inside: avoid; }
+  .sec-body { display: flex; flex-direction: column; gap: 10pt; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0; border: 1px solid #1F2937; }
+  .meta-item { display: flex; flex-direction: column; gap: 2pt; padding: 7pt 8pt; border-right: 1px solid #D1D5DB; border-bottom: 1px solid #D1D5DB; min-width: 0; }
+  .meta-item:nth-child(2n) { border-right: none; }
+  .meta-item dt { margin: 0; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #4B5563; }
+  .meta-item dd { margin: 0; font-size: 11pt; font-weight: 600; color: #111827; overflow-wrap: anywhere; word-break: break-word; }
+  .meta-item dd.is-empty { color: #9CA3AF; font-style: italic; font-weight: 500; }
+  .qa-block { border: 1px solid #1F2937; background: #fff; page-break-inside: avoid; }
+  .qa-q { margin: 0; padding: 6pt 9pt; font-size: 10pt; font-weight: 700; background: #F3F4F6; border-bottom: 1px solid #D1D5DB; color: #111827; }
+  .qa-a { margin: 0; padding: 10pt 11pt 12pt; font-size: 11pt; line-height: 1.65; color: #1F2937; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; min-height: 2.8em; text-align: justify; }
+  .qa-a.is-empty { color: #9CA3AF; font-style: italic; text-align: left; }
+  .empty { color: #9CA3AF; font-style: italic; }
+  .toc-list { list-style: none; margin: 0; padding: 0; border: 1px solid #1F2937; }
+  .toc-list li { display: flex; gap: 10pt; padding: 6pt 8pt; border-bottom: 1px solid #E5E7EB; font-size: 11pt; }
+  .toc-list li:last-child { border-bottom: none; }
+  .toc-num { font-weight: 700; min-width: 1.5em; }
+  .toc-label { flex: 1; }
 </style>
 </head>
 <body>
@@ -847,52 +1160,87 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
     <div class="action">${escapeHtml(doc.actionLine)}</div>
     <div class="unit">${escapeHtml(doc.unitName)}</div>
     <div class="scheme">${escapeHtml(doc.underLine)}</div>
-    <div class="meta">
-      <div><span>District</span>${escapeHtml(doc.district || '—')}</div>
-      <div><span>Location</span>${escapeHtml(doc.location || '—')}</div>
-      ${doc.entrepreneurName ? `<div><span>Entrepreneur name</span>${escapeHtml(doc.entrepreneurName)}</div>` : ''}
-    </div>
+    <div class="cover-meta">${coverMeta}</div>
   </div>
-  <h2>Table of Contents</h2>
-  <table><colgroup><col style="width:12%"/><col style="width:88%"/></colgroup><thead><tr><th>#</th><th>Section</th></tr></thead><tbody>${toc}</tbody></table>
+  <section class="sec">
+    <h2><span class="sec-num">0</span>Table of Contents</h2>
+    <ol class="toc-list">${toc}</ol>
+  </section>
   ${sectionsHtml}
 </body>
 </html>`;
 }
 
 export async function generateIndividualDprDocx(doc: IndividualDocument): Promise<Buffer> {
-  const qaTable = (rows: DocRow[]) =>
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({
-          tableHeader: true,
+  const sectionBlocks = (rows: DocRow[]): (Paragraph | Table)[] => {
+    if (!rows.length) {
+      return [new Paragraph({ children: [new TextRun({ text: '—', italics: true, color: '9CA3AF' })] })];
+    }
+    const shortRows: DocRow[] = [];
+    const longRows: DocRow[] = [];
+    for (const row of rows) {
+      if (isExpansiveRow(row)) longRows.push(row);
+      else shortRows.push(row);
+    }
+    const out: (Paragraph | Table)[] = [];
+
+    // Compact facts as stacked label-above-value (not side-by-side Q|A)
+    for (const row of shortRows) {
+      out.push(
+        new Paragraph({
+          spacing: { before: 120, after: 40 },
+          children: [new TextRun({ text: row.label.toUpperCase(), bold: true, size: 16, color: '4B5563' })],
+        })
+      );
+      out.push(
+        new Paragraph({
+          spacing: { after: 80 },
           children: [
-            new TableCell({
-              width: { size: 40, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ children: [new TextRun({ text: 'Question', bold: true })] })],
-            }),
-            new TableCell({
-              width: { size: 60, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ children: [new TextRun({ text: 'Answer', bold: true })] })],
+            new TextRun({
+              text: !row.value || row.value === '—' ? 'Not filled' : row.value,
+              bold: true,
+              size: 22,
+              italics: !row.value || row.value === '—',
+              color: !row.value || row.value === '—' ? '9CA3AF' : '111827',
             }),
           ],
-        }),
-        ...rows.map(
-          (r) =>
-            new TableRow({
-              children: [
-                new TableCell({
-                  children: [new Paragraph({ text: r.label })],
-                }),
-                new TableCell({
-                  children: [new Paragraph({ text: r.value })],
-                }),
-              ],
-            })
-        ),
-      ],
-    });
+        })
+      );
+    }
+
+    for (const row of longRows) {
+      out.push(
+        new Paragraph({
+          spacing: { before: 160, after: 60 },
+          shading: { type: 'clear', fill: 'F3F4F6' },
+          border: {
+            bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D1D5DB' },
+          },
+          children: [new TextRun({ text: row.label, bold: true, size: 20 })],
+        })
+      );
+      const answer =
+        !row.value || row.value === '—'
+          ? 'Not filled yet — complete this in the form.'
+          : row.value;
+      for (const line of String(answer).split(/\n/)) {
+        out.push(
+          new Paragraph({
+            spacing: { after: 60 },
+            children: [
+              new TextRun({
+                text: line || ' ',
+                size: 22,
+                italics: !row.value || row.value === '—',
+                color: !row.value || row.value === '—' ? '9CA3AF' : '1F2937',
+              }),
+            ],
+          })
+        );
+      }
+    }
+    return out;
+  };
 
   const children: (Paragraph | Table)[] = [
     new Paragraph({
@@ -914,28 +1262,19 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
       : []),
     new Paragraph({ text: '' }),
     new Paragraph({ text: 'Table of Contents', heading: HeadingLevel.HEADING_2 }),
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({
-          tableHeader: true,
-          children: [
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '#', bold: true })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Section', bold: true })] })] }),
-          ],
-        }),
-        ...doc.sections.map(
-          (s) =>
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: String(s.n) })] }),
-                new TableCell({ children: [new Paragraph({ text: s.title })] }),
-              ],
-            })
-        ),
-      ],
-    }),
   ];
+
+  for (const s of doc.sections) {
+    children.push(
+      new Paragraph({
+        spacing: { after: 60 },
+        children: [
+          new TextRun({ text: `${s.n}. `, bold: true }),
+          new TextRun({ text: s.title }),
+        ],
+      })
+    );
+  }
 
   for (const section of doc.sections) {
     children.push(new Paragraph({ text: '' }));
@@ -945,7 +1284,7 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
         heading: HeadingLevel.HEADING_2,
       })
     );
-    children.push(qaTable(section.rows));
+    children.push(...sectionBlocks(section.rows));
   }
 
   const word = new Document({

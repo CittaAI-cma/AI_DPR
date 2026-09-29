@@ -3,7 +3,7 @@
  * Sections follow getSchemeSteps(); fields follow questions actually asked.
  */
 
-import type { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
+import type { Budget } from '@/lib/ventureMatch/types';
 import {
   extraFieldsForScheme,
   getStep18Uploads,
@@ -84,6 +84,14 @@ export const LEAN_UNIT_CODES = new Set([
 ]);
 
 export const EXTRA_FIELD_LABELS: Record<string, string> = {
+  directEmployment: 'Direct employment (count)',
+  indirectEmployment: 'Indirect employment (count)',
+  impactNote: 'Short impact note',
+  powerRequirement: 'Power requirement',
+  educationStatus: 'Education',
+  pmegpAgency: 'Implementing agency',
+  pmegpOwnPercent: 'Own contribution %',
+  pmegpSubsidyPercent: 'Margin money / subsidy %',
   entrepreneurName: 'Entrepreneur name',
   entrepreneurAge: 'Age',
   premisesType: 'Premises type',
@@ -542,30 +550,38 @@ export function getIndividualDocFields(
   }
 
   if (contentStep === 15) {
+    // Match Latest DPR form + server individual mapping (no IRR/NPV/sensitivity inputs on form)
     return [
       stepField('yearProjections', 'Year-wise sales / costs / profit', 15),
-      stepField('breakEvenPoint', 'Break-even Point', 15),
-      stepField('irr', 'IRR (%)', 15),
-      stepField('npv', 'NPV (₹ Lakhs)', 15),
-      stepField('sensitivityAnalysis', 'Sensitivity Analysis', 15),
+      stepField('breakEvenPoint', 'Break-even (capacity %)', 15),
     ];
   }
 
   if (contentStep === 16) {
+    // Form only has CoD + milestones (no totalImplementationPeriod input)
     return [
-      stepField('startDate', 'Start / commercial production date', 16),
-      stepField('totalImplementationPeriod', 'Total Implementation Period', 16),
+      stepField('startDate', 'Commercial production date (CoD)', 16),
       stepField('milestones', 'Milestones', 16),
     ];
   }
 
   if (contentStep === 17) {
+    // PMEGP / 2nd / PMFME form: direct + indirect employment + short impact note
+    if (
+      schemeCode === 'PMEGP' ||
+      schemeCode === 'PMEGP_2ND' ||
+      schemeCode === 'PMFME'
+    ) {
+      return [
+        stepField('employmentGeneration', 'Direct employment (count)', 17),
+        extraField('indirectEmployment'),
+        extraField('impactNote'),
+      ];
+    }
+    // Other schemes: direct employment + expected turnover
     return [
-      stepField('employmentGeneration', 'Employment Generation', 17),
-      stepField('turnoverGrowth', 'Turnover Growth (%)', 17),
-      stepField('exportGrowth', 'Export Growth (%)', 17),
-      stepField('incomeEnhancement', 'Income Enhancement (%)', 17),
-      stepField('sustainabilityOutcomes', 'Sustainability Outcomes', 17),
+      stepField('employmentGeneration', 'Direct employment (count)', 17),
+      stepField('turnoverGrowth', 'Expected annual turnover (₹ Lakhs)', 17),
     ];
   }
 
