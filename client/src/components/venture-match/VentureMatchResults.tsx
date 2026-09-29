@@ -22,6 +22,7 @@ interface VentureMatchResultsProps {
   onCreateDprForScheme: (schemeCode: string) => void;
   onOpenClusterDpr?: () => void;
   onRestart: () => void;
+  disableCreate?: boolean;
 }
 
 const STATUS_ICON: Record<CriterionStatus, React.ElementType> = {
@@ -55,13 +56,19 @@ function MatchAction({
   scheme,
   onCreateDprForScheme,
   onOpenClusterDpr,
+  disableCreate,
 }: {
   scheme: SchemeMatch;
   onCreateDprForScheme: (schemeCode: string) => void;
   onOpenClusterDpr?: () => void;
+  disableCreate?: boolean;
 }) {
   const { t } = useTranslation();
   const route = scheme.dprRoute || 'full';
+
+  if (disableCreate) {
+    return null;
+  }
 
   if (route === 'cluster') {
     return (
@@ -94,6 +101,7 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
   onCreateDprForScheme,
   onOpenClusterDpr,
   onRestart,
+  disableCreate,
 }) => {
   const { t } = useTranslation();
   const [showExcluded, setShowExcluded] = useState(false);
@@ -174,6 +182,7 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                       scheme={scheme}
                       onCreateDprForScheme={onCreateDprForScheme}
                       onOpenClusterDpr={onOpenClusterDpr}
+                      disableCreate={disableCreate}
                     />
                   </div>
                 </div>
@@ -216,10 +225,12 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
       )}
 
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
-        <Button onClick={onCreateDpr} className="gap-2">
-          <FolderPlus className="h-4 w-4" />
-          {t('ventureMatch.createDpr')}
-        </Button>
+        {!disableCreate && (
+          <Button onClick={onCreateDpr} className="gap-2">
+            <FolderPlus className="h-4 w-4" />
+            {t('ventureMatch.createDpr')}
+          </Button>
+        )}
         <Button variant="outline" onClick={onRestart}>
           {t('ventureMatch.startOver')}
         </Button>

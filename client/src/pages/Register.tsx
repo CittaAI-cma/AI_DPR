@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,10 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Sparkles, ArrowRight, CheckCircle, Building2 } from 'lucide-react';
 import { RolePicker } from '@/components/auth/RolePicker';
+import { ConsentFields, ConsentValues } from '@/components/privacy/ConsentFields';
+import { GuardianNotice } from '@/components/privacy/GuardianNotice';
+import { ageFromDob } from '@/lib/privacy/under18';
+import { PRIVACY_NOTICE_VERSION, UNDER_18_CODE } from '@/lib/privacy/constants';
 import { toBackendRole, type AppRole } from '@/lib/rbac';
 
 export const Register: React.FC = () => {
@@ -19,6 +23,8 @@ export const Register: React.FC = () => {
   const handleLinkClick = useLinkHandler();
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [under18, setUnder18] = useState(false);
+  const guardianRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,23 +32,88 @@ export const Register: React.FC = () => {
     phoneNumber: '',
     location: '',
     udyamNumber: '',
+    dateOfBirth: '',
     role: 'consultant' as AppRole,
   });
+  const [consent, setConsent] = useState<ConsentValues>({
+    accountConsent: false,
+    aiAssist: false,
+    analytics: false,
+    noticeRead: false,
+  });
+  const [phoneError, setPhoneError] = useState('');
+
+  const dobAge = ageFromDob(formData.dateOfBirth);
+  const isUnder18Dob = dobAge != null && dobAge < 18;
+  const showGuardian = under18 || isUnder18Dob;
+
+  const isValidPhone = (value: string) => /^\d{10}$/.test(value);
+
+  const scrollToGuardian = () => {
+    window.setTimeout(() => {
+      guardianRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    setFormData({ ...formData, phoneNumber: digits });
+    if (!digits) {
+      setPhoneError(t('auth.phoneRequired'));
+    } else if (!isValidPhone(digits)) {
+      setPhoneError(t('auth.phoneInvalid'));
+    } else {
+      setPhoneError('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidPhone(formData.phoneNumber)) {
+      setPhoneError(
+        formData.phoneNumber
+          ? t('auth.phoneInvalid')
+          : t('auth.phoneRequired')
+      );
+      return;
+    }
+
+    const age = ageFromDob(formData.dateOfBirth);
+    if (age != null && age < 18) {
+      setUnder18(true);
+      scrollToGuardian();
+      return;
+    }
+    setUnder18(false);
+    if (!consent.noticeRead) {
+      toast.error(t('privacy.scrollToEnable'));
+      return;
+    }
+    if (!consent.accountConsent) {
+      toast.error(t('privacy.accountRequired'));
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const response = await api.register({
         ...formData,
         role: toBackendRole(formData.role),
+        accountConsent: consent.accountConsent,
+        aiAssist: consent.aiAssist,
+        analytics: consent.analytics,
+        noticeVersion: PRIVACY_NOTICE_VERSION,
       });
       login(response.data, response.data.token);
       toast.success(t('auth.registerSuccess'));
       navigate('/dashboard');
-    } catch (error) {
-      toast.error(t('auth.registerError'));
+    } catch (error: any) {
+      if (error?.response?.data?.code === UNDER_18_CODE) {
+        setUnder18(true);
+        scrollToGuardian();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -99,11 +170,23 @@ export const Register: React.FC = () => {
                 <Input
                   label={t('auth.phoneNumber')}
                   type="tel"
-                  placeholder="+91 9876543210"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  placeholder="9876543210"
                   value={formData.phoneNumber}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phoneNumber: e.target.value })
-                  }
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  onBlur={() => {
+                    if (!isValidPhone(formData.phoneNumber)) {
+                      setPhoneError(
+                        formData.phoneNumber
+                          ? t('auth.phoneInvalid')
+                          : t('auth.phoneRequired')
+                      );
+                    }
+                  }}
+                  maxLength={10}
+                  required
+                  error={phoneError}
                   className="h-12"
                 />
               </div>
@@ -151,6 +234,18 @@ export const Register: React.FC = () => {
                   className="h-12"
                 />
               </div>
+              <Input
+                label={t('auth.dateOfBirth')}
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={(e) =>
+                  setFormData({ ...formData, dateOfBirth: e.target.value })
+                }
+                required
+                className="h-12"
+              />
+              {showGuardian && <GuardianNotice ref={guardianRef} />}
+              <ConsentFields value={consent} onChange={setConsent} />
               <Button 
                 type="submit" 
                 variant="secondary"

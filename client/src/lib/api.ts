@@ -237,6 +237,7 @@ class APIClient {
 
   // Auth endpoints
   async register(data: any) {
+    this.clearCache('/auth/profile');
     return this.handleRequest(
       async () => {
         const response = await this.client.post('/auth/register', data);
@@ -247,6 +248,7 @@ class APIClient {
   }
 
   async login(email: string, password: string) {
+    this.clearCache('/auth/profile');
     return this.handleRequest(
       async () => {
         const response = await this.client.post('/auth/login', { email, password });
@@ -254,6 +256,32 @@ class APIClient {
       },
       () => MockDataService.login(email, password)
     );
+  }
+
+  async logout() {
+    try {
+      await this.client.post('/auth/logout');
+    } catch {
+      /* still clear the client session */
+    }
+  }
+
+  async acceptConsent(data: {
+    accountConsent: boolean;
+    aiAssist: boolean;
+    analytics: boolean;
+    noticeVersion: string;
+  }) {
+    this.clearCache('/auth/profile');
+    const response = await this.client.post('/auth/consent', data);
+    return response.data;
+  }
+
+  /** Live profile only — never mock. Used by the re-consent gate. */
+  async getProfileLive() {
+    this.clearCache('/auth/profile');
+    const response = await this.client.get('/auth/profile');
+    return response.data;
   }
 
   async getProfile() {
@@ -271,6 +299,78 @@ class APIClient {
 
   async updateProfile(data: any) {
     const response = await this.client.put('/auth/profile', data);
+    return response.data;
+  }
+
+  async exportMyData() {
+    const response = await this.client.get('/privacy/export', { responseType: 'blob' });
+    return response.data;
+  }
+
+  async updatePrivacyConsent(data: { aiAssist?: boolean; analytics?: boolean }) {
+    this.clearCache('/auth/profile');
+    const response = await this.client.patch('/privacy/consent', data);
+    return response.data;
+  }
+
+  async saveNominee(data: { name: string; phone?: string; email?: string }) {
+    this.clearCache('/auth/profile');
+    const response = await this.client.put('/privacy/nominee', data);
+    return response.data;
+  }
+
+  async deleteMyAccount(confirm: string) {
+    const response = await this.client.delete('/privacy/account', { data: { confirm } });
+    return response.data;
+  }
+
+  async submitPrivacyComplaint(data: { subject: string; message: string }) {
+    const response = await this.client.post('/privacy/complaint', data);
+    return response.data;
+  }
+
+  async getPrivacyActivity() {
+    const response = await this.client.get('/privacy/activity');
+    return response.data;
+  }
+
+  async getNotifications(limit = 30) {
+    const response = await this.client.get('/privacy/notifications', { params: { limit } });
+    return response.data;
+  }
+
+  async markNotificationRead(id: string) {
+    const response = await this.client.post(`/privacy/notifications/${id}/read`);
+    return response.data;
+  }
+
+  async getAuditLog(params?: {
+    userId?: string;
+    action?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const response = await this.client.get('/admin/audit', { params });
+    return response.data;
+  }
+
+  async downloadAuditCsv(params?: {
+    userId?: string;
+    action?: string;
+    from?: string;
+    to?: string;
+  }) {
+    const response = await this.client.get('/admin/audit/csv', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  async runRetentionJob() {
+    const response = await this.client.post('/admin/retention/run');
     return response.data;
   }
 
@@ -674,6 +774,13 @@ class APIClient {
     );
   }
 
+  async getClusterFileBlob(fileId: string) {
+    const response = await this.client.get(`/dpr/cluster/files/${fileId}`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  }
+
   async uploadClusterDPRImage(file: File) {
     return this.handleRequest(
       async () => {
@@ -784,10 +891,12 @@ class APIClient {
   async deleteClusterDPRImage(imageUrl: string, cloudinaryPublicId?: string) {
     return this.handleRequest(
       async () => {
+        const fileId = imageUrl?.startsWith('file:') ? imageUrl.slice(5) : undefined;
         const response = await this.client.delete('/dpr/cluster/images/delete', {
           data: {
             imageUrl,
             publicId: cloudinaryPublicId,
+            fileId,
           },
         });
         return response.data;

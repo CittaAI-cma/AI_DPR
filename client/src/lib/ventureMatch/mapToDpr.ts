@@ -1,6 +1,21 @@
-import { HANDOFF_KEY } from './questions';
+import { HANDOFF_KEY, scopedVentureMatchKey } from './questions';
 import { SchemeMatch, VentureMatchAnswers } from './types';
 import en from '@/i18n/locales/en.json';
+
+function currentUserId(): string | null {
+  try {
+    const raw = localStorage.getItem('auth-storage');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state?.user?.userId || parsed?.user?.userId || null;
+  } catch {
+    return null;
+  }
+}
+
+function handoffStorageKey(): string {
+  return scopedVentureMatchKey(HANDOFF_KEY, currentUserId());
+}
 
 const ACTIVITY_SECTOR: Record<string, string> = {
   mfg: 'Manufacturing',
@@ -124,11 +139,13 @@ export function buildDprPrefill(answers: VentureMatchAnswers, matches: SchemeMat
 
 export function saveHandoff(answers: VentureMatchAnswers, matches: SchemeMatch[]) {
   const payload: VentureMatchHandoff = { answers, matches };
-  localStorage.setItem(HANDOFF_KEY, JSON.stringify(payload));
+  localStorage.setItem(handoffStorageKey(), JSON.stringify(payload));
+  // Drop legacy shared key so another account on this browser cannot pick it up
+  localStorage.removeItem(HANDOFF_KEY);
 }
 
 export function peekHandoff(): VentureMatchHandoff | null {
-  const raw = localStorage.getItem(HANDOFF_KEY);
+  const raw = localStorage.getItem(handoffStorageKey());
   if (!raw) return null;
   try {
     return JSON.parse(raw) as VentureMatchHandoff;
@@ -138,8 +155,10 @@ export function peekHandoff(): VentureMatchHandoff | null {
 }
 
 export function consumeHandoff(): VentureMatchHandoff | null {
-  const raw = localStorage.getItem(HANDOFF_KEY);
+  const key = handoffStorageKey();
+  const raw = localStorage.getItem(key);
   if (!raw) return null;
+  localStorage.removeItem(key);
   localStorage.removeItem(HANDOFF_KEY);
   try {
     return JSON.parse(raw) as VentureMatchHandoff;

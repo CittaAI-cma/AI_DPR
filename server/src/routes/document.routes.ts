@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { DocumentController } from '../controllers/document.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
+import { requireAiConsent } from '../middleware/aiConsent.middleware';
 
 const router = Router();
 
@@ -10,8 +11,8 @@ router.use(authenticate);
 
 // Vector store management routes - accessible to all authenticated users for chat
 router.get('/vector-stores/list', DocumentController.getVectorStores);
-router.post('/search', DocumentController.searchDocuments);
-router.post('/rag/query', DocumentController.queryWithRAG);
+router.post('/search', requireAiConsent, DocumentController.searchDocuments);
+router.post('/rag/query', requireAiConsent, DocumentController.queryWithRAG);
 
 // File serving route - accessible to all authenticated users
 router.get('/file/:filename', DocumentController.serveFile);

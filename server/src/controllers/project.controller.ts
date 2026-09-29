@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { Project } from '../models/Project.model';
 import { AuthRequest } from '../types';
 import { OpenAIService } from '../services/openai.service';
+import { AuditService } from '../services/audit.service';
 
 export class ProjectController {
   /**
@@ -176,6 +177,15 @@ export class ProjectController {
         });
         return;
       }
+
+      await AuditService.log({
+        action: 'dpr_delete',
+        userId,
+        role: req.user?.role,
+        targetType: 'project',
+        targetId: id,
+        req,
+      });
 
       res.status(200).json({
         success: true,

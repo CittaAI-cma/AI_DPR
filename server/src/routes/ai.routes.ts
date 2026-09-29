@@ -3,12 +3,13 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { AIController } from '../controllers/ai.controller';
 import { authenticate } from '../middleware/auth.middleware';
+import { requireAiConsent } from '../middleware/aiConsent.middleware';
 import { validate } from '../middleware/validation.middleware';
 
 const router = Router();
 
-// All routes require authentication
 router.use(authenticate);
+router.use(requireAiConsent);
 
 // Chat with AI
 router.post(

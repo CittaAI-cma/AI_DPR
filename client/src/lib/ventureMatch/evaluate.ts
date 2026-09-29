@@ -1,5 +1,14 @@
 import { QUESTIONS } from './questions';
-import { SCHEMES, blocksAllSchemes, cmepBoosted, shouldShowOwnershipHint } from './schemes';
+import {
+  SCHEMES,
+  blocksAllSchemes,
+  cmepBoosted,
+  isIndividualPickerScheme,
+  shouldShowOwnershipHint,
+} from './schemes';
+
+/** Create New Latest DPR packs only — not cluster / helpdesk CTAs. */
+const LATEST_DPR_SCHEMES = SCHEMES.filter((scheme) => isIndividualPickerScheme(scheme.code));
 import {
   EvaluateResult,
   QuestionId,
@@ -44,7 +53,7 @@ export function evaluate(answers: VentureMatchAnswers): EvaluateResult {
   const excluded: SchemeExclusion[] = [];
   const blocked = blocksAllSchemes(answers);
 
-  for (const scheme of SCHEMES) {
+  for (const scheme of LATEST_DPR_SCHEMES) {
     const criteria: SchemeCriterion[] = scheme.criteria.map((criterion) => ({
       id: criterion.id,
       questionId: criterion.questionId,
@@ -103,7 +112,7 @@ export function remainingCount(
 ): number {
   const scoped = scopedAnswers(answers, ignoreQuestionId);
   if (blocksAllSchemes(scoped)) return 0;
-  return SCHEMES.filter((scheme) =>
+  return LATEST_DPR_SCHEMES.filter((scheme) =>
     scheme.criteria.every((criterion) => criterion.test(scoped) !== 'fail')
   ).length;
 }

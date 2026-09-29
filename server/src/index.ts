@@ -6,10 +6,10 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import path from 'path';
 import { connectDatabase } from './config/database';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler.middleware';
+import { getJwtSecret } from './lib/jwtSecret';
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +20,19 @@ if (!process.env.OPENAI_API_KEY) {
   console.error('   Please set OPENAI_API_KEY in your .env file.');
   console.error('   See .env.example for reference.');
   process.exit(1);
+}
+
+if (process.env.NODE_ENV === 'production') {
+  try {
+    getJwtSecret();
+  } catch (error: any) {
+    console.error('❌ ERROR:', error.message);
+    process.exit(1);
+  }
+  if (!(process.env.KYC_ENCRYPTION_KEY || '').trim()) {
+    console.error('❌ ERROR: KYC_ENCRYPTION_KEY is required in production.');
+    process.exit(1);
+  }
 }
 
 // Initialize Express app
@@ -47,21 +60,10 @@ app.use(morgan('dev')); // Logging
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve uploaded files statically with explicit CORS headers
-app.use('/uploads', (req, res, next) => {
-  const origin = process.env.CORS_ORIGIN || 'http://localhost:5173';
-  res.header('Access-Control-Allow-Origin', origin);
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  // Allow embedding for PDFs and images
-  res.removeHeader('X-Frame-Options');
-  res.removeHeader('Content-Security-Policy');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-}, express.static(path.join(process.cwd(), 'uploads')));
+// No public file tree. KYC and cluster photos are served only via authenticated APIs.
+app.use('/uploads', (req, res) => {
+  res.status(404).json({ success: false, message: 'Not found' });
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -111,6 +113,21 @@ const startServer = async () => {
       console.log(`📡 API available at http://localhost:${PORT}/api`);
       console.log(`💚 Health check at http://localhost:${PORT}/api/health\n`);
     });
+
+    const { runRetentionJob } = await import('./services/retention.service');
+    const runRetention = () => {
+      runRetentionJob()
+        .then((summary) => {
+          if (summary.warned || summary.purged || summary.auditPurged) {
+            console.info(
+              `[retention] warned=${summary.warned} purged=${summary.purged} auditPurged=${summary.auditPurged} idleDays=${summary.idleDays} auditDays=${summary.auditDays}`
+            );
+          }
+        })
+        .catch((err) => console.error('[retention] job failed:', err.message));
+    };
+    setTimeout(runRetention, 20_000);
+    setInterval(runRetention, 6 * 60 * 60 * 1000);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

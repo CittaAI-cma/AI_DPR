@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { ConsentGate } from '@/components/privacy/ConsentGate';
 import { toAppRole } from '@/lib/rbac';
 
 interface ProtectedRouteProps {
@@ -56,7 +57,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/dashboard" replace />;
   }
 
-  // User is authenticated, render children
-  return <>{children}</>;
+  return (
+    <ConsentGate>
+      {children}
+    </ConsentGate>
+  );
 };
 

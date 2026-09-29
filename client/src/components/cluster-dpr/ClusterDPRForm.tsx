@@ -11,6 +11,7 @@ import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { FIELD_DESCRIPTIONS } from '@/data/fieldDescriptions';
 import { FinancialStatements } from './FinancialStatements';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { isKycUploaded, kycDisplayName, kycUploadPayload } from '@/lib/privacy/kycField';
 
 interface ClusterDPRFormProps {
   currentStep: number;
@@ -1920,9 +1921,8 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
         try {
           // Upload to Cloudinary
           const uploadResult = await api.uploadClusterDPRDocument(file);
-          if (uploadResult.success && uploadResult.data?.documentUrl) {
-            // Store the Cloudinary URL, not just the filename
-            handleInputChange(field, uploadResult.data.documentUrl);
+          if (uploadResult.success && uploadResult.data) {
+            handleInputChange(field, kycUploadPayload(uploadResult.data, file.name));
             toast.success(`${file.name} uploaded successfully!`);
           } else {
             toast.error(uploadResult.message || 'Failed to upload document');
@@ -1944,40 +1944,32 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
       if (!files || files.length === 0) return;
 
       const fileArray = Array.from(files);
-      const uploadedUrls: string[] = [];
+      const uploadedRefs: any[] = [];
 
       setUploadingFiles(prev => ({ ...prev, supportingDocuments: true }));
       try {
         for (const file of fileArray) {
           try {
             const uploadResult = await api.uploadClusterDPRDocument(file);
-            if (uploadResult.success && uploadResult.data?.documentUrl) {
-              uploadedUrls.push(uploadResult.data.documentUrl);
+            if (uploadResult.success && uploadResult.data) {
+              uploadedRefs.push(kycUploadPayload(uploadResult.data, file.name));
             } else {
-              // Fallback to filename if upload fails
-              uploadedUrls.push(file.name);
+              uploadedRefs.push(kycUploadPayload({}, file.name));
             }
           } catch (error) {
             console.error('Error uploading file:', file.name, error);
-            uploadedUrls.push(file.name);
+            uploadedRefs.push(kycUploadPayload({}, file.name));
           }
         }
-        handleInputChange('supportingDocuments', uploadedUrls);
-        toast.success(`${uploadedUrls.length} document(s) uploaded!`);
+        handleInputChange('supportingDocuments', uploadedRefs);
+        toast.success(`${uploadedRefs.length} document(s) uploaded!`);
       } finally {
         setUploadingFiles(prev => ({ ...prev, supportingDocuments: false }));
       }
     };
 
     // Helper to display filename from URL
-    const getDisplayName = (urlOrName: string): string => {
-      if (urlOrName.startsWith('http://') || urlOrName.startsWith('https://')) {
-        // Extract filename from URL
-        const urlParts = urlOrName.split('/');
-        return urlParts[urlParts.length - 1] || urlOrName;
-      }
-      return urlOrName;
-    };
+    const getDisplayName = (urlOrName: unknown): string => kycDisplayName(urlOrName);
 
     return (
       <div className="space-y-6">

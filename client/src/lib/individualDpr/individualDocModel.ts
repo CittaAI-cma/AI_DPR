@@ -546,6 +546,12 @@ export function sectionTitleFromStep(def: SchemeStepDef): string {
 
 export function formatDocValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    const o = value as Record<string, unknown>;
+    if (o.status === 'uploaded' || o.fileId) {
+      return o.originalName ? `Uploaded (${o.originalName})` : 'Uploaded';
+    }
+  }
   if (typeof value === 'number') {
     if (Number.isNaN(value)) return '—';
     return String(value);

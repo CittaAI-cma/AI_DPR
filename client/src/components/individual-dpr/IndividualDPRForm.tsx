@@ -137,9 +137,13 @@ import { fillAllStepsWithAi, FillAllProgress, normalizeExtraValue } from '@/lib/
 import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
+import { isKycUploaded, kycDisplayName, kycUploadPayload } from '@/lib/privacy/kycField';
 import { normalizeMilestones, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/store/authStore';
+import { hasUnder18Applicant } from '@/lib/privacy/under18';
+import { GuardianNotice } from '@/components/privacy/GuardianNotice';
 interface IndividualDPRFormProps {
   currentStep: number;
   onNext: () => void;
@@ -152,6 +156,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   onPrevious,
 }) => {
   const { data, setStepData, getStepData, setSchemeExtras, setCurrentStep } = useIndividualDPRStore();
+  const { user } = useAuthStore();
+  const aiAllowed = !!user?.privacy?.aiAssist;
+  const under18Applicant = hasUnder18Applicant(data);
   const tf = useClusterFormText();
   const { t } = useTranslation();
   const schemeCode = data.matchedSchemeCode || null;
@@ -324,6 +331,14 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   };
 
   const handleGenerateAllSteps = async () => {
+    if (under18Applicant) {
+      toast.error(t('privacy.guardianMessage'));
+      return;
+    }
+    if (!aiAllowed) {
+      toast.error(t('privacy.aiOffWarning'));
+      return;
+    }
     if (!getUnitName(data.step1)) {
       toast.error(t('individualDpr.toasts.needNameForAi'));
       return;
@@ -522,12 +537,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
           <p className="text-sm font-medium">{tf("Generate the rest of this DPR with AI")}</p>
           <p className="text-sm text-muted-foreground">
-            {tf('Uses the unit name, district, and location to fill every visible step except document uploads. You can edit anything afterwards.')}
+            {aiAllowed
+              ? tf('Uses the unit name, district, and location to fill every visible step except document uploads. You can edit anything afterwards.')
+              : t('privacy.aiOffWarning')}
           </p>
+          {under18Applicant && <GuardianNotice />}
           <Button
             type="button"
             onClick={handleGenerateAllSteps}
-            disabled={isFillingAll}
+            disabled={isFillingAll || !aiAllowed || under18Applicant}
             className="gap-2"
           >
             {isFillingAll ? (
@@ -4389,8 +4407,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         setUploadingFiles((prev) => ({ ...prev, [field]: true }));
         try {
           const uploadResult = await individualDprApi.uploadDocument(file);
-          if (uploadResult.success && uploadResult.data?.documentUrl) {
-            handleInputChange(field, uploadResult.data.documentUrl);
+          if (uploadResult.success && uploadResult.data) {
+            handleInputChange(field, kycUploadPayload(uploadResult.data, file.name));
             toast.success(`${file.name} uploaded successfully!`);
           } else {
             toast.error(uploadResult.message || 'Failed to upload document');
@@ -4405,13 +4423,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       }
     };
 
-    const getDisplayName = (urlOrName: string): string => {
-      if (urlOrName.startsWith('http://') || urlOrName.startsWith('https://')) {
-        const urlParts = urlOrName.split('/');
-        return urlParts[urlParts.length - 1] || urlOrName;
-      }
-      return urlOrName;
-    };
+    const getDisplayName = (urlOrName: unknown): string => kycDisplayName(urlOrName);
 
     const step12 = data.step12 || {};
     const totalCost = (step12.land || 0) + (step12.building || 0) + (step12.machinery || 0) +
@@ -4438,7 +4450,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 </div>
               )}
             </div>
-            {stepData[item.id] && (
+            {isKycUploaded(stepData[item.id]) && (
               <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData[item.id])}</p>
             )}
           </div>
@@ -4451,7 +4463,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => handleFileChange('educationCertificate', e.target.files?.[0] || null)}
             />
-            {stepData.educationCertificate && (
+            {isKycUploaded(stepData.educationCertificate) && (
               <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData.educationCertificate)}</p>
             )}
           </div>

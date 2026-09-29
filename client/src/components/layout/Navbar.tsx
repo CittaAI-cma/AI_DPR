@@ -4,11 +4,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
+import { api } from '@/lib/api';
 import { canAccessAdmin } from '@/lib/rbac';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { Button } from '@/components/ui/Button';
-import { Languages, LogOut, User, Menu, X } from 'lucide-react';
+import { Languages, LogOut, User, Menu, X, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 
 export const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -18,7 +20,8 @@ export const Navbar: React.FC = () => {
   const handleLinkClick = useLinkHandler();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await api.logout();
     logout();
     navigate('/login');
     setMobileMenuOpen(false);
@@ -90,6 +93,8 @@ export const Navbar: React.FC = () => {
               <span className="font-medium">{i18n.language.startsWith('te') ? 'English' : 'తెలుగు'}</span>
             </Button>
 
+            {isAuthenticated && <NotificationBell />}
+
             {isAuthenticated ? (
               <>
                 <div className="hidden sm:flex items-center gap-3">
@@ -98,6 +103,12 @@ export const Navbar: React.FC = () => {
                       <User className="h-4 w-4" />
                       <span className="font-medium">{user?.name}</span>
                       <RoleBadge role={user?.role} />
+                    </Button>
+                  </a>
+                  <a href="/account/privacy" onClick={(e) => handleLinkClick(e, '/account/privacy')}>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="font-medium">{t('nav.privacy')}</span>
                     </Button>
                   </a>
                   <Button
@@ -177,6 +188,17 @@ export const Navbar: React.FC = () => {
                   <User className="h-4 w-4" />
                   <span>{user?.name}</span>
                   <RoleBadge role={user?.role} />
+                </a>
+                <a
+                  href="/account/privacy"
+                  onClick={(e) => {
+                    handleLinkClick(e, '/account/privacy');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-accent"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>{t('nav.privacy')}</span>
                 </a>
                 <button
                   onClick={handleLogout}

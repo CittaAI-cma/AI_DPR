@@ -11,6 +11,22 @@ export interface IUser extends Document {
   udyamNumber?: string;
   location?: string;
   phoneNumber?: string;
+  dateOfBirth?: Date;
+  privacy?: {
+    noticeVersion?: string;
+    noticeAcceptedAt?: Date;
+    accountConsent?: boolean;
+    accountConsentAt?: Date;
+    aiAssist?: boolean;
+    aiAssistAt?: Date;
+    analytics?: boolean;
+    analyticsAt?: Date;
+    nominee?: {
+      name?: string;
+      phone?: string;
+      email?: string;
+    };
+  };
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;

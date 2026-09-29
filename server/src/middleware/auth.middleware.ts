@@ -2,6 +2,7 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../types';
+import { getJwtSecret } from '../lib/jwtSecret';
 
 export const authenticate = (
   req: AuthRequest,
@@ -20,7 +21,7 @@ export const authenticate = (
     }
 
     const token = authHeader.substring(7);
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const secret = getJwtSecret();
 
     const decoded = jwt.verify(token, secret) as {
       userId: string;

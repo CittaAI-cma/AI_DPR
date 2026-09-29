@@ -20,6 +20,8 @@ import { Profile } from './pages/Profile';
 import { ClusterDPRCreation } from './pages/ClusterDPRCreation';
 import { IndividualDPRCreation } from './pages/IndividualDPRCreation';
 import { VentureMatch } from './pages/VentureMatch';
+import { Privacy } from './pages/Privacy';
+import { AccountPrivacy } from './pages/AccountPrivacy';
 import './i18n/config';
 
 function App() {
@@ -66,6 +68,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/privacy" element={<Privacy />} />
         
         <Route
           path="/dashboard"
@@ -189,6 +192,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/account/privacy"
+          element={
+            <ProtectedRoute>
+              <AccountPrivacy />
             </ProtectedRoute>
           }
         />

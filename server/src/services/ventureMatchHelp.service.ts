@@ -1,12 +1,6 @@
 // @ts-nocheck
-import OpenAI from 'openai';
+import { openai } from '../lib/openaiClient';
 import dotenv from 'dotenv';
-
-dotenv.config();
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export type HelpMessage = { role: 'user' | 'assistant'; content: string };
 

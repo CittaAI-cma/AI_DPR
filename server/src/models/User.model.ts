@@ -40,6 +40,24 @@ const userSchema = new Schema<IUser>(
       type: String,
       trim: true,
     },
+    dateOfBirth: {
+      type: Date,
+    },
+    privacy: {
+      noticeVersion: { type: String },
+      noticeAcceptedAt: { type: Date },
+      accountConsent: { type: Boolean, default: false },
+      accountConsentAt: { type: Date },
+      aiAssist: { type: Boolean, default: false },
+      aiAssistAt: { type: Date },
+      analytics: { type: Boolean, default: false },
+      analyticsAt: { type: Date },
+      nominee: {
+        name: { type: String, trim: true },
+        phone: { type: String, trim: true },
+        email: { type: String, trim: true, lowercase: true },
+      },
+    },
   },
   {
     timestamps: true,

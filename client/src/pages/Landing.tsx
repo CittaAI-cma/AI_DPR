@@ -310,7 +310,10 @@ export const Landing: React.FC = () => {
               <span className="text-lg font-semibold text-foreground">MSME DPR Tool</span>
             </div>
             <p className="text-sm text-muted-foreground text-center md:text-right">
-              © 2024 AI-Enabled MSME DPR Generation Tool. All rights reserved.
+              © 2026 AI-Enabled MSME DPR Generation Tool.{' '}
+              <a href="/privacy" className="underline hover:text-foreground">
+                Privacy notice
+              </a>
             </p>
           </div>
         </div>

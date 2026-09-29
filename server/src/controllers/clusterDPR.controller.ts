@@ -7,10 +7,58 @@ import { CloudinaryService } from '../services/cloudinary.service';
 import { Project } from '../models/Project.model';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { ClusterSection } from '../models/ClusterSection.model';
+import { payloadHasUnder18Applicant, under18Response } from '../lib/under18';
+import { AuditService } from '../services/audit.service';
+import { KycFile } from '../models/KycFile.model';
+import {
+  kycRefFromUpload,
+  persistKycBytes,
+  sanitizeStoredPayload,
+  clusterPhotoDir,
+  privateFileRef,
+  fileIdFromRef,
+  isPrivateFileRef,
+  readKycBytes,
+  KycEncryptionRequiredError,
+} from '../lib/kycStorage';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import axios from 'axios';
+
+async function storePrivateBytes(input: {
+  userId: string;
+  projectId?: string;
+  originalName: string;
+  mimeType: string;
+  filePath: string;
+  size: number;
+}) {
+  const bytes = fs.readFileSync(input.filePath);
+  const { encrypted } = persistKycBytes(input.filePath, bytes);
+  const row = await KycFile.create({
+    userId: input.userId,
+    projectId: input.projectId,
+    originalName: input.originalName,
+    mimeType: input.mimeType,
+    storagePath: input.filePath,
+    encrypted,
+    size: input.size,
+  });
+  return row;
+}
+
+function encryptionFailResponse(res: Response, error: any): boolean {
+  if (error instanceof KycEncryptionRequiredError || error?.code === 'KYC_ENCRYPTION_REQUIRED') {
+    res.status(503).json({
+      success: false,
+      message: error.message,
+      code: 'KYC_ENCRYPTION_REQUIRED',
+    });
+    return true;
+  }
+  return false;
+}
 
 export class ClusterDPRController {
   /**
@@ -18,7 +66,8 @@ export class ClusterDPRController {
    */
   static async generateClusterDPR(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { clusterData, language = 'bilingual' } = req.body;
+      const { clusterData: rawClusterData, language = 'bilingual' } = req.body;
+      const clusterData = sanitizeStoredPayload(rawClusterData);
       const userId = req.user?.userId;
 
       if (!userId) {
@@ -34,6 +83,11 @@ export class ClusterDPRController {
           success: false,
           message: 'Cluster data is required',
         });
+        return;
+      }
+
+      if (payloadHasUnder18Applicant(clusterData)) {
+        res.status(403).json(under18Response());
         return;
       }
 
@@ -66,6 +120,15 @@ export class ClusterDPRController {
         clusterData,
         language
       );
+
+      await AuditService.log({
+        action: 'dpr_create',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: result?.dprId ? String(result.dprId) : undefined,
+        req,
+      });
 
       res.status(200).json({
         success: true,
@@ -101,10 +164,7 @@ export class ClusterDPRController {
       // Import DPRVersion model
       const { DPRVersion } = await import('../models/DPRVersion.model');
       
-      const dpr = await DPRVersion.findOne({
-        _id: dprId,
-        userId,
-      });
+      const dpr = await DPRVersion.findById(dprId);
 
       if (!dpr) {
         res.status(404).json({
@@ -114,10 +174,30 @@ export class ClusterDPRController {
         return;
       }
 
+      const isOwner = dpr.userId?.toString() === userId.toString();
+      const isStaff = req.user?.role === 'admin' || req.user?.role === 'officer';
+      if (!isOwner && !isStaff) {
+        res.status(403).json({
+          success: false,
+          message: 'Access denied: This DPR does not belong to you',
+        });
+        return;
+      }
+      if (!isOwner && isStaff) {
+        await AuditService.log({
+          action: 'admin_view',
+          userId,
+          role: req.user?.role,
+          targetType: 'dpr',
+          targetId: dprId,
+          req,
+        });
+      }
+
       // Fetch all cluster sections for this DPR
       const clusterSections = await ClusterSection.find({
         dprId,
-        userId,
+        ...(isOwner ? { userId } : {}),
       });
 
       // Organize sections by language and type
@@ -225,11 +305,7 @@ export class ClusterDPRController {
     return multer({
       storage: multer.diskStorage({
         destination: (req, file, cb) => {
-          const uploadDir = path.join(process.cwd(), 'uploads', 'images');
-          if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-          }
-          cb(null, uploadDir);
+          cb(null, clusterPhotoDir());
         },
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -257,7 +333,7 @@ export class ClusterDPRController {
     return multer({
       storage: multer.diskStorage({
         destination: (req, file, cb) => {
-          const uploadDir = path.join(process.cwd(), 'uploads', 'documents');
+          const uploadDir = path.join(process.cwd(), 'uploads', 'kyc');
           if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
           }
@@ -319,39 +395,31 @@ export class ClusterDPRController {
       // Generate image using Gemini-enhanced prompt with DALL-E
       const imageUrl = await GeminiService.generateImage(prompt, sectionInfo || {});
 
-      // Upload generated image to Cloudinary
-      let cloudinaryUrl = imageUrl;
-      let cloudinaryPublicId = null;
-      try {
-        const cloudinaryResult = await CloudinaryService.uploadImageFromUrl(
-          imageUrl,
-          'msme-dpr/cluster-images/generated'
-        );
-        cloudinaryUrl = cloudinaryResult.secureUrl;
-        cloudinaryPublicId = cloudinaryResult.publicId;
-        console.log(`✅ Image uploaded to Cloudinary: ${cloudinaryPublicId}`);
-      } catch (cloudinaryError: any) {
-        // Check if it's a configuration error
-        if (cloudinaryError.message?.includes('not configured')) {
-          console.warn('⚠️ Cloudinary not configured. Using original image URL.');
-          console.warn('   To enable Cloudinary uploads, add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your .env file');
-        } else {
-          console.error('⚠️ Failed to upload to Cloudinary, using original URL:', cloudinaryError.message || cloudinaryError);
-        }
-        // Continue with original URL if Cloudinary upload fails
-      }
+      // Store generated image privately — do not send to Cloudinary.
+      const ext = '.png';
+      const filePath = path.join(clusterPhotoDir(), `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+      const imageRes = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 60_000 });
+      const mimeType = imageRes.headers['content-type'] || 'image/png';
+      fs.writeFileSync(filePath, Buffer.from(imageRes.data));
+      const stored = await storePrivateBytes({
+        userId,
+        originalName: `generated-${sectionType}${ext}`,
+        mimeType,
+        filePath,
+        size: Buffer.from(imageRes.data).length,
+      });
 
       res.status(200).json({
         success: true,
         message: 'Image generated successfully',
         data: {
-          imageUrl: cloudinaryUrl,
-          originalUrl: imageUrl,
-          cloudinaryPublicId,
+          fileId: stored._id.toString(),
+          imageUrl: privateFileRef(stored._id.toString()),
           sectionType,
         },
       });
     } catch (error: any) {
+      if (encryptionFailResponse(res, error)) return;
       console.error('❌ Error generating image:', error);
       res.status(500).json({
         success: false,
@@ -384,47 +452,36 @@ export class ClusterDPRController {
         return;
       }
 
-      // Upload to Cloudinary
-      let cloudinaryUrl = `/uploads/images/${file.filename}`;
-      let cloudinaryPublicId = null;
-      try {
-        const cloudinaryResult = await CloudinaryService.uploadImage(
-          file.path,
-          'msme-dpr/cluster-images/uploaded',
-          `uploaded-${Date.now()}-${file.filename.replace(/\.[^/.]+$/, '')}`
-        );
-        cloudinaryUrl = cloudinaryResult.secureUrl;
-        cloudinaryPublicId = cloudinaryResult.publicId;
-        
-        // Delete local file after successful Cloudinary upload
-        fs.unlink(file.path, (err) => {
-          if (err) console.error('Error deleting local file:', err);
-        });
-        
-        console.log(`✅ Image uploaded to Cloudinary: ${cloudinaryPublicId}`);
-      } catch (cloudinaryError: any) {
-        // Check if it's a configuration error
-        if (cloudinaryError.message?.includes('not configured')) {
-          console.warn('⚠️ Cloudinary not configured. Using local file storage.');
-          console.warn('   To enable Cloudinary uploads, add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your .env file');
-        } else {
-          console.error('⚠️ Failed to upload to Cloudinary, using local file:', cloudinaryError.message || cloudinaryError);
-        }
-        // Continue with local file path if Cloudinary upload fails
-      }
+      const stored = await storePrivateBytes({
+        userId,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        filePath: file.path,
+        size: file.size,
+      });
+
+      await AuditService.log({
+        action: 'kyc_upload',
+        userId,
+        role: req.user?.role,
+        targetType: 'file',
+        targetId: stored._id.toString(),
+        req,
+      });
 
       res.status(200).json({
         success: true,
         message: 'Image uploaded successfully',
         data: {
-          imageUrl: cloudinaryUrl,
-          cloudinaryPublicId,
+          fileId: stored._id.toString(),
+          imageUrl: privateFileRef(stored._id.toString()),
           filename: file.filename,
           originalName: file.originalname,
           size: file.size,
         },
       });
     } catch (error: any) {
+      if (encryptionFailResponse(res, error)) return;
       console.error('❌ Error uploading image:', error);
       res.status(500).json({
         success: false,
@@ -653,7 +710,8 @@ export class ClusterDPRController {
         return;
       }
 
-      const { clusterData } = req.body;
+      const { clusterData: rawClusterData } = req.body;
+      const clusterData = sanitizeStoredPayload(rawClusterData);
 
       const unitName =
         clusterData?.step1?.unitName || clusterData?.step1?.clusterName;
@@ -662,6 +720,11 @@ export class ClusterDPRController {
           success: false,
           message: 'Draft data with a unit / project name is required',
         });
+        return;
+      }
+
+      if (payloadHasUnder18Applicant(clusterData)) {
+        res.status(403).json(under18Response());
         return;
       }
 
@@ -769,6 +832,15 @@ export class ClusterDPRController {
         await dprVersion.save();
         console.log('✅ Updated DPRVersion record:', dprVersion._id);
       }
+
+      await AuditService.log({
+        action: 'dpr_change',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprVersion._id.toString(),
+        req,
+      });
 
       res.status(200).json({
         success: true,
@@ -1444,48 +1516,38 @@ export class ClusterDPRController {
         return;
       }
 
-      // Upload to Cloudinary
-      let cloudinaryUrl = `/uploads/documents/${file.filename}`;
-      let cloudinaryPublicId = null;
-      try {
-        const cloudinaryResult = await CloudinaryService.uploadDocument(
-          file.path,
-          'msme-dpr/cluster-documents',
-          `document-${Date.now()}-${file.filename.replace(/\.[^/.]+$/, '')}`
-        );
-        cloudinaryUrl = cloudinaryResult.secureUrl;
-        cloudinaryPublicId = cloudinaryResult.publicId;
-        
-        // Delete local file after successful Cloudinary upload
-        fs.unlink(file.path, (err) => {
-          if (err) console.error('Error deleting local file:', err);
-        });
-        
-        console.log(`✅ Document uploaded to Cloudinary: ${cloudinaryPublicId}`);
-      } catch (cloudinaryError: any) {
-        // Check if it's a configuration error
-        if (cloudinaryError.message?.includes('not configured')) {
-          console.warn('⚠️ Cloudinary not configured. Using local file storage.');
-          console.warn('   To enable Cloudinary uploads, add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your .env file');
-        } else {
-          console.error('⚠️ Failed to upload to Cloudinary, using local file:', cloudinaryError.message || cloudinaryError);
-        }
-        // Continue with local file path if Cloudinary upload fails
-      }
+      const bytes = fs.readFileSync(file.path);
+      const { encrypted } = persistKycBytes(file.path, bytes);
+      const kyc = await KycFile.create({
+        userId,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        storagePath: file.path,
+        encrypted,
+        size: file.size,
+      });
 
+      await AuditService.log({
+        action: 'kyc_upload',
+        userId,
+        role: req.user?.role,
+        targetType: 'kyc',
+        targetId: kyc._id.toString(),
+        req,
+      });
+
+      const ref = kycRefFromUpload(kyc._id.toString(), file.originalname);
       res.status(200).json({
         success: true,
         message: 'Document uploaded successfully',
         data: {
-          documentUrl: cloudinaryUrl,
-          cloudinaryPublicId,
-          filename: file.filename,
-          originalName: file.originalname,
-          fileSize: file.size,
+          ...ref,
           mimeType: file.mimetype,
+          fileSize: file.size,
         },
       });
     } catch (error: any) {
+      if (encryptionFailResponse(res, error)) return;
       console.error('❌ Error uploading document:', error);
       res.status(500).json({
         success: false,
@@ -1509,15 +1571,25 @@ export class ClusterDPRController {
         return;
       }
 
-      const { projectId, documentType, documentUrl } = req.body;
+      const { projectId, documentType, documentUrl, fileId, originalName } = req.body;
 
-      if (!projectId || !documentType || !documentUrl) {
+      if (!projectId || !documentType) {
         res.status(400).json({
           success: false,
-          message: 'Project ID, document type, and document URL are required',
+          message: 'Project ID and document type are required',
         });
         return;
       }
+
+      const stored =
+        fileId || documentUrl
+          ? sanitizeStoredPayload({
+              status: 'uploaded',
+              fileId,
+              originalName,
+              documentUrl,
+            })
+          : { status: 'uploaded' as const };
 
       // Find project
       const project = await Project.findOne({
@@ -1565,9 +1637,9 @@ export class ClusterDPRController {
         if (!Array.isArray(project.stepData.step18.supportingDocuments)) {
           project.stepData.step18.supportingDocuments = [];
         }
-        project.stepData.step18.supportingDocuments.push(documentUrl);
+        project.stepData.step18.supportingDocuments.push(stored);
       } else {
-        (project.stepData.step18 as any)[step18Field] = documentUrl;
+        (project.stepData.step18 as any)[step18Field] = stored;
       }
 
       await project.save();
@@ -1594,9 +1666,9 @@ export class ClusterDPRController {
           if (!Array.isArray(dprVersion.content[lang].clusterData.step18.supportingDocuments)) {
             dprVersion.content[lang].clusterData.step18.supportingDocuments = [];
           }
-          dprVersion.content[lang].clusterData.step18.supportingDocuments.push(documentUrl);
+          dprVersion.content[lang].clusterData.step18.supportingDocuments.push(stored);
         } else {
-          dprVersion.content[lang].clusterData.step18[step18Field] = documentUrl;
+          dprVersion.content[lang].clusterData.step18[step18Field] = stored;
         }
 
         await dprVersion.save();
@@ -1608,7 +1680,7 @@ export class ClusterDPRController {
         data: {
           projectId,
           documentType,
-          documentUrl,
+          ...stored,
         },
       });
     } catch (error: any) {
@@ -1616,6 +1688,42 @@ export class ClusterDPRController {
       res.status(500).json({
         success: false,
         message: 'Failed to update annexure document',
+        error: error.message,
+      });
+    }
+  }
+
+  static async getFile(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      const role = req.user?.role;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+      const file = await KycFile.findById(req.params.fileId);
+      if (!file) {
+        res.status(404).json({ success: false, message: 'File not found' });
+        return;
+      }
+      const staff = role === 'admin' || role === 'officer';
+      if (file.userId !== userId && !staff) {
+        res.status(403).json({ success: false, message: 'Not allowed' });
+        return;
+      }
+      if (!file.storagePath || !fs.existsSync(file.storagePath)) {
+        res.status(404).json({ success: false, message: 'File missing' });
+        return;
+      }
+      const bytes = readKycBytes(file.storagePath);
+      res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+      res.setHeader('Cache-Control', 'private, max-age=60');
+      res.send(bytes);
+    } catch (error: any) {
+      console.error('Get private file error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to load file',
         error: error.message,
       });
     }
@@ -1632,47 +1740,57 @@ export class ClusterDPRController {
         return;
       }
 
-      const { imageUrl, publicId } = req.body;
+      const { imageUrl, publicId, fileId } = req.body;
+      const id =
+        fileId ||
+        (isPrivateFileRef(imageUrl) ? fileIdFromRef(imageUrl) : undefined);
 
-      if (!imageUrl && !publicId) {
-        res.status(400).json({
-          success: false,
-          message: 'Image URL or public ID is required',
+      if (id) {
+        const file = await KycFile.findOne({ _id: id, userId });
+        if (file) {
+          try {
+            if (file.storagePath && fs.existsSync(file.storagePath)) {
+              const root = path.resolve(process.cwd(), 'uploads');
+              const resolved = path.resolve(file.storagePath);
+              if (resolved.startsWith(root)) fs.unlinkSync(resolved);
+            }
+          } catch {
+            /* keep going */
+          }
+          await KycFile.deleteOne({ _id: file._id });
+        }
+        await AuditService.log({
+          action: 'kyc_delete',
+          userId,
+          role: req.user?.role,
+          targetType: 'file',
+          targetId: id,
+          req,
         });
-        return;
-      }
-
-      // Extract public ID from URL if not provided
-      let imagePublicId = publicId;
-      if (!imagePublicId && imageUrl) {
-        imagePublicId = CloudinaryService.extractPublicId(imageUrl);
-      }
-
-      if (!imagePublicId) {
-        res.status(400).json({
-          success: false,
-          message: 'Could not extract public ID from image URL',
-        });
-        return;
-      }
-
-      // Delete from Cloudinary
-      const deleted = await CloudinaryService.deleteImage(imagePublicId);
-
-      if (deleted) {
         res.status(200).json({
           success: true,
           message: 'Image deleted successfully',
-          data: {
-            publicId: imagePublicId,
-          },
+          data: { fileId: id },
         });
-      } else {
-        res.status(404).json({
-          success: false,
-          message: 'Image not found in Cloudinary',
-        });
+        return;
       }
+
+      if (publicId || (typeof imageUrl === 'string' && /cloudinary\.com/i.test(imageUrl))) {
+        const imagePublicId = publicId || CloudinaryService.extractPublicId(imageUrl);
+        if (imagePublicId) {
+          await CloudinaryService.deleteImage(imagePublicId);
+        }
+        res.status(200).json({
+          success: true,
+          message: 'Image deleted successfully',
+        });
+        return;
+      }
+
+      res.status(400).json({
+        success: false,
+        message: 'File id is required',
+      });
     } catch (error: any) {
       console.error('❌ Error deleting image:', error);
       res.status(500).json({

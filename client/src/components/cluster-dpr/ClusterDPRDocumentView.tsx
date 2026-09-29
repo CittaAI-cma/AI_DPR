@@ -15,6 +15,8 @@ import { EditableFinancialTable } from './EditableFinancialTable';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { fieldHitNode } from '@/lib/individualDpr/previewFieldHits';
 import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
+import { PrivateImg } from '@/components/privacy/PrivateImg';
+import { isPrivateFileRef, storedImageRef } from '@/lib/privacy/privateFile';
 
 interface ClusterDPRDocumentViewProps {
   dpr: any;
@@ -577,7 +579,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
     try {
       const result = await api.generateClusterDPRImage(prompt, sectionType, sectionInfo);
       if (result.success && result.data?.imageUrl) {
-        const imageUrl = result.data.imageUrl;
+        const imageUrl = storedImageRef(result.data);
         setImages({ ...images, [imageId]: imageUrl });
 
         // Save image to project database
@@ -615,15 +617,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
     try {
       const result = await api.uploadClusterDPRImage(file);
       if (result.success && result.data?.imageUrl) {
-        // Use Cloudinary URL directly (already full URL) or construct local URL
-        const imageUrl = result.data.imageUrl.startsWith('http')
-          ? result.data.imageUrl
-          : (() => {
-            const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-            const serverBaseUrl = apiBaseUrl.replace('/api', '');
-            return `${serverBaseUrl}${result.data.imageUrl}`;
-          })();
-
+        const imageUrl = storedImageRef(result.data);
         setImages({ ...images, [imageId]: imageUrl });
 
         // Store Cloudinary public ID for future deletion if available
@@ -666,46 +660,25 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
       return;
     }
 
-    // Check if it's a Cloudinary URL
-    const isCloudinaryUrl = imageUrl.includes('cloudinary.com') || imageUrl.includes('res.cloudinary.com');
-
-    if (isCloudinaryUrl) {
+    if (isPrivateFileRef(imageUrl) || imageUrl.includes('cloudinary.com')) {
       try {
-        // Extract public ID from Cloudinary URL
-        const urlParts = imageUrl.split('/');
-        const uploadIndex = urlParts.findIndex(part => part === 'upload');
-        if (uploadIndex !== -1 && uploadIndex < urlParts.length - 1) {
-          // Extract public ID (format: v1234567890/folder/public_id.ext)
-          const publicIdPath = urlParts.slice(uploadIndex + 2).join('/').replace(/\.[^/.]+$/, '');
-
-          // Call API to delete from Cloudinary
-          const result = await api.deleteClusterDPRImage(imageUrl, publicIdPath);
-
-          if (result.success) {
-            const newImages = { ...images };
-            delete newImages[imageId];
-            setImages(newImages);
-            toast.success('Image removed and deleted from storage');
-          } else {
-            throw new Error(result.message || 'Failed to delete image');
-          }
-        } else {
-          // Fallback: just remove from UI
-          const newImages = { ...images };
-          delete newImages[imageId];
-          setImages(newImages);
-          toast.success('Image removed');
-        }
-      } catch (error: any) {
-        console.error('Error deleting image from Cloudinary:', error);
-        toast.error('Failed to delete image from storage, but removed from view');
-        // Still remove from UI even if deletion fails
+        const result = await api.deleteClusterDPRImage(imageUrl);
         const newImages = { ...images };
         delete newImages[imageId];
         setImages(newImages);
+        if (result.success) {
+          toast.success('Image removed and deleted from storage');
+        } else {
+          toast.success('Image removed');
+        }
+      } catch (error: any) {
+        console.error('Error deleting image:', error);
+        const newImages = { ...images };
+        delete newImages[imageId];
+        setImages(newImages);
+        toast.success('Image removed');
       }
     } else {
-      // Not a Cloudinary URL, just remove from UI
       const newImages = { ...images };
       delete newImages[imageId];
       setImages(newImages);
@@ -1209,14 +1182,13 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
           >
             {hasImage ? (
               <>
-                <img
+                <PrivateImg
                   src={currentImage}
                   alt={alt}
                   className="w-full h-auto object-contain"
                   style={{ maxHeight: '300px' }}
                   crossOrigin="anonymous"
                   onError={(e) => {
-                    // Fallback to placeholder
                     e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD48L3N2Zz4=';
                   }}
                 />
@@ -1678,7 +1650,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
                           );
 
                           if (result.success && result.data?.imageUrl) {
-                            const imageUrl = result.data.imageUrl;
+                            const imageUrl = storedImageRef(result.data);
                             setImages(prev => ({ ...prev, [imageConfig.imageId]: imageUrl }));
 
                             // Save image to project database
@@ -5416,126 +5388,43 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
                 });
               }
 
-              return annexureFiles.map((annexure, idx) => {
-                const fileUrl = getFileUrl(annexure.file);
-                const fileName = typeof annexure.file === 'string' ? annexure.file : annexure.file?.name || `Document ${annexure.index}`;
-                const isImage = isImageFile(fileName);
-                const isPdf = isPdfFile(fileName);
-
-                // Debug logging
-                if (fileUrl) {
-                  console.log(`📄 Annexure ${annexure.index} (${annexure.title}):`, {
-                    originalFile: annexure.file,
-                    fileName,
-                    fileUrl,
-                    isCloudinary: fileUrl.includes('cloudinary.com'),
-                    isStaticRoute: fileUrl.includes('/uploads/'),
-                  });
-                } else {
-                  console.warn(`⚠️ No file URL for Annexure ${annexure.index} (${annexure.title}):`, annexure.file);
-                }
-
-                return (
-                  <div
-                    key={idx}
-                    className="p-12 border-b-4 border-gray-800 page-break"
-                    style={{
-                      pageBreakAfter: idx < annexureFiles.length - 1 ? 'always' : 'auto',
-                      padding: '2cm',
-                      minHeight: '29.7cm',
-                      fontFamily: 'Times New Roman, serif'
-                    }}
-                  >
-                    <div className="mb-4">
-                      <h3 className="text-2xl font-bold mb-2" style={{ color: '#1F2937' }}>
-                        Annexure {annexure.index}: {annexure.title}
-                      </h3>
-                    </div>
-
-                    {fileUrl ? (
-                      <div className="w-full" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                        {isImage ? (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <img
-                              src={fileUrl}
-                              alt={annexure.title}
-                              className="max-w-full max-h-full object-contain"
-                              style={{ maxHeight: 'calc(29.7cm - 8cm)' }}
-                              onError={(e) => {
-                                console.error('Failed to load image:', fileUrl);
-                                e.currentTarget.style.display = 'none';
-                                const errorDiv = document.createElement('div');
-                                errorDiv.className = 'text-center text-gray-500';
-                                errorDiv.textContent = 'File could not be loaded. Please check the file path.';
-                                e.currentTarget.parentElement?.appendChild(errorDiv);
-                              }}
-                            />
-                          </div>
-                        ) : isPdf ? (
-                          <div className="w-full h-full" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                            {/* For Cloudinary PDFs, show a professional document card since direct embedding has CORS issues */}
-                            {fileUrl.includes('cloudinary.com') ? (
-                              <PDFViewer url={fileUrl} fileName={fileName} />
-                            ) : (
-                              <iframe
-                                src={`${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                                className="w-full border-0"
-                                style={{
-                                  minHeight: 'calc(29.7cm - 8cm)',
-                                  height: 'calc(29.7cm - 8cm)',
-                                }}
-                                title={`${annexure.title} PDF`}
-                                onLoad={() => {
-                                  console.log(`✅ Successfully loaded PDF: ${fileName}`);
-                                }}
-                                onError={(e) => {
-                                  console.error('❌ Failed to load PDF iframe:', {
-                                    fileUrl,
-                                    fileName,
-                                    originalFile: annexure.file,
-                                  });
-                                  // Show error message
-                                  const iframeElement = e.currentTarget;
-                                  const parent = iframeElement.parentElement;
-                                  if (parent) {
-                                    iframeElement.style.display = 'none';
-                                    const errorDiv = document.createElement('div');
-                                    errorDiv.className = 'text-center p-8 border-2 border-red-300 rounded-lg bg-red-50';
-                                    errorDiv.innerHTML = `
-                                    <p class="font-bold text-red-700 mb-2">Failed to load document</p>
-                                    <p class="text-sm text-red-600 mb-1">File: ${fileName}</p>
-                                    <p class="text-xs text-red-500 mb-4">URL: ${fileUrl}</p>
-                                    <p class="text-xs text-gray-600">Please check if the file exists at the specified location.</p>
-                                  `;
-                                    parent.appendChild(errorDiv);
-                                  }
-                                }}
-                              />
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                            <p className="text-gray-500 mb-2">Document Preview</p>
-                            <a
-                              href={fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              Click to view: {fileName}
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg" style={{ minHeight: 'calc(29.7cm - 8cm)' }}>
-                        <p className="text-gray-500">File not available or path not found</p>
-                        <p className="text-sm text-gray-400 mt-2">{fileName}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              });
+              return (
+                <div
+                  className="p-12 border-b-4 border-gray-800 page-break"
+                  style={{
+                    padding: '2cm',
+                    minHeight: '29.7cm',
+                    fontFamily: 'Times New Roman, serif',
+                  }}
+                >
+                  <h3 className="text-2xl font-bold mb-4" style={{ color: '#1F2937' }}>
+                    Annexures — document status
+                  </h3>
+                  <p className="text-sm mb-6" style={{ color: '#4B5563' }}>
+                    Identity and supporting scans are stored privately. This report shows Uploaded or Pending only. Attach originals at the bank or DIC.
+                  </p>
+                  {annexureFiles.length === 0 ? (
+                    <p className="text-sm text-gray-500">No annexure files marked as uploaded.</p>
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr>
+                          <th className="text-left py-2 border-b">Document</th>
+                          <th className="text-left py-2 border-b">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {annexureFiles.map((annexure, idx) => (
+                          <tr key={idx} className="border-b">
+                            <td className="py-2">{annexure.title}</td>
+                            <td className="py-2">Uploaded</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
             })()}
           </>
         );

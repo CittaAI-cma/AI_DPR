@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>DPDP requirements checklist — MSME DPR tool</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm 18mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      color: #1a2332;
+      font-size: 10.5pt;
+      line-height: 1.4;
+      max-width: 190mm;
+      margin: 0 auto;
+      padding: 12px 8px 40px;
+    }
+    h1 { font-size: 20pt; line-height: 1.2; margin: 0 0 8pt; color: #0f2744; }
+    h2 { font-size: 13pt; margin: 20pt 0 8pt; color: #0f2744; page-break-after: avoid; border-bottom: 1px solid #c5d0dc; padding-bottom: 4pt; }
+    h3 { font-size: 11pt; margin: 14pt 0 6pt; color: #1b4d7a; page-break-after: avoid; }
+    p, li { margin: 0 0 7pt; }
+    ul, ol { margin: 0 0 10pt; padding-left: 18pt; }
+    .kicker { font-family: system-ui, sans-serif; font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #5a6a7a; margin-bottom: 6pt; }
+    .meta { font-family: system-ui, sans-serif; font-size: 9pt; color: #4a5563; margin-bottom: 14pt; }
+    .box {
+      background: #f4f7fb;
+      border: 1px solid #d5dee8;
+      border-left: 4px solid #1b4d7a;
+      padding: 10pt 12pt;
+      margin: 10pt 0 14pt;
+      page-break-inside: avoid;
+    }
+    .warn {
+      background: #fbf6ee;
+      border: 1px solid #ead9b8;
+      border-left: 4px solid #b45309;
+      padding: 10pt 12pt;
+      margin: 10pt 0 14pt;
+      page-break-inside: avoid;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 8pt 0 14pt; page-break-inside: auto; }
+    th, td { border: 1px solid #cfd8e3; padding: 5pt 6pt; vertical-align: top; text-align: left; }
+    th { background: #e8eef5; font-family: system-ui, sans-serif; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr { page-break-inside: avoid; }
+    .check { font-family: system-ui, sans-serif; font-size: 11pt; white-space: nowrap; width: 2.2em; text-align: center; }
+    .status { font-family: system-ui, sans-serif; font-size: 8pt; white-space: nowrap; width: 5.5em; }
+    .done { color: #166534; font-weight: 600; }
+    .gap { color: #b45309; font-weight: 600; }
+    .partial { color: #1d4ed8; font-weight: 600; }
+    .n-a { color: #64748b; }
+    footer.note { font-family: system-ui, sans-serif; font-size: 8pt; color: #5a6a7a; margin-top: 20pt; border-top: 1px solid #d5dee8; padding-top: 8pt; }
+    strong { color: #0f2744; }
+    .toc li { margin-bottom: 3pt; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 8.5pt; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
+    .legend span { display: inline-block; margin-right: 12pt; font-family: system-ui, sans-serif; font-size: 8.5pt; }
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="kicker">AI DPR · Data protection</div>
+  <h1>DPDP requirements &amp; checklist</h1>
+  <p class="meta">
+    MSME DPR tool · Internal checklist · September 2026 · Notice version <strong>2026-09-4</strong><br />
+    Source of truth for code behaviour: <code>docs/dpdp.md</code> · Build plan: <code>docs/dpdp-implementation-plan.html</code>
+  </p>
+
+  <div class="warn">
+    <p style="margin:0"><strong>Not a compliance certificate.</strong> This paper lists product requirements we chose for India’s Digital Personal Data Protection Act, 2023, and marks what the <em>code</em> already does. Stages 1–3 are in software. Stage 4 is organisation work. Until Stage 4 is done by people, do <strong>not</strong> say “we comply with DPDP.”</p>
+  </div>
+
+  <div class="box">
+    <p style="margin:0 0 6pt"><strong>How to use the checklist.</strong> Print or open in a browser (File → Print → Save as PDF). Tick the left box when you have verified the item yourself. The Status column is the repo’s current claim as of this document.</p>
+    <p class="legend" style="margin:0">
+      <span class="done">In code</span>
+      <span class="partial">Partial / mock</span>
+      <span class="gap">Org gap</span>
+      <span class="n-a">N/A for this product</span>
+    </p>
+  </div>
+
+  <p class="no-print" style="font-family:system-ui;font-size:9pt;color:#5a6a7a">Tip: open this file in Chrome/Safari and print to PDF for a paper copy.</p>
+
+  <h2>Contents</h2>
+  <ol class="toc">
+    <li>Stage status snapshot</li>
+    <li>Stage 0 — Locked notice decisions</li>
+    <li>Stage 1 — Notice, consent, age 18, safer AI, first audit</li>
+    <li>Stage 2 — Export, delete, nominee, complaint, full audit</li>
+    <li>Stage 3 — Private files, retention clocks</li>
+    <li>Stage 4 — Organisation work</li>
+    <li>Verification smoke tests</li>
+    <li>What we may / must not say</li>
+  </ol>
+
+  <h2>1. Stage status snapshot</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:3em">Stage</th>
+        <th>What it covers</th>
+        <th style="width:7em">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>0</td><td>Fiduciary name, mock grievance mail, 12-month DPR clock, optional AI wording</td><td class="done">Locked</td></tr>
+      <tr><td>1</td><td>Privacy notice, consent, under-18 block, AI gate + KYC strip, first audit, JWT guard</td><td class="done">In code</td></tr>
+      <tr><td>2</td><td>Export, AI toggle, nominee, account erase, complaint form, full audit UI</td><td class="done">In code</td></tr>
+      <tr><td>3</td><td>Private KYC/photos, encryption in production, 12-month purge, 15-day warn, 24-month audit drop</td><td class="done">In code</td></tr>
+      <tr><td>4</td><td>Legal name on paper, real inbox, vendor contracts, breach playbook, named officer</td><td class="gap">Org work</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Stage 0 — Locked notice decisions</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="check">☐</th>
+        <th>Requirement</th>
+        <th>Product rule</th>
+        <th class="status">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>Name who decides why data is collected (Data Fiduciary)</td>
+        <td>Product name: <strong>MSME One Department</strong> (exact legal/gazette name = Stage 4)</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Publish a way to complain / ask for rights</td>
+        <td><code>privacy.grievance@msmeone.gov.in</code> — mock until a person is assigned</td>
+        <td class="status partial">Partial</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Say how long unused reports are kept</td>
+        <td><strong>12 months after last edit</strong> of that DPR (draft or submitted). Not first save, not login-only. Account is not deleted with the report.</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Warn before idle delete</td>
+        <td><strong>15 days</strong> before purge: in-app notification + mock SMS (Twilio when keys exist)</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Say how long audit events are kept</td>
+        <td>Each audit row kept <strong>24 months from that event</strong>, then erased</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>AI is optional and explained</td>
+        <td>If AI is refused: Fill with AI, model quality score, chat help will not run; type / save / download still work. KYC never in the model.</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Bump notice version when text changes</td>
+        <td>Current: <code>2026-09-4</code> on server and client; old users must re-consent</td>
+        <td class="status done">In code</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Stage 1 — Notice, consent, age 18, safer AI, first audit</h2>
+
+  <h3>3.1 Notice &amp; consent</h3>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Requirement</th><th>Where / how</th><th class="status">Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>Public privacy notice before / at collection</td>
+        <td><code>/privacy</code> EN + TE; linked from Register, Login, Layout, Landing</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>User must actually read the notice</td>
+        <td>Scroll box on Register and re-consent; account tick disabled until bottom</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Account consent required to create / keep using account</td>
+        <td><code>User.privacy.accountConsent</code>; server rejects register without it</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Separate optional AI consent</td>
+        <td><code>aiAssist</code>; analytics optional and stored only</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Record which notice version was accepted</td>
+        <td><code>noticeVersion</code> / <code>noticeAcceptedAt</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Old users must accept the current notice</td>
+        <td>Blocking <code>ConsentGate</code> modal; Logout without accepting still works</td>
+        <td class="status done">In code</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 Under 18 (children)</h3>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Requirement</th><th>Where / how</th><th class="status">Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>No adult account for a person under 18</td>
+        <td>Register DOB → age &lt; 18 → no user created; yellow guardian box; <code>UNDER_18</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Named entrepreneur / applicant must be 18+</td>
+        <td>Latest DPR age fields; server draft/save and generate refuse under 18</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Scheme Finder under-18 path cannot create a DPR</td>
+        <td>Guardian box on age question; Create DPR buttons hidden if <code>under18</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Clear guardian message (EN/TE)</td>
+        <td>i18n <code>privacy.guardianMessage</code> + server <code>GUARDIAN_MESSAGE</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Special “child planning DPR” with parental consent UX</td>
+        <td>Out of scope — adult registers and is the applicant</td>
+        <td class="status n-a">N/A</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>3.3 Safer AI &amp; security basics</h3>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Requirement</th><th>Where / how</th><th class="status">Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>AI features require AI consent</td>
+        <td><code>requireAiConsent</code> on AI / generate / suggestions / chat / RAG / quality / translate / image gen</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Draft save and PDF/DOCX download without AI consent</td>
+        <td>Still allowed when AI is off</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Do not send KYC / identity scans to the model</td>
+        <td><code>sanitizeForAi</code> via <code>openaiClient</code> — drops Aadhaar/PAN/passbook keys and patterns</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>UI explains AI-off clearly</td>
+        <td>Disabled Fill-with-AI / suggestions + refuse message <code>AI_CONSENT_REQUIRED</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Production JWT secret required</td>
+        <td>Server exits if <code>JWT_SECRET</code> missing or dummy in production</td>
+        <td class="status done">In code</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>3.4 First audit trail</h3>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Requirement</th><th>Where / how</th><th class="status">Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>Append-only event log</td>
+        <td><code>auditevents</code> — no updates to old rows</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Log register, login, logout, notice, consent, AI call</td>
+        <td>Actions: <code>register</code>, <code>login_success</code>, <code>login_failed</code>, <code>logout</code>, <code>notice_accepted</code>, <code>consent_given</code>, <code>consent_withdrawn</code>, <code>ai_call</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Log rows must not hold Aadhaar or DPR body text</td>
+        <td>Only time, userId, role, action, optional target + IP</td>
+        <td class="status done">In code</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Stage 2 — User rights, complaints, nominee, full audit</h2>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Requirement</th><th>Where / how</th><th class="status">Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>User can download a copy of their data</td>
+        <td><code>/account/privacy</code> → JSON export (profile, projects, DPRs; no password)</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>User can turn AI off without wiping the DPR</td>
+        <td><code>PATCH /api/privacy/consent</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>User can name a nominee</td>
+        <td>Name + phone or email on privacy settings</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>User can erase their account</td>
+        <td>Type <code>DELETE</code>; cascade removes projects, DPRs, files, OpenAI file ids; audit rows stay</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Admin user-delete uses the same cascade</td>
+        <td><code>eraseAccount()</code> shared path</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>In-app privacy / rights request</td>
+        <td>Complaint form → <code>PrivacyComplaint</code> aimed at mock mail; person must still reply (~90 days)</td>
+        <td class="status partial">Partial</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>User can see own recent activity</td>
+        <td><code>GET /api/privacy/activity</code> — own rows only</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Full audit actions for DPR / KYC / export / delete / admin view</td>
+        <td><code>dpr_*</code>, <code>kyc_*</code>, <code>data_export</code>, <code>account_delete</code>, <code>admin_view</code>, nominee, complaint, profile</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Admin can search audit and download CSV</td>
+        <td>Admin Dashboard → Audit log</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Staff opening someone else’s DPR is logged</td>
+        <td><code>admin_view</code> for admin/officer, not for own DPR</td>
+        <td class="status done">In code</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5. Stage 3 — Private files &amp; retention</h2>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Requirement</th><th>Where / how</th><th class="status">Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>Identity scans are not public URLs</td>
+        <td><code>uploads/kyc/</code> + <code>KycFile</code>; served only via authenticated <code>GET /api/dpr/cluster/files/:fileId</code></td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Cluster unit photos are not public / not new Cloudinary</td>
+        <td><code>uploads/cluster/</code> as <code>file:&lt;id&gt;</code>; <code>/uploads</code> always 404</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Do not store Aadhaar/PAN numbers as form fields</td>
+        <td>Dropped on save; DPR shows Uploaded / Pending for identity</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Encrypt KYC/photos at rest in production</td>
+        <td><code>KYC_ENCRYPTION_KEY</code> required in production (AES-256-GCM)</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Idle DPR purge after 12 months from last edit</td>
+        <td>Draft and submitted; job ~every 6 hours / admin Run retention</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>15-day warning before purge</td>
+        <td>In-app + mock SMS; does not reset idle clock</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Audit rows auto-deleted after 24 months</td>
+        <td><code>AUDIT_RETENTION_DAYS</code> default 730; do not set to 0</td>
+        <td class="status done">In code</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Account erase does not wipe audit early</td>
+        <td>Audit stays until the 24-month clock</td>
+        <td class="status done">In code</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>6. Stage 4 — Organisation work (code cannot finish)</h2>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Requirement</th><th>What “done” looks like</th><th class="status">Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="check">☐</td>
+        <td>Confirm legal / gazette Data Fiduciary name on paper</td>
+        <td>Replace or formally endorse “MSME One Department” product name</td>
+        <td class="status gap">Org gap</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Real grievance mailbox a person reads</td>
+        <td>Replace mock address; SLA for rights requests (~90 days)</td>
+        <td class="status gap">Org gap</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Named contact / officer for privacy requests</td>
+        <td>Published name or role + process</td>
+        <td class="status gap">Org gap</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Written contracts / DPA with processors</td>
+        <td>Hosting DB, OpenAI, any SMS gateway, etc.</td>
+        <td class="status gap">Org gap</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Personal data breach playbook</td>
+        <td>Who decides, who is told, timelines, evidence</td>
+        <td class="status gap">Org gap</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Complaint replies are human, not chatbot-only</td>
+        <td>Workflow from <code>PrivacyComplaint</code> rows to a reply</td>
+        <td class="status gap">Org gap</td>
+      </tr>
+      <tr>
+        <td class="check">☐</td>
+        <td>Production secrets and SMS gateway live</td>
+        <td><code>JWT_SECRET</code>, <code>KYC_ENCRYPTION_KEY</code>, Twilio (or equivalent) if SMS is claimed</td>
+        <td class="status gap">Org gap</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>7. Verification smoke tests</h2>
+  <p>Tick when you have run the test on a running client + server + Mongo.</p>
+  <table>
+    <thead>
+      <tr><th class="check">☐</th><th>Test</th><th>Expected</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="check">☐</td><td><code>/privacy</code> EN/TE</td><td>MSME One Department, mock mail, 12-month drafts, optional AI, under-18 line</td></tr>
+      <tr><td class="check">☐</td><td>Adult register, AI off</td><td>Dashboard opens; Fill-with-AI / chat refuse with explanation; hand save works</td></tr>
+      <tr><td class="check">☐</td><td>Adult register, AI on</td><td>Suggestions / chat work (needs <code>OPENAI_API_KEY</code>)</td></tr>
+      <tr><td class="check">☐</td><td>DOB under 18</td><td>No account; guardian yellow box; email cannot log in</td></tr>
+      <tr><td class="check">☐</td><td>Old user / Quick Test Login</td><td>Blocking re-consent modal; Logout works</td></tr>
+      <tr><td class="check">☐</td><td>Promoter age 16 then 32</td><td>Save/generate refuse at 16; save works at 32 (with required fields)</td></tr>
+      <tr><td class="check">☐</td><td>Scheme Finder under 18 vs 21–50</td><td>Create DPR gone then back</td></tr>
+      <tr><td class="check">☐</td><td>Export / nominee / complaint / AI toggle</td><td>On <code>/account/privacy</code>; activity lists actions</td></tr>
+      <tr><td class="check">☐</td><td>Delete account (throwaway)</td><td>Cannot log in; <code>account_delete</code> still in audit</td></tr>
+      <tr><td class="check">☐</td><td>Admin audit CSV</td><td>Search + download; no Aadhaar / DPR text in rows</td></tr>
+      <tr><td class="check">☐</td><td>KYC upload logged out URL</td><td><code>/uploads/...</code> → 404; form shows Uploaded</td></tr>
+      <tr><td class="check">☐</td><td>Retention (test env carefully)</td><td>Warning then purge; do not set <code>AUDIT_RETENTION_DAYS=0</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>8. What we may / must not say</h2>
+  <div class="box">
+    <p><strong>After Stages 1–3 we may say:</strong></p>
+    <ul style="margin-bottom:0">
+      <li>We do not keep identity scans or cluster photos as public web links.</li>
+      <li>Unused reports are cleaned 12 months after last edit (with a 15-day warning).</li>
+      <li>Each audit row is dropped after 24 months.</li>
+      <li>AI help is optional and does not receive KYC files.</li>
+    </ul>
+  </div>
+  <div class="warn">
+    <p style="margin:0"><strong>We must not say:</strong> “We comply with DPDP,” “fully DPDP aligned,” or treat this checklist as a lawyer’s certificate. Stage 4 remains open.</p>
+  </div>
+
+  <footer class="note">
+    Generated for internal use from <code>docs/dpdp.md</code> (implemented logic) and the stage plan.
+    Update this HTML when notice version, retention clocks, or Stage 4 items change.
+    Print date: fill in _______________ · Reviewed by: _______________
+  </footer>
+</body>
+</html>

@@ -4,21 +4,10 @@ import { AuthRequest } from '../types';
 import { Document } from '../models/Document.model';
 import { VectorStore } from '../models/VectorStore.model';
 import { OpenAIService } from '../services/openai.service';
-import OpenAI from 'openai';
+import { openai } from '../lib/openaiClient';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import dotenv from 'dotenv';
-dotenv.config();
-
-// OpenAI client for file operations
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY environment variable is required. Please set it in your .env file.');
-}
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 // Setup multer for file uploads
 const upload = multer({
