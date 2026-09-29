@@ -58,6 +58,26 @@ export class AISuggestionsService {
   }
 
   /**
+   * Improve existing text for a form field (returns improved value only).
+   */
+  static async improveFieldText(
+    fieldName: string,
+    fieldValue: string,
+    context: Record<string, any> = {}
+  ): Promise<string | null> {
+    try {
+      const response = await api.improveFieldText(fieldName, fieldValue, context);
+      if (response.success && response.data?.content) {
+        return String(response.data.content);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error improving field text:', error);
+      return null;
+    }
+  }
+
+  /**
    * Generate actual content for a field based on suggestion
    */
   static async generateFieldContent(

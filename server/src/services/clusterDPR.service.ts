@@ -1556,6 +1556,71 @@ Return only the suggestion text, no JSON or formatting.`;
   }
 
   /**
+   * Improve / polish existing text for a DPR form field.
+   * Returns only the improved field value (no commentary).
+   */
+  static async improveFieldText(
+    fieldName: string,
+    fieldValue: string,
+    context: Record<string, any> = {}
+  ): Promise<string | null> {
+    try {
+      const text = String(fieldValue || '').trim();
+      if (!text) return null;
+
+      const label = context.fieldLabel || fieldName || 'form field';
+      const schemeCode = context.schemeCode || '';
+      const unitName = context.unitName || context.clusterName || '';
+      const district = context.district || '';
+      const location = context.location || '';
+      const natureOfBusiness = context.natureOfBusiness || '';
+
+      const prompt = `You improve text for a Detailed Project Report (DPR) form used for MSME bank / scheme applications in India.
+
+Field: ${label}${fieldName ? ` (key: ${fieldName})` : ''}
+${schemeCode ? `Scheme: ${schemeCode}` : ''}
+${unitName ? `Unit / project: ${unitName}` : ''}
+${[location, district].filter(Boolean).length ? `Place: ${[location, district].filter(Boolean).join(', ')}` : ''}
+${natureOfBusiness ? `Nature of business: ${natureOfBusiness}` : ''}
+
+Current text to improve:
+"""
+${text}
+"""
+
+Rules:
+- Return ONLY the improved text for this field — no quotes, no markdown, no preamble.
+- Keep the same facts and meaning; do not invent loans, subsidies, registrations, or numbers that are not implied.
+- Make it clearer, more professional, and suitable for a bank reviewer.
+- Match length roughly to the input (short notes stay short; paragraphs can be polished).
+- For codes / enums / yes-no / single words (e.g. "cov", "first", "yes"), return a cleaned equivalent — do not expand into an essay.
+- Write as one individual unit / entrepreneur — never as a multi-unit cluster or SPV.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You polish DPR form field text. Reply with the improved field value only — no explanations.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.4,
+        max_tokens: 800,
+      });
+
+      const improved = (response.choices[0]?.message?.content || '').trim();
+      if (!improved) return null;
+      // Strip accidental wrapping quotes
+      return improved.replace(/^["'`]|["'`]$/g, '').trim() || null;
+    } catch (error: any) {
+      console.error('Error improving field text:', error);
+      return null;
+    }
+  }
+
+  /**
    * Generate actual content for a field based on suggestion and context
    */
   static async generateFieldContent(

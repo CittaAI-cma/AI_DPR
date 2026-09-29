@@ -232,6 +232,14 @@ const TE: Record<string, string> = {
   'Edit field': 'ఫీల్డ్‌ను సవరించండి',
   'Edit the full text, then Confirm to save or Cancel to discard.':
     'పూర్తి వచనాన్ని సవరించి, సేవ్ చేయడానికి నిర్ధారించండి లేదా విస్మరించడానికి రద్దు చేయండి.',
+  'Improve this': 'దీన్ని మెరుగుపరచండి',
+  'Improving…': 'మెరుగుపరుస్తోంది…',
+  'Type something first, then Improve this.':
+    'ముందు ఏదైనా టైప్ చేసి, తర్వాత మెరుగుపరచండి.',
+  'Could not improve this text. Try again.':
+    'ఈ వచనాన్ని మెరుగుపరచలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'Improved — review, then Confirm to save.':
+    'మెరుగుపరచబడింది — సమీక్షించి, సేవ్ చేయడానికి నిర్ధారించండి.',
   Uploading: 'అప్‌లోడ్ అవుతోంది',
   Uploaded: 'అప్‌లోడ్ అయింది',
   'Raw Material': 'ముడి పదార్థం',
@@ -246,6 +254,7 @@ const TE: Record<string, string> = {
   'Enter manpower requirements': 'మానవశక్తి అవసరాలు నమోదు చేయండి',
   'Unit / Project Name *': 'యూనిట్ / ప్రాజెక్ట్ పేరు *',
   'Enter unit or project name': 'యూనిట్ లేదా ప్రాజెక్ట్ పేరు నమోదు చేయండి',
+  'Select district': 'జిల్లాను ఎంచుకోండి',
   'Village / town / industrial park': 'గ్రామం / పట్టణం / పారిశ్రామిక పార్క్',
   'Generate the rest of this DPR with AI': 'ఈ DPR మిగిలిన దశలను AIతో నింపండి',
   'Generate all steps with AI': 'అన్ని దశలను AIతో నింపండి',

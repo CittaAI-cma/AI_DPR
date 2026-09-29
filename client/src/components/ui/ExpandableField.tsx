@@ -1,13 +1,40 @@
 // @ts-nocheck
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Maximize2, X } from 'lucide-react';
+import { Loader2, Maximize2, Sparkles, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { useAuthStore } from '@/store/authStore';
+import { useIndividualDPRStore } from '@/store/individualDPRStore';
+import { AISuggestionsService } from '@/services/aiSuggestions.service';
+import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
+import { useTranslation } from 'react-i18next';
 
 type EditorKind = 'input' | 'textarea' | 'select';
+
+const NON_IMPROVE_INPUT_TYPES = new Set([
+  'number',
+  'date',
+  'datetime-local',
+  'time',
+  'month',
+  'week',
+  'file',
+  'checkbox',
+  'radio',
+  'hidden',
+  'color',
+  'range',
+]);
+
+function canImproveKind(kind: EditorKind, inputType?: string) {
+  if (kind === 'select') return false;
+  if (kind === 'input' && inputType && NON_IMPROVE_INPUT_TYPES.has(inputType)) return false;
+  return true;
+}
 
 function FieldExpandModal({
   open,
@@ -33,12 +60,21 @@ function FieldExpandModal({
   onCancel: () => void;
 }) {
   const tf = useClusterFormText();
+  const { t } = useTranslation();
   const titleId = useId();
   const editorRef = useRef<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement | null>(null);
+  const [improving, setImproving] = useState(false);
+  const { user } = useAuthStore();
+  const aiAllowed = !!user?.privacy?.aiAssist;
+  const data = useIndividualDPRStore((s) => s.data);
+  const showImprove = canImproveKind(kind, inputType);
 
   useEffect(() => {
-    if (!open) return;
-    const t = window.setTimeout(() => editorRef.current?.focus?.(), 50);
+    if (!open) {
+      setImproving(false);
+      return;
+    }
+    const tmr = window.setTimeout(() => editorRef.current?.focus?.(), 50);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -51,10 +87,50 @@ function FieldExpandModal({
     };
     window.addEventListener('keydown', onKey);
     return () => {
-      window.clearTimeout(t);
+      window.clearTimeout(tmr);
       window.removeEventListener('keydown', onKey);
     };
   }, [open, onCancel, onConfirm]);
+
+  const handleImprove = async () => {
+    if (!aiAllowed) {
+      toast.error(t('privacy.aiOffWarning'));
+      return;
+    }
+    const text = String(draft || '').trim();
+    if (!text) {
+      toast.error(tf('Type something first, then Improve this.'));
+      return;
+    }
+    setImproving(true);
+    try {
+      const step1 = data?.step1 || {};
+      const improved = await AISuggestionsService.improveFieldText(
+        title || 'field',
+        text,
+        {
+          fieldLabel: title || '',
+          schemeCode: data?.matchedSchemeCode || null,
+          unitName: getUnitName(step1),
+          clusterName: step1.clusterName || '',
+          district: step1.district || '',
+          location: step1.location || '',
+          natureOfBusiness: step1.natureOfBusiness || '',
+        }
+      );
+      if (!improved) {
+        toast.error(tf('Could not improve this text. Try again.'));
+        return;
+      }
+      setDraft(improved);
+      toast.success(tf('Improved — review, then Confirm to save.'));
+    } catch (error) {
+      console.error(error);
+      toast.error(tf('Could not improve this text. Try again.'));
+    } finally {
+      setImproving(false);
+    }
+  };
 
   if (!open || typeof document === 'undefined') return null;
 
@@ -98,7 +174,8 @@ function FieldExpandModal({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={placeholder}
-              className="w-full min-h-[50vh] rounded-lg border border-input bg-background px-4 py-3 text-base leading-relaxed ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={improving}
+              className="w-full min-h-[50vh] rounded-lg border border-input bg-background px-4 py-3 text-base leading-relaxed ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             />
           )}
           {kind === 'input' && (
@@ -108,7 +185,8 @@ function FieldExpandModal({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={placeholder}
-              className="w-full h-14 rounded-lg border border-input bg-background px-4 py-3 text-lg ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={improving}
+              className="w-full h-14 rounded-lg border border-input bg-background px-4 py-3 text-lg ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
             />
           )}
           {kind === 'select' && (
@@ -124,13 +202,33 @@ function FieldExpandModal({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3 sm:px-5">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {tf('Cancel')}
-          </Button>
-          <Button type="button" onClick={onConfirm}>
-            {tf('Confirm')}
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3 sm:px-5">
+          <div>
+            {showImprove && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleImprove}
+                disabled={improving}
+                className="gap-1.5"
+              >
+                {improving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {improving ? tf('Improving…') : tf('Improve this')}
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button type="button" variant="outline" onClick={onCancel} disabled={improving}>
+              {tf('Cancel')}
+            </Button>
+            <Button type="button" onClick={onConfirm} disabled={improving}>
+              {tf('Confirm')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>,

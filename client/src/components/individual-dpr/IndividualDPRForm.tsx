@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { FIELD_DESCRIPTIONS } from '@/data/fieldDescriptions';
+import { districtSelectOptions } from '@/lib/individualDpr/apDistricts';
 import {
   extraFieldsForScheme,
   hideComplexCapex,
@@ -429,11 +430,19 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 <InfoTooltip content={tf(stepDescriptions.district)} />
               )}
             </label>
-            <Input
+            <ExpandableSelect
+              className="w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm"
               value={stepData.district || ''}
               onChange={(e) => handleInputChange('district', e.target.value)}
-              placeholder={tf("Enter district")}
-            />
+              label={tf('District *')}
+            >
+              <option value="">{tf('Select district')}</option>
+              {districtSelectOptions(stepData.district).map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </ExpandableSelect>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
