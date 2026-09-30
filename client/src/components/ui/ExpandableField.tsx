@@ -58,6 +58,7 @@ function FieldExpandModal({
   onConfirm,
   onCancel,
   enableSkillMatch = false,
+  allowImprove = true,
 }: {
   open: boolean;
   title?: string;
@@ -70,6 +71,7 @@ function FieldExpandModal({
   onConfirm: () => void;
   onCancel: () => void;
   enableSkillMatch?: boolean;
+  allowImprove?: boolean;
 }) {
   const tf = useClusterFormText();
   const { t } = useTranslation();
@@ -82,7 +84,7 @@ function FieldExpandModal({
   const data = useIndividualDPRStore((s) => s.data);
   // Step 1 (cover / basics) is manual — no AI improve on any field.
   const onStep1 = (data?.currentStep ?? 1) === 1;
-  const showImprove = canImproveKind(kind, inputType) && !onStep1 && !enableSkillMatch;
+  const showImprove = allowImprove && canImproveKind(kind, inputType) && !onStep1 && !enableSkillMatch;
   const showMatchSkill = !!enableSkillMatch && canImproveKind(kind, inputType);
   const busy = improving || matching;
 
@@ -405,6 +407,8 @@ ExpandableInput.displayName = 'ExpandableInput';
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string;
   expandTitle?: string;
+  /** Hide the Improve this action. Used for location and address fields. */
+  allowImprove?: boolean;
 };
 
 /** Drop-in for native `<textarea>` — click opens enlarged editor (descriptive answers only). */
@@ -418,6 +422,7 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
       placeholder,
       label,
       expandTitle,
+      allowImprove = true,
       disabled,
       readOnly,
       onFocus,
@@ -472,6 +477,7 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
           placeholder={placeholder}
           onConfirm={confirm}
           onCancel={cancel}
+          allowImprove={allowImprove}
         />
       </>
     );

@@ -2618,6 +2618,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             isLeanUnit ? 'Brief location / market catchment' : 'Geography'
           )}
           <ExpandableTextarea
+            allowImprove={false}
+            expandTitle={isLeanUnit ? 'Brief location / market catchment' : 'Geography'}
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.geography || ''}
             onChange={(e) => handleInputChange('geography', e.target.value)}
@@ -3370,6 +3372,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             isLeanUnit ? 'Premises note (own / lease / rent)' : 'Land Details'
           )}
           <ExpandableTextarea
+            allowImprove={false}
+            expandTitle={isLeanUnit ? 'Premises note (own / lease / rent)' : 'Land Details'}
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.landDetails || ''}
             onChange={(e) => handleInputChange('landDetails', e.target.value)}
@@ -3572,6 +3576,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <div>
             {renderLabel('address', 'Correspondence address')}
             <ExpandableTextarea
+              allowImprove={false}
+              expandTitle="Correspondence address"
               className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={stepData.address || ''}
               onChange={(e) => handleInputChange('address', e.target.value)}
