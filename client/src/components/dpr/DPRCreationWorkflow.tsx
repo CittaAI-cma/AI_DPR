@@ -181,10 +181,10 @@ const DPRCreationWorkflow: React.FC = () => {
         );
       case 'number':
         return (
-          <input
+          <Input
             {...commonProps}
             type="number"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full"
           />
         );
       default:

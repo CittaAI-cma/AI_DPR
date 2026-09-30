@@ -1,4 +1,5 @@
 /** HTML date inputs only accept YYYY-MM-DD. */
+import { normalizeCostPhasing, normalizeMachineryItems, normalizePromoters } from '@/lib/individualDpr/cmepBankPack';
 export function toDateInputValue(value: unknown): string {
   if (value == null || value === '') return '';
   if (typeof value === 'number' && Number.isFinite(value)) return '';
@@ -340,6 +341,21 @@ export const NUMERIC_DPR_FIELDS = new Set([
   'turnoverPerUnit',
   'increaseInUnits',
   'indirectEmployment',
+  'furniture',
+  'securityDeposits',
+  'cashCreditLimit',
+  'interestRate',
+  'moratoriumMonths',
+  'loanTenureMonths',
+  'subsidyPercent',
+  'capacityPerDay',
+  'workingDays',
+  'capacityUtilisation',
+  'sellingPricePerUnit',
+  'monthlyRent',
+  'monthlySalaries',
+  'monthlyPower',
+  'annualExpenseGrowth',
 ]);
 
 export function isNumericDprField(field: string): boolean {
@@ -347,7 +363,7 @@ export function isNumericDprField(field: string): boolean {
 }
 
 export function isStructuredDprField(field: string): boolean {
-  return field === 'yearProjections' || field === 'milestones';
+  return field === 'yearProjections' || field === 'milestones' || field === 'promoters' || field === 'machineryItems' || field === 'costPhasing';
 }
 
 /** Turn an AI suggestion string into a form field value without a second API call. */
@@ -362,6 +378,9 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
       const rows = normalizeYearProjections(suggestion);
       return rows.length ? rows : null;
     }
+    if (field === 'promoters') return normalizePromoters(suggestion);
+    if (field === 'machineryItems') return normalizeMachineryItems(suggestion);
+    if (field === 'costPhasing') return normalizeCostPhasing(suggestion);
     if (field === 'startDate' || field === 'endDate') return toDateInputValue(suggestion) || null;
     if (isNumericDprField(field)) {
       const n = Number(suggestion);
@@ -385,6 +404,22 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
   if (field === 'yearProjections') {
     const rows = normalizeYearProjections(text);
     return rows.length ? rows : null;
+  }
+
+  if (field === 'promoters' || field === 'machineryItems' || field === 'costPhasing') {
+    const array = firstJsonArray(text);
+    const objectMatch = text.match(/\{[\s\S]*\}/);
+    let objectValue: unknown = null;
+    if (objectMatch) {
+      try {
+        objectValue = JSON.parse(objectMatch[0]);
+      } catch {
+        objectValue = null;
+      }
+    }
+    if (field === 'promoters') return normalizePromoters(array || objectValue);
+    if (field === 'machineryItems') return normalizeMachineryItems(array || objectValue);
+    if (field === 'costPhasing') return objectValue ? normalizeCostPhasing(objectValue) : null;
   }
 
   if (field === 'connectivity') {

@@ -316,6 +316,8 @@ const ARRAY_FIELD_NAMES = new Set([
   'boardOfDirectors',
   'milestones',
   'yearProjections',
+  'promoters',
+  'machineryItems',
   'supportingDocuments',
 ]);
 
@@ -333,12 +335,31 @@ const NUMBER_FIELD_NAMES = new Set([
   'turnoverGrowth',
   'irr',
   'npv',
+  'furniture',
+  'securityDeposits',
+  'cashCreditLimit',
+  'interestRate',
+  'moratoriumMonths',
+  'loanTenureMonths',
+  'subsidyPercent',
+  'capacityPerDay',
+  'workingDays',
+  'capacityUtilisation',
+  'sellingPricePerUnit',
+  'monthlyRent',
+  'monthlySalaries',
+  'monthlyPower',
+  'annualExpenseGrowth',
+  'land',
+  'building',
+  'machinery',
+  'workingCapitalMargin',
 ]);
 
 function inferAiFieldType(name: string): string {
   if (ARRAY_FIELD_NAMES.has(name)) return 'array';
   if (NUMBER_FIELD_NAMES.has(name)) return 'number';
-  if (name === 'connectivity' || name === 'enterpriseCount' || name === 'marketServed') return 'object';
+  if (name === 'connectivity' || name === 'enterpriseCount' || name === 'marketServed' || name === 'costPhasing') return 'object';
   return 'text';
 }
 

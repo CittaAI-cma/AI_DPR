@@ -494,11 +494,13 @@ export function getIndividualDocFields(
 
   if (contentStep === 11) {
     if (lean) {
-      return [
+      const fields = [
         stepField('spvName', 'Firm / proprietor name', 11),
         stepField('legalStatus', 'Legal status', 11),
         stepField('address', 'Correspondence address', 11),
       ];
+      if (schemeCode === 'AP_CMEP') fields.push(stepField('promoters', 'Promoters', 11));
+      return fields;
     }
     return [
       stepField('spvName', 'Applicant / firm name', 11),
@@ -524,20 +526,39 @@ export function getIndividualDocFields(
       stepField('machinery', 'Machinery / equipment (₹ Lakhs)', 12),
       stepField('workingCapitalMargin', 'Working capital (₹ Lakhs)', 12)
     );
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('costPhasing', 'Cost already incurred and still to be incurred (₹ Lakhs)', 12),
+        stepField('machineryItems', 'Machinery list', 12),
+        stepField('furniture', 'Furniture and fixtures (₹ Lakhs)', 12),
+        stepField('securityDeposits', 'Security deposits (₹ Lakhs)', 12)
+      );
+    }
     return fields;
   }
 
   if (contentStep === 13) {
-    return [
+    const fields = [
       stepField('spvContribution', 'Own / promoter contribution (₹ Lakhs)', 13),
       stepField('governmentGrant', 'Government Grant (₹ Lakhs)', 13),
       stepField('bankLoan', 'Bank Loan (₹ Lakhs)', 13),
       stepField('otherSources', 'Other Sources (₹ Lakhs)', 13),
     ];
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('cashCreditLimit', 'Cash credit / working capital limit (₹ Lakhs)', 13),
+        stepField('bankName', 'Bank name', 13),
+        stepField('interestRate', 'Interest rate (% per year)', 13),
+        stepField('moratoriumMonths', 'Moratorium (months)', 13),
+        stepField('loanTenureMonths', 'Loan tenure (months)', 13),
+        stepField('subsidyPercent', 'Subsidy rate (%)', 13)
+      );
+    }
+    return fields;
   }
 
   if (contentStep === 14) {
-    return [
+    const fields = [
       stepField('rawMaterialCost', 'Raw Material Cost (₹ Lakhs)', 14),
       stepField('powerCost', 'Power Cost (₹ Lakhs)', 14),
       stepField('wages', 'Wages (₹ Lakhs)', 14),
@@ -547,12 +568,30 @@ export function getIndividualDocFields(
       stepField('annualProductionVolume', 'Annual Production Volume', 14),
       stepField('annualSalesRealization', 'Annual Sales Realization (₹ Lakhs)', 14),
     ];
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('capacityPerDay', 'Installed capacity per day', 14),
+        stepField('workingDays', 'Working days in a year', 14),
+        stepField('capacityUtilisation', 'Capacity utilisation (%)', 14),
+        stepField('sellingPricePerUnit', 'Selling price per unit (₹)', 14),
+        stepField('monthlyRent', 'Rent per month (₹)', 14),
+        stepField('monthlySalaries', 'Salaries per month (₹)', 14),
+        stepField('monthlyPower', 'Power per month (₹)', 14),
+        stepField('annualExpenseGrowth', 'Annual expense increase (%)', 14)
+      );
+    }
+    return fields;
   }
 
   if (contentStep === 15) {
-    // Match Latest DPR form + server individual mapping (no IRR/NPV/sensitivity inputs on form)
     return [
-      stepField('yearProjections', 'Year-wise sales / costs / profit', 15),
+      stepField(
+        'yearProjections',
+        schemeCode === 'AP_CMEP'
+          ? 'Financial projections — previous years and estimates (₹ Lakhs)'
+          : 'Year-wise sales / costs / profit',
+        15
+      ),
       stepField('breakEvenPoint', 'Break-even (capacity %)', 15),
     ];
   }

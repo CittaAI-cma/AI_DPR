@@ -488,7 +488,7 @@ export const AP_CMEP_STEPS: SchemeStepDef[] = catalog([
   { id: 'cost', title: 'Upgrade project cost', contentStep: 12 },
   { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
   { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
-  { id: 'viability', title: 'Financial viability', contentStep: 15 },
+  { id: 'viability', title: 'Financial projections (actuals and estimates)', contentStep: 15 },
   { id: 'schedule', title: 'Implementation schedule', contentStep: 16 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);

@@ -9,6 +9,16 @@ import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { FIELD_DESCRIPTIONS } from '@/data/fieldDescriptions';
 import { districtSelectOptions, townSelectOptions, isTownInDistrict } from '@/lib/individualDpr/apDistricts';
+import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { CmepProjectionTable } from '@/components/individual-dpr/CmepProjectionTable';
+import {
+  CmepAssumptionsEditor,
+  CmepCostPhasingEditor,
+  CmepDerivedSheets,
+  CmepLoanTermsEditor,
+  CmepMachineryEditor,
+  CmepPromotersEditor,
+} from '@/components/individual-dpr/CmepBankSections';
 import { BUSINESS_SKILLS, matchBusinessSkillLocal } from '@/lib/individualDpr/businessSkills';
 import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { useAuthStore } from '@/store/authStore';
@@ -2618,6 +2628,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             isLeanUnit ? 'Brief location / market catchment' : 'Geography'
           )}
           <ExpandableTextarea
+            allowImprove={false}
+            expandTitle={isLeanUnit ? 'Brief location / market catchment' : 'Geography'}
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.geography || ''}
             onChange={(e) => handleInputChange('geography', e.target.value)}
@@ -3370,6 +3382,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             isLeanUnit ? 'Premises note (own / lease / rent)' : 'Land Details'
           )}
           <ExpandableTextarea
+            allowImprove={false}
+            expandTitle={isLeanUnit ? 'Premises note (own / lease / rent)' : 'Land Details'}
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.landDetails || ''}
             onChange={(e) => handleInputChange('landDetails', e.target.value)}
@@ -3569,15 +3583,25 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           </div>
         </div>
         {isLeanUnit ? (
+          <>
           <div>
             {renderLabel('address', 'Correspondence address')}
             <ExpandableTextarea
+              allowImprove={false}
+              expandTitle="Correspondence address"
               className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={stepData.address || ''}
               onChange={(e) => handleInputChange('address', e.target.value)}
               placeholder={tf('Full correspondence address for KYC')}
             />
           </div>
+          {isApCmep && (
+            <CmepPromotersEditor
+              value={stepData.promoters}
+              onChange={(next) => handleInputChange('promoters', next)}
+            />
+          )}
+          </>
         ) : (
           <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3671,7 +3695,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       toFiniteNumber(stepData.machinery) +
       toFiniteNumber(stepData.utilitiesAndInfrastructure) +
       toFiniteNumber(stepData.preliminaryAndPreOperative) +
-      toFiniteNumber(stepData.workingCapitalMargin);
+      toFiniteNumber(stepData.workingCapitalMargin) +
+      (isApCmep ? toFiniteNumber(stepData.furniture) + toFiniteNumber(stepData.securityDeposits) : 0);
 
     return (
       <div className="space-y-6">
@@ -3689,8 +3714,23 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {tf('Heavy capex tables are hidden for Mudra Shishu / Kishore. Enter machinery and working-capital margin only.')}
           </p>
         )}
+        {isApCmep && (
+          <>
+            <CmepCostPhasingEditor
+              step={stepData}
+              onChange={(patch) => {
+                const latest = getStepData(contentStep) || {};
+                setStepData(contentStep, { ...latest, ...patch });
+              }}
+            />
+            <CmepMachineryEditor
+              value={stepData.machineryItems}
+              onChange={(next) => handleInputChange('machineryItems', next)}
+            />
+          </>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {showHeavy && (
+          {showHeavy && !isApCmep && (
             <>
               <div>
                 {renderLabel(
@@ -3718,6 +3758,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
             </>
           )}
+          {!isApCmep && (
           <div>
             {renderLabel('machinery', 'Plant & machinery (₹ Lakhs)')}
             <Input
@@ -3727,6 +3768,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               placeholder={tf("0")}
             />
           </div>
+          )}
           {showHeavy && (
             <>
               <div>
@@ -3769,6 +3811,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
             </>
           )}
+          {!isApCmep && (
           <div>
             {renderLabel(
               'workingCapitalMargin',
@@ -3785,6 +3828,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               placeholder={tf("0")}
             />
           </div>
+          )}
         </div>
         <div className="border-t pt-4">
           <div className="bg-primary/10 p-4 rounded-lg">
@@ -3812,7 +3856,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       toFiniteNumber(step12.machinery) +
       toFiniteNumber(step12.utilitiesAndInfrastructure) +
       toFiniteNumber(step12.preliminaryAndPreOperative) +
-      toFiniteNumber(step12.workingCapitalMargin);
+      toFiniteNumber(step12.workingCapitalMargin) +
+      (isApCmep ? toFiniteNumber(step12.furniture) + toFiniteNumber(step12.securityDeposits) : 0);
 
     return (
       <div className="space-y-6">
@@ -3825,6 +3870,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
+        {isApCmep && (
+          <CmepLoanTermsEditor step={stepData} onChange={handleInputChange} />
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             {renderLabel(
@@ -4124,6 +4172,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
+        {isApCmep && (
+          <CmepAssumptionsEditor step={stepData} onChange={handleInputChange} />
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             {renderLabel('rawMaterialCost', 'Raw Material Cost (₹ Lakhs)')}
@@ -4250,16 +4301,33 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       toFiniteNumber(step13.bankLoan) +
       toFiniteNumber(step13.otherSources);
     const loan = toFiniteNumber(step13.bankLoan);
-    const years = stepData.yearProjections?.length
-      ? stepData.yearProjections
-      : [1, 2, 3, 4, 5].map((year) => ({
-          year,
-          sales: year === 1 ? toFiniteNumber(step14.annualSalesRealization) : 0,
-          rm: year === 1 ? toFiniteNumber(step14.rawMaterialCost) : 0,
-          wages: year === 1 ? toFiniteNumber(step14.wages) : 0,
-          power: year === 1 ? toFiniteNumber(step14.powerCost) : 0,
-          netProfit: 0,
-        }));
+    let cmepYears = isApCmep ? normalizeCmepProjections(stepData.yearProjections) : [];
+    if (isApCmep && !Array.isArray(stepData.yearProjections)) {
+      const firstProjected = cmepYears.findIndex((col) => col.period === 'projected');
+      cmepYears = cmepYears.map((col, index) =>
+        index === firstProjected
+          ? {
+              ...col,
+              sales: toFiniteNumber(step14.annualSalesRealization),
+              rm: toFiniteNumber(step14.rawMaterialCost),
+              wages: toFiniteNumber(step14.wages),
+              power: toFiniteNumber(step14.powerCost),
+            }
+          : col
+      );
+    }
+    const years = isApCmep
+      ? cmepYears.filter((col) => col.period === 'projected')
+      : stepData.yearProjections?.length
+        ? stepData.yearProjections
+        : [1, 2, 3, 4, 5].map((year) => ({
+            year,
+            sales: year === 1 ? toFiniteNumber(step14.annualSalesRealization) : 0,
+            rm: year === 1 ? toFiniteNumber(step14.rawMaterialCost) : 0,
+            wages: year === 1 ? toFiniteNumber(step14.wages) : 0,
+            power: year === 1 ? toFiniteNumber(step14.powerCost) : 0,
+            netProfit: 0,
+          }));
     const updateYear = (index: number, field: string, value: number) => {
       const next = years.map((row: any, i: number) => (i === index ? { ...row, [field]: value } : row));
       handleInputChange('yearProjections', next);
@@ -4311,6 +4379,24 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <p className="text-sm">{tf('Promoter margin (5% of WC)')}: <strong>₹ {nayak.margin.toFixed(2)} {tf('Lakhs')}</strong></p>
           </div>
         )}
+        {isApCmep ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {tf(
+                'Enter actuals for the three previous financial years and estimates for the next five. All figures are ₹ Lakhs.'
+              )}
+            </p>
+            <CmepProjectionTable
+              columns={cmepYears}
+              onChange={(next) => handleInputChange('yearProjections', next)}
+            />
+            <CmepDerivedSheets
+              step12={getStepData(12)}
+              step13={getStepData(13)}
+              step15={{ ...stepData, yearProjections: cmepYears }}
+            />
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border">
             <thead>
@@ -4341,6 +4427,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             </tbody>
           </table>
         </div>
+        )}
         <div>
           {renderLabel('breakEvenPoint', 'Break-even (capacity %)')}
           <Input
@@ -4355,9 +4442,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
         {showDscr(loan) && (
-          <div className={`p-4 rounded-lg border ${avgDscr < 1.5 ? 'border-amber-400 bg-amber-50' : 'border-border'}`}>
-            <p className="font-semibold">{tf("DSCR (profit + depreciation vs EMI)")}</p>
-            <p className="text-sm text-muted-foreground mt-1">
+          <div className={`p-4 rounded-lg border ${avgDscr < 1.5 ? 'border-red-300 bg-red-50' : 'border-border'}`}>
+            <p className={`font-semibold ${avgDscr < 1.5 ? 'text-red-700' : ''}`}>{tf("DSCR (profit + depreciation vs EMI)")}</p>
+            <p className={`text-sm mt-1 ${avgDscr < 1.5 ? 'text-red-700' : 'text-muted-foreground'}`}>
               {tf('Assumed 7-year term at 12%. Average DSCR:')} <strong>{avgDscr.toFixed(2)}</strong>
               {avgDscr < 1.5 ? tf(' — below 1.5; lenders may query this.') : ''}
             </p>
