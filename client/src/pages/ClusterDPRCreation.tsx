@@ -12,14 +12,18 @@ import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { missingClusterRequired } from '@/lib/requiredStepFields';
 
 export const ClusterDPRCreation: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const tf = useClusterFormText();
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams] = useSearchParams();
   const { data, setCurrentStep, setGeneratedDPR, resetData, setDprIds, loadDataFromProject, setStepData } = useClusterDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isStepping, setIsStepping] = useState(false);
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
   const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
@@ -335,13 +339,24 @@ export const ClusterDPRCreation: React.FC = () => {
   };
 
   const handleNext = async () => {
-    if (currentStep < totalSteps) {
-      // Save to database before moving to next step
+    if (isStepping || currentStep >= totalSteps) return;
+    const stepData = data[`step${currentStep}`] || {};
+    const missing = missingClusterRequired(currentStep, stepData);
+    if (missing.length) {
+      toast.error(
+        `${tf('Fill the required fields before continuing')}: ${missing
+          .map((field) => tf(field.label))
+          .join(', ')}`
+      );
+      return;
+    }
+    setIsStepping(true);
+    try {
       await saveToDatabase();
-      
       setCurrentStep(currentStep + 1);
-      // Scroll to top of the page so the new content appears to come from top
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsStepping(false);
     }
   };
 
@@ -657,22 +672,33 @@ export const ClusterDPRCreation: React.FC = () => {
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
-                    disabled={currentStep === 1}
+                    disabled={currentStep === 1 || isStepping}
                     className="gap-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     {t('common.previous')}
                   </Button>
                   
-                  <Button
-                    variant="primary"
-                    onClick={handleNext}
-                    disabled={currentStep === totalSteps}
-                    className="gap-2"
-                  >
-                    {t('common.next')}
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  {currentStep === totalSteps ? (
+                    <Button
+                      variant="primary"
+                      onClick={handleGenerateDPR}
+                      isLoading={isGenerating}
+                      className="gap-2"
+                    >
+                      {t('clusterDpr.generateDpr')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={handleNext}
+                      isLoading={isStepping}
+                      className="gap-2"
+                    >
+                      {t('common.next')}
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

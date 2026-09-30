@@ -557,7 +557,7 @@ export class AdminController {
       }
 
       let query = DPRVersion.find(filter)
-        .populate('projectId', 'projectName industrySector location totalCost userId')
+        .populate('projectId', 'projectName industrySector subSector location projectType totalCost userId')
         .sort({ createdAt: -1 });
 
       if (search) {

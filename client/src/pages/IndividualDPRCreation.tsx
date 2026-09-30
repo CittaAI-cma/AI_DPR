@@ -16,6 +16,7 @@ import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { toIndividualPayload, getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
+import { missingIndividualRequired } from '@/lib/requiredStepFields';
 import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { hasUnder18Applicant } from '@/lib/privacy/under18';
@@ -49,6 +50,7 @@ export const IndividualDPRCreation: React.FC = () => {
     setVentureMatchAnswers,
   } = useIndividualDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isStepping, setIsStepping] = useState(false);
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
@@ -246,12 +248,32 @@ export const IndividualDPRCreation: React.FC = () => {
   }, [dprPayload, data, setDprIds, t]);
 
   const goAdjacent = async (dir: 1 | -1) => {
-    await saveToDatabase();
-    const idx = visibleSteps.indexOf(currentStep);
-    const next = visibleSteps[idx + dir];
-    if (next) {
-      setCurrentStep(next);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (isStepping) return;
+    const advancing = dir === 1;
+    if (advancing) {
+      const content = getContentStep(currentStep, schemeCode);
+      const stepData = data[`step${content}`] || {};
+      const missing = missingIndividualRequired(content, stepData, schemeCode);
+      if (missing.length) {
+        toast.error(
+          `${tf('Fill the required fields before continuing')}: ${missing
+            .map((field) => tf(field.label))
+            .join(', ')}`
+        );
+        return;
+      }
+      setIsStepping(true);
+    }
+    try {
+      await saveToDatabase();
+      const idx = visibleSteps.indexOf(currentStep);
+      const next = visibleSteps[idx + dir];
+      if (next) {
+        setCurrentStep(next);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } finally {
+      if (advancing) setIsStepping(false);
     }
   };
 
@@ -607,14 +629,30 @@ export const IndividualDPRCreation: React.FC = () => {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === visibleSteps[0]} className="gap-2">
+                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === visibleSteps[0] || isStepping} className="gap-2">
                     <ChevronLeft className="h-4 w-4" />
                     {t('common.previous')}
                   </Button>
-                  <Button variant="primary" onClick={() => goAdjacent(1)} disabled={currentStep === lastVisible} className="gap-2">
-                    {t('common.next')}
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  {currentStep === lastVisible ? (
+                    <Button
+                      variant="primary"
+                      onClick={handleGenerateDPR}
+                      isLoading={isGenerating}
+                      className="gap-2"
+                    >
+                      {t('individualDpr.generateDpr')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={() => goAdjacent(1)}
+                      isLoading={isStepping}
+                      className="gap-2"
+                    >
+                      {t('common.next')}
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
