@@ -2,6 +2,8 @@
 export const FORM_FIELD_TE: Record<string, string> = {
   District: 'జిల్లా',
   Step: 'దశ',
+  'Cluster Name': 'క్లస్టర్ పేరు',
+  'Fill the required fields before continuing': 'కొనసాగే ముందు తప్పనిసరి ఫీల్డ్‌లను నింపండి',
   '51% Controlling Stake Proof (if not sole proprietor)':
     '51% నియంత్రణ వాటా రుజువు (ఏకైక యజమాని కాకపోతే)',
   '51% SC/ST Shareholding Proof (if not sole proprietor)':

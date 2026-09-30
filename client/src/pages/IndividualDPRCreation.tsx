@@ -16,6 +16,7 @@ import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { toIndividualPayload, getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
+import { missingIndividualRequired } from '@/lib/requiredStepFields';
 import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { hasUnder18Applicant } from '@/lib/privacy/under18';
@@ -249,7 +250,20 @@ export const IndividualDPRCreation: React.FC = () => {
   const goAdjacent = async (dir: 1 | -1) => {
     if (isStepping) return;
     const advancing = dir === 1;
-    if (advancing) setIsStepping(true);
+    if (advancing) {
+      const content = getContentStep(currentStep, schemeCode);
+      const stepData = data[`step${content}`] || {};
+      const missing = missingIndividualRequired(content, stepData, schemeCode);
+      if (missing.length) {
+        toast.error(
+          `${tf('Fill the required fields before continuing')}: ${missing
+            .map((field) => tf(field.label))
+            .join(', ')}`
+        );
+        return;
+      }
+      setIsStepping(true);
+    }
     try {
       await saveToDatabase();
       const idx = visibleSteps.indexOf(currentStep);

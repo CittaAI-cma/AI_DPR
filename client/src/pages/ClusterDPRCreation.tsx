@@ -12,9 +12,12 @@ import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { missingClusterRequired } from '@/lib/requiredStepFields';
 
 export const ClusterDPRCreation: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const tf = useClusterFormText();
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams] = useSearchParams();
@@ -337,6 +340,16 @@ export const ClusterDPRCreation: React.FC = () => {
 
   const handleNext = async () => {
     if (isStepping || currentStep >= totalSteps) return;
+    const stepData = data[`step${currentStep}`] || {};
+    const missing = missingClusterRequired(currentStep, stepData);
+    if (missing.length) {
+      toast.error(
+        `${tf('Fill the required fields before continuing')}: ${missing
+          .map((field) => tf(field.label))
+          .join(', ')}`
+      );
+      return;
+    }
     setIsStepping(true);
     try {
       await saveToDatabase();
