@@ -1240,15 +1240,18 @@ Return suggestions in JSON format with EXACTLY ${stepMapping.fields.length} sugg
 }
 
 CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one for each field key: ${stepMapping.fields.map(f => f.name).join(', ')}. Never rename those keys. Do not add any field that is not in this list.
-${schemeCode === 'AP_CMEP' ? `
-AP CMEP ONLY:
+${['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(schemeCode)) ? `
+THIS STEP ONLY:
 - Suggestions may use ONLY these keys: ${stepMapping.fields.map(f => f.name).join(', ')}.
 - Do not invent new questions, headings, or extra JSON keys.
-- For executiveSummary, processOfManufacture, sectorDescription, presentActivities, targetMarket, existingDemand, and geography, the suggestion value itself must be 250 to 400 words of finished prose.
+${schemeCode === 'AP_CMEP' ? `- For executiveSummary, processOfManufacture, sectorDescription, presentActivities, targetMarket, existingDemand, and geography, the suggestion value itself must be 250 to 400 words of finished prose.
 - promoters must be a JSON array of {name, relationName, age, dob, education, experienceYears, phone, address}.
-- machineryItems must be a JSON array of {description, condition, supplier, quantity, unitCost} with condition "new" or "used".
+- machineryItems must be a JSON array of {description, condition, supplier, quantity, unitCost, gst, transport, installation, lifeYears, annualMaintenance} with condition "new" or "used". Amounts are ₹ Lakhs.
 - costPhasing must be a JSON object whose keys are only land, building, machinery, furniture, deposits, workingCapital, each {incurred, proposed} in ₹ Lakhs.
-- yearProjections must be a JSON array of 8 future-year objects with keys year, sales, rm, wages, power, salaries, rent, maintenance, admin, interest, depreciation, tax, netProfit.` : ''}`;
+- yearProjections must be a JSON array of 8 future-year objects with keys year, sales, rm, wages, power, salaries, rent, maintenance, admin, interest, depreciation, tax, netProfit.
+- productMix is [{name, sharePercent, sellingPrice}]. rawMaterialItems is [{name, use, basis}]. staffRoles is [{role, count, monthlyPay}]. risks is [{risk, mitigation}]. utilisationByYear is [{label, percent}].` : `- machineryItems, when present, is [{description, condition, supplier, quantity, unitCost}] with condition "new" or "used" and unitCost in ₹ Lakhs.
+- productMix, when present, is [{name, sharePercent, sellingPrice}]. rawMaterialItems is [{name, use, basis}]. staffRoles is [{role, count, monthlyPay}].`}
+` : ''}`;
 
       // Use OpenAI chat completions directly
       const response = await openai.chat.completions.create({
@@ -1275,7 +1278,7 @@ Return suggestions in JSON format only.`,
           },
         ],
         temperature: 0.7,
-        max_tokens: schemeCode === 'AP_CMEP' ? 4500 : 2000,
+        max_tokens: ['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(schemeCode)) ? 4500 : 2000,
       });
 
       const responseText = response.choices[0]?.message?.content || '';
@@ -1377,7 +1380,7 @@ Return suggestions in JSON format only.`,
       }
 
       // Fallback stays on the catalog fields. For AP CMEP, do not invent instructional questions.
-      if (schemeCode === 'AP_CMEP') return [];
+      if (['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(schemeCode))) return [];
 
       // Fallback: return field-specific suggestions based on all previous step data
       // Note: step1Data, clusterName, district, natureOfBusiness, majorProducts, emptyFields, and filledFields

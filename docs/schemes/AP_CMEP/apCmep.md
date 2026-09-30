@@ -38,6 +38,21 @@ Confirm live CMEP GOs / AP Industries notifications for subsidy % and booster ca
 3–12. Location → … → cost (incurred / to incur, machinery list) → loan terms and subsidy → operating assumptions → financial projections (3 previous FYs + 8 projected FYs) → schedule  
 13. Uploads: Udyam (or application), quotations, bank sanction path, AP domicile  
 
-**UI:** AP CMEP uses its own form / live-DPR template (indigo state pack), distinct from PMEGP’s teal KVIC pack. Live DPR and the downloaded PDF use a stacked section-and-answer layout. Financial projections, depreciation, DSCR, break-even, and the repayment summary render as sheets. AI may answer only the fields on this form.
+**UI:** AP CMEP uses its own form / live-DPR template (indigo state pack), distinct from PMEGP’s teal KVIC pack. Live DPR and the downloaded PDF use a stacked section-and-answer layout. Financial projections, depreciation, DSCR, break-even, and the repayment summary render as sheets. AI may answer only the fields on the current step. It must not invent questions.
+
+---
+
+## Why these extra questions are only on AP CMEP
+
+A Mangalagiri handloom bank report was compared with the schemes it could fit. CMEP is the credit-linked margin-money programme, so the form now also asks what changes the subsidy or the bank model:
+
+- Urban or rural, EDP done or pending, any earlier subsidy, and one person in the family.
+- Product share and selling price, loom or machine count, shifts, and utilisation for each projected year.
+- Raw materials, staff by role and monthly pay, workshop area, lease period, and water or dye waste.
+- Working capital built from stock, work in progress, finished goods, receivables, cash, and supplier credit.
+- On each machine: GST, transport, installation, life, and yearly maintenance.
+- A short risk table, plus uploads for the education certificate, EDP certificate, lease, yarn and dye rates, and dealer enquiries.
+
+Subsidy amount, DSCR, break-even, depreciation, and sensitivity cases stay calculated. They are not questions. PMEGP and Stand-Up India get the shared bank tables only. AP MSME-EDP 4.0 gets the fixed-capital split only. CGTMSE is left unchanged because a guarantee does not need this operating pack.
 
 Update this file + `apCmepQuestions.ts` + `AP_CMEP_STEPS` together.

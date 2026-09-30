@@ -140,9 +140,20 @@ import {
 } from '@/lib/individualDpr/apFppQuestions';
 import {
   AP_CMEP_ACTIVITY_OPTIONS,
+  AP_CMEP_AREA_OPTIONS,
   AP_CMEP_BOOSTER_OPTIONS,
+  AP_CMEP_EDP_OPTIONS,
   AP_CMEP_YES_NO,
 } from '@/lib/individualDpr/apCmepQuestions';
+import {
+  ProductMixEditor,
+  RawMaterialEditor,
+  RiskEditor,
+  StaffRoleEditor,
+  UtilisationYearEditor,
+  WorkingCapitalBuildupEditor,
+} from '@/components/individual-dpr/SchemeQuestionEditors';
+import { machineryTotalLakhs } from '@/lib/individualDpr/cmepBankPack';
 import { OBMMS_CORP_OPTIONS, OBMMS_YES_NO } from '@/lib/individualDpr/obmmsQuestions';
 import { MSE_SPICE_SECTOR_OPTIONS } from '@/lib/individualDpr/mseSpiceQuestions';
 import { AP_PARKS_REBATE_OPTIONS, AP_PARKS_YES_NO } from '@/lib/individualDpr/apParksQuestions';
@@ -1596,6 +1607,42 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
                 <Input value={extras.entrepreneurName || ''} onChange={(e) => updateExtras({ entrepreneurName: e.target.value })} />
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Urban or rural')}</label>
+                <ExpandableSelect className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.cmepArea || ''} onChange={(e) => updateExtras({ cmepArea: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_CMEP_AREA_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </ExpandableSelect>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('EDP training')}</label>
+                <ExpandableSelect className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.edpStatus || ''} onChange={(e) => updateExtras({ edpStatus: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_CMEP_EDP_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </ExpandableSelect>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Earlier government subsidy')}</label>
+                <ExpandableSelect className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.priorSubsidy || ''} onChange={(e) => updateExtras({ priorSubsidy: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_CMEP_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </ExpandableSelect>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{tf('Only one person in the family for this scheme')}</label>
+                <ExpandableSelect className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.familyExclusive || ''} onChange={(e) => updateExtras({ familyExclusive: e.target.value })}>
+                  <option value="">{tf('Select')}</option>
+                  {AP_CMEP_YES_NO.map((o) => (
+                    <option key={o.value} value={o.value}>{tf(o.label)}</option>
+                  ))}
+                </ExpandableSelect>
+              </div>
             </div>
           </div>
         )}
@@ -2841,6 +2888,21 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
         )}
+        {(isApCmep || isPmegp || isStandup) && (
+          <ProductMixEditor value={stepData.productMix} onChange={(next) => handleInputChange('productMix', next)} />
+        )}
+        {isApCmep && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Number of looms / machines')}</label>
+              <Input type="number" value={stepData.loomCount || ''} onChange={(e) => handleInputChange('loomCount', parseFloat(e.target.value) || 0)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">{tf('Shifts per day')}</label>
+              <Input type="number" value={stepData.shifts || ''} onChange={(e) => handleInputChange('shifts', parseFloat(e.target.value) || 0)} />
+            </div>
+          </div>
+        )}
         {isPmfme && (
         <div>
             <label className="block text-sm font-medium mb-2">{tf('Proposed workers (nos.)')}</label>
@@ -3470,6 +3532,39 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 placeholder={tf('e.g. 8 kW')}
               />
             </div>
+            {isApCmep && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">{tf('Workshop area (sq.ft.)')}</label>
+                  <Input type="number" value={stepData.workshopAreaSqft || ''} onChange={(e) => handleInputChange('workshopAreaSqft', parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{tf('Production floor (sq.ft.)')}</label>
+                  <Input type="number" value={stepData.productionAreaSqft || ''} onChange={(e) => handleInputChange('productionAreaSqft', parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{tf('Storage / packing area (sq.ft.)')}</label>
+                  <Input type="number" value={stepData.storageAreaSqft || ''} onChange={(e) => handleInputChange('storageAreaSqft', parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{tf('Office area (sq.ft.)')}</label>
+                  <Input type="number" value={stepData.officeAreaSqft || ''} onChange={(e) => handleInputChange('officeAreaSqft', parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{tf('Lease period (years)')}</label>
+                  <Input type="number" value={stepData.leaseYears || ''} onChange={(e) => handleInputChange('leaseYears', parseFloat(e.target.value) || 0)} />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-2">{tf('Water use and dye wastewater')}</label>
+                  <ExpandableTextarea
+                    allowImprove={false}
+                    className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={stepData.waterAndEffluent || ''}
+                    onChange={(e) => handleInputChange('waterAndEffluent', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -3696,7 +3791,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       toFiniteNumber(stepData.utilitiesAndInfrastructure) +
       toFiniteNumber(stepData.preliminaryAndPreOperative) +
       toFiniteNumber(stepData.workingCapitalMargin) +
-      (isApCmep ? toFiniteNumber(stepData.furniture) + toFiniteNumber(stepData.securityDeposits) : 0);
+      (isApCmep || isApEdp ? toFiniteNumber(stepData.furniture) + toFiniteNumber(stepData.securityDeposits) : 0);
 
     return (
       <div className="space-y-6">
@@ -3724,10 +3819,34 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               }}
             />
             <CmepMachineryEditor
+              detailed
               value={stepData.machineryItems}
-              onChange={(next) => handleInputChange('machineryItems', next)}
+              onChange={(next) => {
+                const latest = getStepData(contentStep) || {};
+                const patch: Record<string, unknown> = { machineryItems: next };
+                if (next.some((row) => row.description || row.unitCost)) patch.machinery = machineryTotalLakhs(next, true);
+                setStepData(contentStep, { ...latest, ...patch });
+              }}
+            />
+            <WorkingCapitalBuildupEditor
+              step={stepData}
+              onChange={(patch) => {
+                const latest = getStepData(contentStep) || {};
+                setStepData(contentStep, { ...latest, ...patch });
+              }}
             />
           </>
+        )}
+        {(isPmegp || isStandup || isApEdp) && (
+          <CmepMachineryEditor
+            value={stepData.machineryItems}
+            onChange={(next) => {
+              const latest = getStepData(contentStep) || {};
+              const patch: Record<string, unknown> = { machineryItems: next };
+              if (next.some((row) => row.description || row.unitCost)) patch.machinery = machineryTotalLakhs(next, false);
+              setStepData(contentStep, { ...latest, ...patch });
+            }}
+          />
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {showHeavy && !isApCmep && (
@@ -3758,7 +3877,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
             </>
           )}
-          {!isApCmep && (
+          {!isApCmep && !(isPmegp || isStandup || isApEdp) && (
           <div>
             {renderLabel('machinery', 'Plant & machinery (₹ Lakhs)')}
             <Input
@@ -3811,6 +3930,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
             </>
           )}
+          {isApEdp && (
+            <>
+              <div>
+                {renderLabel('furniture', 'Furniture and fixtures (₹ Lakhs)')}
+                <Input type="number" value={stepData.furniture || ''} onChange={(e) => handleInputChange('furniture', parseFloat(e.target.value) || 0)} placeholder={tf('0')} />
+              </div>
+              <div>
+                {renderLabel('securityDeposits', 'Security deposits (₹ Lakhs)')}
+                <Input type="number" value={stepData.securityDeposits || ''} onChange={(e) => handleInputChange('securityDeposits', parseFloat(e.target.value) || 0)} placeholder={tf('0')} />
+              </div>
+            </>
+          )}
           {!isApCmep && (
           <div>
             {renderLabel(
@@ -3857,7 +3988,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       toFiniteNumber(step12.utilitiesAndInfrastructure) +
       toFiniteNumber(step12.preliminaryAndPreOperative) +
       toFiniteNumber(step12.workingCapitalMargin) +
-      (isApCmep ? toFiniteNumber(step12.furniture) + toFiniteNumber(step12.securityDeposits) : 0);
+      (isApCmep || isApEdp ? toFiniteNumber(step12.furniture) + toFiniteNumber(step12.securityDeposits) : 0);
 
     return (
       <div className="space-y-6">
@@ -3872,6 +4003,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         />
         {isApCmep && (
           <CmepLoanTermsEditor step={stepData} onChange={handleInputChange} />
+        )}
+        {(isPmegp || isStandup) && (
+          <CmepLoanTermsEditor includeSubsidy={false} step={stepData} onChange={handleInputChange} />
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -4174,6 +4308,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         />
         {isApCmep && (
           <CmepAssumptionsEditor step={stepData} onChange={handleInputChange} />
+        )}
+        {(isApCmep || isPmegp || isStandup) && (
+          <>
+            <RawMaterialEditor value={stepData.rawMaterialItems} onChange={(next) => handleInputChange('rawMaterialItems', next)} />
+            <StaffRoleEditor value={stepData.staffRoles} onChange={(next) => handleInputChange('staffRoles', next)} />
+          </>
+        )}
+        {isApCmep && (
+          <UtilisationYearEditor value={stepData.utilisationByYear} onChange={(next) => handleInputChange('utilisationByYear', next)} />
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -4524,6 +4667,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             ))}
           </div>
         </div>
+        {isApCmep && (
+          <RiskEditor value={stepData.risks} onChange={(next) => handleInputChange('risks', next)} />
+        )}
       </div>
     );
   }

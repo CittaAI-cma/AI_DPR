@@ -154,6 +154,10 @@ export const EXTRA_FIELD_LABELS: Record<string, string> = {
   womenOwned: 'Women-owned',
   proposedLimit: 'Proposed limit (₹ Lakhs)',
   activityBand: 'Activity band',
+  cmepArea: 'Urban or rural',
+  edpStatus: 'EDP training',
+  priorSubsidy: 'Earlier government subsidy',
+  familyExclusive: 'Only one person in the family for this scheme',
   boosterCategory: 'Booster category',
   welfareCorporation: 'Welfare corporation',
   whiteRiceCard: 'White rice card',
@@ -413,6 +417,15 @@ export function getIndividualDocFields(
       fields.push(extraField('capacityUtilisationY1'));
     }
     if (schemeCode === 'PMFME') fields.push(extraField('proposedWorkers'));
+    if (schemeCode === 'AP_CMEP' || schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+      fields.push(stepField('productMix', 'Products, share of output and selling price', 4));
+    }
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('loomCount', 'Number of looms / machines', 4),
+        stepField('shifts', 'Shifts per day', 4)
+      );
+    }
     return fields;
   }
 
@@ -473,10 +486,21 @@ export function getIndividualDocFields(
 
   if (contentStep === 10) {
     if (lean) {
-      return [
+      const fields = [
         stepField('name', 'Shop / shed / workplace name', 10),
         stepField('landDetails', 'Premises note (own / lease / rent)', 10),
       ];
+      if (schemeCode === 'AP_CMEP') {
+        fields.push(
+          stepField('workshopAreaSqft', 'Workshop area (sq.ft.)', 10),
+          stepField('productionAreaSqft', 'Production floor (sq.ft.)', 10),
+          stepField('storageAreaSqft', 'Storage / packing area (sq.ft.)', 10),
+          stepField('officeAreaSqft', 'Office area (sq.ft.)', 10),
+          stepField('leaseYears', 'Lease period (years)', 10),
+          stepField('waterAndEffluent', 'Water use and dye wastewater', 10)
+        );
+      }
+      return fields;
     }
     return [
       stepField('name', 'Unit / shed / workplace name', 10),
@@ -531,6 +555,21 @@ export function getIndividualDocFields(
         stepField('costPhasing', 'Cost already incurred and still to be incurred (₹ Lakhs)', 12),
         stepField('machineryItems', 'Machinery list', 12),
         stepField('furniture', 'Furniture and fixtures (₹ Lakhs)', 12),
+        stepField('securityDeposits', 'Security deposits (₹ Lakhs)', 12),
+        stepField('wcRawStock', 'Raw material stock (₹ Lakhs)', 12),
+        stepField('wcWip', 'Work in progress (₹ Lakhs)', 12),
+        stepField('wcFinished', 'Finished goods (₹ Lakhs)', 12),
+        stepField('wcReceivables', 'Receivables (₹ Lakhs)', 12),
+        stepField('wcSupplierCredit', 'Supplier credit (₹ Lakhs)', 12),
+        stepField('wcCash', 'Cash (₹ Lakhs)', 12)
+      );
+    }
+    if (schemeCode === 'PMEGP' || schemeCode === 'STANDUP' || schemeCode === 'AP_EDP') {
+      fields.push(stepField('machineryItems', 'Machinery list', 12));
+    }
+    if (schemeCode === 'AP_EDP') {
+      fields.push(
+        stepField('furniture', 'Furniture and fixtures (₹ Lakhs)', 12),
         stepField('securityDeposits', 'Security deposits (₹ Lakhs)', 12)
       );
     }
@@ -554,6 +593,14 @@ export function getIndividualDocFields(
         stepField('subsidyPercent', 'Subsidy rate (%)', 13)
       );
     }
+    if (schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+      fields.push(
+        stepField('bankName', 'Bank name', 13),
+        stepField('interestRate', 'Interest rate (% per year)', 13),
+        stepField('moratoriumMonths', 'Moratorium (months)', 13),
+        stepField('loanTenureMonths', 'Loan tenure (months)', 13)
+      );
+    }
     return fields;
   }
 
@@ -568,6 +615,12 @@ export function getIndividualDocFields(
       stepField('annualProductionVolume', 'Annual Production Volume', 14),
       stepField('annualSalesRealization', 'Annual Sales Realization (₹ Lakhs)', 14),
     ];
+    if (schemeCode === 'AP_CMEP' || schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+      fields.push(
+        stepField('rawMaterialItems', 'Raw materials', 14),
+        stepField('staffRoles', 'Staff by role and monthly pay', 14)
+      );
+    }
     if (schemeCode === 'AP_CMEP') {
       fields.push(
         stepField('capacityPerDay', 'Installed capacity per day', 14),
@@ -577,7 +630,8 @@ export function getIndividualDocFields(
         stepField('monthlyRent', 'Rent per month (₹)', 14),
         stepField('monthlySalaries', 'Salaries per month (₹)', 14),
         stepField('monthlyPower', 'Power per month (₹)', 14),
-        stepField('annualExpenseGrowth', 'Annual expense increase (%)', 14)
+        stepField('annualExpenseGrowth', 'Annual expense increase (%)', 14),
+        stepField('utilisationByYear', 'Capacity utilisation by projected year', 14)
       );
     }
     return fields;
@@ -598,10 +652,12 @@ export function getIndividualDocFields(
 
   if (contentStep === 16) {
     // Form only has CoD + milestones (no totalImplementationPeriod input)
-    return [
+    const fields = [
       stepField('startDate', 'Commercial production date (CoD)', 16),
       stepField('milestones', 'Milestones', 16),
     ];
+    if (schemeCode === 'AP_CMEP') fields.push(stepField('risks', 'Risks and how they will be handled', 16));
+    return fields;
   }
 
   if (contentStep === 17) {

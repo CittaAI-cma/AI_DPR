@@ -113,12 +113,29 @@ export function CmepCostPhasingEditor({
   );
 }
 
+function blankMachine(): CmepMachineryItem {
+  return {
+    description: '',
+    condition: 'new',
+    supplier: '',
+    quantity: 1,
+    unitCost: 0,
+    gst: 0,
+    transport: 0,
+    installation: 0,
+    lifeYears: 0,
+    annualMaintenance: 0,
+  };
+}
+
 export function CmepMachineryEditor({
   value,
   onChange,
+  detailed = false,
 }: {
   value: unknown;
   onChange: (next: CmepMachineryItem[]) => void;
+  detailed?: boolean;
 }) {
   const tf = useClusterFormText();
   const rows = normalizeMachineryItems(value);
@@ -147,6 +164,15 @@ export function CmepMachineryEditor({
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
+          {detailed && (
+            <>
+              <Input type="number" value={row.gst || ''} placeholder={tf('GST (₹ Lakhs)')} onChange={(e) => update(index, { gst: parseFloat(e.target.value) || 0 })} />
+              <Input type="number" value={row.transport || ''} placeholder={tf('Transport (₹ Lakhs)')} onChange={(e) => update(index, { transport: parseFloat(e.target.value) || 0 })} />
+              <Input type="number" value={row.installation || ''} placeholder={tf('Installation (₹ Lakhs)')} onChange={(e) => update(index, { installation: parseFloat(e.target.value) || 0 })} />
+              <Input type="number" value={row.lifeYears || ''} placeholder={tf('Expected life (years)')} onChange={(e) => update(index, { lifeYears: parseFloat(e.target.value) || 0 })} />
+              <Input type="number" value={row.annualMaintenance || ''} placeholder={tf('Yearly maintenance (₹ Lakhs)')} onChange={(e) => update(index, { annualMaintenance: parseFloat(e.target.value) || 0 })} />
+            </>
+          )}
         </div>
       ))}
       <Button
@@ -154,7 +180,7 @@ export function CmepMachineryEditor({
         variant="outline"
         size="sm"
         className="gap-2"
-        onClick={() => onChange([...rows, { description: '', condition: 'new', supplier: '', quantity: 1, unitCost: 0 }])}
+        onClick={() => onChange([...rows, blankMachine()])}
       >
         <Plus className="h-4 w-4" />
         {tf('Add machinery')}
@@ -166,9 +192,11 @@ export function CmepMachineryEditor({
 export function CmepLoanTermsEditor({
   step,
   onChange,
+  includeSubsidy = true,
 }: {
   step: Record<string, any>;
   onChange: (field: string, value: string | number) => void;
+  includeSubsidy?: boolean;
 }) {
   const tf = useClusterFormText();
   const numberField = (field: string, label: string) => (
@@ -179,8 +207,8 @@ export function CmepLoanTermsEditor({
   );
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-md p-4">
-      <h4 className="md:col-span-2 font-semibold">{tf('Term loan and subsidy terms')}</h4>
-      {numberField('cashCreditLimit', 'Cash credit / working capital limit (₹ Lakhs)')}
+      <h4 className="md:col-span-2 font-semibold">{tf(includeSubsidy ? 'Term loan and subsidy terms' : 'Term loan terms')}</h4>
+      {includeSubsidy && numberField('cashCreditLimit', 'Cash credit / working capital limit (₹ Lakhs)')}
       <div>
         <label className="block text-sm font-medium mb-2">{tf('Bank name')}</label>
         <Input value={step.bankName || ''} onChange={(e) => onChange('bankName', e.target.value)} />
@@ -188,7 +216,7 @@ export function CmepLoanTermsEditor({
       {numberField('interestRate', 'Interest rate (% per year)')}
       {numberField('moratoriumMonths', 'Moratorium (months)')}
       {numberField('loanTenureMonths', 'Loan tenure (months)')}
-      {numberField('subsidyPercent', 'Subsidy rate (%)')}
+      {includeSubsidy && numberField('subsidyPercent', 'Subsidy rate (%)')}
     </div>
   );
 }
