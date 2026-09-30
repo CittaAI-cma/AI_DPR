@@ -1,32 +1,50 @@
-export type CmepLineKey = 'sales' | 'rm' | 'wages' | 'power' | 'netProfit';
+export type CmepLineKey =
+  | 'sales'
+  | 'rm'
+  | 'wages'
+  | 'power'
+  | 'salaries'
+  | 'rent'
+  | 'maintenance'
+  | 'admin'
+  | 'interest'
+  | 'depreciation'
+  | 'tax'
+  | 'netProfit';
 
 export const CMEP_LINE_ITEMS: { key: CmepLineKey; label: string }[] = [
   { key: 'sales', label: 'Sales realisation' },
   { key: 'rm', label: 'Raw material' },
   { key: 'wages', label: 'Wages' },
   { key: 'power', label: 'Power' },
+  { key: 'salaries', label: 'Salaries' },
+  { key: 'rent', label: 'Rent' },
+  { key: 'maintenance', label: 'Maintenance' },
+  { key: 'admin', label: 'Administrative expenses' },
+  { key: 'interest', label: 'Interest' },
+  { key: 'depreciation', label: 'Depreciation' },
+  { key: 'tax', label: 'Income tax' },
   { key: 'netProfit', label: 'Net profit' },
 ];
+
+export const CMEP_PROJECTED_YEARS = 8;
 
 export type CmepYearColumn = {
   label: string;
   period: 'previous' | 'projected';
-  sales: number;
-  rm: number;
-  wages: number;
-  power: number;
-  netProfit: number;
-};
+} & Record<CmepLineKey, number>;
 
 function fyLabel(startYear: number): string {
   return `${startYear}-${startYear + 1}`;
 }
 
 function blankColumn(label: string, period: CmepYearColumn['period']): CmepYearColumn {
-  return { label, period, sales: 0, rm: 0, wages: 0, power: 0, netProfit: 0 };
+  const column = { label, period } as CmepYearColumn;
+  for (const line of CMEP_LINE_ITEMS) column[line.key] = 0;
+  return column;
 }
 
-/** Three completed financial years, then five years from the current FY (April–March). */
+/** Three completed financial years, then eight years from the current FY (April–March). */
 export function cmepProjectionColumns(now = new Date()): CmepYearColumn[] {
   const month = now.getMonth();
   const year = now.getFullYear();
@@ -35,7 +53,7 @@ export function cmepProjectionColumns(now = new Date()): CmepYearColumn[] {
   for (let i = 3; i >= 1; i -= 1) {
     cols.push(blankColumn(fyLabel(currentFyStart - i), 'previous'));
   }
-  for (let i = 0; i < 5; i += 1) {
+  for (let i = 0; i < CMEP_PROJECTED_YEARS; i += 1) {
     cols.push(blankColumn(fyLabel(currentFyStart + i), 'projected'));
   }
   return cols;
@@ -48,15 +66,24 @@ function asNumber(value: unknown): number {
 
 function coerceColumn(raw: Record<string, unknown>, fallback: CmepYearColumn): CmepYearColumn {
   const period = raw.period === 'previous' || raw.period === 'projected' ? raw.period : fallback.period;
-  return {
+  const column: CmepYearColumn = {
     label: String(raw.label || fallback.label),
     period,
-    sales: asNumber(raw.sales),
-    rm: asNumber(raw.rm),
-    wages: asNumber(raw.wages),
-    power: asNumber(raw.power),
-    netProfit: asNumber(raw.netProfit),
+    sales: 0,
+    rm: 0,
+    wages: 0,
+    power: 0,
+    salaries: 0,
+    rent: 0,
+    maintenance: 0,
+    admin: 0,
+    interest: 0,
+    depreciation: 0,
+    tax: 0,
+    netProfit: 0,
   };
+  for (const line of CMEP_LINE_ITEMS) column[line.key] = asNumber(raw[line.key]);
+  return column;
 }
 
 function isSavedColumn(value: unknown): value is Record<string, unknown> {
@@ -72,11 +99,10 @@ export function normalizeCmepProjections(raw: unknown, now = new Date()): CmepYe
 
   if (raw.every(isSavedColumn)) {
     const byLabel = new Map(raw.map((row) => [String(row.label), row]));
-    const sameShape = defaults.every((col) => byLabel.has(col.label));
-    if (sameShape) {
-      return defaults.map((col) => coerceColumn(byLabel.get(col.label) as Record<string, unknown>, col));
-    }
-    return raw.filter(isSavedColumn).map((row, index) => coerceColumn(row, defaults[index] || defaults[0]));
+    return defaults.map((col) => {
+      const saved = byLabel.get(col.label);
+      return saved ? coerceColumn(saved, col) : col;
+    });
   }
 
   const legacy = raw.filter((row) => row && typeof row === 'object' && 'year' in (row as object));
@@ -86,11 +112,7 @@ export function normalizeCmepProjections(raw: unknown, now = new Date()): CmepYe
     const target = projected[index];
     if (!target) return;
     const source = row as Record<string, unknown>;
-    target.sales = asNumber(source.sales);
-    target.rm = asNumber(source.rm);
-    target.wages = asNumber(source.wages);
-    target.power = asNumber(source.power);
-    target.netProfit = asNumber(source.netProfit);
+    for (const line of CMEP_LINE_ITEMS) target[line.key] = asNumber(source[line.key]);
   });
   return defaults;
 }
@@ -111,14 +133,9 @@ export function mergeCmepProjectedSuggestion(existing: unknown, suggestion: unkn
     slot += 1;
     if (!row || typeof row !== 'object') return col;
     const item = row as Record<string, unknown>;
-    return {
-      ...col,
-      sales: asNumber(item.sales),
-      rm: asNumber(item.rm),
-      wages: asNumber(item.wages),
-      power: asNumber(item.power),
-      netProfit: asNumber(item.netProfit),
-    };
+    const next = { ...col };
+    for (const line of CMEP_LINE_ITEMS) next[line.key] = asNumber(item[line.key]);
+    return next;
   });
 }
 

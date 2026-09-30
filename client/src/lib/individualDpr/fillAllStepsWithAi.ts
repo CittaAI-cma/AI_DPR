@@ -4,6 +4,7 @@ import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
 import { suggestionToFieldValue, isNumericDprField, isStructuredDprField, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { mergeCmepProjectedSuggestion } from '@/lib/individualDpr/cmepProjections';
+import { totalsFromCostPhasing } from '@/lib/individualDpr/cmepBankPack';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
@@ -426,14 +427,43 @@ export async function suggestCurrentStepWithAi(options: {
     try {
       let previousForField = previous;
       if (isNumericDprField(field)) {
+        const plainNumber = [
+          'interestRate',
+          'moratoriumMonths',
+          'loanTenureMonths',
+          'subsidyPercent',
+          'capacityPerDay',
+          'workingDays',
+          'capacityUtilisation',
+          'sellingPricePerUnit',
+          'monthlyRent',
+          'monthlySalaries',
+          'monthlyPower',
+          'annualExpenseGrowth',
+        ].includes(field);
         previousForField = {
           ...previous,
-          _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs (e.g. 15 or 10.5). No words, no currency symbol, no explanation.`,
+          _promptContext: plainNumber
+            ? `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number. No words and no extra fields.`
+            : `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs (e.g. 15 or 10.5). No words, no currency symbol, no explanation.`,
         };
       } else if (field === 'yearProjections') {
+        const yearPrompt = options.schemeCode === 'AP_CMEP'
+          ? `For field "yearProjections": reply with ONLY a JSON array of 8 objects for the next 8 financial years, values in ₹ Lakhs. Keys: year, sales, rm, wages, power, salaries, rent, maintenance, admin, interest, depreciation, tax, netProfit. Do not add previous-year columns and do not add any other field.`
+          : `For field "yearProjections": reply with ONLY a JSON array of 5 objects, values in ₹ Lakhs (not rupees). Example: [{"year":1,"sales":18,"rm":8,"wages":3,"power":1.5,"netProfit":4},{"year":2,"sales":20,"rm":9,"wages":3.2,"power":1.6,"netProfit":4.5},{"year":3,"sales":22,"rm":10,"wages":3.5,"power":1.7,"netProfit":5},{"year":4,"sales":24,"rm":11,"wages":3.8,"power":1.8,"netProfit":5.5},{"year":5,"sales":26,"rm":12,"wages":4,"power":2,"netProfit":6}]. Fill sales, rm, wages, power, and netProfit for EVERY year. No prose.`;
         previousForField = {
           ...previous,
-          _promptContext: `For field "yearProjections": reply with ONLY a JSON array of 5 objects, values in ₹ Lakhs (not rupees). Example: [{"year":1,"sales":18,"rm":8,"wages":3,"power":1.5,"netProfit":4},{"year":2,"sales":20,"rm":9,"wages":3.2,"power":1.6,"netProfit":4.5},{"year":3,"sales":22,"rm":10,"wages":3.5,"power":1.7,"netProfit":5},{"year":4,"sales":24,"rm":11,"wages":3.8,"power":1.8,"netProfit":5.5},{"year":5,"sales":26,"rm":12,"wages":4,"power":2,"netProfit":6}]. Fill sales, rm, wages, power, and netProfit for EVERY year. No prose.`,
+          _promptContext: yearPrompt,
+        };
+      } else if (options.schemeCode === 'AP_CMEP' && (field === 'promoters' || field === 'machineryItems' || field === 'costPhasing')) {
+        const shape = field === 'promoters'
+          ? '[{"name":"","relationName":"","age":"","dob":"","education":"","experienceYears":"","phone":"","address":""}]'
+          : field === 'machineryItems'
+            ? '[{"description":"","condition":"new","supplier":"","quantity":1,"unitCost":0}]'
+            : '{"land":{"incurred":0,"proposed":0},"building":{"incurred":0,"proposed":0},"machinery":{"incurred":0,"proposed":0},"furniture":{"incurred":0,"proposed":0},"deposits":{"incurred":0,"proposed":0},"workingCapital":{"incurred":0,"proposed":0}}';
+        previousForField = {
+          ...previous,
+          _promptContext: `For field "${field}": reply with ONLY JSON in this shape: ${shape}. Do not add any other question or key.`,
         };
       } else if (field === 'milestones') {
         previousForField = {
@@ -449,6 +479,14 @@ export async function suggestCurrentStepWithAi(options: {
         previousForField = {
           ...previous,
           _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a whole number (headcount), e.g. 4. No words.`,
+        };
+      } else if (
+        options.schemeCode === 'AP_CMEP' &&
+        ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography'].includes(field)
+      ) {
+        previousForField = {
+          ...previous,
+          _promptContext: `For field "${field}" ("${fieldDef.label}"): write 250 to 400 words of finished bank-ready prose for this one field only. Do not invent extra questions or headings.`,
         };
       }
       const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
@@ -588,7 +626,9 @@ export function applyCatalogSuggestionToForm(options: {
 
   // Structured / date fields must parse cleanly — never store raw AI prose.
   if (isStructuredDprField(suggestion.field)) {
-    if (!Array.isArray(value) || value.length === 0) return { ok: false, value: null };
+    if (suggestion.field === 'costPhasing') {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return { ok: false, value: null };
+    } else if (!Array.isArray(value) || value.length === 0) return { ok: false, value: null };
   } else if (suggestion.field === 'startDate' || suggestion.field === 'endDate') {
     value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion);
     if (!value) return { ok: false, value: null };
@@ -629,11 +669,17 @@ export function applyCatalogSuggestionToForm(options: {
 
   if (stepPatch) {
     stepPatch[suggestion.field] = value;
+    if (suggestion.field === 'costPhasing' && value && typeof value === 'object') {
+      Object.assign(stepPatch, totalsFromCostPhasing(value as Record<string, { incurred: number; proposed: number }>));
+    }
     return { ok: true, value };
   }
 
   const latest = { ...(getStepData(contentStep) || {}) };
   latest[suggestion.field] = value;
+  if (suggestion.field === 'costPhasing' && value && typeof value === 'object') {
+    Object.assign(latest, totalsFromCostPhasing(value as Record<string, { incurred: number; proposed: number }>));
+  }
   extraFieldNames.forEach((name) => {
     delete latest[name];
   });

@@ -14,7 +14,9 @@ import {
 } from '@/lib/individualDpr/individualDocModel';
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import { CmepProjectionTable } from '@/components/individual-dpr/CmepProjectionTable';
+import { CmepDerivedSheets } from '@/components/individual-dpr/CmepBankSections';
 import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { CMEP_COST_HEADS, normalizeCostPhasing, normalizeMachineryItems, normalizePromoters } from '@/lib/individualDpr/cmepBankPack';
 import { isKycUploaded } from '@/lib/privacy/kycField';
 
 export interface IndividualDPRDocumentViewProps {
@@ -129,9 +131,58 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             if (field.name === 'yearProjections') {
               const columns = normalizeCmepProjections(readDocField(field, data));
               return (
-                <div key={field.path}>
+                <div key={field.path} className="space-y-4">
                   {fieldHit(field.path, <CmepProjectionTable columns={columns} readOnly />, trackFieldHits)}
+                  <CmepDerivedSheets step12={data.step12} step13={data.step13} step15={data.step15} />
                 </div>
+              );
+            }
+            if (field.name === 'promoters') {
+              const rows = normalizePromoters(readDocField(field, data)).filter((row) => row.name || row.phone);
+              return (
+                <article key={field.path} className="individual-qa-block">
+                  <h3 className="individual-qa-q">{tf(field.label)}</h3>
+                  <div className="individual-qa-a">
+                    {rows.length
+                      ? rows.map((row) => (
+                          <p key={row.name + row.phone}>
+                            {row.name || '—'} · {row.relationName || '—'} · {tf('Age')} {row.age || '—'} · {row.education || '—'} · {tf('Experience (years)')} {row.experienceYears || '—'} · {row.phone || '—'}
+                          </p>
+                        ))
+                      : tf('Not filled yet — complete this in the form.')}
+                  </div>
+                </article>
+              );
+            }
+            if (field.name === 'machineryItems') {
+              const rows = normalizeMachineryItems(readDocField(field, data));
+              return (
+                <article key={field.path} className="individual-qa-block">
+                  <h3 className="individual-qa-q">{tf(field.label)}</h3>
+                  <div className="individual-qa-a">
+                    {rows.length
+                      ? rows.map((row, index) => (
+                          <p key={index}>{row.description || '—'} · {row.condition || '—'} · {row.supplier || '—'} · {row.quantity} × {row.unitCost}</p>
+                        ))
+                      : tf('Not filled yet — complete this in the form.')}
+                  </div>
+                </article>
+              );
+            }
+            if (field.name === 'costPhasing') {
+              const phasing = normalizeCostPhasing(readDocField(field, data), data.step12);
+              return (
+                <article key={field.path} className="individual-qa-block">
+                  <h3 className="individual-qa-q">{tf(field.label)}</h3>
+                  <div className="individual-qa-a">
+                    {CMEP_COST_HEADS.map((head) => {
+                      const cell = phasing[head.key];
+                      return (
+                        <p key={head.key}>{tf(head.label)}: {tf('Already incurred')} {cell.incurred} · {tf('To be incurred')} {cell.proposed}</p>
+                      );
+                    })}
+                  </div>
+                </article>
               );
             }
             const text = formatDocValue(readDocField(field, data));

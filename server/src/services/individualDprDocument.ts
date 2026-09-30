@@ -23,7 +23,13 @@ export type DocField = {
   path: string;
 };
 
-export type DocRow = { label: string; value: string; path: string; filled: boolean; embed?: 'cmep-projections' };
+export type DocRow = {
+  label: string;
+  value: string;
+  path: string;
+  filled: boolean;
+  embed?: 'cmep-projections' | 'cmep-promoters' | 'cmep-machinery' | 'cmep-cost' | 'cmep-derived';
+};
 
 export type DocSection = {
   n: number;
@@ -512,11 +518,13 @@ export function getIndividualDocFields(
 
   if (contentStep === 11) {
     if (lean) {
-      return [
+      const fields = [
         stepField('spvName', 'Firm / proprietor name', 11),
         stepField('legalStatus', 'Legal status', 11),
         stepField('address', 'Correspondence address', 11),
       ];
+      if (schemeCode === 'AP_CMEP') fields.push(stepField('promoters', 'Promoters', 11));
+      return fields;
     }
     return [
       stepField('spvName', 'Applicant / firm name', 11),
@@ -542,20 +550,39 @@ export function getIndividualDocFields(
       stepField('machinery', 'Machinery / equipment (₹ Lakhs)', 12),
       stepField('workingCapitalMargin', 'Working capital (₹ Lakhs)', 12)
     );
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('costPhasing', 'Cost already incurred and still to be incurred (₹ Lakhs)', 12),
+        stepField('machineryItems', 'Machinery list', 12),
+        stepField('furniture', 'Furniture and fixtures (₹ Lakhs)', 12),
+        stepField('securityDeposits', 'Security deposits (₹ Lakhs)', 12)
+      );
+    }
     return fields;
   }
 
   if (contentStep === 13) {
-    return [
+    const fields = [
       stepField('spvContribution', 'Own / promoter contribution (₹ Lakhs)', 13),
       stepField('governmentGrant', 'Government Grant (₹ Lakhs)', 13),
       stepField('bankLoan', 'Bank Loan (₹ Lakhs)', 13),
       stepField('otherSources', 'Other Sources (₹ Lakhs)', 13),
     ];
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('cashCreditLimit', 'Cash credit / working capital limit (₹ Lakhs)', 13),
+        stepField('bankName', 'Bank name', 13),
+        stepField('interestRate', 'Interest rate (% per year)', 13),
+        stepField('moratoriumMonths', 'Moratorium (months)', 13),
+        stepField('loanTenureMonths', 'Loan tenure (months)', 13),
+        stepField('subsidyPercent', 'Subsidy rate (%)', 13)
+      );
+    }
+    return fields;
   }
 
   if (contentStep === 14) {
-    return [
+    const fields = [
       stepField('rawMaterialCost', 'Raw Material Cost (₹ Lakhs)', 14),
       stepField('powerCost', 'Power Cost (₹ Lakhs)', 14),
       stepField('wages', 'Wages (₹ Lakhs)', 14),
@@ -565,6 +592,19 @@ export function getIndividualDocFields(
       stepField('annualProductionVolume', 'Annual Production Volume', 14),
       stepField('annualSalesRealization', 'Annual Sales Realization (₹ Lakhs)', 14),
     ];
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('capacityPerDay', 'Installed capacity per day', 14),
+        stepField('workingDays', 'Working days in a year', 14),
+        stepField('capacityUtilisation', 'Capacity utilisation (%)', 14),
+        stepField('sellingPricePerUnit', 'Selling price per unit (₹)', 14),
+        stepField('monthlyRent', 'Rent per month (₹)', 14),
+        stepField('monthlySalaries', 'Salaries per month (₹)', 14),
+        stepField('monthlyPower', 'Power per month (₹)', 14),
+        stepField('annualExpenseGrowth', 'Annual expense increase (%)', 14)
+      );
+    }
+    return fields;
   }
 
   if (contentStep === 15) {
@@ -768,8 +808,8 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
       const raw = readField(field, data);
       if (schemeCode === 'AP_CMEP' && field.name === 'yearProjections') {
         const columns = normalizeCmepProjections(raw);
-        const lineKeys = ['sales', 'rm', 'wages', 'power', 'netProfit'] as const;
-        const filled = columns.some((col) => lineKeys.some((key) => col[key] !== 0));
+        const lineKeys = ['sales', 'rm', 'wages', 'power', 'salaries', 'rent', 'maintenance', 'admin', 'interest', 'depreciation', 'tax', 'netProfit'] as const;
+        const filled = columns.some((col) => lineKeys.some((key) => Number((col as Record<string, unknown>)[key]) !== 0));
         rows.push({
           label: field.label,
           value: JSON.stringify(columns),
@@ -779,8 +819,30 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
         });
         continue;
       }
+      if (
+        schemeCode === 'AP_CMEP' &&
+        (field.name === 'promoters' || field.name === 'machineryItems' || field.name === 'costPhasing')
+      ) {
+        rows.push({
+          label: field.label,
+          value: JSON.stringify(raw ?? null),
+          path: field.path,
+          filled: raw != null && raw !== '' && !(Array.isArray(raw) && raw.length === 0),
+          embed: field.name === 'promoters' ? 'cmep-promoters' : field.name === 'machineryItems' ? 'cmep-machinery' : 'cmep-cost',
+        });
+        continue;
+      }
       const formatted = formatDocValue(raw);
       rows.push({ label: field.label, value: formatted, path: field.path, filled: isFilled(formatted) });
+    }
+    if (schemeCode === 'AP_CMEP' && def.contentStep === 15) {
+      rows.push({
+        label: 'Depreciation, DSCR, break-even and repayment',
+        value: JSON.stringify(buildCmepDerived(data)),
+        path: 'derived.cmep',
+        filled: true,
+        embed: 'cmep-derived',
+      });
     }
     return { n: def.n, id: def.id, title, contentStep: def.contentStep, rows };
   });
@@ -915,7 +977,7 @@ function normalizeCmepProjections(raw: unknown, now = new Date()) {
       power: 0,
       netProfit: 0,
     })),
-    ...[0, 1, 2, 3, 4].map((offset) => {
+    ...[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
       const year = start + offset;
       return {
         label: `${year}-${year + 1}`,
@@ -928,37 +990,23 @@ function normalizeCmepProjections(raw: unknown, now = new Date()) {
       };
     }),
   ];
+  const lineKeys = ['sales', 'rm', 'wages', 'power', 'salaries', 'rent', 'maintenance', 'admin', 'interest', 'depreciation', 'tax', 'netProfit'];
   const num = (value: unknown) => {
     const n = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
     return Number.isFinite(n) ? n : 0;
+  };
+  const copyAmounts = (saved: Record<string, unknown>) => {
+    const amounts: Record<string, number> = {};
+    for (const key of lineKeys) amounts[key] = num(saved[key]);
+    return amounts;
   };
   if (!Array.isArray(raw)) return defaults;
   const labeled = raw.filter((row) => row && typeof row === 'object' && 'label' in row && 'period' in row);
   if (labeled.length) {
     const byLabel = new Map(labeled.map((row) => [String((row as { label: string }).label), row as Record<string, unknown>]));
-    const sameShape = defaults.every((col) => byLabel.has(col.label));
-    const source = sameShape ? defaults : labeled.map((row) => {
-      const item = row as { label: string; period: string };
-      return {
-        label: String(item.label),
-        period: item.period === 'previous' ? ('previous' as const) : ('projected' as const),
-        sales: 0,
-        rm: 0,
-        wages: 0,
-        power: 0,
-        netProfit: 0,
-      };
-    });
-    return source.map((col) => {
+    return defaults.map((col) => {
       const saved = byLabel.get(col.label) || {};
-      return {
-        ...col,
-        sales: num(saved.sales),
-        rm: num(saved.rm),
-        wages: num(saved.wages),
-        power: num(saved.power),
-        netProfit: num(saved.netProfit),
-      };
+      return { ...col, ...copyAmounts(saved) };
     });
   }
   const legacy = raw.filter((row) => row && typeof row === 'object');
@@ -966,14 +1014,7 @@ function normalizeCmepProjections(raw: unknown, now = new Date()) {
     if (col.period !== 'projected') return col;
     const slot = legacy[index - defaults.filter((item) => item.period === 'previous').length] as Record<string, unknown> | undefined;
     if (!slot) return col;
-    return {
-      ...col,
-      sales: num(slot.sales),
-      rm: num(slot.rm),
-      wages: num(slot.wages),
-      power: num(slot.power),
-      netProfit: num(slot.netProfit),
-    };
+    return { ...col, ...copyAmounts(slot) };
   });
 }
 
@@ -991,6 +1032,13 @@ function renderCmepProjectionTableHtml(json: string): string {
     ['rm', 'Raw material'],
     ['wages', 'Wages'],
     ['power', 'Power'],
+    ['salaries', 'Salaries'],
+    ['rent', 'Rent'],
+    ['maintenance', 'Maintenance'],
+    ['admin', 'Administrative expenses'],
+    ['interest', 'Interest'],
+    ['depreciation', 'Depreciation'],
+    ['tax', 'Income tax'],
     ['netProfit', 'Net profit'],
   ];
   const previous = columns.filter((col) => col.period === 'previous').length;
@@ -1025,12 +1073,127 @@ function renderCmepProjectionTableHtml(json: string): string {
   </div>`;
 }
 
+function buildCmepDerived(data: Record<string, any>) {
+  const step12 = data.step12 || {};
+  const step13 = data.step13 || {};
+  const columns = normalizeCmepProjections(data.step15?.yearProjections).filter((col) => col.period === 'projected');
+  const num = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const phasing = step12.costPhasing && typeof step12.costPhasing === 'object' ? step12.costPhasing : {};
+  const asset = (key: string, field: string) => {
+    const cell = phasing[key];
+    if (cell && typeof cell === 'object') return num(cell.incurred) + num(cell.proposed);
+    return num(step12[field]);
+  };
+  const schedule = (label: string, rate: number, addition: number) => {
+    let opening = 0;
+    return {
+      asset: label,
+      rate,
+      years: columns.map((col, index) => {
+        const additions = index === 0 ? addition : 0;
+        const depreciation = Math.round((opening + additions) * rate * 100) / 100;
+        const closing = Math.round((opening + additions - depreciation) * 100) / 100;
+        const row = { label: col.label, opening, additions, depreciation, closing };
+        opening = closing;
+        return row;
+      }),
+    };
+  };
+  const loan = num(step13.bankLoan);
+  const rate = num(step13.interestRate) > 0 ? num(step13.interestRate) : 12;
+  const tenure = num(step13.loanTenureMonths) > 0 ? num(step13.loanTenureMonths) : 84;
+  const moratorium = num(step13.moratoriumMonths);
+  const months = Math.max(1, tenure - moratorium);
+  const monthly = rate / 100 / 12;
+  const emi = loan > 0 && monthly > 0
+    ? (loan * monthly * Math.pow(1 + monthly, months)) / (Math.pow(1 + monthly, months) - 1)
+    : 0;
+  const repayment = emi * 12;
+  const dscr = columns.map((col) => {
+    const record = col as Record<string, unknown>;
+    const cash = num(record.netProfit) + num(record.depreciation) + num(record.interest);
+    return { label: col.label, ratio: repayment > 0 ? cash / repayment : 0 };
+  });
+  const first = (columns[0] || {}) as Record<string, unknown>;
+  const fixed = num(first.salaries) + num(first.rent) + num(first.maintenance) + num(first.admin) + num(first.depreciation) + num(first.interest);
+  const contribution = Math.max(0, num(first.sales) - num(first.rm) - num(first.wages) - num(first.power));
+  const breakEvenSales = num(first.sales) > 0 && contribution > 0 ? fixed / (contribution / num(first.sales)) : 0;
+  return {
+    depreciation: [
+      schedule('Machinery', 0.15, asset('machinery', 'machinery')),
+      schedule('Building', 0.1, asset('building', 'building')),
+      schedule('Furniture and fixtures', 0.1, asset('furniture', 'furniture')),
+    ],
+    averageDscr: dscr.length ? dscr.reduce((sum, row) => sum + row.ratio, 0) / dscr.length : 0,
+    breakEvenSales,
+    repayment: { amount: loan, rate, moratorium, tenure, emi },
+  };
+}
+
+function renderCmepEmbedHtml(kind: string, json: string): string {
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    parsed = null;
+  }
+  const fmt = (value: unknown) => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n === 0) return '–';
+    return Number.isInteger(n) ? String(n) : n.toFixed(2);
+  };
+  if (kind === 'cmep-promoters' && Array.isArray(parsed)) {
+    const body = parsed
+      .map((row) => `<tr><td>${escapeHtml(String(row.name || '–'))}</td><td>${escapeHtml(String(row.relationName || '–'))}</td><td>${escapeHtml(String(row.age || '–'))}</td><td>${escapeHtml(String(row.education || '–'))}</td><td>${escapeHtml(String(row.experienceYears || '–'))}</td><td>${escapeHtml(String(row.phone || '–'))}</td></tr>`)
+      .join('');
+    return `<table class="fin-table"><thead><tr><th>Name</th><th>Relation</th><th>Age</th><th>Education</th><th>Experience</th><th>Phone</th></tr></thead><tbody>${body}</tbody></table>`;
+  }
+  if (kind === 'cmep-machinery' && Array.isArray(parsed)) {
+    const body = parsed
+      .map((row) => `<tr><td>${escapeHtml(String(row.description || '–'))}</td><td>${escapeHtml(String(row.condition || '–'))}</td><td>${escapeHtml(String(row.supplier || '–'))}</td><td>${fmt(row.quantity)}</td><td>${fmt(row.unitCost)}</td></tr>`)
+      .join('');
+    return `<table class="fin-table"><thead><tr><th>Description</th><th>New / used</th><th>Supplier</th><th>Qty</th><th>Unit cost (₹ Lakhs)</th></tr></thead><tbody>${body}</tbody></table>`;
+  }
+  if (kind === 'cmep-cost' && parsed && typeof parsed === 'object') {
+    const heads: Array<[string, string]> = [
+      ['land', 'Land'],
+      ['building', 'Building / shed'],
+      ['machinery', 'Machinery / equipment'],
+      ['furniture', 'Furniture and fixtures'],
+      ['deposits', 'Security deposits'],
+      ['workingCapital', 'Working capital'],
+    ];
+    const body = heads
+      .map(([key, label]) => {
+        const cell = parsed[key] || {};
+        const incurred = Number(cell.incurred) || 0;
+        const proposed = Number(cell.proposed) || 0;
+        return `<tr><td class="part">${label}</td><td>${fmt(incurred)}</td><td>${fmt(proposed)}</td><td>${fmt(incurred + proposed)}</td></tr>`;
+      })
+      .join('');
+    return `<table class="fin-table"><thead><tr><th>Particulars</th><th>Already incurred</th><th>To be incurred</th><th>Total</th></tr></thead><tbody>${body}</tbody></table>`;
+  }
+  if (kind === 'cmep-derived' && parsed) {
+    const loan = parsed.repayment || {};
+    const dep = Array.isArray(parsed.depreciation)
+      ? parsed.depreciation
+          .map((asset: any) => `<p><strong>${escapeHtml(String(asset.asset || ''))}</strong> @ ${Math.round(Number(asset.rate) * 100)}% WDV. Year 1 addition ${fmt(asset.years?.[0]?.additions)}, closing ${fmt(asset.years?.[0]?.closing)}.</p>`)
+          .join('')
+      : '';
+    return `<div class="qa-a"><p>Term loan ₹ ${fmt(loan.amount)} Lakhs at ${fmt(loan.rate)}% . Moratorium ${loan.moratorium || 0} months. Tenure ${loan.tenure || 0} months. Indicative EMI ₹ ${fmt(loan.emi)} Lakhs.</p><p>Average DSCR ${fmt(parsed.averageDscr)}. Break-even sales ₹ ${fmt(parsed.breakEvenSales)} Lakhs.</p>${dep}</div>`;
+  }
+  return '';
+}
+
 function renderSectionRowsHtml(rows: DocRow[], schemeCode?: string | null): string {
   if (!rows.length) return '<p class="empty">—</p>';
 
   const stacked = schemeCode === 'AP_CMEP';
-  const embeds = rows.filter((row) => row.embed === 'cmep-projections');
-  const rest = rows.filter((row) => row.embed !== 'cmep-projections');
+  const embeds = rows.filter((row) => !!row.embed);
+  const rest = rows.filter((row) => !row.embed);
   const shortRows: DocRow[] = [];
   const longRows: DocRow[] = [];
   for (const row of rest) {
@@ -1063,7 +1226,8 @@ function renderSectionRowsHtml(rows: DocRow[], schemeCode?: string | null): stri
   }
 
   for (const row of embeds) {
-    parts.push(renderCmepProjectionTableHtml(row.value));
+    if (row.embed === 'cmep-projections') parts.push(renderCmepProjectionTableHtml(row.value));
+    else if (row.embed) parts.push(renderCmepEmbedHtml(row.embed, row.value));
   }
 
   parts.push('</div>');
@@ -1347,6 +1511,13 @@ function cmepDocxTable(json: string): Table {
     ['rm', 'Raw material'],
     ['wages', 'Wages'],
     ['power', 'Power'],
+    ['salaries', 'Salaries'],
+    ['rent', 'Rent'],
+    ['maintenance', 'Maintenance'],
+    ['admin', 'Administrative expenses'],
+    ['interest', 'Interest'],
+    ['depreciation', 'Depreciation'],
+    ['tax', 'Income tax'],
     ['netProfit', 'Net profit'],
   ];
   const cell = (text: string, bold = false) =>
@@ -1417,8 +1588,8 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
       return [new Paragraph({ children: [new TextRun({ text: '—', italics: true, color: '9CA3AF' })] })];
     }
     const stacked = doc.schemeCode === 'AP_CMEP';
-    const embeds = rows.filter((row) => row.embed === 'cmep-projections');
-    const rest = rows.filter((row) => row.embed !== 'cmep-projections');
+    const embeds = rows.filter((row) => !!row.embed);
+    const rest = rows.filter((row) => !row.embed);
     const shortRows: DocRow[] = [];
     const longRows: DocRow[] = [];
     for (const row of rest) {
@@ -1483,13 +1654,24 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
       }
     }
     for (const row of embeds) {
+      if (row.embed === 'cmep-projections') {
+        out.push(
+          new Paragraph({
+            spacing: { before: 160, after: 60 },
+            children: [new TextRun({ text: 'Financial projections (Rs. In Lakhs)', bold: true, size: 20 })],
+          })
+        );
+        out.push(cmepDocxTable(row.value));
+        continue;
+      }
+      const plain = renderCmepEmbedHtml(row.embed || '', row.value).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
       out.push(
         new Paragraph({
           spacing: { before: 160, after: 60 },
-          children: [new TextRun({ text: 'Financial projections (Rs. In Lakhs)', bold: true, size: 20 })],
+          children: [new TextRun({ text: row.label, bold: true, size: 20 })],
         })
       );
-      out.push(cmepDocxTable(row.value));
+      out.push(new Paragraph({ children: [new TextRun({ text: plain || '—', size: 20 })] }));
     }
     return out;
   };

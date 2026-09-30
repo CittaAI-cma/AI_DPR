@@ -1239,7 +1239,16 @@ Return suggestions in JSON format with EXACTLY ${stepMapping.fields.length} sugg
   ]
 }
 
-CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one for each field key: ${stepMapping.fields.map(f => f.name).join(', ')}. Never rename those keys.`;
+CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one for each field key: ${stepMapping.fields.map(f => f.name).join(', ')}. Never rename those keys. Do not add any field that is not in this list.
+${schemeCode === 'AP_CMEP' ? `
+AP CMEP ONLY:
+- Suggestions may use ONLY these keys: ${stepMapping.fields.map(f => f.name).join(', ')}.
+- Do not invent new questions, headings, or extra JSON keys.
+- For executiveSummary, processOfManufacture, sectorDescription, presentActivities, targetMarket, existingDemand, and geography, the suggestion value itself must be 250 to 400 words of finished prose.
+- promoters must be a JSON array of {name, relationName, age, dob, education, experienceYears, phone, address}.
+- machineryItems must be a JSON array of {description, condition, supplier, quantity, unitCost} with condition "new" or "used".
+- costPhasing must be a JSON object whose keys are only land, building, machinery, furniture, deposits, workingCapital, each {incurred, proposed} in ₹ Lakhs.
+- yearProjections must be a JSON array of 8 future-year objects with keys year, sales, rm, wages, power, salaries, rent, maintenance, admin, interest, depreciation, tax, netProfit.` : ''}`;
 
       // Use OpenAI chat completions directly
       const response = await openai.chat.completions.create({
@@ -1266,7 +1275,7 @@ Return suggestions in JSON format only.`,
           },
         ],
         temperature: 0.7,
-        max_tokens: 2000, // Increased to handle suggestions for all fields
+        max_tokens: schemeCode === 'AP_CMEP' ? 4500 : 2000,
       });
 
       const responseText = response.choices[0]?.message?.content || '';
@@ -1366,6 +1375,9 @@ Return suggestions in JSON format only.`,
         console.error('Error parsing AI suggestions:', parseError);
         console.log(`⚠️ Failed to parse AI response for step ${currentStep}, using fallback`);
       }
+
+      // Fallback stays on the catalog fields. For AP CMEP, do not invent instructional questions.
+      if (schemeCode === 'AP_CMEP') return [];
 
       // Fallback: return field-specific suggestions based on all previous step data
       // Note: step1Data, clusterName, district, natureOfBusiness, majorProducts, emptyFields, and filledFields
@@ -1603,7 +1615,7 @@ Rules:
 - Return ONLY the improved text for this field — no quotes, no markdown, no preamble.
 - Keep the same facts and meaning; do not invent loans, subsidies, registrations, or numbers that are not implied.
 - Make it clearer, more professional, and suitable for a bank reviewer.
-- Match length roughly to the input (short notes stay short; paragraphs can be polished).
+- ${['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography'].includes(String(fieldName)) && schemeCode === 'AP_CMEP' ? 'You may expand this answer to 250–400 words. Still answer only this field.' : 'Match length roughly to the input (short notes stay short; paragraphs can be polished).'}
 - For codes / enums / yes-no / single words (e.g. "cov", "first", "yes"), return a cleaned equivalent — do not expand into an essay.
 - Write as one individual unit / entrepreneur — never as a multi-unit cluster or SPV.`;
 
@@ -1618,7 +1630,7 @@ Rules:
           { role: 'user', content: prompt },
         ],
         temperature: 0.4,
-        max_tokens: 800,
+        max_tokens: schemeCode === 'AP_CMEP' ? 1600 : 800,
       });
 
       const improved = (response.choices[0]?.message?.content || '').trim();
@@ -1881,7 +1893,14 @@ CRITICAL FORMAT FOR ${fieldName}:
 - No text, no units, no explanations
 - Example: 500000 or 75.5`;
       } else {
-        formatInstructions = `
+        const longCmep = schemeCode === 'AP_CMEP' && ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography'].includes(fieldName);
+        formatInstructions = longCmep
+          ? `
+CRITICAL FORMAT FOR ${fieldName}:
+- Return only the finished answer for this one field
+- Write 250 to 400 words of bank-ready prose
+- Do not add extra questions, headings, or fields`
+          : `
 CRITICAL FORMAT FOR ${fieldName}:
 - Return a well-written paragraph or multiple paragraphs
 - Be specific and reference actual data from previous steps
@@ -1954,7 +1973,7 @@ Return only the field content, no JSON wrapper or additional text.`;
           },
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: schemeCode === 'AP_CMEP' && ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography'].includes(fieldName) ? 1600 : 500,
       });
 
       const responseText = response.choices[0]?.message?.content || '';
