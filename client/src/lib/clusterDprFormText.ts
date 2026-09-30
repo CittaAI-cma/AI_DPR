@@ -1,6 +1,8 @@
 import { SCHEME_FORM_TE } from '@/lib/individualDpr/schemeFormTe';
 import { SCHEME_STEP_TITLES_TE } from '@/lib/individualDpr/schemeStepTitlesTe';
 import { BUSINESS_SKILLS_TE } from '@/lib/individualDpr/businessSkillsTe';
+import { FORM_FIELD_TE } from '@/lib/individualDpr/formFieldTe';
+import { AP_PLACES_TE } from '@/lib/individualDpr/apPlacesTe';
 import { useTranslation } from 'react-i18next';
 import { useCallback } from 'react';
 
@@ -9,6 +11,8 @@ const TE: Record<string, string> = {
   ...SCHEME_FORM_TE,
   ...SCHEME_STEP_TITLES_TE,
   ...BUSINESS_SKILLS_TE,
+  ...FORM_FIELD_TE,
+  ...AP_PLACES_TE,
   'Cluster Name *': 'క్లస్టర్ పేరు *',
   'District *': 'జిల్లా *',
   'Location *': 'స్థలం *',
@@ -407,6 +411,122 @@ const TE: Record<string, string> = {
   'No answers for this section yet.': 'ఈ విభాగానికి ఇంకా సమాధానాలు లేవు.',
   'Not filled': 'నింపలేదు',
   'Not filled yet — complete this in the form.': 'ఇంకా నింపలేదు — ఫారమ్‌లో దీన్ని పూర్తి చేయండి.',
+  'Describe civil works': 'సివిల్ పనులను వివరించండి',
+  'Describe competitor analysis': 'పోటీ విశ్లేషణను వివరించండి',
+  'Describe demand-supply gap': 'డిమాండ్-సప్లై అంతరాన్ని వివరించండి',
+  'Describe existing demand': 'ప్రస్తుత డిమాండ్‌ను వివరించండి',
+  'Describe export potential': 'ఎగుమతి సామర్థ్యాన్ని వివరించండి',
+  'Describe financial gaps': 'ఆర్థిక అంతరాలను వివరించండి',
+  'Describe infrastructure gaps': 'మౌలిక సదుపాయాల అంతరాలను వివరించండి',
+  'Describe manufacturing process': 'తయారీ ప్రక్రియను వివరించండి',
+  'Describe marketing gaps': 'మార్కెటింగ్ అంతరాలను వివరించండి',
+  'Describe plant & machinery': 'ప్లాంట్ మరియు యంత్రాలను వివరించండి',
+  'Describe price trends': 'ధరల ధోరణులను వివరించండి',
+  'Describe skill gaps': 'నైపుణ్య అంతరాలను వివరించండి',
+  'Describe target market': 'లక్ష్య మార్కెట్‌ను వివరించండి',
+  'Describe technology gaps': 'సాంకేతిక అంతరాలను వివరించండి',
+  'Describe the intervention': 'జోక్యాన్ని వివరించండి',
+  'End date': 'ముగింపు తేదీ',
+  'Enter CFC name': 'CFC పేరు నమోదు చేయండి',
+  'Enter applicant or firm name': 'దరఖాస్తుదారు లేదా సంస్థ పేరు నమోదు చేయండి',
+  'Enter capacity': 'సామర్థ్యం నమోదు చేయండి',
+  'Enter expected benefits separated by commas (e.g., Benefit 1, Benefit 2, Benefit 3)':
+    'ఊహించిన ప్రయోజనాలను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter intermediate products separated by commas (e.g., Semi-finished Product 1, Semi-finished Product 2)':
+    'మధ్యంతర ఉత్పత్తులను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter land details': 'భూమి వివరాలు నమోదు చేయండి',
+  'Enter major buyers separated by commas (e.g., Buyer 1, Buyer 2, Buyer 3)':
+    'ప్రధాన కొనుగోలుదారులను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter objective': 'లక్ష్యం నమోదు చేయండి',
+  'Enter objectives separated by commas (e.g., Objective 1, Objective 2, Objective 3)':
+    'లక్ష్యాలను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter opportunities separated by commas (e.g., Growing market demand, Government support, Export potential)':
+    'అవకాశాలను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter roles and responsibilities separated by commas (e.g., Role 1, Role 2, Role 3)':
+    'పాత్రలు మరియు బాధ్యతలను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter stakeholders separated by commas (e.g., Stakeholder 1, Stakeholder 2, Stakeholder 3)':
+    'వాటాదారులను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter statutory registrations separated by commas (e.g., Registration 1, Registration 2, Registration 3)':
+    'చట్టబద్ధ నమోదులను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter strengths separated by commas (e.g., Strong market presence, Skilled workforce, Good infrastructure)':
+    'బలాలను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter sustainability outcomes separated by commas (e.g., Outcome 1, Outcome 2, Outcome 3)':
+    'సుస్థిరత ఫలితాలను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter threats separated by commas (e.g., Market competition, Price fluctuations, Regulatory changes)':
+    'ముప్పులను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter weaknesses separated by commas (e.g., Limited technology, Lack of skilled workers, Poor infrastructure)':
+    'బలహీనతలను కామాతో వేరు చేసి నమోదు చేయండి',
+  'Enter workplace or shed name': 'పని స్థలం లేదా షెడ్ పేరు నమోదు చేయండి',
+  Milestone: 'మైలురాయి',
+  'Min own': 'కనీస స్వంతం',
+  'Percentage (%)': 'శాతం (%)',
+  'Provide justification for intervention': 'జోక్యానికి సమర్థన ఇవ్వండి',
+  'Registration number': 'నమోదు సంఖ్య',
+  'Short impact note (optional)': 'చిన్న ప్రభావ గమనిక (ఐచ్ఛికం)',
+  'Stakeholder name': 'వాటాదారు పేరు',
+  'Start date': 'ప్రారంభ తేదీ',
+  'Time required': 'అవసరమైన సమయం',
+  YYYY: 'YYYY',
+  'e.g. 200 units/day': 'ఉదా. రోజుకు 200 యూనిట్లు',
+  'e.g. 50 kg/hour or 1000 units/month': 'ఉదా. గంటకు 50 కిలోలు లేదా నెలకు 1000 యూనిట్లు',
+  'e.g. 60': 'ఉదా. 60',
+  'e.g. 8 kW': 'ఉదా. 8 kW',
+  'e.g. Apr 2026': 'ఉదా. ఏప్రి 2026',
+  'e.g., 18 months': 'ఉదా. 18 నెలలు',
+  'Raw Material {n}': 'ముడి పదార్థం {n}',
+  'Stage {n}': 'దశ {n}',
+  'Project cost': 'ప్రాజెక్ట్ ఖర్చు',
+  'Equity + loan + other': 'ఈక్విటీ + రుణం + ఇతర',
+  'Projected annual turnover (₹ Lakhs)': 'అంచనా వార్షిక టర్నోవర్ (₹ లక్షలు)',
+  'WC limit (20%)': 'WC పరిమితి (20%)',
+  'Promoter margin (5% of WC)': 'ప్రమోటర్ మార్జిన్ (WCలో 5%)',
+  Year: 'సంవత్సరం',
+  Sales: 'అమ్మకాలు',
+  RM: 'ముడి పదార్థం',
+  Wages: 'వేతనాలు',
+  Power: 'విద్యుత్',
+  'Net profit': 'నికర లాభం',
+  'Spec: docs/schemes/AP_EDP/apEdp.md — greenfield FCI capital subsidy; mutually exclusive with tech-upgrade':
+    'కొత్త యూనిట్ FCI మూలధన సబ్సిడీ; టెక్-అప్‌గ్రేడ్‌తో కలిపి పొందలేరు',
+  'Spec: docs/schemes/AP_FPP/apFpp.md — do not double-claim with AP_EDP':
+    'AP EDPతో రెండుసార్లు క్లెయిమ్ చేయవద్దు',
+  'Spec: docs/schemes/AP_PARKS/apParks.md': 'AP పార్కుల యూనిట్ ప్యాక్',
+  'Spec: docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md — brownfield FCI; mutually exclusive with new-unit EDP capital subsidy':
+    'ఉన్న యూనిట్ FCI అప్‌గ్రేడ్; కొత్త యూనిట్ EDP మూలధన సబ్సిడీతో కలిపి పొందలేరు',
+  'Spec: docs/schemes/ASPIRE/aspire.md': 'ASPIRE యూనిట్ ప్యాక్',
+  'Spec: docs/schemes/CGTMSE/cgtmse.md': 'CGTMSE హామీ ప్యాక్',
+  'Spec: docs/schemes/CVY/cvy.md': 'కొబ్బరి వికాస్ యోజన ప్యాక్',
+  'Spec: docs/schemes/ECLGS/eclgs.md — additional WC up to 20% of peak Q4 outstanding':
+    'అదనపు వర్కింగ్ క్యాపిటల్ — గరిష్ట Q4 బకాయిలో 20% వరకు',
+  'Spec: docs/schemes/EPM_NIRYAT/epmNiryat.md — 2.75% interest subvention':
+    'ఎగుమతి వడ్డీ సబ్సిడీ 2.75%',
+  'Spec: docs/schemes/LEAN/lean.md': 'LEAN ప్యాక్',
+  'Spec: docs/schemes/MSE_GIFT/mseGift.md': 'MSE-GIFT ప్యాక్',
+  'Spec: docs/schemes/MSE_SPICE/mseSpice.md — 25% P&M cap ₹12.5 L':
+    'P&Mపై 25%, పరిమితి ₹12.5 లక్షలు',
+  'Spec: docs/schemes/MSME_IPR/msmeIpr.md': 'MSME IPR ప్యాక్',
+  'Spec: docs/schemes/MUDRA/mudra.md — Shishu / Kishore / Tarun / Tarun Plus':
+    'ముద్ర — శిశు / కిషోర్ / తరుణ్ / తరుణ్ ప్లస్',
+  'Spec: docs/schemes/NHDP/nhdp.md': 'NHDP ప్యాక్',
+  'Spec: docs/schemes/OBMMS/obmms.md': 'OBMMS ప్యాక్',
+  'Spec: docs/schemes/PMEGP_2ND/pmegp2nd.md — brownfield only; uniform 15% MM (20% NER/Hill); own 10%':
+    'ఉన్న యూనిట్ మాత్రమే; ఏకరూప మార్జిన్ మనీ 15% (NER/హిల్ 20%); స్వంతం 10%',
+  'Spec: docs/schemes/PMFME/pmfme.md — NIFTEM model DPRs; 35% grant capped ₹10 L; own ≥10%':
+    'NIFTEM మోడల్ DPR; 35% గ్రాంట్, పరిమితి ₹10 లక్షలు; స్వంతం ≥10%',
+  'Spec: docs/schemes/PMPDS/pmpds.md': 'PMPDS ప్యాక్',
+  'Spec: docs/schemes/PMS/pms.md': 'సేకరణ మరియు మార్కెటింగ్ పథకం',
+  'Spec: docs/schemes/PTUAS/ptuas.md': 'PTUAS ప్యాక్',
+  'Spec: docs/schemes/RAMP_TEAM/rampTeam.md': 'RAMP TEAM ప్యాక్',
+  'Spec: docs/schemes/SCLCSS/sclcss.md — 25% on new P&M, cap ₹25 L; SC/ST ≥51%; not general CLCSS':
+    'కొత్త P&Mపై 25%, పరిమితి ₹25 లక్షలు; SC/ST ≥51%',
+  'Spec: docs/schemes/SCST_HUB/scstHub.md': 'SC/ST హబ్ ప్యాక్',
+  'Spec: docs/schemes/STANDUP/standup.md — woman / SC / ST, greenfield, ≥10% own, ₹10 L–₹1 Cr':
+    'మహిళ / SC / ST, కొత్త యూనిట్, స్వంతం ≥10%, ₹10 లక్షలు–₹1 కోటి',
+  'Spec: docs/schemes/SVANIDHI/svanidhi.md — WC tranches ₹15k / ₹25k / ₹50k; 7% interest subsidy; UPI mandatory':
+    'వర్కింగ్ క్యాపిటల్ విడతలు ₹15 వేలు / ₹25 వేలు / ₹50 వేలు; 7% వడ్డీ సబ్సిడీ; UPI తప్పనిసరి',
+  'Spec: docs/schemes/VISHWAKARMA/vishwakarma.md — 18 trades; toolkit ₹15,000; loan ₹1 L then ₹2 L at 5%':
+    '18 వృత్తులు; టూల్‌కిట్ ₹15,000; రుణం ₹1 లక్ష తర్వాత ₹2 లక్షలు, 5%',
+  'Spec: docs/schemes/ZED/zed.md': 'ZED ప్యాక్',
 };
 
 export function useClusterFormText() {

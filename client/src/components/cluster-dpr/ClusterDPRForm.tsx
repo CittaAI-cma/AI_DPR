@@ -504,7 +504,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Product
+              {tf('Add Product')}
             </Button>
           </div>
         </div>
@@ -751,7 +751,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Raw Material
+              {tf('Add Raw Material')}
             </Button>
           </div>
         </div>
@@ -797,7 +797,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Final Product
+              {tf('Add Final Product')}
             </Button>
           </div>
         </div>
@@ -839,7 +839,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Value Addition Stage
+              {tf('Add Value Addition Stage')}
             </Button>
           </div>
         </div>
@@ -1289,7 +1289,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Objective
+              {tf('Add Objective')}
             </Button>
           </div>
         </div>
@@ -1923,15 +1923,15 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
           const uploadResult = await api.uploadClusterDPRDocument(file);
           if (uploadResult.success && uploadResult.data) {
             handleInputChange(field, kycUploadPayload(uploadResult.data, file.name));
-            toast.success(`${file.name} uploaded successfully!`);
+            toast.success(`${file.name} ${tf('uploaded successfully!')}`);
           } else {
-            toast.error(uploadResult.message || 'Failed to upload document');
+            toast.error(uploadResult.message || tf('Failed to upload document'));
             // Fallback to filename only if upload fails
             handleInputChange(field, file.name);
           }
         } catch (error: any) {
           console.error('Error uploading document:', error);
-          toast.error(error.message || 'Failed to upload document');
+          toast.error(error.message || tf('Failed to upload document'));
           // Fallback to filename only if upload fails
           handleInputChange(field, file.name);
         } finally {

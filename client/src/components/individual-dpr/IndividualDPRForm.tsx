@@ -462,7 +462,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <option value="">{tf('Select district')}</option>
               {districtSelectOptions(stepData.district).map((d) => (
                 <option key={d} value={d}>
-                  {d}
+                  {tf(d)}
                 </option>
               ))}
             </ExpandableSelect>
@@ -486,7 +486,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </option>
               {townSelectOptions(stepData.district, stepData.location).map((town) => (
                 <option key={town} value={town}>
-                  {town}
+                  {tf(town)}
                 </option>
               ))}
             </ExpandableSelect>
@@ -2589,7 +2589,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Product
+              {tf('Add Product')}
             </Button>
           </div>
         </div>
@@ -2894,7 +2894,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {(Array.isArray(stepData.rawMaterials) ? stepData.rawMaterials : []).map((material: any, index: number) => (
               <div key={index} className="p-4 border rounded-lg space-y-2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Raw Material {index + 1}</span>
+                  <span className="text-sm font-medium">{tf('Raw Material {n}').replace('{n}', String(index + 1))}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -2924,7 +2924,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Raw Material
+              {tf('Add Raw Material')}
             </Button>
           </div>
         </div>
@@ -2970,7 +2970,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Final Product
+              {tf('Add Final Product')}
             </Button>
           </div>
         </div>
@@ -2981,7 +2981,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {(Array.isArray(stepData.valueAdditionStages) ? stepData.valueAdditionStages : []).map((stage: any, index: number) => (
               <div key={index} className="p-4 border rounded-lg space-y-2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Stage {index + 1}</span>
+                  <span className="text-sm font-medium">{tf('Stage {n}').replace('{n}', String(index + 1))}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -3012,7 +3012,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Value Addition Stage
+              {tf('Add Value Addition Stage')}
             </Button>
           </div>
         </div>
@@ -3629,7 +3629,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              Add Objective
+              {tf('Add Objective')}
             </Button>
           </div>
         </div>
@@ -3686,7 +3686,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         />
         {simpleCapex && (
           <p className="text-sm text-muted-foreground">
-            Heavy capex tables are hidden for Mudra Shishu / Kishore. Enter machinery and working-capital margin only.
+            {tf('Heavy capex tables are hidden for Mudra Shishu / Kishore. Enter machinery and working-capital margin only.')}
           </p>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4290,37 +4290,37 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 border rounded-lg">
-            <p className="text-sm text-muted-foreground">Project cost</p>
-            <p className="text-xl font-semibold">₹ {cost.toLocaleString('en-IN')} Lakhs</p>
+            <p className="text-sm text-muted-foreground">{tf('Project cost')}</p>
+            <p className="text-xl font-semibold">₹ {cost.toLocaleString('en-IN')} {tf('Lakhs')}</p>
           </div>
           <div className="p-4 border rounded-lg">
-            <p className="text-sm text-muted-foreground">Equity + loan + other</p>
-            <p className="text-xl font-semibold">₹ {finance.toLocaleString('en-IN')} Lakhs</p>
+            <p className="text-sm text-muted-foreground">{tf('Equity + loan + other')}</p>
+            <p className="text-xl font-semibold">₹ {finance.toLocaleString('en-IN')} {tf('Lakhs')}</p>
           </div>
         </div>
         {mudraSimple && (
           <div className="border rounded-lg p-4 space-y-3">
             <h4 className="font-semibold">{tf("Mudra Nayak working capital")}</h4>
-            <label className="block text-sm font-medium">Projected annual turnover (₹ Lakhs)</label>
+            <label className="block text-sm font-medium">{tf('Projected annual turnover (₹ Lakhs)')}</label>
             <Input
               type="number"
               value={turnover || ''}
               onChange={(e) => updateExtras({ projectedTurnover: parseFloat(e.target.value) || 0 })}
             />
-            <p className="text-sm">WC limit (20%): <strong>₹ {nayak.limit.toFixed(2)} Lakhs</strong></p>
-            <p className="text-sm">Promoter margin (5% of WC): <strong>₹ {nayak.margin.toFixed(2)} Lakhs</strong></p>
+            <p className="text-sm">{tf('WC limit (20%)')}: <strong>₹ {nayak.limit.toFixed(2)} {tf('Lakhs')}</strong></p>
+            <p className="text-sm">{tf('Promoter margin (5% of WC)')}: <strong>₹ {nayak.margin.toFixed(2)} {tf('Lakhs')}</strong></p>
           </div>
         )}
         <div className="overflow-x-auto">
           <table className="w-full text-sm border">
             <thead>
               <tr className="bg-muted">
-                <th className="p-2 text-left">Year</th>
-                <th className="p-2">Sales</th>
-                <th className="p-2">RM</th>
-                <th className="p-2">Wages</th>
-                <th className="p-2">Power</th>
-                <th className="p-2">Net profit</th>
+                <th className="p-2 text-left">{tf('Year')}</th>
+                <th className="p-2">{tf('Sales')}</th>
+                <th className="p-2">{tf('RM')}</th>
+                <th className="p-2">{tf('Wages')}</th>
+                <th className="p-2">{tf('Power')}</th>
+                <th className="p-2">{tf('Net profit')}</th>
               </tr>
             </thead>
             <tbody>
@@ -4358,8 +4358,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <div className={`p-4 rounded-lg border ${avgDscr < 1.5 ? 'border-amber-400 bg-amber-50' : 'border-border'}`}>
             <p className="font-semibold">{tf("DSCR (profit + depreciation vs EMI)")}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Assumed 7-year term at 12%. Average DSCR: <strong>{avgDscr.toFixed(2)}</strong>
-              {avgDscr < 1.5 ? ' — below 1.5; lenders may query this.' : ''}
+              {tf('Assumed 7-year term at 12%. Average DSCR:')} <strong>{avgDscr.toFixed(2)}</strong>
+              {avgDscr < 1.5 ? tf(' — below 1.5; lenders may query this.') : ''}
             </p>
           </div>
         )}
@@ -4522,13 +4522,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           const uploadResult = await individualDprApi.uploadDocument(file);
           if (uploadResult.success && uploadResult.data) {
             handleInputChange(field, kycUploadPayload(uploadResult.data, file.name));
-            toast.success(`${file.name} uploaded successfully!`);
+            toast.success(`${file.name} ${tf('uploaded successfully!')}`);
           } else {
-            toast.error(uploadResult.message || 'Failed to upload document');
+            toast.error(uploadResult.message || tf('Failed to upload document'));
             handleInputChange(field, file.name);
           }
         } catch (error: any) {
-          toast.error(error.message || 'Failed to upload document');
+          toast.error(error.message || tf('Failed to upload document'));
           handleInputChange(field, file.name);
         } finally {
           setUploadingFiles((prev) => ({ ...prev, [field]: false }));
@@ -4592,7 +4592,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   return (
     <div className="space-y-6">
       <p className="text-muted-foreground">
-        Step {currentStep} form implementation in progress. Please check back soon.
+        {tf('Step')} {currentStep} {tf('form implementation in progress. Please check back soon.')}
       </p>
     </div>
   );
