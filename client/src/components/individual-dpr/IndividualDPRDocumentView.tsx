@@ -13,6 +13,8 @@ import {
   type IndividualDocField,
 } from '@/lib/individualDpr/individualDocModel';
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
+import { CmepProjectionTable } from '@/components/individual-dpr/CmepProjectionTable';
+import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
 import { isKycUploaded } from '@/lib/privacy/kycField';
 
 export interface IndividualDPRDocumentViewProps {
@@ -116,6 +118,38 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const renderSectionFields = (fields: IndividualDocField[]) => {
     if (!fields.length) {
       return <p className="individual-empty">{tf('No answers for this section yet.')}</p>;
+    }
+
+    const stacked = schemeCode === 'AP_CMEP';
+
+    if (stacked) {
+      return (
+        <div className="individual-sec-body">
+          {fields.map((field) => {
+            if (field.name === 'yearProjections') {
+              const columns = normalizeCmepProjections(readDocField(field, data));
+              return (
+                <div key={field.path}>
+                  {fieldHit(field.path, <CmepProjectionTable columns={columns} readOnly />, trackFieldHits)}
+                </div>
+              );
+            }
+            const text = formatDocValue(readDocField(field, data));
+            return (
+              <article key={field.path} className="individual-qa-block">
+                <h3 className="individual-qa-q">{tf(field.label)}</h3>
+                <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
+                  {fieldHit(
+                    field.path,
+                    text === '—' ? tf('Not filled yet — complete this in the form.') : tf(text),
+                    trackFieldHits
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      );
     }
 
     const shortFields: Array<{ field: IndividualDocField; text: string }> = [];

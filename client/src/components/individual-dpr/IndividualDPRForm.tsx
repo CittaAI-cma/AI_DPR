@@ -9,6 +9,8 @@ import { AISuggestions } from '@/components/cluster-dpr/AISuggestions';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { FIELD_DESCRIPTIONS } from '@/data/fieldDescriptions';
 import { districtSelectOptions, townSelectOptions, isTownInDistrict } from '@/lib/individualDpr/apDistricts';
+import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { CmepProjectionTable } from '@/components/individual-dpr/CmepProjectionTable';
 import { BUSINESS_SKILLS, matchBusinessSkillLocal } from '@/lib/individualDpr/businessSkills';
 import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { useAuthStore } from '@/store/authStore';
@@ -4256,16 +4258,33 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       toFiniteNumber(step13.bankLoan) +
       toFiniteNumber(step13.otherSources);
     const loan = toFiniteNumber(step13.bankLoan);
-    const years = stepData.yearProjections?.length
-      ? stepData.yearProjections
-      : [1, 2, 3, 4, 5].map((year) => ({
-          year,
-          sales: year === 1 ? toFiniteNumber(step14.annualSalesRealization) : 0,
-          rm: year === 1 ? toFiniteNumber(step14.rawMaterialCost) : 0,
-          wages: year === 1 ? toFiniteNumber(step14.wages) : 0,
-          power: year === 1 ? toFiniteNumber(step14.powerCost) : 0,
-          netProfit: 0,
-        }));
+    let cmepYears = isApCmep ? normalizeCmepProjections(stepData.yearProjections) : [];
+    if (isApCmep && !Array.isArray(stepData.yearProjections)) {
+      const firstProjected = cmepYears.findIndex((col) => col.period === 'projected');
+      cmepYears = cmepYears.map((col, index) =>
+        index === firstProjected
+          ? {
+              ...col,
+              sales: toFiniteNumber(step14.annualSalesRealization),
+              rm: toFiniteNumber(step14.rawMaterialCost),
+              wages: toFiniteNumber(step14.wages),
+              power: toFiniteNumber(step14.powerCost),
+            }
+          : col
+      );
+    }
+    const years = isApCmep
+      ? cmepYears.filter((col) => col.period === 'projected')
+      : stepData.yearProjections?.length
+        ? stepData.yearProjections
+        : [1, 2, 3, 4, 5].map((year) => ({
+            year,
+            sales: year === 1 ? toFiniteNumber(step14.annualSalesRealization) : 0,
+            rm: year === 1 ? toFiniteNumber(step14.rawMaterialCost) : 0,
+            wages: year === 1 ? toFiniteNumber(step14.wages) : 0,
+            power: year === 1 ? toFiniteNumber(step14.powerCost) : 0,
+            netProfit: 0,
+          }));
     const updateYear = (index: number, field: string, value: number) => {
       const next = years.map((row: any, i: number) => (i === index ? { ...row, [field]: value } : row));
       handleInputChange('yearProjections', next);
@@ -4317,6 +4336,19 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <p className="text-sm">{tf('Promoter margin (5% of WC)')}: <strong>₹ {nayak.margin.toFixed(2)} {tf('Lakhs')}</strong></p>
           </div>
         )}
+        {isApCmep ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {tf(
+                'Enter actuals for the three previous financial years and estimates for the next five. All figures are ₹ Lakhs.'
+              )}
+            </p>
+            <CmepProjectionTable
+              columns={cmepYears}
+              onChange={(next) => handleInputChange('yearProjections', next)}
+            />
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border">
             <thead>
@@ -4347,6 +4379,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             </tbody>
           </table>
         </div>
+        )}
         <div>
           {renderLabel('breakEvenPoint', 'Break-even (capacity %)')}
           <Input

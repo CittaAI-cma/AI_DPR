@@ -950,3 +950,87 @@
 .individual-dpr-document.tpl-ap-cmep .individual-meta-grid {
   border-color: #3730a3;
 }
+
+.cmep-fin-sheet {
+  border: 1px solid #1f2937;
+  background: #fff;
+  page-break-inside: avoid;
+}
+
+.cmep-fin-banner {
+  background: #8fa03a;
+  color: #fff;
+  text-align: right;
+  padding: 6px 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.cmep-fin-unit {
+  margin: 0;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px 2px;
+}
+
+.cmep-fin-scroll {
+  overflow-x: auto;
+}
+
+.cmep-fin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  min-width: 720px;
+}
+
+.cmep-fin-table th,
+.cmep-fin-table td {
+  border: 1px solid #1f2937;
+  padding: 4px 6px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cmep-fin-table .cmep-fin-sl {
+  width: 42px;
+  font-weight: 700;
+}
+
+.cmep-fin-table .cmep-fin-particulars {
+  text-align: left;
+  min-width: 140px;
+  font-weight: 600;
+}
+
+.cmep-fin-table .cmep-fin-group {
+  background: #f3f4f6;
+  font-weight: 700;
+}
+
+.cmep-fin-table .cmep-fin-year {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cmep-fin-table .cmep-fin-amt .w-full input,
+.cmep-fin-table .cmep-fin-amt input {
+  height: 32px;
+  padding: 2px 4px;
+  text-align: center;
+  font-size: 12px;
+}
+
+@media print {
+  .cmep-fin-scroll {
+    overflow: visible;
+  }
+
+  .cmep-fin-table {
+    min-width: 0;
+    font-size: 8pt;
+  }
+}

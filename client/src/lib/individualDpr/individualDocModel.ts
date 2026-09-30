@@ -550,9 +550,14 @@ export function getIndividualDocFields(
   }
 
   if (contentStep === 15) {
-    // Match Latest DPR form + server individual mapping (no IRR/NPV/sensitivity inputs on form)
     return [
-      stepField('yearProjections', 'Year-wise sales / costs / profit', 15),
+      stepField(
+        'yearProjections',
+        schemeCode === 'AP_CMEP'
+          ? 'Financial projections — previous years and estimates (₹ Lakhs)'
+          : 'Year-wise sales / costs / profit',
+        15
+      ),
       stepField('breakEvenPoint', 'Break-even (capacity %)', 15),
     ];
   }

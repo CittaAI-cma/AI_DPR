@@ -3,6 +3,7 @@ import { extraFieldsForScheme, VISHWAKARMA_CRAFTS, hideComplexCapex } from '@/li
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
 import { suggestionToFieldValue, isNumericDprField, isStructuredDprField, toDateInputValue } from '@/lib/dprAiFieldNormalize';
+import { mergeCmepProjectedSuggestion } from '@/lib/individualDpr/cmepProjections';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
@@ -580,6 +581,10 @@ export function applyCatalogSuggestionToForm(options: {
   } = options;
   const extraFieldNames = extraFieldsForScheme(schemeCode);
   let value = suggestionToFieldValue(suggestion.field, suggestion.suggestion);
+  if (schemeCode === 'AP_CMEP' && suggestion.field === 'yearProjections' && Array.isArray(value)) {
+    const current = stepPatch?.yearProjections ?? getStepData(contentStep)?.yearProjections;
+    value = mergeCmepProjectedSuggestion(current, value);
+  }
 
   // Structured / date fields must parse cleanly — never store raw AI prose.
   if (isStructuredDprField(suggestion.field)) {
@@ -785,6 +790,9 @@ export async function fillCurrentStepWithAi(options: {
           ? match.suggestion
           : JSON.stringify(match.suggestion);
       let value = suggestionToFieldValue(field, text);
+      if (schemeCode === 'AP_CMEP' && field === 'yearProjections' && Array.isArray(value)) {
+        value = mergeCmepProjectedSuggestion(stepData?.yearProjections, value);
+      }
       if (value === null || value === undefined || value === '') {
         failed.push(field);
         continue;
@@ -918,7 +926,10 @@ export async function fillAllStepsWithAi(options: {
           typeof suggestion.suggestion === 'string'
             ? suggestion.suggestion
             : JSON.stringify(suggestion.suggestion);
-        const value = suggestionToFieldValue(field, text);
+        let value = suggestionToFieldValue(field, text);
+        if (schemeCode === 'AP_CMEP' && field === 'yearProjections' && Array.isArray(value)) {
+          value = mergeCmepProjectedSuggestion(nextStepData.yearProjections, value);
+        }
         if (value === null || value === undefined) continue;
 
         if (extraFieldNames.includes(field)) {

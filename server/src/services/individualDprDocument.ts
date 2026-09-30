@@ -23,7 +23,7 @@ export type DocField = {
   path: string;
 };
 
-export type DocRow = { label: string; value: string; path: string; filled: boolean };
+export type DocRow = { label: string; value: string; path: string; filled: boolean; embed?: 'cmep-projections' };
 
 export type DocSection = {
   n: number;
@@ -569,7 +569,13 @@ export function getIndividualDocFields(
 
   if (contentStep === 15) {
     return [
-      stepField('yearProjections', 'Year-wise sales / costs / profit', 15),
+      stepField(
+        'yearProjections',
+        schemeCode === 'AP_CMEP'
+          ? 'Financial projections — previous years and estimates (₹ Lakhs)'
+          : 'Year-wise sales / costs / profit',
+        15
+      ),
       stepField('breakEvenPoint', 'Break-even (capacity %)', 15),
     ];
   }
@@ -759,7 +765,21 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
     for (const field of fields) {
       if (seen.has(field.path)) continue;
       seen.add(field.path);
-      const formatted = formatDocValue(readField(field, data));
+      const raw = readField(field, data);
+      if (schemeCode === 'AP_CMEP' && field.name === 'yearProjections') {
+        const columns = normalizeCmepProjections(raw);
+        const lineKeys = ['sales', 'rm', 'wages', 'power', 'netProfit'] as const;
+        const filled = columns.some((col) => lineKeys.some((key) => col[key] !== 0));
+        rows.push({
+          label: field.label,
+          value: JSON.stringify(columns),
+          path: field.path,
+          filled,
+          embed: 'cmep-projections',
+        });
+        continue;
+      }
+      const formatted = formatDocValue(raw);
       rows.push({ label: field.label, value: formatted, path: field.path, filled: isFilled(formatted) });
     }
     return { n: def.n, id: def.id, title, contentStep: def.contentStep, rows };
@@ -879,13 +899,142 @@ function isExpansiveRow(row: DocRow): boolean {
   );
 }
 
-function renderSectionRowsHtml(rows: DocRow[]): string {
+function cmepFyStart(now = new Date()): number {
+  return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+}
+
+function normalizeCmepProjections(raw: unknown, now = new Date()) {
+  const start = cmepFyStart(now);
+  const defaults = [
+    ...[start - 3, start - 2, start - 1].map((year) => ({
+      label: `${year}-${year + 1}`,
+      period: 'previous' as const,
+      sales: 0,
+      rm: 0,
+      wages: 0,
+      power: 0,
+      netProfit: 0,
+    })),
+    ...[0, 1, 2, 3, 4].map((offset) => {
+      const year = start + offset;
+      return {
+        label: `${year}-${year + 1}`,
+        period: 'projected' as const,
+        sales: 0,
+        rm: 0,
+        wages: 0,
+        power: 0,
+        netProfit: 0,
+      };
+    }),
+  ];
+  const num = (value: unknown) => {
+    const n = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
+    return Number.isFinite(n) ? n : 0;
+  };
+  if (!Array.isArray(raw)) return defaults;
+  const labeled = raw.filter((row) => row && typeof row === 'object' && 'label' in row && 'period' in row);
+  if (labeled.length) {
+    const byLabel = new Map(labeled.map((row) => [String((row as { label: string }).label), row as Record<string, unknown>]));
+    const sameShape = defaults.every((col) => byLabel.has(col.label));
+    const source = sameShape ? defaults : labeled.map((row) => {
+      const item = row as { label: string; period: string };
+      return {
+        label: String(item.label),
+        period: item.period === 'previous' ? ('previous' as const) : ('projected' as const),
+        sales: 0,
+        rm: 0,
+        wages: 0,
+        power: 0,
+        netProfit: 0,
+      };
+    });
+    return source.map((col) => {
+      const saved = byLabel.get(col.label) || {};
+      return {
+        ...col,
+        sales: num(saved.sales),
+        rm: num(saved.rm),
+        wages: num(saved.wages),
+        power: num(saved.power),
+        netProfit: num(saved.netProfit),
+      };
+    });
+  }
+  const legacy = raw.filter((row) => row && typeof row === 'object');
+  return defaults.map((col, index) => {
+    if (col.period !== 'projected') return col;
+    const slot = legacy[index - defaults.filter((item) => item.period === 'previous').length] as Record<string, unknown> | undefined;
+    if (!slot) return col;
+    return {
+      ...col,
+      sales: num(slot.sales),
+      rm: num(slot.rm),
+      wages: num(slot.wages),
+      power: num(slot.power),
+      netProfit: num(slot.netProfit),
+    };
+  });
+}
+
+function renderCmepProjectionTableHtml(json: string): string {
+  let columns: Array<Record<string, unknown>> = [];
+  try {
+    const parsed = JSON.parse(json);
+    if (Array.isArray(parsed)) columns = parsed;
+  } catch {
+    columns = [];
+  }
+  if (!columns.length) return '<p class="empty">Not filled yet — complete this in the form.</p>';
+  const lines: Array<[string, string]> = [
+    ['sales', 'Sales realisation'],
+    ['rm', 'Raw material'],
+    ['wages', 'Wages'],
+    ['power', 'Power'],
+    ['netProfit', 'Net profit'],
+  ];
+  const previous = columns.filter((col) => col.period === 'previous').length;
+  const projected = columns.filter((col) => col.period === 'projected').length;
+  const fmt = (value: unknown) => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n === 0) return '–';
+    return Number.isInteger(n) ? String(n) : n.toFixed(2);
+  };
+  const years = columns.map((col) => `<th>${escapeHtml(String(col.label || ''))}</th>`).join('');
+  const body = lines
+    .map(([key, label], index) => {
+      const cells = columns.map((col) => `<td class="amt">${fmt(col[key])}</td>`).join('');
+      return `<tr><td class="sl">${index + 1}</td><td class="part">${escapeHtml(label)}</td>${cells}</tr>`;
+    })
+    .join('');
+  return `<div class="fin-sheet">
+    <div class="fin-banner">Financial projections</div>
+    <p class="fin-unit">Rs. In Lakhs</p>
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th rowspan="2" class="sl">Sl. No.</th>
+          <th rowspan="2" class="part">Particulars</th>
+          ${previous ? `<th colspan="${previous}">Previous</th>` : ''}
+          ${projected ? `<th colspan="${projected}">Projected</th>` : ''}
+        </tr>
+        <tr>${years}</tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderSectionRowsHtml(rows: DocRow[], schemeCode?: string | null): string {
   if (!rows.length) return '<p class="empty">—</p>';
 
+  const stacked = schemeCode === 'AP_CMEP';
+  const embeds = rows.filter((row) => row.embed === 'cmep-projections');
+  const rest = rows.filter((row) => row.embed !== 'cmep-projections');
   const shortRows: DocRow[] = [];
   const longRows: DocRow[] = [];
-  for (const row of rows) {
-    if (isExpansiveRow(row)) longRows.push(row);
+  for (const row of rest) {
+    if (stacked || isExpansiveRow(row)) longRows.push(row);
     else shortRows.push(row);
   }
 
@@ -913,6 +1062,10 @@ function renderSectionRowsHtml(rows: DocRow[]): string {
     );
   }
 
+  for (const row of embeds) {
+    parts.push(renderCmepProjectionTableHtml(row.value));
+  }
+
   parts.push('</div>');
   return parts.join('');
 }
@@ -926,7 +1079,7 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
   const sectionsHtml = doc.sections
     .map(
       (s) =>
-        `<section class="sec"><h2><span class="sec-num">${s.n}</span>${escapeHtml(s.title)}</h2>${renderSectionRowsHtml(s.rows)}</section>`
+        `<section class="sec"><h2><span class="sec-num">${s.n}</span>${escapeHtml(s.title)}</h2>${renderSectionRowsHtml(s.rows, doc.schemeCode)}</section>`
     )
     .join('\n');
 
@@ -1146,6 +1299,16 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
   .qa-a { margin: 0; padding: 10pt 11pt 12pt; font-size: 11pt; line-height: 1.65; color: #1F2937; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; min-height: 2.8em; text-align: justify; }
   .qa-a.is-empty { color: #9CA3AF; font-style: italic; text-align: left; }
   .empty { color: #9CA3AF; font-style: italic; }
+  .sec:has(.fin-sheet) { page-break-inside: auto; }
+  .fin-sheet { page: fin; break-before: page; margin-top: 4pt; }
+  @page fin { size: A4 landscape; margin: 12mm; }
+  .fin-banner { background: #8fa03a; color: #fff; text-align: right; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4pt 8pt; font-size: 11pt; }
+  .fin-unit { margin: 2pt 0 4pt; text-align: right; font-size: 9pt; font-weight: 700; }
+  .fin-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  .fin-table th, .fin-table td { border: 1px solid #1F2937; padding: 3pt 4pt; text-align: center; }
+  .fin-table .sl { width: 36pt; font-weight: 700; }
+  .fin-table .part { text-align: left; font-weight: 700; min-width: 90pt; }
+  .fin-table thead th { background: #F3F4F6; font-weight: 700; }
   .toc-list { list-style: none; margin: 0; padding: 0; border: 1px solid #1F2937; }
   .toc-list li { display: flex; gap: 10pt; padding: 6pt 8pt; border-bottom: 1px solid #E5E7EB; font-size: 11pt; }
   .toc-list li:last-child { border-bottom: none; }
@@ -1171,15 +1334,95 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
 </html>`;
 }
 
+function cmepDocxTable(json: string): Table {
+  let columns: Array<Record<string, unknown>> = [];
+  try {
+    const parsed = JSON.parse(json);
+    if (Array.isArray(parsed)) columns = parsed;
+  } catch {
+    columns = [];
+  }
+  const lines: Array<[string, string]> = [
+    ['sales', 'Sales realisation'],
+    ['rm', 'Raw material'],
+    ['wages', 'Wages'],
+    ['power', 'Power'],
+    ['netProfit', 'Net profit'],
+  ];
+  const cell = (text: string, bold = false) =>
+    new TableCell({
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text, bold, size: 14 })],
+        }),
+      ],
+    });
+  const fmt = (value: unknown) => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n === 0) return '–';
+    return Number.isInteger(n) ? String(n) : n.toFixed(2);
+  };
+  const previous = columns.filter((col) => col.period === 'previous').length;
+  const projected = columns.filter((col) => col.period === 'projected').length;
+  const group = (text: string, span: number) =>
+    new TableCell({
+      columnSpan: span,
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text, bold: true, size: 14 })],
+        }),
+      ],
+    });
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            rowSpan: 2,
+            children: [new Paragraph({ children: [new TextRun({ text: 'Sl. No.', bold: true, size: 14 })] })],
+          }),
+          new TableCell({
+            rowSpan: 2,
+            children: [new Paragraph({ children: [new TextRun({ text: 'Particulars', bold: true, size: 14 })] })],
+          }),
+          ...(previous ? [group('Previous', previous)] : []),
+          ...(projected ? [group('Projected', projected)] : []),
+        ],
+      }),
+      new TableRow({
+        children: columns.map((col) => cell(String(col.label || ''), true)),
+      }),
+      ...lines.map(
+        ([key, label], index) =>
+          new TableRow({
+            children: [
+              cell(String(index + 1), true),
+              new TableCell({
+                children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 14 })] })],
+              }),
+              ...columns.map((col) => cell(fmt(col[key]))),
+            ],
+          })
+      ),
+    ],
+  });
+}
+
 export async function generateIndividualDprDocx(doc: IndividualDocument): Promise<Buffer> {
   const sectionBlocks = (rows: DocRow[]): (Paragraph | Table)[] => {
     if (!rows.length) {
       return [new Paragraph({ children: [new TextRun({ text: '—', italics: true, color: '9CA3AF' })] })];
     }
+    const stacked = doc.schemeCode === 'AP_CMEP';
+    const embeds = rows.filter((row) => row.embed === 'cmep-projections');
+    const rest = rows.filter((row) => row.embed !== 'cmep-projections');
     const shortRows: DocRow[] = [];
     const longRows: DocRow[] = [];
-    for (const row of rows) {
-      if (isExpansiveRow(row)) longRows.push(row);
+    for (const row of rest) {
+      if (stacked || isExpansiveRow(row)) longRows.push(row);
       else shortRows.push(row);
     }
     const out: (Paragraph | Table)[] = [];
@@ -1238,6 +1481,15 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
           })
         );
       }
+    }
+    for (const row of embeds) {
+      out.push(
+        new Paragraph({
+          spacing: { before: 160, after: 60 },
+          children: [new TextRun({ text: 'Financial projections (Rs. In Lakhs)', bold: true, size: 20 })],
+        })
+      );
+      out.push(cmepDocxTable(row.value));
     }
     return out;
   };
