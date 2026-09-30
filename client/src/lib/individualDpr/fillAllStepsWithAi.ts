@@ -514,12 +514,12 @@ export async function suggestCurrentStepWithAi(options: {
           _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a whole number (headcount), e.g. 4. No words.`,
         };
       } else if (
-        options.schemeCode === 'AP_CMEP' &&
-        ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography'].includes(field)
+        ['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(options.schemeCode)) &&
+        ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography', 'landDetails', 'impactNote', 'waterAndEffluent'].includes(field)
       ) {
         previousForField = {
           ...previous,
-          _promptContext: `For field "${field}" ("${fieldDef.label}"): write 250 to 400 words of finished bank-ready prose for this one field only. Do not invent extra questions or headings.`,
+          _promptContext: `For field "${field}" ("${fieldDef.label}"): write 320 to 450 words of finished bank-ready prose for this one field only. Do not invent extra questions or headings.`,
         };
       }
       const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(

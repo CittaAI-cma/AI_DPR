@@ -13,11 +13,10 @@ import {
   type IndividualDocField,
 } from '@/lib/individualDpr/individualDocModel';
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
-import { CmepProjectionTable } from '@/components/individual-dpr/CmepProjectionTable';
-import { CmepDerivedSheets } from '@/components/individual-dpr/CmepBankSections';
 import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
 import {
   CMEP_COST_HEADS,
+  deriveCmepBankSheets,
   normalizeCostPhasing,
   normalizeMachineryItems,
   normalizeProductMix,
@@ -205,15 +204,86 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
 
       for (const field of fields) {
         const raw = readDocField(field, data);
+        if (field.name === 'yearProjections' && schemeCode !== 'AP_CMEP') {
+          flushParticulars();
+          const years = Array.isArray(raw) ? raw : [];
+          blocks.push(dataTable(
+            field.path,
+            field.label,
+            ['Year', 'Sales (₹ Lakhs)', 'Raw material', 'Wages', 'Power', 'Net profit'],
+            years.map((row) => {
+              const item = row && typeof row === 'object' ? row as Record<string, unknown> : {};
+              return [
+                item.year != null ? `Year ${item.year}` : String(item.label || ''),
+                String(item.sales ?? ''),
+                String(item.rm ?? ''),
+                String(item.wages ?? ''),
+                String(item.power ?? ''),
+                String(item.netProfit ?? ''),
+              ];
+            })
+          ));
+          continue;
+        }
         if (field.name === 'yearProjections' && schemeCode === 'AP_CMEP') {
           flushParticulars();
           const columns = normalizeCmepProjections(raw);
+          const amount = (value: number) => (Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100));
+          blocks.push(dataTable(
+            field.path,
+            'Sales and operating costs (₹ Lakhs)',
+            ['Year', 'Sales', 'Raw material', 'Wages', 'Power', 'Salaries', 'Rent', 'Maintenance', 'Admin'],
+            columns.map((col) => [col.label, amount(col.sales), amount(col.rm), amount(col.wages), amount(col.power), amount(col.salaries), amount(col.rent), amount(col.maintenance), amount(col.admin)])
+          ));
+          blocks.push(dataTable(
+            `${field.path}.profit`,
+            'Interest, depreciation and profit (₹ Lakhs)',
+            ['Year', 'Interest', 'Depreciation', 'Tax', 'Net profit'],
+            columns.map((col) => [col.label, amount(col.interest), amount(col.depreciation), amount(col.tax), amount(col.netProfit)])
+          ));
+          const derived = deriveCmepBankSheets({ step12: data.step12, step13: data.step13, step15: data.step15 });
           blocks.push(
-            <div key={field.path} className="space-y-4">
-              {fieldHit(field.path, <CmepProjectionTable columns={columns} readOnly />, trackFieldHits)}
-              <CmepDerivedSheets step12={data.step12} step13={data.step13} step15={data.step15} />
-            </div>
+            <table key="cmep-repay" className="individual-particulars">
+              <caption className="individual-qa-q">{tf('Repayment, break-even and DSCR')}</caption>
+              <thead>
+                <tr>
+                  <th>{tf('Particular')}</th>
+                  <th>{tf('Details')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Term loan (₹ Lakhs)', amount(derived.repayment.amount)],
+                  ['Interest rate (% per year)', amount(derived.repayment.rate)],
+                  ['Moratorium (months)', String(derived.repayment.moratoriumMonths || 0)],
+                  ['Loan tenure (months)', String(derived.repayment.tenureMonths || 0)],
+                  ['Indicative EMI (₹ Lakhs)', amount(derived.repayment.emi)],
+                  ['Break-even sales (₹ Lakhs)', amount(derived.breakEvenSales)],
+                  ['Break-even capacity (%)', amount(derived.breakEvenCapacity)],
+                  ['Average DSCR', amount(derived.averageDscr)],
+                ].map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="part">{tf(label)}</td>
+                    <td>{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           );
+          blocks.push(dataTable(
+            'cmep-dscr',
+            'DSCR by year (₹ Lakhs)',
+            ['Year', 'Cash profit', 'Repayment', 'DSCR'],
+            derived.dscr.map((row) => [row.label, amount(row.cashProfit), amount(row.repayment), amount(row.ratio)])
+          ));
+          derived.depreciation.forEach((asset) => {
+            blocks.push(dataTable(
+              `cmep-dep-${asset.asset}`,
+              `${asset.asset} — depreciation ${Math.round(asset.rate * 100)}%`,
+              ['Year', 'Opening', 'Additions', 'Depreciation', 'Closing'],
+              asset.years.map((year) => [year.label, amount(year.opening), amount(year.additions), amount(year.depreciation), amount(year.closing)])
+            ));
+          });
           continue;
         }
         if (field.name === 'productMix') {
