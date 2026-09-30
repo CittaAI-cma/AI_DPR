@@ -13,7 +13,6 @@ import { useDPRStore } from '@/store/dprStore';
 import { 
   FileText, 
   Search,
-  Filter,
   Download,
   Eye,
   CheckCircle,
@@ -28,6 +27,7 @@ import {
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import { collectDprSearchTags, dprSchemeCode, dprSearchHaystack } from '@/lib/dprSearchTags';
 
 interface DPR {
   _id: string;
@@ -37,6 +37,8 @@ interface DPR {
   generatedAt?: Date;
   createdAt?: Date;
   content?: any;
+  schemeCode?: string | null;
+  searchTags?: string[];
 }
 
 type SortField = 'date' | 'status' | 'quality' | 'name';
@@ -54,6 +56,7 @@ export const AllDPRs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [activeTag, setActiveTag] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [uploading, setUploading] = useState(false);
@@ -67,7 +70,7 @@ export const AllDPRs: React.FC = () => {
 
   useEffect(() => {
     filterAndSortDPRs();
-  }, [dprs, searchQuery, statusFilter, sortField, sortOrder]);
+  }, [dprs, searchQuery, statusFilter, activeTag, sortField, sortOrder]);
 
   const loadDPRs = async () => {
     // Use cached data if available and not stale
@@ -165,19 +168,20 @@ export const AllDPRs: React.FC = () => {
     
     let filtered = [...dprs];
 
-    // Apply search filter
+    // Apply keyword search (name, sector, location, scheme, tags)
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
       filtered = filtered.filter((dpr) => {
-        const projectName = dpr.projectId?.projectName || '';
-        const sector = dpr.projectId?.industrySector || '';
-        const status = dpr.status || '';
-        return (
-          projectName.toLowerCase().includes(query) ||
-          sector.toLowerCase().includes(query) ||
-          status.toLowerCase().includes(query)
-        );
+        const haystack = dprSearchHaystack(dpr);
+        return tokens.every((token) => haystack.includes(token));
       });
+    }
+
+    if (activeTag) {
+      const tag = activeTag.toLowerCase();
+      filtered = filtered.filter((dpr) =>
+        collectDprSearchTags(dpr).some((item) => item.toLowerCase() === tag)
+      );
     }
 
     // Apply status filter using effective status
@@ -412,6 +416,27 @@ export const AllDPRs: React.FC = () => {
     }
   };
 
+  const tagCounts = new Map<string, number>();
+  dprs.forEach((dpr) => {
+    collectDprSearchTags(dpr).forEach((tag) => {
+      tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    });
+  });
+  const popularTags = Array.from(tagCounts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 12)
+    .map(([tag]) => tag);
+  const filtersActive =
+    Boolean(searchQuery.trim()) ||
+    statusFilter !== 'all' ||
+    Boolean(activeTag);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setActiveTag('');
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -572,26 +597,22 @@ export const AllDPRs: React.FC = () => {
 
         {/* Filters and Search */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by project name, sector, or status..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-1/2">
+              <Search className="absolute left-4 top-1/2 z-10 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search name, sector, location, scheme, or keywords…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-12 pl-12 text-base"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="px-4 py-2 border-2 border-primary/20 rounded-lg focus:outline-none focus:border-primary bg-white"
+                  className="px-3 py-2 border-2 border-primary/20 rounded-lg focus:outline-none focus:border-primary bg-white text-sm"
                 >
                   <option value="all">All Status</option>
                   <option value="draft">Draft</option>
@@ -600,10 +621,6 @@ export const AllDPRs: React.FC = () => {
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
                 </select>
-              </div>
-
-              {/* Sort */}
-              <div className="flex items-center gap-2">
                 <select
                   value={`${sortField}-${sortOrder}`}
                   onChange={(e) => {
@@ -611,7 +628,7 @@ export const AllDPRs: React.FC = () => {
                     setSortField(field as SortField);
                     setSortOrder(order as SortOrder);
                   }}
-                  className="px-4 py-2 border-2 border-primary/20 rounded-lg focus:outline-none focus:border-primary bg-white"
+                  className="px-3 py-2 border-2 border-primary/20 rounded-lg focus:outline-none focus:border-primary bg-white text-sm"
                 >
                   <option value="date-desc">Newest First</option>
                   <option value="date-asc">Oldest First</option>
@@ -622,8 +639,36 @@ export const AllDPRs: React.FC = () => {
                   <option value="status-asc">Status (A-Z)</option>
                   <option value="status-desc">Status (Z-A)</option>
                 </select>
-              </div>
+                {filtersActive && (
+                  <Button variant="outline" size="sm" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-1" />
+                    Clear
+                  </Button>
+                )}
             </div>
+            </div>
+            {popularTags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Keywords</span>
+                {popularTags.map((tag) => {
+                  const selected = activeTag.toLowerCase() === tag.toLowerCase();
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setActiveTag(selected ? '' : tag)}
+                      className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                        selected
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-muted/40 text-foreground border-border hover:border-primary/40'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -636,26 +681,23 @@ export const AllDPRs: React.FC = () => {
                   <FileText className="h-10 w-10 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
-                  {searchQuery || statusFilter !== 'all' ? 'No DPRs found' : 'No DPRs yet'}
+                  {filtersActive ? 'No DPRs found' : 'No DPRs yet'}
                 </h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  {searchQuery || statusFilter !== 'all'
-                    ? 'Try adjusting your search or filter criteria'
+                  {filtersActive
+                    ? 'Try adjusting your search, keyword, or filter criteria'
                     : 'Create your first Detailed Project Report to get started'}
                 </p>
-                {!searchQuery && statusFilter === 'all' && (
+                {!filtersActive && (
                   <Button onClick={() => navigate('/individual-dpr/create?new=true')} size="lg">
                     <FileText className="h-5 w-5 mr-2" />
                     Create New Latest DPR
                   </Button>
                 )}
-                {(searchQuery || statusFilter !== 'all') && (
+                {filtersActive && (
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setStatusFilter('all');
-                    }}
+                    onClick={clearFilters}
                   >
                     <X className="h-4 w-4 mr-2" />
                     Clear Filters
@@ -698,6 +740,18 @@ export const AllDPRs: React.FC = () => {
                             <span className="font-medium">Sector:</span>
                             {dpr.projectId?.industrySector || 'Unknown'}
                           </span>
+                          {dpr.projectId?.location && dpr.projectId.location !== 'Unknown' && (
+                            <>
+                              <span>•</span>
+                              <span>{dpr.projectId.location}</span>
+                            </>
+                          )}
+                          {dprSchemeCode(dpr) && (
+                            <>
+                              <span>•</span>
+                              <span className="font-medium text-primary">{dprSchemeCode(dpr)}</span>
+                            </>
+                          )}
                           <span>•</span>
                           <span className="flex items-center gap-1">  
                             <span className="font-medium">Created:</span>
@@ -713,6 +767,20 @@ export const AllDPRs: React.FC = () => {
                             </>
                           )}
                         </div>
+                        {collectDprSearchTags(dpr).length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {collectDprSearchTags(dpr).slice(0, 6).map((tag) => (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => setActiveTag(activeTag.toLowerCase() === tag.toLowerCase() ? '' : tag)}
+                                className="px-2 py-0.5 rounded-full text-[11px] bg-primary/5 text-primary border border-primary/15 hover:bg-primary/10"
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">

@@ -14,6 +14,51 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
+function pushTag(bag: Set<string>, value: unknown) {
+  if (value == null) return;
+  const text = String(value).trim();
+  if (!text || text === '—' || /^unknown$/i.test(text)) return;
+  text
+    .split(/[,;/|]+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 1 && part.length < 48)
+    .forEach((part) => bag.add(part));
+}
+
+/** Keywords shown on DPR cards and used by list search. */
+function buildDprSearchTags(input: {
+  project?: any;
+  dpr?: any;
+}): string[] {
+  const bag = new Set<string>();
+  const project = input.project || {};
+  const dpr = input.dpr || {};
+  const english = dpr.content?.english || {};
+  const cluster = english.clusterData || {};
+  const step1 = cluster.step1 || {};
+  const scheme =
+    english.matchedSchemeCode ||
+    english.metadata?.matchedSchemeCode ||
+    cluster.matchedSchemeCode ||
+    null;
+
+  pushTag(bag, project.projectType === 'individual' ? 'Individual' : project.projectType === 'cluster' ? 'Cluster' : project.projectType);
+  pushTag(bag, project.industrySector);
+  pushTag(bag, project.subSector);
+  pushTag(bag, project.location);
+  pushTag(bag, step1.district);
+  pushTag(bag, step1.natureOfBusiness);
+  pushTag(bag, step1.majorProducts);
+  pushTag(bag, scheme);
+  if (english.metadata?.isIndividualDPR || english.isIndividualDPR || cluster.isIndividualDPR) {
+    pushTag(bag, 'Individual');
+  }
+  const schemes = dpr.eligibleSchemes?.selectedSchemes;
+  if (Array.isArray(schemes)) schemes.forEach((code: string) => pushTag(bag, code));
+
+  return Array.from(bag).slice(0, 12);
+}
+
 // Setup multer for DPR file uploads
 const upload = multer({
   storage: multer.diskStorage({
@@ -1269,7 +1314,9 @@ export class DPRController {
 
       // Find DPRs for user's projects - only select essential fields for dashboard
       const dprs = await DPRVersion.find({ projectId: { $in: projectIds } })
-        .select('_id projectId versionNumber status qualityScore generatedAt createdAt updatedAt')
+        .select(
+          '_id projectId versionNumber status qualityScore generatedAt createdAt updatedAt eligibleSchemes.selectedSchemes content.english.matchedSchemeCode content.english.isIndividualDPR content.english.metadata.matchedSchemeCode content.english.metadata.isIndividualDPR content.english.clusterData.matchedSchemeCode content.english.clusterData.isIndividualDPR content.english.clusterData.step1.district content.english.clusterData.step1.natureOfBusiness content.english.clusterData.step1.majorProducts'
+        )
         .sort({ createdAt: -1 })
         .lean(); // Use lean() for faster queries
 
@@ -1278,21 +1325,33 @@ export class DPRController {
       const dprsWithProjects = await Promise.all(
         dprs.map(async (dpr: any) => {
           const project = await Project.findById(dpr.projectId)
-            .select('projectName industrySector location userId')
+            .select('projectName industrySector subSector location projectType userId')
             .lean();
           
           // Only include DPR if the project belongs to the current user
           if (!project || project.userId?.toString() !== userId.toString()) {
             return null;
           }
+
+          const english = dpr.content?.english || {};
+          const schemeCode =
+            english.matchedSchemeCode ||
+            english.metadata?.matchedSchemeCode ||
+            english.clusterData?.matchedSchemeCode ||
+            null;
+          const searchTags = buildDprSearchTags({ project, dpr });
           
           return {
             _id: dpr._id,
             projectId: {
               projectName: project.projectName || 'Unknown Project',
               industrySector: project.industrySector || 'Unknown',
+              subSector: project.subSector || '',
               location: project.location || 'Unknown',
+              projectType: project.projectType || (english.metadata?.isIndividualDPR || english.isIndividualDPR ? 'individual' : 'cluster'),
             },
+            schemeCode,
+            searchTags,
             versionNumber: dpr.versionNumber,
             status: dpr.status,
             qualityScore: dpr.qualityScore,
