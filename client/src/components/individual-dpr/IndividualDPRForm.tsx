@@ -4355,9 +4355,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
         {showDscr(loan) && (
-          <div className={`p-4 rounded-lg border ${avgDscr < 1.5 ? 'border-amber-400 bg-amber-50' : 'border-border'}`}>
-            <p className="font-semibold">{tf("DSCR (profit + depreciation vs EMI)")}</p>
-            <p className="text-sm text-muted-foreground mt-1">
+          <div className={`p-4 rounded-lg border ${avgDscr < 1.5 ? 'border-red-300 bg-red-50' : 'border-border'}`}>
+            <p className={`font-semibold ${avgDscr < 1.5 ? 'text-red-700' : ''}`}>{tf("DSCR (profit + depreciation vs EMI)")}</p>
+            <p className={`text-sm mt-1 ${avgDscr < 1.5 ? 'text-red-700' : 'text-muted-foreground'}`}>
               {tf('Assumed 7-year term at 12%. Average DSCR:')} <strong>{avgDscr.toFixed(2)}</strong>
               {avgDscr < 1.5 ? tf(' — below 1.5; lenders may query this.') : ''}
             </p>

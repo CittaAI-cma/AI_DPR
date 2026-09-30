@@ -24,6 +24,7 @@ export const ClusterDPRCreation: React.FC = () => {
   const { data, setCurrentStep, setGeneratedDPR, resetData, setDprIds, loadDataFromProject, setStepData } = useClusterDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
+  const [requiredNotice, setRequiredNotice] = useState('');
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
   const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
@@ -33,6 +34,10 @@ export const ClusterDPRCreation: React.FC = () => {
   const currentStep = data.currentStep || 1;
   const totalSteps = 18;
   const [isLoadingData, setIsLoadingData] = useState(true);
+
+  useEffect(() => {
+    setRequiredNotice('');
+  }, [currentStep]);
 
   // Helper function to load a draft project
   const loadDraftProject = async (projectId: string, dprId?: string) => {
@@ -343,13 +348,14 @@ export const ClusterDPRCreation: React.FC = () => {
     const stepData = data[`step${currentStep}`] || {};
     const missing = missingClusterRequired(currentStep, stepData);
     if (missing.length) {
-      toast.error(
-        `${tf('Fill the required fields before continuing')}: ${missing
-          .map((field) => tf(field.label))
-          .join(', ')}`
-      );
+      const message = `${tf('Fill the required fields before continuing')}: ${missing
+        .map((field) => tf(field.label))
+        .join(', ')}`;
+      setRequiredNotice(message);
+      toast.error(message);
       return;
     }
+    setRequiredNotice('');
     setIsStepping(true);
     try {
       await saveToDatabase();
@@ -657,6 +663,14 @@ export const ClusterDPRCreation: React.FC = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
+                      {requiredNotice ? (
+                        <div
+                          role="alert"
+                          className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+                        >
+                          {requiredNotice}
+                        </div>
+                      ) : null}
                       <ClusterDPRForm
                         key={`step-${currentStep}-${data.projectId || 'new'}-${isLoadingData ? 'loading' : 'loaded'}`}
                         currentStep={currentStep}

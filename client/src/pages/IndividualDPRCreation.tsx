@@ -51,6 +51,7 @@ export const IndividualDPRCreation: React.FC = () => {
   } = useIndividualDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
+  const [requiredNotice, setRequiredNotice] = useState('');
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
@@ -211,6 +212,10 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   }, [schemeCode]);
 
+  useEffect(() => {
+    setRequiredNotice('');
+  }, [currentStep]);
+
   const saveToDatabase = useCallback(async () => {
     try {
       if (hasUnder18Applicant(data)) {
@@ -255,13 +260,14 @@ export const IndividualDPRCreation: React.FC = () => {
       const stepData = data[`step${content}`] || {};
       const missing = missingIndividualRequired(content, stepData, schemeCode);
       if (missing.length) {
-        toast.error(
-          `${tf('Fill the required fields before continuing')}: ${missing
-            .map((field) => tf(field.label))
-            .join(', ')}`
-        );
+        const message = `${tf('Fill the required fields before continuing')}: ${missing
+          .map((field) => tf(field.label))
+          .join(', ')}`;
+        setRequiredNotice(message);
+        toast.error(message);
         return;
       }
+      setRequiredNotice('');
       setIsStepping(true);
     }
     try {
@@ -618,6 +624,14 @@ export const IndividualDPRCreation: React.FC = () => {
                       ) : null}
                     </CardHeader>
                     <CardContent>
+                      {requiredNotice ? (
+                        <div
+                          role="alert"
+                          className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+                        >
+                          {requiredNotice}
+                        </div>
+                      ) : null}
                       <IndividualDPRForm
                         key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`}
                         currentStep={currentStep}

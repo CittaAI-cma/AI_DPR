@@ -55,11 +55,13 @@ function App() {
           },
           error: {
             style: {
-              background: 'hsl(0, 84%, 60%)',
+              background: '#dc2626',
+              color: '#ffffff',
+              border: '1px solid #991b1b',
             },
             iconTheme: {
-              primary: '#fff',
-              secondary: 'hsl(0, 84%, 60%)',
+              primary: '#ffffff',
+              secondary: '#dc2626',
             },
           },
         }}
