@@ -68,6 +68,7 @@ export const FORM_FIELD_TE: Record<string, string> = {
   'Enter actuals for the three previous financial years and estimates for the next five. All figures are ₹ Lakhs.':
     'గత మూడు ఆర్థిక సంవత్సరాల వాస్తవాలు మరియు తర్వాతి ఐదు సంవత్సరాల అంచనాలు నమోదు చేయండి. అన్ని సంఖ్యలు ₹ లక్షల్లో.',
   'Fill the required fields before continuing': 'కొనసాగే ముందు తప్పనిసరి ఫీల్డ్‌లను నింపండి',
+  'Dev mode': 'డెవ్ మోడ్',
   '51% Controlling Stake Proof (if not sole proprietor)':
     '51% నియంత్రణ వాటా రుజువు (ఏకైక యజమాని కాకపోతే)',
   '51% SC/ST Shareholding Proof (if not sole proprietor)':

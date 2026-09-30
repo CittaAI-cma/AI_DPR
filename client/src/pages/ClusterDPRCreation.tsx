@@ -12,8 +12,11 @@ import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { DevModeToggle } from '@/components/ui/DevModeToggle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { missingClusterRequired } from '@/lib/requiredStepFields';
+import { useAuthStore } from '@/store/authStore';
+import { isSuperAdmin } from '@/lib/rbac';
 
 export const ClusterDPRCreation: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -25,6 +28,8 @@ export const ClusterDPRCreation: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
   const [requiredNotice, setRequiredNotice] = useState('');
+  const [devMode, setDevMode] = useState(false);
+  const isAdmin = isSuperAdmin(useAuthStore((s) => s.user?.role));
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
   const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
@@ -345,17 +350,19 @@ export const ClusterDPRCreation: React.FC = () => {
 
   const handleNext = async () => {
     if (isStepping || currentStep >= totalSteps) return;
-    const stepData = data[`step${currentStep}`] || {};
-    const missing = missingClusterRequired(currentStep, stepData);
-    if (missing.length) {
-      const message = `${tf('Fill the required fields before continuing')}: ${missing
-        .map((field) => tf(field.label))
-        .join(', ')}`;
-      setRequiredNotice(message);
-      toast.error(message);
-      return;
+    if (!(isAdmin && devMode)) {
+      const stepData = data[`step${currentStep}`] || {};
+      const missing = missingClusterRequired(currentStep, stepData);
+      if (missing.length) {
+        const message = `${tf('Fill the required fields before continuing')}: ${missing
+          .map((field) => tf(field.label))
+          .join(', ')}`;
+        setRequiredNotice(message);
+        toast.error(message);
+        return;
+      }
+      setRequiredNotice('');
     }
-    setRequiredNotice('');
     setIsStepping(true);
     try {
       await saveToDatabase();
@@ -546,6 +553,13 @@ export const ClusterDPRCreation: React.FC = () => {
               
               <div className="flex items-center gap-2 flex-wrap justify-end">
                 <LanguageToggle />
+                <DevModeToggle
+                  on={devMode}
+                  onChange={(next) => {
+                    setDevMode(next);
+                    if (next) setRequiredNotice('');
+                  }}
+                />
                 <Button
                   variant="outline"
                   size="sm"
