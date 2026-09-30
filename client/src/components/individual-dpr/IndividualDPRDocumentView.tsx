@@ -16,7 +16,32 @@ import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import { CmepProjectionTable } from '@/components/individual-dpr/CmepProjectionTable';
 import { CmepDerivedSheets } from '@/components/individual-dpr/CmepBankSections';
 import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
-import { CMEP_COST_HEADS, normalizeCostPhasing, normalizeMachineryItems, normalizePromoters } from '@/lib/individualDpr/cmepBankPack';
+import {
+  CMEP_COST_HEADS,
+  normalizeCostPhasing,
+  normalizeMachineryItems,
+  normalizeProductMix,
+  normalizePromoters,
+  normalizeRawMaterials,
+  normalizeRisks,
+  normalizeStaffRoles,
+  normalizeUtilisationYears,
+} from '@/lib/individualDpr/cmepBankPack';
+import { normalizeMilestones } from '@/lib/dprAiFieldNormalize';
+
+const BANK_LAYOUT = new Set(['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP']);
+const NARRATIVE_FIELDS = new Set([
+  'executiveSummary',
+  'processOfManufacture',
+  'sectorDescription',
+  'presentActivities',
+  'geography',
+  'targetMarket',
+  'existingDemand',
+  'landDetails',
+  'waterAndEffluent',
+  'impactNote',
+]);
 import { isKycUploaded } from '@/lib/privacy/kycField';
 
 export interface IndividualDPRDocumentViewProps {
@@ -122,85 +147,142 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       return <p className="individual-empty">{tf('No answers for this section yet.')}</p>;
     }
 
-    const stacked = schemeCode === 'AP_CMEP';
-
-    if (stacked) {
-      return (
-        <div className="individual-sec-body">
-          {fields.map((field) => {
-            if (field.name === 'yearProjections') {
-              const columns = normalizeCmepProjections(readDocField(field, data));
-              return (
-                <div key={field.path} className="space-y-4">
-                  {fieldHit(field.path, <CmepProjectionTable columns={columns} readOnly />, trackFieldHits)}
-                  <CmepDerivedSheets step12={data.step12} step13={data.step13} step15={data.step15} />
-                </div>
-              );
-            }
-            if (field.name === 'promoters') {
-              const rows = normalizePromoters(readDocField(field, data)).filter((row) => row.name || row.phone);
-              return (
-                <article key={field.path} className="individual-qa-block">
-                  <h3 className="individual-qa-q">{tf(field.label)}</h3>
-                  <div className="individual-qa-a">
-                    {rows.length
-                      ? rows.map((row) => (
-                          <p key={row.name + row.phone}>
-                            {row.name || '—'} · {row.relationName || '—'} · {tf('Age')} {row.age || '—'} · {row.education || '—'} · {tf('Experience (years)')} {row.experienceYears || '—'} · {row.phone || '—'}
-                          </p>
-                        ))
-                      : tf('Not filled yet — complete this in the form.')}
-                  </div>
-                </article>
-              );
-            }
-            if (field.name === 'machineryItems') {
-              const rows = normalizeMachineryItems(readDocField(field, data));
-              return (
-                <article key={field.path} className="individual-qa-block">
-                  <h3 className="individual-qa-q">{tf(field.label)}</h3>
-                  <div className="individual-qa-a">
-                    {rows.length
-                      ? rows.map((row, index) => (
-                          <p key={index}>{row.description || '—'} · {row.condition || '—'} · {row.supplier || '—'} · {row.quantity} × {row.unitCost}</p>
-                        ))
-                      : tf('Not filled yet — complete this in the form.')}
-                  </div>
-                </article>
-              );
-            }
-            if (field.name === 'costPhasing') {
-              const phasing = normalizeCostPhasing(readDocField(field, data), data.step12);
-              return (
-                <article key={field.path} className="individual-qa-block">
-                  <h3 className="individual-qa-q">{tf(field.label)}</h3>
-                  <div className="individual-qa-a">
-                    {CMEP_COST_HEADS.map((head) => {
-                      const cell = phasing[head.key];
-                      return (
-                        <p key={head.key}>{tf(head.label)}: {tf('Already incurred')} {cell.incurred} · {tf('To be incurred')} {cell.proposed}</p>
-                      );
-                    })}
-                  </div>
-                </article>
-              );
-            }
-            const text = formatDocValue(readDocField(field, data));
-            return (
-              <article key={field.path} className="individual-qa-block">
-                <h3 className="individual-qa-q">{tf(field.label)}</h3>
-                <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
-                  {fieldHit(
-                    field.path,
-                    text === '—' ? tf('Not filled yet — complete this in the form.') : tf(text),
-                    trackFieldHits
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
+    if (BANK_LAYOUT.has(String(schemeCode))) {
+      const blocks: React.ReactNode[] = [];
+      let particulars: IndividualDocField[] = [];
+      const flushParticulars = () => {
+        if (!particulars.length) return;
+        const rows = particulars;
+        particulars = [];
+        blocks.push(
+          <table key={rows.map((field) => field.path).join('|')} className="individual-particulars">
+            <thead>
+              <tr>
+                <th>{tf('Particular')}</th>
+                <th>{tf('Details')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((field) => {
+                const text = formatDocValue(readDocField(field, data));
+                const empty = text === '—';
+                return (
+                  <tr key={field.path}>
+                    <td className="part">{tf(field.label)}</td>
+                    <td className={empty ? 'is-empty' : ''}>
+                      {fieldHit(field.path, empty ? '—' : tf(text), trackFieldHits)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        );
+      };
+      const prose = (field: IndividualDocField, text: string) => (
+        <article key={field.path} className="individual-qa-block">
+          <h3 className="individual-qa-q">{tf(field.label)}</h3>
+          <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
+            {fieldHit(field.path, text === '—' ? '—' : text, trackFieldHits)}
+          </div>
+        </article>
       );
+      const dataTable = (key: string, title: string, headers: string[], body: string[][]) => (
+        <table key={key} className="individual-particulars">
+          <caption className="individual-qa-q">{tf(title)}</caption>
+          <thead>
+            <tr>{headers.map((header) => <th key={header}>{tf(header)}</th>)}</tr>
+          </thead>
+          <tbody>
+            {body.length ? body.map((row, index) => (
+              <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell || '—'}</td>)}</tr>
+            )) : (
+              <tr><td colSpan={headers.length}>—</td></tr>
+            )}
+          </tbody>
+        </table>
+      );
+
+      for (const field of fields) {
+        const raw = readDocField(field, data);
+        if (field.name === 'yearProjections' && schemeCode === 'AP_CMEP') {
+          flushParticulars();
+          const columns = normalizeCmepProjections(raw);
+          blocks.push(
+            <div key={field.path} className="space-y-4">
+              {fieldHit(field.path, <CmepProjectionTable columns={columns} readOnly />, trackFieldHits)}
+              <CmepDerivedSheets step12={data.step12} step13={data.step13} step15={data.step15} />
+            </div>
+          );
+          continue;
+        }
+        if (field.name === 'productMix') {
+          flushParticulars();
+          blocks.push(dataTable(field.path, field.label, ['Product', 'Share of output (%)', 'Selling price (₹)'], normalizeProductMix(raw).map((row) => [row.name, String(row.sharePercent || ''), String(row.sellingPrice || '')])));
+          continue;
+        }
+        if (field.name === 'rawMaterialItems') {
+          flushParticulars();
+          blocks.push(dataTable(field.path, field.label, ['Material', 'Use', 'How it is bought'], normalizeRawMaterials(raw).map((row) => [row.name, row.use, row.basis])));
+          continue;
+        }
+        if (field.name === 'staffRoles') {
+          flushParticulars();
+          blocks.push(dataTable(field.path, field.label, ['Role', 'Number of people', 'Monthly pay (₹)'], normalizeStaffRoles(raw).map((row) => [row.role, String(row.count || ''), String(row.monthlyPay || '')])));
+          continue;
+        }
+        if (field.name === 'risks') {
+          flushParticulars();
+          blocks.push(dataTable(field.path, field.label, ['Risk', 'How it will be handled'], normalizeRisks(raw).map((row) => [row.risk, row.mitigation])));
+          continue;
+        }
+        if (field.name === 'utilisationByYear') {
+          flushParticulars();
+          blocks.push(dataTable(field.path, field.label, ['Year', 'Capacity utilisation (%)'], normalizeUtilisationYears(raw).map((row) => [row.label, String(row.percent || '')])));
+          continue;
+        }
+        if (field.name === 'milestones') {
+          flushParticulars();
+          blocks.push(dataTable(field.path, field.label, ['Activity', 'Time', 'Start', 'End'], normalizeMilestones(raw).map((row) => [row.activity, row.timeRequired, row.startDate, row.endDate])));
+          continue;
+        }
+        if (field.name === 'promoters') {
+          flushParticulars();
+          blocks.push(dataTable(field.path, field.label, ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone'], normalizePromoters(raw).filter((row) => row.name || row.phone).map((row) => [row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone])));
+          continue;
+        }
+        if (field.name === 'machineryItems') {
+          flushParticulars();
+          const items = normalizeMachineryItems(raw);
+          const detailed = schemeCode === 'AP_CMEP';
+          const headers = ['Description', 'New / used', 'Supplier', 'Qty', 'Unit cost (₹ Lakhs)'];
+          if (detailed) headers.push('GST', 'Transport', 'Installation', 'Life (years)', 'Yearly maintenance');
+          blocks.push(dataTable(field.path, field.label, headers, items.map((row) => {
+            const cells = [row.description, row.condition, row.supplier, String(row.quantity || ''), String(row.unitCost || '')];
+            if (detailed) cells.push(String(row.gst || ''), String(row.transport || ''), String(row.installation || ''), String(row.lifeYears || ''), String(row.annualMaintenance || ''));
+            return cells;
+          })));
+          continue;
+        }
+        if (field.name === 'costPhasing') {
+          flushParticulars();
+          const phasing = normalizeCostPhasing(raw, data.step12);
+          blocks.push(dataTable(field.path, field.label, ['Particulars', 'Already incurred', 'To be incurred', 'Total'], CMEP_COST_HEADS.map((head) => {
+            const cell = phasing[head.key];
+            return [tf(head.label), String(cell.incurred || 0), String(cell.proposed || 0), String((cell.incurred || 0) + (cell.proposed || 0))];
+          })));
+          continue;
+        }
+        const text = formatDocValue(raw);
+        if (NARRATIVE_FIELDS.has(field.name) || (text !== '—' && text.length > 160)) {
+          flushParticulars();
+          blocks.push(prose(field, text));
+          continue;
+        }
+        particulars.push(field);
+      }
+      flushParticulars();
+      return <div className="individual-sec-body">{blocks}</div>;
     }
 
     const shortFields: Array<{ field: IndividualDocField; text: string }> = [];

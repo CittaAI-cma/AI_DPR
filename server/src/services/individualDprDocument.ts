@@ -28,7 +28,7 @@ export type DocRow = {
   value: string;
   path: string;
   filled: boolean;
-  embed?: 'cmep-projections' | 'cmep-promoters' | 'cmep-machinery' | 'cmep-cost' | 'cmep-derived';
+  embed?: 'cmep-projections' | 'cmep-promoters' | 'cmep-machinery' | 'cmep-cost' | 'cmep-derived' | 'data-table';
 };
 
 export type DocSection = {
@@ -848,6 +848,105 @@ function uploadRows(schemeCode: string | null, data: Record<string, any>): DocRo
   });
 }
 
+const BANK_LAYOUT_SCHEMES = new Set(['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP']);
+
+function tableCell(value: unknown): string {
+  if (value == null || value === '') return '—';
+  return String(value);
+}
+
+function bankDataTable(
+  name: string,
+  raw: unknown,
+  schemeCode?: string | null
+): { headers: string[]; rows: string[][] } | null {
+  const list = Array.isArray(raw) ? raw.filter((row) => row && typeof row === 'object') : [];
+  if (name === 'productMix') {
+    return {
+      headers: ['Product', 'Share of output (%)', 'Selling price (₹)'],
+      rows: list.map((row) => [tableCell(row.name), tableCell(row.sharePercent), tableCell(row.sellingPrice)]),
+    };
+  }
+  if (name === 'rawMaterialItems') {
+    return {
+      headers: ['Material', 'Use', 'How it is bought'],
+      rows: list.map((row) => [tableCell(row.name), tableCell(row.use), tableCell(row.basis)]),
+    };
+  }
+  if (name === 'staffRoles') {
+    return {
+      headers: ['Role', 'Number of people', 'Monthly pay (₹)'],
+      rows: list.map((row) => [tableCell(row.role), tableCell(row.count), tableCell(row.monthlyPay)]),
+    };
+  }
+  if (name === 'risks') {
+    return {
+      headers: ['Risk', 'How it will be handled'],
+      rows: list.map((row) => [tableCell(row.risk), tableCell(row.mitigation)]),
+    };
+  }
+  if (name === 'utilisationByYear') {
+    return {
+      headers: ['Year', 'Capacity utilisation (%)'],
+      rows: list.map((row) => [tableCell(row.label), tableCell(row.percent)]),
+    };
+  }
+  if (name === 'milestones') {
+    return {
+      headers: ['Activity', 'Time', 'Start', 'End'],
+      rows: list.map((row) => [tableCell(row.activity), tableCell(row.timeRequired), tableCell(row.startDate), tableCell(row.endDate)]),
+    };
+  }
+  if (name === 'promoters') {
+    return {
+      headers: ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone', 'Address'],
+      rows: list.map((row) => [
+        tableCell(row.name),
+        tableCell(row.relationName),
+        tableCell(row.age),
+        tableCell(row.education),
+        tableCell(row.experienceYears),
+        tableCell(row.phone),
+        tableCell(row.address),
+      ]),
+    };
+  }
+  if (name === 'machineryItems') {
+    const detailed = schemeCode === 'AP_CMEP';
+    const headers = ['Description', 'New / used', 'Supplier', 'Qty', 'Unit cost (₹ Lakhs)'];
+    if (detailed) headers.push('GST', 'Transport', 'Installation', 'Life (years)', 'Yearly maintenance');
+    return {
+      headers,
+      rows: list.map((row) => {
+        const cells = [tableCell(row.description), tableCell(row.condition), tableCell(row.supplier), tableCell(row.quantity), tableCell(row.unitCost)];
+        if (detailed) cells.push(tableCell(row.gst), tableCell(row.transport), tableCell(row.installation), tableCell(row.lifeYears), tableCell(row.annualMaintenance));
+        return cells;
+      }),
+    };
+  }
+  if (name === 'costPhasing' && raw && typeof raw === 'object') {
+    const heads: Array<[string, string]> = [
+      ['land', 'Land'],
+      ['building', 'Building / shed'],
+      ['machinery', 'Machinery / equipment'],
+      ['furniture', 'Furniture and fixtures'],
+      ['deposits', 'Security deposits'],
+      ['workingCapital', 'Working capital'],
+    ];
+    const source = raw as Record<string, any>;
+    return {
+      headers: ['Particulars', 'Already incurred', 'To be incurred', 'Total'],
+      rows: heads.map(([key, label]) => {
+        const cell = source[key] || {};
+        const incurred = Number(cell.incurred) || 0;
+        const proposed = Number(cell.proposed) || 0;
+        return [label, String(incurred), String(proposed), String(incurred + proposed)];
+      }),
+    };
+  }
+  return null;
+}
+
 export function buildIndividualDocument(dpr: any, project?: any): IndividualDocument {
   const data = extractIndividualDocData(dpr, project);
   const schemeCode = extractSchemeCode(dpr, project, data);
@@ -880,6 +979,19 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
           path: field.path,
           filled,
           embed: 'cmep-projections',
+        });
+        continue;
+      }
+      const table = BANK_LAYOUT_SCHEMES.has(String(schemeCode))
+        ? bankDataTable(field.name, raw, schemeCode)
+        : null;
+      if (table) {
+        rows.push({
+          label: field.label,
+          value: JSON.stringify(table),
+          path: field.path,
+          filled: table.rows.length > 0,
+          embed: 'data-table',
         });
         continue;
       }
@@ -1252,10 +1364,88 @@ function renderCmepEmbedHtml(kind: string, json: string): string {
   return '';
 }
 
+function renderDataTableHtml(json: string): string {
+  let parsed: { headers?: string[]; rows?: string[][] } = {};
+  try {
+    parsed = JSON.parse(json || '{}');
+  } catch {
+    parsed = {};
+  }
+  const headers = parsed.headers || [];
+  const bodyRows = parsed.rows || [];
+  const head = headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('');
+  const body = bodyRows.length
+    ? bodyRows
+        .map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`)
+        .join('')
+    : `<tr><td colspan="${headers.length || 1}">—</td></tr>`;
+  return `<table class="fin-table particulars"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+const NARRATIVE_FIELDS = new Set([
+  'executiveSummary',
+  'processOfManufacture',
+  'sectorDescription',
+  'presentActivities',
+  'geography',
+  'targetMarket',
+  'existingDemand',
+  'landDetails',
+  'waterAndEffluent',
+  'impactNote',
+]);
+
+function isNarrativeRow(row: DocRow): boolean {
+  const name = fieldNameFromPath(row.path);
+  if (NARRATIVE_FIELDS.has(name)) return true;
+  const text = String(row.value || '');
+  return text.length > 160;
+}
+
+function renderParticularsHtml(rows: DocRow[]): string {
+  const body = rows
+    .map((row) => {
+      const empty = !row.value || row.value === '—';
+      return `<tr><td class="part">${escapeHtml(row.label)}</td><td class="${empty ? 'is-empty' : ''}">${escapeHtml(empty ? '—' : row.value)}</td></tr>`;
+    })
+    .join('');
+  return `<table class="particulars"><thead><tr><th>Particular</th><th>Details</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
 function renderSectionRowsHtml(rows: DocRow[], schemeCode?: string | null): string {
   if (!rows.length) return '<p class="empty">—</p>';
 
-  const stacked = schemeCode === 'AP_CMEP';
+  if (BANK_LAYOUT_SCHEMES.has(String(schemeCode))) {
+    const parts: string[] = ['<div class="sec-body">'];
+    let bucket: DocRow[] = [];
+    const flush = () => {
+      if (!bucket.length) return;
+      parts.push(renderParticularsHtml(bucket));
+      bucket = [];
+    };
+    for (const row of rows) {
+      if (row.embed) {
+        flush();
+        if (row.embed === 'cmep-projections') parts.push(renderCmepProjectionTableHtml(row.value));
+        else if (row.embed === 'data-table') parts.push(renderDataTableHtml(row.value));
+        else parts.push(renderCmepEmbedHtml(row.embed, row.value));
+      } else if (isNarrativeRow(row)) {
+        flush();
+        const empty = !row.value || row.value === '—';
+        parts.push(
+          `<article class="qa-block"><h3 class="qa-q">${escapeHtml(row.label)}</h3>` +
+            `<div class="qa-a${empty ? ' is-empty' : ''}">${escapeHtml(empty ? '—' : row.value).replace(/\n/g, '<br/>')}</div></article>`
+        );
+      } else {
+        bucket.push(row);
+      }
+    }
+    flush();
+    parts.push('</div>');
+    return parts.join('');
+  }
+
+  const stacked = false;
   const embeds = rows.filter((row) => !!row.embed);
   const rest = rows.filter((row) => !row.embed);
   const shortRows: DocRow[] = [];
@@ -1417,6 +1607,12 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
     border-right: 1px solid #99f6e4; border-bottom: 1px solid #99f6e4; min-width: 0;
     background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
   }
+  .particulars { width: 100%; border-collapse: collapse; margin: 0 0 8pt; font-size: 10pt; }
+  .particulars th, .particulars td { border: 1px solid #0f766e; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  .particulars thead th { background: #ecfdf5; font-weight: 700; }
+  .particulars td.part { width: 46%; font-weight: 700; }
+  .particulars td.is-empty { color: #9CA3AF; font-style: italic; }
+  .fin-table.particulars td, .fin-table.particulars th { text-align: left; }
   .meta-item:nth-child(2n) { border-right: none; }
   .meta-item dt {
     margin: 0; font-size: 8pt; font-weight: 700; text-transform: uppercase;
@@ -1522,6 +1718,12 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
   .meta-item dt { margin: 0; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #4B5563; }
   .meta-item dd { margin: 0; font-size: 11pt; font-weight: 600; color: #111827; overflow-wrap: anywhere; word-break: break-word; }
   .meta-item dd.is-empty { color: #9CA3AF; font-style: italic; font-weight: 500; }
+  .particulars { width: 100%; border-collapse: collapse; margin: 0 0 8pt; font-size: 10pt; }
+  .particulars th, .particulars td { border: 1px solid #1F2937; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  .particulars thead th { background: #F3F4F6; font-weight: 700; }
+  .particulars td.part { width: 46%; font-weight: 700; }
+  .particulars td.is-empty { color: #9CA3AF; font-style: italic; }
+  .fin-table.particulars td, .fin-table.particulars th { text-align: left; }
   .qa-block { border: 1px solid #1F2937; background: #fff; page-break-inside: avoid; }
   .qa-q { margin: 0; padding: 6pt 9pt; font-size: 10pt; font-weight: 700; background: #F3F4F6; border-bottom: 1px solid #D1D5DB; color: #111827; }
   .qa-a { margin: 0; padding: 10pt 11pt 12pt; font-size: 11pt; line-height: 1.65; color: #1F2937; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; min-height: 2.8em; text-align: justify; }
