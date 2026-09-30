@@ -611,10 +611,21 @@ export const IndividualDPRCreation: React.FC = () => {
                     <ChevronLeft className="h-4 w-4" />
                     {t('common.previous')}
                   </Button>
-                  <Button variant="primary" onClick={() => goAdjacent(1)} disabled={currentStep === lastVisible} className="gap-2">
-                    {t('common.next')}
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  {currentStep === lastVisible ? (
+                    <Button
+                      variant="primary"
+                      onClick={handleGenerateDPR}
+                      isLoading={isGenerating}
+                      className="gap-2"
+                    >
+                      {t('individualDpr.generateDpr')}
+                    </Button>
+                  ) : (
+                    <Button variant="primary" onClick={() => goAdjacent(1)} className="gap-2">
+                      {t('common.next')}
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

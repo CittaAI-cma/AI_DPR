@@ -664,15 +664,25 @@ export const ClusterDPRCreation: React.FC = () => {
                     {t('common.previous')}
                   </Button>
                   
-                  <Button
-                    variant="primary"
-                    onClick={handleNext}
-                    disabled={currentStep === totalSteps}
-                    className="gap-2"
-                  >
-                    {t('common.next')}
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  {currentStep === totalSteps ? (
+                    <Button
+                      variant="primary"
+                      onClick={handleGenerateDPR}
+                      isLoading={isGenerating}
+                      className="gap-2"
+                    >
+                      {t('clusterDpr.generateDpr')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={handleNext}
+                      className="gap-2"
+                    >
+                      {t('common.next')}
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
