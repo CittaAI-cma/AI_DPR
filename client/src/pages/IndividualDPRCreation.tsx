@@ -49,6 +49,7 @@ export const IndividualDPRCreation: React.FC = () => {
     setVentureMatchAnswers,
   } = useIndividualDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isStepping, setIsStepping] = useState(false);
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
@@ -246,12 +247,19 @@ export const IndividualDPRCreation: React.FC = () => {
   }, [dprPayload, data, setDprIds, t]);
 
   const goAdjacent = async (dir: 1 | -1) => {
-    await saveToDatabase();
-    const idx = visibleSteps.indexOf(currentStep);
-    const next = visibleSteps[idx + dir];
-    if (next) {
-      setCurrentStep(next);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (isStepping) return;
+    const advancing = dir === 1;
+    if (advancing) setIsStepping(true);
+    try {
+      await saveToDatabase();
+      const idx = visibleSteps.indexOf(currentStep);
+      const next = visibleSteps[idx + dir];
+      if (next) {
+        setCurrentStep(next);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } finally {
+      if (advancing) setIsStepping(false);
     }
   };
 
@@ -607,7 +615,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === visibleSteps[0]} className="gap-2">
+                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === visibleSteps[0] || isStepping} className="gap-2">
                     <ChevronLeft className="h-4 w-4" />
                     {t('common.previous')}
                   </Button>
@@ -621,7 +629,12 @@ export const IndividualDPRCreation: React.FC = () => {
                       {t('individualDpr.generateDpr')}
                     </Button>
                   ) : (
-                    <Button variant="primary" onClick={() => goAdjacent(1)} className="gap-2">
+                    <Button
+                      variant="primary"
+                      onClick={() => goAdjacent(1)}
+                      isLoading={isStepping}
+                      className="gap-2"
+                    >
                       {t('common.next')}
                       <ChevronRight className="h-4 w-4" />
                     </Button>

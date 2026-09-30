@@ -20,6 +20,7 @@ export const ClusterDPRCreation: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { data, setCurrentStep, setGeneratedDPR, resetData, setDprIds, loadDataFromProject, setStepData } = useClusterDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isStepping, setIsStepping] = useState(false);
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
   const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
@@ -335,13 +336,14 @@ export const ClusterDPRCreation: React.FC = () => {
   };
 
   const handleNext = async () => {
-    if (currentStep < totalSteps) {
-      // Save to database before moving to next step
+    if (isStepping || currentStep >= totalSteps) return;
+    setIsStepping(true);
+    try {
       await saveToDatabase();
-      
       setCurrentStep(currentStep + 1);
-      // Scroll to top of the page so the new content appears to come from top
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsStepping(false);
     }
   };
 
@@ -657,7 +659,7 @@ export const ClusterDPRCreation: React.FC = () => {
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
-                    disabled={currentStep === 1}
+                    disabled={currentStep === 1 || isStepping}
                     className="gap-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -677,6 +679,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     <Button
                       variant="primary"
                       onClick={handleNext}
+                      isLoading={isStepping}
                       className="gap-2"
                     >
                       {t('common.next')}
