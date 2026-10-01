@@ -87,29 +87,6 @@ export class SchemeService {
       portal: 'CGTMSE Portal'
     });
 
-    // Stand-Up India (if applicable)
-    defaultSchemes.push({
-      _id: 'default_standup',
-      schemeCode: 'STANDUP',
-      schemeName: 'Stand-Up India Scheme',
-      description: 'Bank loan scheme for SC/ST and women entrepreneurs. Provides loans from ₹10 lakhs to ₹1 crore for setting up greenfield enterprises in manufacturing, services, or trading sector.',
-      eligibility: {
-        minCost: 1000000,
-        maxCost: 100000000,
-        applicableFor: ['manufacturing', 'service', 'trading'],
-        category: ['micro', 'small', 'medium']
-      },
-      benefits: {
-        loanAmount: '₹10 lakhs to ₹1 crore',
-        interestRate: 'MCLR + 3%',
-        repaymentPeriod: 'Up to 7 years'
-      },
-      documentsRequired: ['Caste Certificate (for SC/ST)', 'Project Report', 'Identity Proof', 'Address Proof'],
-      status: 'active',
-      category: 'Central Government',
-      portal: 'Stand-Up India Portal'
-    });
-
     // AP MSME specific schemes (if location is Andhra Pradesh)
     if (location.includes('andhra') || location.includes('ap') || location.includes('telangana')) {
       defaultSchemes.push({

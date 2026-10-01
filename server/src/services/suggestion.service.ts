@@ -126,15 +126,6 @@ export class SuggestionService {
         category: 'State Government'
       },
       {
-        name: 'Stand-Up India',
-        description: 'Bank loan for SC/ST and women entrepreneurs',
-        eligibility: 'SC/ST and women entrepreneurs',
-        subsidy: 'No subsidy, but priority sector lending',
-        applicable: true, // Based on entrepreneur profile
-        portal: 'Stand-Up India Portal',
-        category: 'Central Government'
-      },
-      {
         name: 'AP Food Processing Policy',
         description: 'Incentives for food processing units',
         eligibility: 'Food processing units in AP',

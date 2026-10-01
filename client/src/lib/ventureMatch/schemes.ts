@@ -55,7 +55,6 @@ const ENTERPRISE_ACTIVITIES: Activity[] = [
   'mixed',
 ];
 const OBMMS_OWNERS: OwnerTag[] = ['sc', 'st', 'bc', 'pwd'];
-const STANDUP_OWNERS: OwnerTag[] = ['female', 'sc', 'st'];
 const OBMMS_AGES: Age[] = ['21to50', '51to60'];
 const SPECIAL_OWNERS: OwnerTag[] = ['female', 'sc', 'st', 'bc', 'pwd'];
 const CMEP_ACTIVITIES: Activity[] = ['mfg', 'knowledge'];
@@ -286,63 +285,6 @@ export const SCHEMES: SchemeRule[] = [
         questionId: 'education',
         labelKey: 'ventureMatch.criteria.pmegpEducation',
         test: pmegpEducation,
-      },
-    ],
-  },
-  {
-    code: 'STANDUP',
-    name: 'Stand-Up India',
-    kind: 'loan',
-    benefit: () => 'ventureMatch.benefits.standup',
-    criteria: [
-      {
-        id: 'activity',
-        questionId: 'activity',
-        labelKey: 'ventureMatch.criteria.enterpriseActivity',
-        test: (a) => passIf(a.activity, ENTERPRISE_ACTIVITIES),
-      },
-      {
-        id: 'legal',
-        questionId: 'legal',
-        labelKey: 'ventureMatch.criteria.legalRegistered',
-        test: (a) => passIf(a.legal, FIRM_LEGAL),
-      },
-      {
-        id: 'stage',
-        questionId: 'stage',
-        labelKey: 'ventureMatch.criteria.greenfield',
-        test: (a) => passIf(a.stage, ['greenfield']),
-      },
-      {
-        id: 'owner',
-        questionId: 'owner',
-        labelKey: 'ventureMatch.criteria.womanScSt',
-        test: (a) =>
-          requireValue(owners(a), (tags) => tags.some((o) => STANDUP_OWNERS.includes(o))),
-      },
-      {
-        id: 'budgetMin',
-        questionId: 'budget',
-        labelKey: 'ventureMatch.criteria.standupMin',
-        test: (a) => requireNumericBudget(a, (min) => min >= 1_000_000),
-      },
-      {
-        id: 'budgetMax',
-        questionId: 'budget',
-        labelKey: 'ventureMatch.criteria.standupMax',
-        test: (a) => requireNumericBudget(a, (min) => min <= 10_000_000),
-      },
-      {
-        id: 'age',
-        questionId: 'age',
-        labelKey: 'ventureMatch.criteria.age18',
-        test: (a) => passIf(a.age, AGE_18_PLUS),
-      },
-      {
-        id: 'udyam',
-        questionId: 'udyam',
-        labelKey: 'ventureMatch.criteria.udyam',
-        test: (a) => passIf(a.udyam, UDYAM_READY),
       },
     ],
   },

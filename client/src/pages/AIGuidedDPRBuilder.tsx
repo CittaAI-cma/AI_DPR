@@ -749,7 +749,7 @@ CRITICAL: Return ONLY a valid JSON object with this exact structure. Do NOT incl
 }
 
 Guidelines:
-- Suggest 3-5 relevant government schemes (PMEGP, MUDRA, CGTMSE, Stand-Up India, etc.)
+- Suggest 3-5 relevant government schemes (PMEGP, MUDRA, CGTMSE, etc.)
 - Focus on schemes applicable to ${businessData.industrySector || 'the industry'} sector
 - Consider project cost, location, and applicant category
 - Include both central and state government schemes if applicable
