@@ -59,9 +59,11 @@ function FieldExpandModal({
   onCancel,
   enableSkillMatch = false,
   allowImprove = true,
+  fieldKey,
 }: {
   open: boolean;
   title?: string;
+  fieldKey?: string;
   kind: EditorKind;
   draft: string;
   setDraft: (v: string) => void;
@@ -136,11 +138,12 @@ function FieldExpandModal({
     try {
       const step1 = data?.step1 || {};
       const improved = await AISuggestionsService.improveFieldText(
-        title || 'field',
+        fieldKey || title || 'field',
         text,
         {
           fieldLabel: title || '',
           schemeCode: data?.matchedSchemeCode || null,
+          isIndividualDPR: true,
           unitName: getUnitName(step1),
           clusterName: step1.clusterName || '',
           district: step1.district || '',
@@ -471,6 +474,7 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
         <FieldExpandModal
           open={open}
           title={modalTitle}
+          fieldKey={typeof props.name === 'string' ? props.name : undefined}
           kind="textarea"
           draft={draft}
           setDraft={setDraft}

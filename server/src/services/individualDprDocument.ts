@@ -895,8 +895,6 @@ function uploadRows(schemeCode: string | null, data: Record<string, any>): DocRo
   });
 }
 
-const BANK_LAYOUT_SCHEMES = new Set(['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP']);
-
 function tableCell(value: unknown): string {
   if (value == null || value === '') return '—';
   return String(value);
@@ -1062,9 +1060,7 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
         rows.push({ label: profit.caption, value: JSON.stringify(profit), path: `${field.path}.profit`, filled, embed: 'data-table' });
         continue;
       }
-      const table = BANK_LAYOUT_SCHEMES.has(String(schemeCode))
-        ? bankDataTable(field.name, raw, schemeCode)
-        : null;
+      const table = bankDataTable(field.name, raw, schemeCode);
       if (table) {
         rows.push({
           label: field.label,
@@ -1534,10 +1530,10 @@ function renderParticularsHtml(rows: DocRow[]): string {
   return `<table class="particulars"><thead><tr><th>Particular</th><th>Details</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 
-function renderSectionRowsHtml(rows: DocRow[], schemeCode?: string | null): string {
+function renderSectionRowsHtml(rows: DocRow[], _schemeCode?: string | null): string {
   if (!rows.length) return '<p class="empty">—</p>';
 
-  if (BANK_LAYOUT_SCHEMES.has(String(schemeCode))) {
+  {
     const parts: string[] = ['<div class="sec-body">'];
     let bucket: DocRow[] = [];
     const flush = () => {
@@ -1566,48 +1562,6 @@ function renderSectionRowsHtml(rows: DocRow[], schemeCode?: string | null): stri
     parts.push('</div>');
     return parts.join('');
   }
-
-  const stacked = false;
-  const embeds = rows.filter((row) => !!row.embed);
-  const rest = rows.filter((row) => !row.embed);
-  const shortRows: DocRow[] = [];
-  const longRows: DocRow[] = [];
-  for (const row of rest) {
-    if (stacked || isExpansiveRow(row)) longRows.push(row);
-    else shortRows.push(row);
-  }
-
-  const parts: string[] = ['<div class="sec-body">'];
-
-  if (shortRows.length) {
-    parts.push('<dl class="meta-grid">');
-    for (const row of shortRows) {
-      const empty = !row.value || row.value === '—';
-      parts.push(
-        `<div class="meta-item"><dt>${escapeHtml(row.label)}</dt>` +
-          `<dd class="${empty ? 'is-empty' : ''}">${escapeHtml(empty ? 'Not filled' : row.value).replace(/\n/g, '<br/>')}</dd></div>`
-      );
-    }
-    parts.push('</dl>');
-  }
-
-  for (const row of longRows) {
-    const empty = !row.value || row.value === '—';
-    parts.push(
-      `<article class="qa-block"><h3 class="qa-q">${escapeHtml(row.label)}</h3>` +
-        `<div class="qa-a${empty ? ' is-empty' : ''}">${escapeHtml(
-          empty ? 'Not filled yet — complete this in the form.' : row.value
-        ).replace(/\n/g, '<br/>')}</div></article>`
-    );
-  }
-
-  for (const row of embeds) {
-    if (row.embed === 'cmep-projections') parts.push(renderCmepProjectionTableHtml(row.value));
-    else if (row.embed) parts.push(renderCmepEmbedHtml(row.embed, row.value));
-  }
-
-  parts.push('</div>');
-  return parts.join('');
 }
 
 export function renderIndividualDprHtml(doc: IndividualDocument): string {

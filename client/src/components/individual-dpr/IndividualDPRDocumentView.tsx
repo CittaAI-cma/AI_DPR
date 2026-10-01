@@ -28,7 +28,6 @@ import {
 } from '@/lib/individualDpr/cmepBankPack';
 import { normalizeMilestones } from '@/lib/dprAiFieldNormalize';
 
-const BANK_LAYOUT = new Set(['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP']);
 const NARRATIVE_FIELDS = new Set([
   'executiveSummary',
   'processOfManufacture',
@@ -51,43 +50,6 @@ export interface IndividualDPRDocumentViewProps {
   onSectionClick?: (localStep: number) => void;
 }
 
-const SHORT_FIELD_NAMES = new Set([
-  'unitName',
-  'district',
-  'location',
-  'yearOfEstablishment',
-  'entrepreneurName',
-  'entrepreneurAge',
-  'craft',
-  'loanTranche',
-  'trainingStage',
-  'covOrLor',
-  'vendingType',
-  'workplaceType',
-  'fssai',
-  'unitStage',
-  'odopAligned',
-  'sectorType',
-  'land',
-  'building',
-  'machinery',
-  'utilitiesAndInfrastructure',
-  'preliminaryAndPreOperative',
-  'workingCapitalMargin',
-  'ownContribution',
-  'bankLoan',
-  'subsidy',
-  'startDate',
-  'endDate',
-  'irr',
-  'npv',
-  'dscr',
-  'upiQr',
-  'dailySales',
-  'yearsVending',
-  'yearsPractising',
-]);
-
 function fieldHit(
   path: string,
   children: React.ReactNode,
@@ -95,27 +57,6 @@ function fieldHit(
 ): React.ReactNode {
   if (!track) return children;
   return <span data-dpr-field={path}>{children}</span>;
-}
-
-function isExpansiveField(field: IndividualDocField, formatted: string): boolean {
-  if (SHORT_FIELD_NAMES.has(field.name)) return false;
-  if (formatted === '—' || formatted.length <= 48) return false;
-  // Multi-line / paragraph answers get the wide PDF block
-  if (formatted.includes('\n') || formatted.length > 48) return true;
-  // Description-ish labels
-  const label = field.label.toLowerCase();
-  return (
-    label.includes('description') ||
-    label.includes('intro') ||
-    label.includes('summary') ||
-    label.includes('process') ||
-    label.includes('analysis') ||
-    label.includes('importance') ||
-    label.includes('justification') ||
-    label.includes('gap') ||
-    label.includes('story') ||
-    label.includes('activity')
-  );
 }
 
 export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps> = ({
@@ -146,8 +87,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       return <p className="individual-empty">{tf('No answers for this section yet.')}</p>;
     }
 
-    if (BANK_LAYOUT.has(String(schemeCode))) {
-      const blocks: React.ReactNode[] = [];
+    const blocks: React.ReactNode[] = [];
       let particulars: IndividualDocField[] = [];
       const flushParticulars = () => {
         if (!particulars.length) return;
@@ -353,51 +293,6 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       }
       flushParticulars();
       return <div className="individual-sec-body">{blocks}</div>;
-    }
-
-    const shortFields: Array<{ field: IndividualDocField; text: string }> = [];
-    const longFields: Array<{ field: IndividualDocField; text: string }> = [];
-
-    for (const field of fields) {
-      const raw = readDocField(field, data);
-      const text = formatDocValue(raw);
-      if (isExpansiveField(field, text)) longFields.push({ field, text });
-      else shortFields.push({ field, text });
-    }
-
-    return (
-      <div className="individual-sec-body">
-        {shortFields.length > 0 && (
-          <dl className="individual-meta-grid">
-            {shortFields.map(({ field, text }) => (
-              <div key={field.path} className="individual-meta-item">
-                <dt>{tf(field.label)}</dt>
-                <dd>
-                  {fieldHit(
-                    field.path,
-                    text === '—' ? tf('Not filled') : tf(text),
-                    trackFieldHits
-                  )}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
-
-        {longFields.map(({ field, text }) => (
-          <article key={field.path} className="individual-qa-block">
-            <h3 className="individual-qa-q">{tf(field.label)}</h3>
-            <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
-              {fieldHit(
-                field.path,
-                text === '—' ? tf('Not filled yet — complete this in the form.') : text,
-                trackFieldHits
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-    );
   };
 
   return (

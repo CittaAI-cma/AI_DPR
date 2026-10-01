@@ -514,7 +514,6 @@ export async function suggestCurrentStepWithAi(options: {
           _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a whole number (headcount), e.g. 4. No words.`,
         };
       } else if (
-        ['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(options.schemeCode)) &&
         ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography', 'landDetails', 'impactNote', 'waterAndEffluent'].includes(field)
       ) {
         previousForField = {
