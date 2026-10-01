@@ -196,22 +196,6 @@ async function seedSchemes() {
         },
       },
       {
-        schemeCode: 'STANDUP',
-        schemeName: 'Stand-Up India Scheme',
-        nameInTelugu: 'స్టాండ్-అప్ ఇండియా స్కీం',
-        description: 'Stand-Up India facilitates bank loans for SC/ST and women entrepreneurs.',
-        descriptionInTelugu: 'స్టాండ్-అప్ ఇండియా SC/ST మరియు మహిళా వ్యవసాయులకు బ్యాంక్ రుణాలను సులభతరం చేస్తుంది.',
-        eligibilityCriteria: {
-          minCost: 1000000,
-          maxCost: 10000000,
-          applicableFor: ['manufacturing', 'service', 'trading'],
-          category: ['micro', 'small'],
-        },
-        benefits: {
-          interestRate: 9,
-        },
-      },
-      {
         schemeCode: 'MSME-CDP',
         schemeName: 'MSME Cluster Development Programme',
         nameInTelugu: 'MSME క్లస్టర్ డెవలప్‌మెంట్ ప్రోగ్రామ్',
@@ -231,6 +215,8 @@ async function seedSchemes() {
     await Scheme.insertMany(schemes);
     console.log('✅ Initial schemes seeded successfully');
   }
+
+  await Scheme.deleteMany({ schemeCode: 'STANDUP' });
 }
 
 // Graceful shutdown

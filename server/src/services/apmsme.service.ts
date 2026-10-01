@@ -164,18 +164,6 @@ export class APMSMEService {
         applicationUrl: 'https://apmsme.ap.gov.in/credit-guarantee',
       },
       {
-        schemeCode: 'STAND_UP_INDIA',
-        schemeName: 'Stand-Up India',
-        description: 'Bank loan for SC/ST and women entrepreneurs',
-        eligibility: 'SC/ST and women entrepreneurs',
-        subsidy: 'No subsidy, but priority sector lending',
-        maxProjectCost: 10000000,
-        categories: ['manufacturing', 'services', 'agriculture', 'retail'],
-        status: 'active',
-        portal: 'Stand-Up India Portal',
-        applicationUrl: 'https://standupmitra.in',
-      },
-      {
         schemeCode: 'AP_FOOD_PROCESSING',
         schemeName: 'AP Food Processing Policy',
         description: 'Incentives for food processing units',

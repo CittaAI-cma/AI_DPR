@@ -5,7 +5,6 @@ import { Project } from '../models/Project.model';
 import { getStepFieldsMapping } from './stepFieldsMapping';
 import { ClusterSection } from '../models/ClusterSection.model';
 
-const BANK_REPORT_SCHEMES = ['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'];
 const BANK_PROSE_FIELDS = [
   'executiveSummary',
   'processOfManufacture',
@@ -19,8 +18,8 @@ const BANK_PROSE_FIELDS = [
   'waterAndEffluent',
 ];
 
-function isBankProseField(schemeCode: string, fieldName: string): boolean {
-  return BANK_REPORT_SCHEMES.includes(String(schemeCode)) && BANK_PROSE_FIELDS.includes(String(fieldName));
+function isBankProseField(fieldName: string, individual: boolean): boolean {
+  return individual && BANK_PROSE_FIELDS.includes(String(fieldName));
 }
 
 export class ClusterDPRService {
@@ -1258,12 +1257,12 @@ Return suggestions in JSON format with EXACTLY ${stepMapping.fields.length} sugg
 }
 
 CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one for each field key: ${stepMapping.fields.map(f => f.name).join(', ')}. Never rename those keys. Do not add any field that is not in this list.
-${['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(schemeCode)) ? `
+${isIndividualDPR ? `- For any of these keys that are in this step — executiveSummary, processOfManufacture, sectorDescription, presentActivities, targetMarket, existingDemand, geography, landDetails, impactNote, waterAndEffluent — the suggestion value itself must be 320 to 450 words of finished prose.
+` : ''}${['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(schemeCode)) ? `
 THIS STEP ONLY:
 - Suggestions may use ONLY these keys: ${stepMapping.fields.map(f => f.name).join(', ')}.
 - Do not invent new questions, headings, or extra JSON keys.
-${BANK_REPORT_SCHEMES.includes(String(schemeCode)) ? `- For any of these keys that are in this step — executiveSummary, processOfManufacture, sectorDescription, presentActivities, targetMarket, existingDemand, geography, landDetails, impactNote, waterAndEffluent — the suggestion value itself must be 320 to 450 words of finished prose.
-` : ''}${schemeCode === 'AP_CMEP' ? `
+${schemeCode === 'AP_CMEP' ? `
 - promoters must be a JSON array of {name, relationName, age, dob, education, experienceYears, phone, address}.
 - machineryItems must be a JSON array of {description, condition, supplier, quantity, unitCost, gst, transport, installation, lifeYears, annualMaintenance} with condition "new" or "used". Amounts are ₹ Lakhs.
 - costPhasing must be a JSON object whose keys are only land, building, machinery, furniture, deposits, workingCapital, each {incurred, proposed} in ₹ Lakhs.
@@ -1297,7 +1296,7 @@ Return suggestions in JSON format only.`,
           },
         ],
         temperature: 0.7,
-        max_tokens: BANK_REPORT_SCHEMES.includes(String(schemeCode)) ? 6500 : 2000,
+        max_tokens: isIndividualDPR ? 6500 : 2000,
       });
 
       const responseText = response.choices[0]?.message?.content || '';
@@ -1637,7 +1636,7 @@ Rules:
 - Return ONLY the improved text for this field — no quotes, no markdown, no preamble.
 - Keep the same facts and meaning; do not invent loans, subsidies, registrations, or numbers that are not implied.
 - Make it clearer, more professional, and suitable for a bank reviewer.
-- ${isBankProseField(schemeCode, fieldName) ? 'Expand this answer to 320–450 words of finished prose. Still answer only this field.' : 'Match length roughly to the input (short notes stay short; paragraphs can be polished).'}
+- ${isBankProseField(fieldName, context.isIndividualDPR === true) ? 'Expand this answer to 320–450 words of finished prose. Still answer only this field.' : 'Match length roughly to the input (short notes stay short; paragraphs can be polished).'}
 - For codes / enums / yes-no / single words (e.g. "cov", "first", "yes"), return a cleaned equivalent — do not expand into an essay.
 - Write as one individual unit / entrepreneur — never as a multi-unit cluster or SPV.`;
 
@@ -1652,7 +1651,7 @@ Rules:
           { role: 'user', content: prompt },
         ],
         temperature: 0.4,
-        max_tokens: isBankProseField(schemeCode, fieldName) ? 1800 : 800,
+        max_tokens: isBankProseField(fieldName, context.isIndividualDPR === true) ? 1800 : 800,
       });
 
       const improved = (response.choices[0]?.message?.content || '').trim();
@@ -1915,7 +1914,7 @@ CRITICAL FORMAT FOR ${fieldName}:
 - No text, no units, no explanations
 - Example: 500000 or 75.5`;
       } else {
-        const longBankProse = isBankProseField(schemeCode, fieldName);
+        const longBankProse = isBankProseField(fieldName, isIndividualDPR);
         formatInstructions = longBankProse
           ? `
 CRITICAL FORMAT FOR ${fieldName}:
@@ -1995,7 +1994,7 @@ Return only the field content, no JSON wrapper or additional text.`;
           },
         ],
         temperature: 0.7,
-        max_tokens: isBankProseField(schemeCode, fieldName) ? 1800 : 500,
+        max_tokens: isBankProseField(fieldName, isIndividualDPR) ? 1800 : 500,
       });
 
       const responseText = response.choices[0]?.message?.content || '';
