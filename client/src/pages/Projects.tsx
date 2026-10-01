@@ -98,7 +98,7 @@ export const Projects: React.FC = () => {
               className="border-2"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Create New Latest DPR
+              Create DPR
             </Button>
             <Button 
               onClick={() => navigate('/projects/create')}
@@ -229,7 +229,7 @@ export const Projects: React.FC = () => {
                       size="sm"
                       className="flex-1 border-2 hover:bg-secondary/5 hover:border-secondary"
                       onClick={() => navigate('/individual-dpr/create?new=true')}
-                      title="Create New Latest DPR"
+                      title="Create DPR"
                     >
                       <FileText className="h-4 w-4 mr-1" />
                       DPR

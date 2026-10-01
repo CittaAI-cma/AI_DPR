@@ -172,6 +172,17 @@ import {
 } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 
+function isReasonableIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return false;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  if (`${year}-${month}-${day}` !== value) return false;
+  return year >= 1990 && year <= 2100;
+}
+
 interface IndividualDPRFormProps {
   currentStep: number;
   onNext: () => void;
@@ -345,10 +356,13 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     }
     const latestStepData = getStepData(contentStep) || {};
     let nextValue = value;
-    if (field === 'startDate' || field === 'endDate') nextValue = toDateInputValue(value) || value;
+    if (field === 'startDate' || field === 'endDate' || field === 'commitmentDate' || (field === 'yearOfEstablishment' && isLeanUnit)) {
+      nextValue = toDateInputValue(value) || value;
+    }
     if (field === 'milestones') nextValue = normalizeMilestones(value);
     // Guard: never store AI prose in ₹ / numeric fields (breaks totals via string concat)
-    if (isNumericDprField(field) && (typeof nextValue === 'string' || typeof nextValue === 'number')) {
+    const dateOnThisStep = field === 'commitmentDate' || (field === 'yearOfEstablishment' && isLeanUnit);
+    if (!dateOnThisStep && isNumericDprField(field) && (typeof nextValue === 'string' || typeof nextValue === 'number')) {
       nextValue = toFiniteNumber(nextValue);
     }
     if (field === 'unitName' || field === 'clusterName') {
@@ -2816,23 +2830,59 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             }
           />
         </div>
+        {isLeanUnit ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              {renderLabel('yearOfEstablishment', 'Start Date')}
+              <Input
+                type="date"
+                value={toDateInputValue(stepData.yearOfEstablishment)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next && !isReasonableIsoDate(next)) {
+                    toast.error(tf('Enter a valid date between 1990 and 2100'));
+                    return;
+                  }
+                  if (next && stepData.commitmentDate && toDateInputValue(stepData.commitmentDate) && next > toDateInputValue(stepData.commitmentDate)) {
+                    toast.error(tf('Commitment Date must be on or after Start Date'));
+                    return;
+                  }
+                  handleInputChange('yearOfEstablishment', next);
+                }}
+              />
+            </div>
+            <div>
+              {renderLabel('commitmentDate', 'Commitment Date')}
+              <Input
+                type="date"
+                value={toDateInputValue(stepData.commitmentDate)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next && !isReasonableIsoDate(next)) {
+                    toast.error(tf('Enter a valid date between 1990 and 2100'));
+                    return;
+                  }
+                  const start = toDateInputValue(stepData.yearOfEstablishment);
+                  if (next && start && next < start) {
+                    toast.error(tf('Commitment Date must be on or after Start Date'));
+                    return;
+                  }
+                  handleInputChange('commitmentDate', next);
+                }}
+              />
+            </div>
+          </div>
+        ) : (
         <div>
-          {renderLabel(
-            'yearOfEstablishment',
-            isLeanUnit ? 'Start / commencement (existing or proposed)' : 'Year of Establishment'
-          )}
+          {renderLabel('yearOfEstablishment', 'Year of Establishment')}
           <Input
-            type={isLeanUnit ? 'text' : 'number'}
+            type="number"
             value={stepData.yearOfEstablishment || ''}
-            onChange={(e) =>
-              handleInputChange(
-                'yearOfEstablishment',
-                isLeanUnit ? e.target.value : parseInt(e.target.value) || 0
-              )
-            }
-            placeholder={isLeanUnit ? tf('e.g. Apr 2026') : tf('YYYY')}
+            onChange={(e) => handleInputChange('yearOfEstablishment', parseInt(e.target.value) || 0)}
+            placeholder={tf('YYYY')}
           />
         </div>
+        )}
         <div>
           {renderLabel(
             'technologyLevel',

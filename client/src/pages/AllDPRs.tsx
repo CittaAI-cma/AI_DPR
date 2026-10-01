@@ -507,7 +507,7 @@ export const AllDPRs: React.FC = () => {
               className="bg-primary hover:bg-primary/90 text-white"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Create New Latest DPR
+              Create DPR
             </Button>
           </div>
         </div>
@@ -691,7 +691,7 @@ export const AllDPRs: React.FC = () => {
                 {!filtersActive && (
                   <Button onClick={() => navigate('/individual-dpr/create?new=true')} size="lg">
                     <FileText className="h-5 w-5 mr-2" />
-                    Create New Latest DPR
+                    Create DPR
                   </Button>
                 )}
                 {filtersActive && (

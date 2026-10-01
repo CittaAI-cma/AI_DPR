@@ -1,7 +1,7 @@
 import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { extraFieldsForScheme, VISHWAKARMA_CRAFTS, hideComplexCapex } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
-import { getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
+import { getIndividualDocFields, isLeanUnitScheme } from '@/lib/individualDpr/individualDocModel';
 import { suggestionToFieldValue, isNumericDprField, isStructuredDprField, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { mergeCmepProjectedSuggestion } from '@/lib/individualDpr/cmepProjections';
 import { machineryTotalLakhs, totalsFromCostPhasing, workingCapitalFromBuildup } from '@/lib/individualDpr/cmepBankPack';
@@ -503,7 +503,12 @@ export async function suggestCurrentStepWithAi(options: {
           ...previous,
           _promptContext: `For field "milestones": reply with ONLY a JSON array of 3–5 objects. Example: [{"activity":"Machinery order / installation","timeRequired":"30 days","startDate":"2026-04-01","endDate":"2026-04-30"},{"activity":"Power connection","timeRequired":"15 days","startDate":"2026-05-01","endDate":"2026-05-15"},{"activity":"Trial run / commercial production","timeRequired":"15 days","startDate":"2026-05-16","endDate":"2026-05-31"}]. Dates must be YYYY-MM-DD. No prose.`,
         };
-      } else if (field === 'startDate' || field === 'endDate') {
+      } else if (
+        field === 'startDate' ||
+        field === 'endDate' ||
+        field === 'commitmentDate' ||
+        (field === 'yearOfEstablishment' && isLeanUnitScheme(options.schemeCode))
+      ) {
         previousForField = {
           ...previous,
           _promptContext: `For field "${field}": reply with ONLY a date in YYYY-MM-DD format (e.g. 2026-06-01). No words.`,
@@ -661,7 +666,12 @@ export function applyCatalogSuggestionToForm(options: {
     if (suggestion.field === 'costPhasing') {
       if (!value || typeof value !== 'object' || Array.isArray(value)) return { ok: false, value: null };
     } else if (!Array.isArray(value) || value.length === 0) return { ok: false, value: null };
-  } else if (suggestion.field === 'startDate' || suggestion.field === 'endDate') {
+  } else if (
+    suggestion.field === 'startDate' ||
+    suggestion.field === 'endDate' ||
+    suggestion.field === 'commitmentDate' ||
+    (suggestion.field === 'yearOfEstablishment' && isLeanUnitScheme(schemeCode))
+  ) {
     value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion);
     if (!value) return { ok: false, value: null };
   } else if (isNumericDprField(suggestion.field)) {
