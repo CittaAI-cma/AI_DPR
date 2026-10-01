@@ -206,8 +206,8 @@ Own + subsidy + bank (+ other) should equal total. Indicative subsidy = min(rate
 
 ## Why only the fixed-capital questions were added
 
-AP MSME-EDP 4.0 pays a capital subsidy on fixed capital investment. The form now asks for a machinery list, plus furniture and security deposits, because those change eligible FCI. Building was already a cost head.
+AP MSME-EDP 4.0 pays a capital subsidy on fixed capital investment. The form asks for a machinery list, plus furniture and security deposits, because those change eligible FCI. Building was already a cost head.
 
-The profit sheet, loan diary, staff payroll, raw-material list, and CMEP eligibility gates are not on this form. The department appraises investment and category, not a full bank operating pack. Fill-this-step may answer only the fields on the current step.
+The same bank tables used on PMEGP are also on this form: product mix, bank name, interest, moratorium, tenure, raw materials, and staff by role. CMEP-only gates stay off this form: EDP status, one person per family, workshop-area split, working-capital buildup, machine GST and life, and the risk table. Fill-this-step may answer only the fields on the current step.
 
 Update **this file**, `apEdpQuestions.ts`, and `AP_EDP_STEPS` together when questions change.

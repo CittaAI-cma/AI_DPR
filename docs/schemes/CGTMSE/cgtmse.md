@@ -42,8 +42,8 @@ Confirm women-owned cover % with the lender.
 2–11. Story → … → cost → MoF (grant 0) → operating → viability  
 12. Uploads: Udyam, Aadhaar/PAN, quotations / WC evidence
 
-## Why no extra operating questions were added
+## Why the shared bank tables are on this form
 
-CGTMSE is a bank-side guarantee. Cover depends on the loan and whether the unit is women-owned. Those questions are already on the form. Product mix, staff pay, loom count, working-capital buildup, loan diary, and CMEP eligibility do not change the guarantee, so they were not added here. Fill-this-step may answer only the fields already on the current step.  
+CGTMSE is a bank-side guarantee. Cover still depends on the loan and whether the unit is women-owned. The form also asks the shared bank tables used on the other Latest DPR schemes: product mix, machinery list, bank name, interest, moratorium, tenure, raw materials, and staff by role. Loom count, working-capital buildup, and the CMEP eligibility gates stay off this form. Fill-this-step may answer only the fields already on the current step.  
 
 Update this file + `cgtmseQuestions.ts` + `CGTMSE_STEPS` together.

@@ -53,6 +53,6 @@ A Mangalagiri handloom bank report was compared with the schemes it could fit. C
 - On each machine: GST, transport, installation, life, and yearly maintenance.
 - A short risk table, plus uploads for the education certificate, EDP certificate, lease, yarn and dye rates, and dealer enquiries.
 
-Subsidy amount, DSCR, break-even, depreciation, and sensitivity cases stay calculated. They are not questions. PMEGP and Stand-Up India get the shared bank tables only. AP MSME-EDP 4.0 gets the fixed-capital split only. CGTMSE is left unchanged because a guarantee does not need this operating pack.
+Subsidy amount, DSCR, break-even, depreciation, and sensitivity cases stay calculated. They are not questions. Every other Latest DPR scheme now gets the shared bank tables: product mix, machinery list, bank name, interest, moratorium, tenure, raw materials, and staff by role. Furniture, security deposits, and the CMEP eligibility gates stay on the schemes that already had them.
 
 Update this file + `apCmepQuestions.ts` + `AP_CMEP_STEPS` together.

@@ -2888,7 +2888,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
         )}
-        {(isApCmep || isPmegp || isStandup) && (
+        {isLeanUnit && (
           <ProductMixEditor value={stepData.productMix} onChange={(next) => handleInputChange('productMix', next)} />
         )}
         {isApCmep && (
@@ -3837,7 +3837,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </>
         )}
-        {(isPmegp || isStandup || isApEdp) && (
+        {isLeanUnit && !isApCmep && (
           <CmepMachineryEditor
             value={stepData.machineryItems}
             onChange={(next) => {
@@ -3877,7 +3877,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
             </>
           )}
-          {!isApCmep && !(isPmegp || isStandup || isApEdp) && (
+          {!isLeanUnit && (
           <div>
             {renderLabel('machinery', 'Plant & machinery (₹ Lakhs)')}
             <Input
@@ -4004,7 +4004,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         {isApCmep && (
           <CmepLoanTermsEditor step={stepData} onChange={handleInputChange} />
         )}
-        {(isPmegp || isStandup) && (
+        {isLeanUnit && !isApCmep && (
           <CmepLoanTermsEditor includeSubsidy={false} step={stepData} onChange={handleInputChange} />
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4309,7 +4309,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         {isApCmep && (
           <CmepAssumptionsEditor step={stepData} onChange={handleInputChange} />
         )}
-        {(isApCmep || isPmegp || isStandup) && (
+        {isLeanUnit && (
           <>
             <RawMaterialEditor value={stepData.rawMaterialItems} onChange={(next) => handleInputChange('rawMaterialItems', next)} />
             <StaffRoleEditor value={stepData.staffRoles} onChange={(next) => handleInputChange('staffRoles', next)} />
