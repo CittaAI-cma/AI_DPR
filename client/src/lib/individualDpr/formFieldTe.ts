@@ -316,4 +316,18 @@ export const FORM_FIELD_TE: Record<string, string> = {
   'uploaded successfully!': 'విజయవంతంగా అప్‌లోడ్ అయింది!',
   'form implementation in progress. Please check back soon.':
     'ఫారమ్ అమలు జరుగుతోంది. త్వరలో మళ్లీ చూడండి.',
+  'Search schemes': 'పథకాలను వెతకండి',
+  'Search by name, ministry, or support': 'పేరు, మంత్రిత్వ శాఖ లేదా సహాయం ద్వారా వెతకండి',
+  'All levels': 'అన్ని స్థాయిలు',
+  'Central schemes': 'కేంద్ర పథకాలు',
+  'Andhra Pradesh schemes': 'ఆంధ్రప్రదేశ్ పథకాలు',
+  'Bank term loan': 'బ్యాంకు టర్మ్ లోన్',
+  'All kinds': 'అన్ని రకాలు',
+  Subsidy: 'సబ్సిడీ',
+  Loan: 'రుణం',
+  Guarantee: 'గ్యారంటీ',
+  'Other support': 'ఇతర సహాయం',
+  Clear: 'తొలగించు',
+  schemes: 'పథకాలు',
+  'No schemes match this search.': 'ఈ వెతుకులాటకు పథకాలు దొరకలేదు.',
 };
