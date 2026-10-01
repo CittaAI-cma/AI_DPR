@@ -423,7 +423,8 @@ export function getIndividualDocFields(
   if (contentStep === 4) {
     const fields: DocField[] = [
       stepField('presentActivities', lean ? 'Present / proposed activity summary' : 'Present Activities', 4),
-      stepField('yearOfEstablishment', lean ? 'Start / commencement' : 'Year of Establishment', 4),
+      stepField('yearOfEstablishment', lean ? 'Start Date' : 'Year of Establishment', 4),
+      ...(lean ? [stepField('commitmentDate', 'Commitment Date', 4)] : []),
       stepField('technologyLevel', lean ? 'Tools / process level' : 'Technology Level', 4),
       stepField('productionCapacity', lean ? 'Capacity / throughput' : 'Production Capacity', 4),
     ];

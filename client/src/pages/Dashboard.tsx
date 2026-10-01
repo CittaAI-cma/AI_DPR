@@ -355,7 +355,7 @@ export const Dashboard: React.FC = () => {
                 className="gap-2 whitespace-nowrap"
               >
                 <FileText className="h-4 w-4" />
-                Create New Latest DPR
+                Create DPR
               </Button>
             )}
             <Button
@@ -534,7 +534,7 @@ export const Dashboard: React.FC = () => {
                   size="lg"
                 >
                   <FileText className="h-5 w-5 mr-2" />
-                  Create New Latest DPR
+                  Create DPR
                 </Button>
               </div>
             ) : (
@@ -693,7 +693,7 @@ export const Dashboard: React.FC = () => {
                 <div className="h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center">
                   <FileText className="h-6 w-6" />
                 </div>
-                <span className="font-semibold">Create New Latest DPR</span>
+                <span className="font-semibold">Create DPR</span>
                 <span className="text-sm opacity-90">Individual / scheme-aware</span>
               </Button>
               <Button
