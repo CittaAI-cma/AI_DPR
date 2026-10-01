@@ -196,6 +196,14 @@ Catalog: `STANDUP_STEPS` — consecutive **Step 1 … Step 13**.
 
 ---
 
-## 7. Maintenance
+## 7. Why only some bank questions were added
+
+Stand-Up India is a composite bank loan for a woman, SC, or ST promoter. The form now asks for a machinery list, bank name, interest, moratorium, tenure, product share and price, a raw-material list, and staff pay. Age, category, and the loan amount were already here.
+
+It does not take the CMEP subsidy gates (EDP, family rule, urban slab, area split, working-capital buildup, machine life, risks). Stand-Up is not a margin-money subsidy. Fill-this-step may answer only the fields on the current step.
+
+---
+
+## 8. Maintenance
 
 Update **this file**, `standupQuestions.ts`, and `STANDUP_STEPS` together when questions change.

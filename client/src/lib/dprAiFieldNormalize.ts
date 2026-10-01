@@ -1,5 +1,14 @@
 /** HTML date inputs only accept YYYY-MM-DD. */
-import { normalizeCostPhasing, normalizeMachineryItems, normalizePromoters } from '@/lib/individualDpr/cmepBankPack';
+import {
+  normalizeCostPhasing,
+  normalizeMachineryItems,
+  normalizeProductMix,
+  normalizePromoters,
+  normalizeRawMaterials,
+  normalizeRisks,
+  normalizeStaffRoles,
+  normalizeUtilisationYears,
+} from '@/lib/individualDpr/cmepBankPack';
 export function toDateInputValue(value: unknown): string {
   if (value == null || value === '') return '';
   if (typeof value === 'number' && Number.isFinite(value)) return '';
@@ -356,14 +365,40 @@ export const NUMERIC_DPR_FIELDS = new Set([
   'monthlySalaries',
   'monthlyPower',
   'annualExpenseGrowth',
+  'loomCount',
+  'shifts',
+  'workshopAreaSqft',
+  'productionAreaSqft',
+  'storageAreaSqft',
+  'officeAreaSqft',
+  'leaseYears',
+  'wcRawStock',
+  'wcWip',
+  'wcFinished',
+  'wcReceivables',
+  'wcSupplierCredit',
+  'wcCash',
 ]);
 
 export function isNumericDprField(field: string): boolean {
   return NUMERIC_DPR_FIELDS.has(field);
 }
 
+const STRUCTURED_LIST_FIELDS = new Set([
+  'yearProjections',
+  'milestones',
+  'promoters',
+  'machineryItems',
+  'costPhasing',
+  'productMix',
+  'rawMaterialItems',
+  'staffRoles',
+  'risks',
+  'utilisationByYear',
+]);
+
 export function isStructuredDprField(field: string): boolean {
-  return field === 'yearProjections' || field === 'milestones' || field === 'promoters' || field === 'machineryItems' || field === 'costPhasing';
+  return STRUCTURED_LIST_FIELDS.has(field);
 }
 
 /** Turn an AI suggestion string into a form field value without a second API call. */
@@ -381,6 +416,11 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
     if (field === 'promoters') return normalizePromoters(suggestion);
     if (field === 'machineryItems') return normalizeMachineryItems(suggestion);
     if (field === 'costPhasing') return normalizeCostPhasing(suggestion);
+    if (field === 'productMix') return normalizeProductMix(suggestion);
+    if (field === 'rawMaterialItems') return normalizeRawMaterials(suggestion);
+    if (field === 'staffRoles') return normalizeStaffRoles(suggestion);
+    if (field === 'risks') return normalizeRisks(suggestion);
+    if (field === 'utilisationByYear') return normalizeUtilisationYears(suggestion);
     if (field === 'startDate' || field === 'endDate') return toDateInputValue(suggestion) || null;
     if (isNumericDprField(field)) {
       const n = Number(suggestion);
@@ -406,7 +446,16 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
     return rows.length ? rows : null;
   }
 
-  if (field === 'promoters' || field === 'machineryItems' || field === 'costPhasing') {
+  if (
+    field === 'promoters' ||
+    field === 'machineryItems' ||
+    field === 'costPhasing' ||
+    field === 'productMix' ||
+    field === 'rawMaterialItems' ||
+    field === 'staffRoles' ||
+    field === 'risks' ||
+    field === 'utilisationByYear'
+  ) {
     const array = firstJsonArray(text);
     const objectMatch = text.match(/\{[\s\S]*\}/);
     let objectValue: unknown = null;
@@ -419,6 +468,11 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
     }
     if (field === 'promoters') return normalizePromoters(array || objectValue);
     if (field === 'machineryItems') return normalizeMachineryItems(array || objectValue);
+    if (field === 'productMix') return normalizeProductMix(array || objectValue);
+    if (field === 'rawMaterialItems') return normalizeRawMaterials(array || objectValue);
+    if (field === 'staffRoles') return normalizeStaffRoles(array || objectValue);
+    if (field === 'risks') return normalizeRisks(array || objectValue);
+    if (field === 'utilisationByYear') return normalizeUtilisationYears(array || objectValue);
     if (field === 'costPhasing') return objectValue ? normalizeCostPhasing(objectValue) : null;
   }
 

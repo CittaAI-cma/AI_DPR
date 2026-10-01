@@ -12,6 +12,10 @@ export const AP_CMEP_EXTRA_FIELDS = [
   'executiveSummary',
   'processOfManufacture',
   'premisesType',
+  'cmepArea',
+  'edpStatus',
+  'priorSubsidy',
+  'familyExclusive',
 ] as const;
 
 export type ApCmepExtraField = (typeof AP_CMEP_EXTRA_FIELDS)[number];
@@ -32,6 +36,16 @@ export const AP_CMEP_BOOSTER_OPTIONS = [
 export const AP_CMEP_YES_NO = [
   { value: 'yes', label: 'Yes' },
   { value: 'no', label: 'No' },
+];
+
+export const AP_CMEP_AREA_OPTIONS = [
+  { value: 'urban', label: 'Urban' },
+  { value: 'rural', label: 'Rural' },
+];
+
+export const AP_CMEP_EDP_OPTIONS = [
+  { value: 'completed', label: 'EDP completed' },
+  { value: 'pending', label: 'EDP still pending' },
 ];
 
 export const AP_CMEP_IMPACT_BULLETS = [

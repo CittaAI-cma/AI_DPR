@@ -17,7 +17,18 @@ export type CmepMachineryItem = {
   supplier: string;
   quantity: number;
   unitCost: number;
+  gst: number;
+  transport: number;
+  installation: number;
+  lifeYears: number;
+  annualMaintenance: number;
 };
+
+export type ProductMixRow = { name: string; sharePercent: number; sellingPrice: number };
+export type RawMaterialRow = { name: string; use: string; basis: string };
+export type StaffRoleRow = { role: string; count: number; monthlyPay: number };
+export type RiskRow = { risk: string; mitigation: string };
+export type UtilisationYear = { label: string; percent: number };
 
 export type CmepCostCell = { incurred: number; proposed: number };
 
@@ -85,7 +96,12 @@ export function normalizeMachineryItems(raw: unknown): CmepMachineryItem[] {
         supplier: String(item.supplier ?? ''),
         quantity: num(item.quantity) || 1,
         unitCost: num(item.unitCost),
-      } as CmepMachineryItem;
+        gst: num(item.gst),
+        transport: num(item.transport),
+        installation: num(item.installation),
+        lifeYears: num(item.lifeYears),
+        annualMaintenance: num(item.annualMaintenance),
+      };
     });
 }
 
@@ -101,6 +117,69 @@ export function normalizeCostPhasing(raw: unknown, step?: Record<string, unknown
       : { incurred: 0, proposed: total };
   }
   return out;
+}
+
+export function machineryTotalLakhs(items: CmepMachineryItem[], includeCharges: boolean): number {
+  return items.reduce((sum, row) => {
+    const charges = includeCharges ? row.gst + row.transport + row.installation : 0;
+    return sum + (row.quantity || 0) * ((row.unitCost || 0) + charges);
+  }, 0);
+}
+
+export function workingCapitalFromBuildup(step: Record<string, unknown>): number {
+  return (
+    num(step.wcRawStock) +
+    num(step.wcWip) +
+    num(step.wcFinished) +
+    num(step.wcReceivables) +
+    num(step.wcCash) -
+    num(step.wcSupplierCredit)
+  );
+}
+
+function textRows<T>(raw: unknown, blank: () => T, fill: (row: T, item: Record<string, unknown>) => T): T[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((row) => row && typeof row === 'object')
+    .map((row) => fill(blank(), row as Record<string, unknown>));
+}
+
+export function normalizeProductMix(raw: unknown): ProductMixRow[] {
+  return textRows(raw, () => ({ name: '', sharePercent: 0, sellingPrice: 0 }), (row, item) => ({
+    name: String(item.name ?? ''),
+    sharePercent: num(item.sharePercent),
+    sellingPrice: num(item.sellingPrice),
+  }));
+}
+
+export function normalizeRawMaterials(raw: unknown): RawMaterialRow[] {
+  return textRows(raw, () => ({ name: '', use: '', basis: '' }), (row, item) => ({
+    name: String(item.name ?? item.material ?? ''),
+    use: String(item.use ?? ''),
+    basis: String(item.basis ?? ''),
+  }));
+}
+
+export function normalizeStaffRoles(raw: unknown): StaffRoleRow[] {
+  return textRows(raw, () => ({ role: '', count: 0, monthlyPay: 0 }), (row, item) => ({
+    role: String(item.role ?? ''),
+    count: num(item.count),
+    monthlyPay: num(item.monthlyPay),
+  }));
+}
+
+export function normalizeRisks(raw: unknown): RiskRow[] {
+  return textRows(raw, () => ({ risk: '', mitigation: '' }), (row, item) => ({
+    risk: String(item.risk ?? ''),
+    mitigation: String(item.mitigation ?? ''),
+  }));
+}
+
+export function normalizeUtilisationYears(raw: unknown): UtilisationYear[] {
+  return textRows(raw, () => ({ label: '', percent: 0 }), (row, item) => ({
+    label: String(item.label ?? ''),
+    percent: num(item.percent),
+  }));
 }
 
 export function totalsFromCostPhasing(phasing: Record<string, CmepCostCell>): Record<string, number> {

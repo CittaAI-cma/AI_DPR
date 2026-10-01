@@ -204,4 +204,10 @@ Own + subsidy + bank (+ other) should equal total. Indicative subsidy = min(rate
 - [x] Keep land/building FCI tables visible  
 - [x] Brief + `create-new-dpr-business-logic.md` row  
 
+## Why only the fixed-capital questions were added
+
+AP MSME-EDP 4.0 pays a capital subsidy on fixed capital investment. The form now asks for a machinery list, plus furniture and security deposits, because those change eligible FCI. Building was already a cost head.
+
+The profit sheet, loan diary, staff payroll, raw-material list, and CMEP eligibility gates are not on this form. The department appraises investment and category, not a full bank operating pack. Fill-this-step may answer only the fields on the current step.
+
 Update **this file**, `apEdpQuestions.ts`, and `AP_EDP_STEPS` together when questions change.

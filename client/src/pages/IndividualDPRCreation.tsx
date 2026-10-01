@@ -12,6 +12,9 @@ import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { DevModeToggle } from '@/components/ui/DevModeToggle';
+import { useAuthStore } from '@/store/authStore';
+import { isSuperAdmin } from '@/lib/rbac';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { toIndividualPayload, getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
@@ -52,6 +55,8 @@ export const IndividualDPRCreation: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
   const [requiredNotice, setRequiredNotice] = useState('');
+  const [devMode, setDevMode] = useState(false);
+  const isAdmin = isSuperAdmin(useAuthStore((s) => s.user?.role));
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
@@ -255,7 +260,7 @@ export const IndividualDPRCreation: React.FC = () => {
   const goAdjacent = async (dir: 1 | -1) => {
     if (isStepping) return;
     const advancing = dir === 1;
-    if (advancing) {
+    if (advancing && !(isAdmin && devMode)) {
       const content = getContentStep(currentStep, schemeCode);
       const stepData = data[`step${content}`] || {};
       const missing = missingIndividualRequired(content, stepData, schemeCode);
@@ -268,8 +273,8 @@ export const IndividualDPRCreation: React.FC = () => {
         return;
       }
       setRequiredNotice('');
-      setIsStepping(true);
     }
+    if (advancing) setIsStepping(true);
     try {
       await saveToDatabase();
       const idx = visibleSteps.indexOf(currentStep);
@@ -423,6 +428,15 @@ export const IndividualDPRCreation: React.FC = () => {
 
               <div className="flex items-center gap-2 flex-wrap">
                 <LanguageToggle />
+                {setupPhase === 'form' && (
+                  <DevModeToggle
+                    on={devMode}
+                    onChange={(next) => {
+                      setDevMode(next);
+                      if (next) setRequiredNotice('');
+                    }}
+                  />
+                )}
                 {setupPhase === 'form' && (
                   <>
                     <label className="flex items-center gap-2 text-sm">

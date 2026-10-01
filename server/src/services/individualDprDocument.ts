@@ -28,7 +28,7 @@ export type DocRow = {
   value: string;
   path: string;
   filled: boolean;
-  embed?: 'cmep-projections' | 'cmep-promoters' | 'cmep-machinery' | 'cmep-cost' | 'cmep-derived';
+  embed?: 'cmep-projections' | 'cmep-promoters' | 'cmep-machinery' | 'cmep-cost' | 'cmep-derived' | 'data-table';
 };
 
 export type DocSection = {
@@ -126,7 +126,7 @@ const SCHEME_EXTRA_FIELDS: Record<string, string[]> = {
   ECLGS: ['existingLimit', 'peakWcOutstanding', 'additionalWcSought', 'accountStatus', 'entrepreneurName', 'liquidityReason'],
   CGTMSE: ['loanPurpose', 'womenOwned', 'entrepreneurName', 'proposedLimit'],
   AP_FPP: ['enterpriseSize', 'specialCategory', 'apDomicile', 'fpoShg', 'entrepreneurName', 'processOfManufacture', 'installedCapacity', 'premisesType'],
-  AP_CMEP: ['activityBand', 'boosterCategory', 'apDomicile', 'entrepreneurName', 'executiveSummary', 'processOfManufacture', 'premisesType'],
+  AP_CMEP: ['activityBand', 'boosterCategory', 'apDomicile', 'entrepreneurName', 'executiveSummary', 'processOfManufacture', 'premisesType', 'cmepArea', 'edpStatus', 'priorSubsidy', 'familyExclusive'],
   OBMMS: ['welfareCorporation', 'whiteRiceCard', 'entrepreneurName', 'entrepreneurAge', 'activityTrade'],
   MSE_SPICE: ['circularSector', 'existingUnitYears', 'entrepreneurName', 'proposedPmCost', 'processOfManufacture'],
   AP_PARKS: ['apiicParkName', 'plotArea', 'landRebateClaim', 'scStOrWomen', 'entrepreneurName', 'apDomicile'],
@@ -202,6 +202,10 @@ const EXTRA_FIELD_LABELS: Record<string, string> = {
   womenOwned: 'Women-owned',
   proposedLimit: 'Proposed limit (₹ Lakhs)',
   activityBand: 'Activity band',
+  cmepArea: 'Urban or rural',
+  edpStatus: 'EDP training',
+  priorSubsidy: 'Earlier government subsidy',
+  familyExclusive: 'Only one person in the family for this scheme',
   boosterCategory: 'Booster category',
   welfareCorporation: 'Welfare corporation',
   whiteRiceCard: 'White rice card',
@@ -437,6 +441,15 @@ export function getIndividualDocFields(
       fields.push(extraField('capacityUtilisationY1'));
     }
     if (schemeCode === 'PMFME') fields.push(extraField('proposedWorkers'));
+    if (schemeCode === 'AP_CMEP' || schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+      fields.push(stepField('productMix', 'Products, share of output and selling price', 4));
+    }
+    if (schemeCode === 'AP_CMEP') {
+      fields.push(
+        stepField('loomCount', 'Number of looms / machines', 4),
+        stepField('shifts', 'Shifts per day', 4)
+      );
+    }
     return fields;
   }
 
@@ -497,10 +510,21 @@ export function getIndividualDocFields(
 
   if (contentStep === 10) {
     if (lean) {
-      return [
+      const fields = [
         stepField('name', 'Shop / shed / workplace name', 10),
         stepField('landDetails', 'Premises note (own / lease / rent)', 10),
       ];
+      if (schemeCode === 'AP_CMEP') {
+        fields.push(
+          stepField('workshopAreaSqft', 'Workshop area (sq.ft.)', 10),
+          stepField('productionAreaSqft', 'Production floor (sq.ft.)', 10),
+          stepField('storageAreaSqft', 'Storage / packing area (sq.ft.)', 10),
+          stepField('officeAreaSqft', 'Office area (sq.ft.)', 10),
+          stepField('leaseYears', 'Lease period (years)', 10),
+          stepField('waterAndEffluent', 'Water use and dye wastewater', 10)
+        );
+      }
+      return fields;
     }
     return [
       stepField('name', 'Unit / shed / workplace name', 10),
@@ -555,6 +579,21 @@ export function getIndividualDocFields(
         stepField('costPhasing', 'Cost already incurred and still to be incurred (₹ Lakhs)', 12),
         stepField('machineryItems', 'Machinery list', 12),
         stepField('furniture', 'Furniture and fixtures (₹ Lakhs)', 12),
+        stepField('securityDeposits', 'Security deposits (₹ Lakhs)', 12),
+        stepField('wcRawStock', 'Raw material stock (₹ Lakhs)', 12),
+        stepField('wcWip', 'Work in progress (₹ Lakhs)', 12),
+        stepField('wcFinished', 'Finished goods (₹ Lakhs)', 12),
+        stepField('wcReceivables', 'Receivables (₹ Lakhs)', 12),
+        stepField('wcSupplierCredit', 'Supplier credit (₹ Lakhs)', 12),
+        stepField('wcCash', 'Cash (₹ Lakhs)', 12)
+      );
+    }
+    if (schemeCode === 'PMEGP' || schemeCode === 'STANDUP' || schemeCode === 'AP_EDP') {
+      fields.push(stepField('machineryItems', 'Machinery list', 12));
+    }
+    if (schemeCode === 'AP_EDP') {
+      fields.push(
+        stepField('furniture', 'Furniture and fixtures (₹ Lakhs)', 12),
         stepField('securityDeposits', 'Security deposits (₹ Lakhs)', 12)
       );
     }
@@ -578,6 +617,14 @@ export function getIndividualDocFields(
         stepField('subsidyPercent', 'Subsidy rate (%)', 13)
       );
     }
+    if (schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+      fields.push(
+        stepField('bankName', 'Bank name', 13),
+        stepField('interestRate', 'Interest rate (% per year)', 13),
+        stepField('moratoriumMonths', 'Moratorium (months)', 13),
+        stepField('loanTenureMonths', 'Loan tenure (months)', 13)
+      );
+    }
     return fields;
   }
 
@@ -592,6 +639,12 @@ export function getIndividualDocFields(
       stepField('annualProductionVolume', 'Annual Production Volume', 14),
       stepField('annualSalesRealization', 'Annual Sales Realization (₹ Lakhs)', 14),
     ];
+    if (schemeCode === 'AP_CMEP' || schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+      fields.push(
+        stepField('rawMaterialItems', 'Raw materials', 14),
+        stepField('staffRoles', 'Staff by role and monthly pay', 14)
+      );
+    }
     if (schemeCode === 'AP_CMEP') {
       fields.push(
         stepField('capacityPerDay', 'Installed capacity per day', 14),
@@ -601,7 +654,8 @@ export function getIndividualDocFields(
         stepField('monthlyRent', 'Rent per month (₹)', 14),
         stepField('monthlySalaries', 'Salaries per month (₹)', 14),
         stepField('monthlyPower', 'Power per month (₹)', 14),
-        stepField('annualExpenseGrowth', 'Annual expense increase (%)', 14)
+        stepField('annualExpenseGrowth', 'Annual expense increase (%)', 14),
+        stepField('utilisationByYear', 'Capacity utilisation by projected year', 14)
       );
     }
     return fields;
@@ -621,10 +675,12 @@ export function getIndividualDocFields(
   }
 
   if (contentStep === 16) {
-    return [
+    const fields = [
       stepField('startDate', 'Commercial production date (CoD)', 16),
       stepField('milestones', 'Milestones', 16),
     ];
+    if (schemeCode === 'AP_CMEP') fields.push(stepField('risks', 'Risks and how they will be handled', 16));
+    return fields;
   }
 
   if (contentStep === 17) {
@@ -656,7 +712,32 @@ export function formatDocValue(value: unknown): string {
   }
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'string') {
-    const mapped: Record<string, string> = { yes: 'Yes', no: 'No', cov: 'Certificate of Vending', first: '1st tranche' };
+    const mapped: Record<string, string> = {
+      yes: 'Yes',
+      no: 'No',
+      cov: 'Certificate of Vending',
+      first: '1st tranche',
+      general: 'General category',
+      special: 'Special category (SC / ST / OBC / Minority / Women / Ex-serviceman / PwD)',
+      rural: 'Rural',
+      urban: 'Urban',
+      '8thPlus': '8th class pass or higher',
+      below8th: 'Below 8th class',
+      KVIB: 'State KVIB',
+      DIC: 'DIC',
+      manufacturing: 'Manufacturing',
+      knowledge: 'Knowledge / service enterprise',
+      woman: 'Woman entrepreneur',
+      none: 'General (no booster)',
+      pwd: 'PwD',
+      exServiceman: 'Ex-serviceman',
+      transgender: 'Transgender',
+      completed: 'EDP completed',
+      pending: 'EDP still pending',
+      leased: 'Leased',
+      owned: 'Owned',
+      rented: 'Rented',
+    };
     return mapped[value] || value;
   }
   if (Array.isArray(value)) {
@@ -754,6 +835,24 @@ function actionLine(schemeCode: string | null): string {
   return 'Establishment of';
 }
 
+function pmegpUploadIds(data: Record<string, any>): string[] {
+  const ids = ['aadhaarPan', 'machineryQuotations', 'buildingEstimates', 'bankPassbook', 'udyamCertificate'];
+  if (data.schemeExtras?.pmegpCategory === 'special') ids.push('casteCertificate');
+  const cost = data.step12 || {};
+  const total = [
+    'land',
+    'building',
+    'machinery',
+    'utilitiesAndInfrastructure',
+    'preliminaryAndPreOperative',
+    'workingCapitalMargin',
+    'furniture',
+    'securityDeposits',
+  ].reduce((sum, key) => sum + (Number(cost[key]) || 0), 0);
+  if (total > 10) ids.push('educationCertificate');
+  return ids;
+}
+
 function uploadRows(schemeCode: string | null, data: Record<string, any>): DocRow[] {
   const store = data.step18 || data.uploads || {};
   const labels: Record<string, string> = {
@@ -766,13 +865,25 @@ function uploadRows(schemeCode: string | null, data: Record<string, any>): DocRo
     rationCard: 'Ration Card',
     pmVishwakarmaId: 'PM Vishwakarma Certificate / ID',
     toolkitQuotation: 'Toolkit List / Quote',
+    educationCertificate: 'Education certificate',
+    buildingEstimates: 'Building / workshed estimate',
+    casteCertificate: 'Caste / special-category certificate',
+    edpCertificate: 'EDP certificate',
+    apDomicileProof: 'AP Domicile Proof',
+    premisesLease: 'Lease deed / premises proof',
+    rawMaterialQuotations: 'Yarn, dye and packing rate sheets',
+    dealerEnquiries: 'Dealer enquiries or purchase orders',
   };
   const ids =
     schemeCode === 'SVANIDHI'
       ? ['covOrLor', 'aadhaarPan', 'bankPassbook', 'upiProof']
       : schemeCode === 'VISHWAKARMA'
         ? ['aadhaarPan', 'bankPassbook', 'rationCard', 'pmVishwakarmaId', 'toolkitQuotation']
-        : ['aadhaarPan', 'udyamCertificate', 'bankPassbook', 'machineryQuotations'];
+        : schemeCode === 'AP_CMEP'
+          ? ['udyamCertificate', 'machineryQuotations', 'apDomicileProof', 'bankPassbook', 'educationCertificate', 'edpCertificate', 'premisesLease', 'rawMaterialQuotations', 'dealerEnquiries']
+          : schemeCode === 'PMEGP'
+            ? pmegpUploadIds(data)
+            : ['aadhaarPan', 'udyamCertificate', 'bankPassbook', 'machineryQuotations'];
   return ids.map((id) => {
     const present = !!(store[id] || store[labels[id]]);
     return {
@@ -782,6 +893,118 @@ function uploadRows(schemeCode: string | null, data: Record<string, any>): DocRo
       filled: present,
     };
   });
+}
+
+const BANK_LAYOUT_SCHEMES = new Set(['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP']);
+
+function tableCell(value: unknown): string {
+  if (value == null || value === '') return '—';
+  return String(value);
+}
+
+function bankDataTable(
+  name: string,
+  raw: unknown,
+  schemeCode?: string | null
+): { headers: string[]; rows: string[][] } | null {
+  const list = Array.isArray(raw) ? raw.filter((row) => row && typeof row === 'object') : [];
+  if (name === 'productMix') {
+    return {
+      headers: ['Product', 'Share of output (%)', 'Selling price (₹)'],
+      rows: list.map((row) => [tableCell(row.name), tableCell(row.sharePercent), tableCell(row.sellingPrice)]),
+    };
+  }
+  if (name === 'rawMaterialItems') {
+    return {
+      headers: ['Material', 'Use', 'How it is bought'],
+      rows: list.map((row) => [tableCell(row.name), tableCell(row.use), tableCell(row.basis)]),
+    };
+  }
+  if (name === 'staffRoles') {
+    return {
+      headers: ['Role', 'Number of people', 'Monthly pay (₹)'],
+      rows: list.map((row) => [tableCell(row.role), tableCell(row.count), tableCell(row.monthlyPay)]),
+    };
+  }
+  if (name === 'risks') {
+    return {
+      headers: ['Risk', 'How it will be handled'],
+      rows: list.map((row) => [tableCell(row.risk), tableCell(row.mitigation)]),
+    };
+  }
+  if (name === 'utilisationByYear') {
+    return {
+      headers: ['Year', 'Capacity utilisation (%)'],
+      rows: list.map((row) => [tableCell(row.label), tableCell(row.percent)]),
+    };
+  }
+  if (name === 'milestones') {
+    return {
+      headers: ['Activity', 'Time', 'Start', 'End'],
+      rows: list.map((row) => [tableCell(row.activity), tableCell(row.timeRequired), tableCell(row.startDate), tableCell(row.endDate)]),
+    };
+  }
+  if (name === 'promoters') {
+    return {
+      headers: ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone', 'Address'],
+      rows: list.map((row) => [
+        tableCell(row.name),
+        tableCell(row.relationName),
+        tableCell(row.age),
+        tableCell(row.education),
+        tableCell(row.experienceYears),
+        tableCell(row.phone),
+        tableCell(row.address),
+      ]),
+    };
+  }
+  if (name === 'machineryItems') {
+    const detailed = schemeCode === 'AP_CMEP';
+    const headers = ['Description', 'New / used', 'Supplier', 'Qty', 'Unit cost (₹ Lakhs)'];
+    if (detailed) headers.push('GST', 'Transport', 'Installation', 'Life (years)', 'Yearly maintenance');
+    return {
+      headers,
+      rows: list.map((row) => {
+        const cells = [tableCell(row.description), tableCell(row.condition), tableCell(row.supplier), tableCell(row.quantity), tableCell(row.unitCost)];
+        if (detailed) cells.push(tableCell(row.gst), tableCell(row.transport), tableCell(row.installation), tableCell(row.lifeYears), tableCell(row.annualMaintenance));
+        return cells;
+      }),
+    };
+  }
+  if (name === 'yearProjections') {
+    return {
+      headers: ['Year', 'Sales (₹ Lakhs)', 'Raw material', 'Wages', 'Power', 'Net profit'],
+      rows: list.map((row) => [
+        tableCell(row.year != null ? `Year ${row.year}` : row.label),
+        tableCell(row.sales),
+        tableCell(row.rm),
+        tableCell(row.wages),
+        tableCell(row.power),
+        tableCell(row.netProfit),
+      ]),
+    };
+  }
+  if (name === 'costPhasing' && raw && typeof raw === 'object') {
+    const heads: Array<[string, string]> = [
+      ['land', 'Land'],
+      ['building', 'Building / shed'],
+      ['machinery', 'Machinery / equipment'],
+      ['furniture', 'Furniture and fixtures'],
+      ['deposits', 'Security deposits'],
+      ['workingCapital', 'Working capital'],
+    ];
+    const source = raw as Record<string, any>;
+    return {
+      headers: ['Particulars', 'Already incurred', 'To be incurred', 'Total'],
+      rows: heads.map(([key, label]) => {
+        const cell = source[key] || {};
+        const incurred = Number(cell.incurred) || 0;
+        const proposed = Number(cell.proposed) || 0;
+        return [label, String(incurred), String(proposed), String(incurred + proposed)];
+      }),
+    };
+  }
+  return null;
 }
 
 export function buildIndividualDocument(dpr: any, project?: any): IndividualDocument {
@@ -807,15 +1030,48 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
       seen.add(field.path);
       const raw = readField(field, data);
       if (schemeCode === 'AP_CMEP' && field.name === 'yearProjections') {
-        const columns = normalizeCmepProjections(raw);
+        const columns = normalizeCmepProjections(raw) as Array<Record<string, unknown>>;
+        const amt = (value: unknown) => {
+          const n = Number(value);
+          if (!Number.isFinite(n)) return '0';
+          return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100);
+        };
         const lineKeys = ['sales', 'rm', 'wages', 'power', 'salaries', 'rent', 'maintenance', 'admin', 'interest', 'depreciation', 'tax', 'netProfit'] as const;
         const filled = columns.some((col) => lineKeys.some((key) => Number((col as Record<string, unknown>)[key]) !== 0));
+        const operating = {
+          caption: 'Sales and operating costs (₹ Lakhs)',
+          headers: ['Year', 'Sales', 'Raw material', 'Wages', 'Power', 'Salaries', 'Rent', 'Maintenance', 'Admin'],
+          rows: columns.map((col) => [
+            String(col.label || ''),
+            amt(col.sales),
+            amt(col.rm),
+            amt(col.wages),
+            amt(col.power),
+            amt(col.salaries),
+            amt(col.rent),
+            amt(col.maintenance),
+            amt(col.admin),
+          ]),
+        };
+        const profit = {
+          caption: 'Interest, depreciation and profit (₹ Lakhs)',
+          headers: ['Year', 'Interest', 'Depreciation', 'Tax', 'Net profit'],
+          rows: columns.map((col) => [String(col.label || ''), amt(col.interest), amt(col.depreciation), amt(col.tax), amt(col.netProfit)]),
+        };
+        rows.push({ label: operating.caption, value: JSON.stringify(operating), path: field.path, filled, embed: 'data-table' });
+        rows.push({ label: profit.caption, value: JSON.stringify(profit), path: `${field.path}.profit`, filled, embed: 'data-table' });
+        continue;
+      }
+      const table = BANK_LAYOUT_SCHEMES.has(String(schemeCode))
+        ? bankDataTable(field.name, raw, schemeCode)
+        : null;
+      if (table) {
         rows.push({
           label: field.label,
-          value: JSON.stringify(columns),
+          value: JSON.stringify(table),
           path: field.path,
-          filled,
-          embed: 'cmep-projections',
+          filled: table.rows.length > 0,
+          embed: 'data-table',
         });
         continue;
       }
@@ -1115,20 +1371,28 @@ function buildCmepDerived(data: Record<string, any>) {
   const dscr = columns.map((col) => {
     const record = col as Record<string, unknown>;
     const cash = num(record.netProfit) + num(record.depreciation) + num(record.interest);
-    return { label: col.label, ratio: repayment > 0 ? cash / repayment : 0 };
+    return {
+      label: col.label,
+      cash,
+      repayment,
+      ratio: repayment > 0 ? cash / repayment : 0,
+    };
   });
   const first = (columns[0] || {}) as Record<string, unknown>;
   const fixed = num(first.salaries) + num(first.rent) + num(first.maintenance) + num(first.admin) + num(first.depreciation) + num(first.interest);
   const contribution = Math.max(0, num(first.sales) - num(first.rm) - num(first.wages) - num(first.power));
   const breakEvenSales = num(first.sales) > 0 && contribution > 0 ? fixed / (contribution / num(first.sales)) : 0;
+  const breakEvenCapacity = num(first.sales) > 0 ? (breakEvenSales / num(first.sales)) * 100 : 0;
   return {
     depreciation: [
       schedule('Machinery', 0.15, asset('machinery', 'machinery')),
       schedule('Building', 0.1, asset('building', 'building')),
       schedule('Furniture and fixtures', 0.1, asset('furniture', 'furniture')),
     ],
+    dscr,
     averageDscr: dscr.length ? dscr.reduce((sum, row) => sum + row.ratio, 0) / dscr.length : 0,
     breakEvenSales,
+    breakEvenCapacity,
     repayment: { amount: loan, rate, moratorium, tenure, emi },
   };
 }
@@ -1178,20 +1442,132 @@ function renderCmepEmbedHtml(kind: string, json: string): string {
   }
   if (kind === 'cmep-derived' && parsed) {
     const loan = parsed.repayment || {};
-    const dep = Array.isArray(parsed.depreciation)
-      ? parsed.depreciation
-          .map((asset: any) => `<p><strong>${escapeHtml(String(asset.asset || ''))}</strong> @ ${Math.round(Number(asset.rate) * 100)}% WDV. Year 1 addition ${fmt(asset.years?.[0]?.additions)}, closing ${fmt(asset.years?.[0]?.closing)}.</p>`)
-          .join('')
-      : '';
-    return `<div class="qa-a"><p>Term loan ₹ ${fmt(loan.amount)} Lakhs at ${fmt(loan.rate)}% . Moratorium ${loan.moratorium || 0} months. Tenure ${loan.tenure || 0} months. Indicative EMI ₹ ${fmt(loan.emi)} Lakhs.</p><p>Average DSCR ${fmt(parsed.averageDscr)}. Break-even sales ₹ ${fmt(parsed.breakEvenSales)} Lakhs.</p>${dep}</div>`;
+    const facts: Array<[string, string]> = [
+      ['Term loan (₹ Lakhs)', fmt(loan.amount)],
+      ['Interest rate (% per year)', fmt(loan.rate)],
+      ['Moratorium (months)', String(loan.moratorium || 0)],
+      ['Loan tenure (months)', String(loan.tenure || 0)],
+      ['Indicative EMI (₹ Lakhs)', fmt(loan.emi)],
+      ['Break-even sales (₹ Lakhs)', fmt(parsed.breakEvenSales)],
+      ['Break-even capacity (%)', fmt(parsed.breakEvenCapacity)],
+      ['Average DSCR', fmt(parsed.averageDscr)],
+    ];
+    const factRows = facts
+      .map(([label, value]) => `<tr><td class="part">${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`)
+      .join('');
+    const dscrBody = (Array.isArray(parsed.dscr) ? parsed.dscr : [])
+      .map(
+        (row: any) =>
+          `<tr><td>${escapeHtml(String(row.label || ''))}</td><td>${fmt(row.cash)}</td><td>${fmt(row.repayment)}</td><td>${fmt(row.ratio)}</td></tr>`
+      )
+      .join('');
+    const depTables = (Array.isArray(parsed.depreciation) ? parsed.depreciation : [])
+      .map((asset: any) => {
+        const body = (Array.isArray(asset.years) ? asset.years : [])
+          .map(
+            (year: any) =>
+              `<tr><td>${escapeHtml(String(year.label || ''))}</td><td>${fmt(year.opening)}</td><td>${fmt(year.additions)}</td><td>${fmt(year.depreciation)}</td><td>${fmt(year.closing)}</td></tr>`
+          )
+          .join('');
+        const title = `${asset.asset || 'Asset'} — depreciation ${Math.round(Number(asset.rate) * 100)}%`;
+        return `<table class="fin-table particulars"><caption>${escapeHtml(title)}</caption><thead><tr><th>Year</th><th>Opening</th><th>Additions</th><th>Depreciation</th><th>Closing</th></tr></thead><tbody>${body}</tbody></table>`;
+      })
+      .join('');
+    return (
+      `<table class="particulars"><caption>Repayment, break-even and DSCR</caption><thead><tr><th>Particular</th><th>Details</th></tr></thead><tbody>${factRows}</tbody></table>` +
+      `<table class="fin-table particulars"><caption>DSCR by year (₹ Lakhs)</caption><thead><tr><th>Year</th><th>Cash profit</th><th>Repayment</th><th>DSCR</th></tr></thead><tbody>${dscrBody}</tbody></table>` +
+      depTables
+    );
   }
   return '';
+}
+
+function renderDataTableHtml(json: string): string {
+  let parsed: { headers?: string[]; rows?: string[][] } = {};
+  try {
+    parsed = JSON.parse(json || '{}');
+  } catch {
+    parsed = {};
+  }
+  const headers = parsed.headers || [];
+  const bodyRows = parsed.rows || [];
+  const caption = (parsed as { caption?: string }).caption
+    ? `<caption>${escapeHtml(String((parsed as { caption?: string }).caption))}</caption>`
+    : '';
+  const wide = headers.length > 8 ? ' year-grid' : '';
+  const head = headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('');
+  const body = bodyRows.length
+    ? bodyRows
+        .map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`)
+        .join('')
+    : `<tr><td colspan="${headers.length || 1}">—</td></tr>`;
+  return `<table class="fin-table particulars${wide}">${caption}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+const NARRATIVE_FIELDS = new Set([
+  'executiveSummary',
+  'processOfManufacture',
+  'sectorDescription',
+  'presentActivities',
+  'geography',
+  'targetMarket',
+  'existingDemand',
+  'landDetails',
+  'waterAndEffluent',
+  'impactNote',
+]);
+
+function isNarrativeRow(row: DocRow): boolean {
+  const name = fieldNameFromPath(row.path);
+  if (NARRATIVE_FIELDS.has(name)) return true;
+  const text = String(row.value || '');
+  return text.length > 160;
+}
+
+function renderParticularsHtml(rows: DocRow[]): string {
+  const body = rows
+    .map((row) => {
+      const empty = !row.value || row.value === '—';
+      return `<tr><td class="part">${escapeHtml(row.label)}</td><td class="${empty ? 'is-empty' : ''}">${escapeHtml(empty ? '—' : row.value)}</td></tr>`;
+    })
+    .join('');
+  return `<table class="particulars"><thead><tr><th>Particular</th><th>Details</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 
 function renderSectionRowsHtml(rows: DocRow[], schemeCode?: string | null): string {
   if (!rows.length) return '<p class="empty">—</p>';
 
-  const stacked = schemeCode === 'AP_CMEP';
+  if (BANK_LAYOUT_SCHEMES.has(String(schemeCode))) {
+    const parts: string[] = ['<div class="sec-body">'];
+    let bucket: DocRow[] = [];
+    const flush = () => {
+      if (!bucket.length) return;
+      parts.push(renderParticularsHtml(bucket));
+      bucket = [];
+    };
+    for (const row of rows) {
+      if (row.embed) {
+        flush();
+        if (row.embed === 'cmep-projections') parts.push(renderCmepProjectionTableHtml(row.value));
+        else if (row.embed === 'data-table') parts.push(renderDataTableHtml(row.value));
+        else parts.push(renderCmepEmbedHtml(row.embed, row.value));
+      } else if (isNarrativeRow(row)) {
+        flush();
+        const empty = !row.value || row.value === '—';
+        parts.push(
+          `<article class="qa-block"><h3 class="qa-q">${escapeHtml(row.label)}</h3>` +
+            `<div class="qa-a${empty ? ' is-empty' : ''}">${escapeHtml(empty ? '—' : row.value).replace(/\n/g, '<br/>')}</div></article>`
+        );
+      } else {
+        bucket.push(row);
+      }
+    }
+    flush();
+    parts.push('</div>');
+    return parts.join('');
+  }
+
+  const stacked = false;
   const embeds = rows.filter((row) => !!row.embed);
   const rest = rows.filter((row) => !row.embed);
   const shortRows: DocRow[] = [];
@@ -1353,6 +1729,15 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
     border-right: 1px solid #99f6e4; border-bottom: 1px solid #99f6e4; min-width: 0;
     background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
   }
+  .particulars { width: 100%; border-collapse: collapse; margin: 0 0 8pt; font-size: 10pt; }
+  .particulars th, .particulars td { border: 1px solid #0f766e; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  .particulars thead th { background: #ecfdf5; font-weight: 700; }
+  .particulars td.part { width: 46%; font-weight: 700; }
+  .particulars td.is-empty { color: #9CA3AF; font-style: italic; }
+  .particulars caption { caption-side: top; text-align: left; font-weight: 700; padding: 5pt 6pt; background: #ecfdf5; border: 1px solid #0f766e; border-bottom: none; }
+  .fin-table.particulars td, .fin-table.particulars th { text-align: left; }
+  .year-grid { font-size: 8pt; }
+  .year-grid th, .year-grid td { padding: 3pt 3pt; }
   .meta-item:nth-child(2n) { border-right: none; }
   .meta-item dt {
     margin: 0; font-size: 8pt; font-weight: 700; text-transform: uppercase;
@@ -1458,6 +1843,15 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
   .meta-item dt { margin: 0; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #4B5563; }
   .meta-item dd { margin: 0; font-size: 11pt; font-weight: 600; color: #111827; overflow-wrap: anywhere; word-break: break-word; }
   .meta-item dd.is-empty { color: #9CA3AF; font-style: italic; font-weight: 500; }
+  .particulars { width: 100%; border-collapse: collapse; margin: 0 0 8pt; font-size: 10pt; }
+  .particulars th, .particulars td { border: 1px solid #1F2937; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  .particulars thead th { background: #F3F4F6; font-weight: 700; }
+  .particulars td.part { width: 46%; font-weight: 700; }
+  .particulars td.is-empty { color: #9CA3AF; font-style: italic; }
+  .particulars caption { caption-side: top; text-align: left; font-weight: 700; padding: 5pt 6pt; background: #F3F4F6; border: 1px solid #1F2937; border-bottom: none; }
+  .fin-table.particulars td, .fin-table.particulars th { text-align: left; }
+  .year-grid { font-size: 8pt; }
+  .year-grid th, .year-grid td { padding: 3pt 3pt; }
   .qa-block { border: 1px solid #1F2937; background: #fff; page-break-inside: avoid; }
   .qa-q { margin: 0; padding: 6pt 9pt; font-size: 10pt; font-weight: 700; background: #F3F4F6; border-bottom: 1px solid #D1D5DB; color: #111827; }
   .qa-a { margin: 0; padding: 10pt 11pt 12pt; font-size: 11pt; line-height: 1.65; color: #1F2937; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; min-height: 2.8em; text-align: justify; }

@@ -419,6 +419,11 @@ export function getStep18Uploads(
       { id: 'machineryQuotations', label: 'Machinery / Capex Quotations' },
       { id: 'apDomicileProof', label: 'AP Domicile Proof' },
       { id: 'bankPassbook', label: 'Bank Passbook / Cancelled Cheque' },
+      { id: 'educationCertificate', label: 'Education certificate' },
+      { id: 'edpCertificate', label: 'EDP certificate' },
+      { id: 'premisesLease', label: 'Lease deed / premises proof' },
+      { id: 'rawMaterialQuotations', label: 'Yarn, dye and packing rate sheets' },
+      { id: 'dealerEnquiries', label: 'Dealer enquiries or purchase orders' },
     ];
   }
   if (code === 'OBMMS') {

@@ -196,6 +196,14 @@ Education gate (app): manufacturing-like cost &gt; ₹10 L or service-like &gt; 
 
 ---
 
+## Why only some bank questions were added
+
+PMEGP is a bank appraisal, so the form now also asks for a machinery list, the bank name, interest rate, moratorium, and tenure, each product’s share and price, a raw-material list, and staff by role and monthly pay. Urban or rural, the education gate, and employment were already on this form.
+
+CMEP-only gates stay off PMEGP: EDP training, one person per family, the CMEP slab, workshop-area split, working-capital buildup, machine GST and life, and the risk table. Those decide a state margin-money case, not a KVIC margin-money case. Fill-this-step may answer only the fields on the current step.
+
+---
+
 ## 6. What must never appear on a PMEGP DPR
 
 - Common Facility Centre (CFC)  

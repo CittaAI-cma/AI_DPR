@@ -422,6 +422,46 @@
   word-break: break-word;
 }
 
+.individual-particulars {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 10pt;
+  font-size: 10.5pt;
+}
+
+.individual-particulars th,
+.individual-particulars td {
+  border: 1px solid #1f2937;
+  padding: 5pt 7pt;
+  text-align: left;
+  vertical-align: top;
+}
+
+.individual-particulars thead th {
+  background: #f3f4f6;
+  font-weight: 700;
+}
+
+.individual-particulars td.part {
+  width: 46%;
+  font-weight: 700;
+}
+
+.individual-particulars td.is-empty {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.individual-particulars caption {
+  caption-side: top;
+  text-align: left;
+  padding: 6pt 8pt;
+  font-weight: 700;
+  background: #f3f4f6;
+  border: 1px solid #1f2937;
+  border-bottom: none;
+}
+
 /* Expansive Q&A blocks for description answers */
 .individual-qa-block {
   border: 1px solid #1f2937;

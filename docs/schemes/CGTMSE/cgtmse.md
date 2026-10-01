@@ -40,6 +40,10 @@ Confirm women-owned cover % with the lender.
 
 1. Cover (`loanPurpose`, `womenOwned`, `entrepreneurName`, `proposedLimit`)  
 2–11. Story → … → cost → MoF (grant 0) → operating → viability  
-12. Uploads: Udyam, Aadhaar/PAN, quotations / WC evidence  
+12. Uploads: Udyam, Aadhaar/PAN, quotations / WC evidence
+
+## Why no extra operating questions were added
+
+CGTMSE is a bank-side guarantee. Cover depends on the loan and whether the unit is women-owned. Those questions are already on the form. Product mix, staff pay, loom count, working-capital buildup, loan diary, and CMEP eligibility do not change the guarantee, so they were not added here. Fill-this-step may answer only the fields already on the current step.  
 
 Update this file + `cgtmseQuestions.ts` + `CGTMSE_STEPS` together.

@@ -4,7 +4,7 @@ import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
 import { getIndividualDocFields } from '@/lib/individualDpr/individualDocModel';
 import { suggestionToFieldValue, isNumericDprField, isStructuredDprField, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { mergeCmepProjectedSuggestion } from '@/lib/individualDpr/cmepProjections';
-import { totalsFromCostPhasing } from '@/lib/individualDpr/cmepBankPack';
+import { machineryTotalLakhs, totalsFromCostPhasing, workingCapitalFromBuildup } from '@/lib/individualDpr/cmepBankPack';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
@@ -440,6 +440,19 @@ export async function suggestCurrentStepWithAi(options: {
           'monthlySalaries',
           'monthlyPower',
           'annualExpenseGrowth',
+          'loomCount',
+          'shifts',
+          'workshopAreaSqft',
+          'productionAreaSqft',
+          'storageAreaSqft',
+          'officeAreaSqft',
+          'leaseYears',
+          'wcRawStock',
+          'wcWip',
+          'wcFinished',
+          'wcReceivables',
+          'wcSupplierCredit',
+          'wcCash',
         ].includes(field);
         previousForField = {
           ...previous,
@@ -455,11 +468,31 @@ export async function suggestCurrentStepWithAi(options: {
           ...previous,
           _promptContext: yearPrompt,
         };
-      } else if (options.schemeCode === 'AP_CMEP' && (field === 'promoters' || field === 'machineryItems' || field === 'costPhasing')) {
+      } else if (
+        (field === 'promoters' || field === 'costPhasing') && options.schemeCode === 'AP_CMEP' ||
+        field === 'machineryItems' ||
+        field === 'productMix' ||
+        field === 'rawMaterialItems' ||
+        field === 'staffRoles' ||
+        field === 'risks' ||
+        field === 'utilisationByYear'
+      ) {
         const shape = field === 'promoters'
           ? '[{"name":"","relationName":"","age":"","dob":"","education":"","experienceYears":"","phone":"","address":""}]'
           : field === 'machineryItems'
-            ? '[{"description":"","condition":"new","supplier":"","quantity":1,"unitCost":0}]'
+            ? options.schemeCode === 'AP_CMEP'
+              ? '[{"description":"","condition":"new","supplier":"","quantity":1,"unitCost":0,"gst":0,"transport":0,"installation":0,"lifeYears":0,"annualMaintenance":0}]'
+              : '[{"description":"","condition":"new","supplier":"","quantity":1,"unitCost":0}]'
+            : field === 'productMix'
+              ? '[{"name":"","sharePercent":0,"sellingPrice":0}]'
+              : field === 'rawMaterialItems'
+                ? '[{"name":"","use":"","basis":""}]'
+                : field === 'staffRoles'
+                  ? '[{"role":"","count":0,"monthlyPay":0}]'
+                  : field === 'risks'
+                    ? '[{"risk":"","mitigation":""}]'
+                    : field === 'utilisationByYear'
+                      ? '[{"label":"2026-2027","percent":60}]'
             : '{"land":{"incurred":0,"proposed":0},"building":{"incurred":0,"proposed":0},"machinery":{"incurred":0,"proposed":0},"furniture":{"incurred":0,"proposed":0},"deposits":{"incurred":0,"proposed":0},"workingCapital":{"incurred":0,"proposed":0}}';
         previousForField = {
           ...previous,
@@ -481,12 +514,12 @@ export async function suggestCurrentStepWithAi(options: {
           _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a whole number (headcount), e.g. 4. No words.`,
         };
       } else if (
-        options.schemeCode === 'AP_CMEP' &&
-        ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography'].includes(field)
+        ['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(options.schemeCode)) &&
+        ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography', 'landDetails', 'impactNote', 'waterAndEffluent'].includes(field)
       ) {
         previousForField = {
           ...previous,
-          _promptContext: `For field "${field}" ("${fieldDef.label}"): write 250 to 400 words of finished bank-ready prose for this one field only. Do not invent extra questions or headings.`,
+          _promptContext: `For field "${field}" ("${fieldDef.label}"): write 320 to 450 words of finished bank-ready prose for this one field only. Do not invent extra questions or headings.`,
         };
       }
       const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
@@ -672,6 +705,12 @@ export function applyCatalogSuggestionToForm(options: {
     if (suggestion.field === 'costPhasing' && value && typeof value === 'object') {
       Object.assign(stepPatch, totalsFromCostPhasing(value as Record<string, { incurred: number; proposed: number }>));
     }
+    if (suggestion.field === 'machineryItems' && Array.isArray(value)) {
+      stepPatch.machinery = machineryTotalLakhs(value, schemeCode === 'AP_CMEP');
+    }
+    if (String(suggestion.field).startsWith('wc')) {
+      stepPatch.workingCapitalMargin = workingCapitalFromBuildup({ ...stepPatch });
+    }
     return { ok: true, value };
   }
 
@@ -679,6 +718,12 @@ export function applyCatalogSuggestionToForm(options: {
   latest[suggestion.field] = value;
   if (suggestion.field === 'costPhasing' && value && typeof value === 'object') {
     Object.assign(latest, totalsFromCostPhasing(value as Record<string, { incurred: number; proposed: number }>));
+  }
+  if (suggestion.field === 'machineryItems' && Array.isArray(value)) {
+    latest.machinery = machineryTotalLakhs(value, schemeCode === 'AP_CMEP');
+  }
+  if (String(suggestion.field).startsWith('wc')) {
+    latest.workingCapitalMargin = workingCapitalFromBuildup(latest);
   }
   extraFieldNames.forEach((name) => {
     delete latest[name];
