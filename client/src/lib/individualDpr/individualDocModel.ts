@@ -417,7 +417,7 @@ export function getIndividualDocFields(
       fields.push(extraField('capacityUtilisationY1'));
     }
     if (schemeCode === 'PMFME') fields.push(extraField('proposedWorkers'));
-    if (schemeCode === 'AP_CMEP' || schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+    if (lean) {
       fields.push(stepField('productMix', 'Products, share of output and selling price', 4));
     }
     if (schemeCode === 'AP_CMEP') {
@@ -564,7 +564,7 @@ export function getIndividualDocFields(
         stepField('wcCash', 'Cash (₹ Lakhs)', 12)
       );
     }
-    if (schemeCode === 'PMEGP' || schemeCode === 'STANDUP' || schemeCode === 'AP_EDP') {
+    if (lean && schemeCode !== 'AP_CMEP') {
       fields.push(stepField('machineryItems', 'Machinery list', 12));
     }
     if (schemeCode === 'AP_EDP') {
@@ -593,7 +593,7 @@ export function getIndividualDocFields(
         stepField('subsidyPercent', 'Subsidy rate (%)', 13)
       );
     }
-    if (schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+    if (lean && schemeCode !== 'AP_CMEP') {
       fields.push(
         stepField('bankName', 'Bank name', 13),
         stepField('interestRate', 'Interest rate (% per year)', 13),
@@ -615,7 +615,7 @@ export function getIndividualDocFields(
       stepField('annualProductionVolume', 'Annual Production Volume', 14),
       stepField('annualSalesRealization', 'Annual Sales Realization (₹ Lakhs)', 14),
     ];
-    if (schemeCode === 'AP_CMEP' || schemeCode === 'PMEGP' || schemeCode === 'STANDUP') {
+    if (lean) {
       fields.push(
         stepField('rawMaterialItems', 'Raw materials', 14),
         stepField('staffRoles', 'Staff by role and monthly pay', 14)

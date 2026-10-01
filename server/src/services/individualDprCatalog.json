@@ -3,7 +3,7 @@
     {
       "n": 1,
       "id": "cover",
-      "title": "Step 1: Your unit \u2013 basic details",
+      "title": "Step 1: Your unit – basic details",
       "contentStep": 1
     },
     {
@@ -457,7 +457,7 @@
     {
       "n": 4,
       "id": "unit",
-      "title": "Step 4: Unit profile & capacity (existing \u2192 proposed)",
+      "title": "Step 4: Unit profile & capacity (existing → proposed)",
       "contentStep": 4
     },
     {
@@ -892,8 +892,14 @@
     },
     {
       "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
       "id": "uploads",
-      "title": "Step 10: Documents & uploads",
+      "title": "Step 11: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -968,8 +974,26 @@
     },
     {
       "n": 5,
+      "id": "cost",
+      "title": "Step 5: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 6,
+      "id": "finance",
+      "title": "Step 6: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 7,
+      "id": "operating",
+      "title": "Step 7: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 8,
       "id": "uploads",
-      "title": "Step 5: Documents & uploads",
+      "title": "Step 8: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1000,8 +1024,26 @@
     },
     {
       "n": 5,
+      "id": "cost",
+      "title": "Step 5: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 6,
+      "id": "finance",
+      "title": "Step 6: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 7,
+      "id": "operating",
+      "title": "Step 7: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 8,
       "id": "uploads",
-      "title": "Step 5: Documents & uploads",
+      "title": "Step 8: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1032,8 +1074,26 @@
     },
     {
       "n": 5,
+      "id": "cost",
+      "title": "Step 5: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 6,
+      "id": "finance",
+      "title": "Step 6: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 7,
+      "id": "operating",
+      "title": "Step 7: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 8,
       "id": "uploads",
-      "title": "Step 5: Documents & uploads",
+      "title": "Step 8: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1064,8 +1124,26 @@
     },
     {
       "n": 5,
+      "id": "cost",
+      "title": "Step 5: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 6,
+      "id": "finance",
+      "title": "Step 6: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 7,
+      "id": "operating",
+      "title": "Step 7: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 8,
       "id": "uploads",
-      "title": "Step 5: Documents & uploads",
+      "title": "Step 8: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1096,8 +1174,26 @@
     },
     {
       "n": 5,
+      "id": "cost",
+      "title": "Step 5: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 6,
+      "id": "finance",
+      "title": "Step 6: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 7,
+      "id": "operating",
+      "title": "Step 7: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 8,
       "id": "uploads",
-      "title": "Step 5: Documents & uploads",
+      "title": "Step 8: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1158,8 +1254,14 @@
     },
     {
       "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
       "id": "uploads",
-      "title": "Step 10: Documents & uploads",
+      "title": "Step 11: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1220,8 +1322,14 @@
     },
     {
       "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
       "id": "uploads",
-      "title": "Step 10: Documents & uploads",
+      "title": "Step 11: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1480,8 +1588,26 @@
     },
     {
       "n": 5,
+      "id": "cost",
+      "title": "Step 5: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 6,
+      "id": "finance",
+      "title": "Step 6: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 7,
+      "id": "operating",
+      "title": "Step 7: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 8,
       "id": "uploads",
-      "title": "Step 5: Documents & uploads",
+      "title": "Step 8: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1776,8 +1902,14 @@
     },
     {
       "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
       "id": "uploads",
-      "title": "Step 10: Documents & uploads",
+      "title": "Step 11: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1912,8 +2044,14 @@
     },
     {
       "n": 10,
+      "id": "operating",
+      "title": "Step 10: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 11,
       "id": "uploads",
-      "title": "Step 10: Documents & uploads",
+      "title": "Step 11: Documents & uploads",
       "contentStep": 18
     }
   ],
@@ -1944,8 +2082,26 @@
     },
     {
       "n": 5,
+      "id": "cost",
+      "title": "Step 5: Project cost",
+      "contentStep": 12
+    },
+    {
+      "n": 6,
+      "id": "finance",
+      "title": "Step 6: Means of finance",
+      "contentStep": 13
+    },
+    {
+      "n": 7,
+      "id": "operating",
+      "title": "Step 7: Operating cost & sales",
+      "contentStep": 14
+    },
+    {
+      "n": 8,
       "id": "uploads",
-      "title": "Step 5: Documents & uploads",
+      "title": "Step 8: Documents & uploads",
       "contentStep": 18
     }
   ],

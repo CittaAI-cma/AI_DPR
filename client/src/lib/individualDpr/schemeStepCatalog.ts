@@ -233,7 +233,7 @@ export const VISHWAKARMA_STEPS: SchemeStepDef[] = catalog([
 ]);
 
 /**
- * PM SVANidhi — 10 consecutive steps (street-vendor WC micro-credit).
+ * PM SVANidhi — 11 consecutive steps (street-vendor WC micro-credit).
  * Spec: docs/schemes/SVANIDHI/svanidhi.md
  */
 export const SVANIDHI_STEPS: SchemeStepDef[] = catalog([
@@ -246,6 +246,7 @@ export const SVANIDHI_STEPS: SchemeStepDef[] = catalog([
   { id: 'applicant', title: 'Applicant', contentStep: 11 },
   { id: 'cost', title: 'Working capital need', contentStep: 12 },
   { id: 'finance', title: 'Means of finance (critical)', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
@@ -264,7 +265,7 @@ export const ECLGS_STEPS: SchemeStepDef[] = catalog([
 ]);
 
 /**
- * MSME Sustainable ZED — 5 consecutive steps (certification note).
+ * MSME Sustainable ZED — 8 consecutive steps (certification note).
  * Spec: docs/schemes/ZED/zed.md
  */
 export const ZED_STEPS: SchemeStepDef[] = catalog([
@@ -272,11 +273,14 @@ export const ZED_STEPS: SchemeStepDef[] = catalog([
   { id: 'unit', title: 'Unit profile', contentStep: 4 },
   { id: 'market', title: 'Quality / market need', contentStep: 6 },
   { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 /**
- * Competitive LEAN — 5 consecutive steps (process consulting note).
+ * Competitive LEAN — 8 consecutive steps (process consulting note).
  * Spec: docs/schemes/LEAN/lean.md
  */
 export const LEAN_STEPS: SchemeStepDef[] = catalog([
@@ -284,11 +288,14 @@ export const LEAN_STEPS: SchemeStepDef[] = catalog([
   { id: 'unit', title: 'Unit / shop-floor profile', contentStep: 4 },
   { id: 'market', title: 'Process / market need', contentStep: 6 },
   { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 /**
- * MSME Innovative IPR — 5 consecutive steps (IP filing note).
+ * MSME Innovative IPR — 8 consecutive steps (IP filing note).
  * Spec: docs/schemes/MSME_IPR/msmeIpr.md
  */
 export const MSME_IPR_STEPS: SchemeStepDef[] = catalog([
@@ -296,11 +303,14 @@ export const MSME_IPR_STEPS: SchemeStepDef[] = catalog([
   { id: 'unit', title: 'Unit / invention profile', contentStep: 4 },
   { id: 'market', title: 'IP / market need', contentStep: 6 },
   { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 /**
- * PMS — 5 consecutive steps (trade-fair / marketing annex).
+ * PMS — 8 consecutive steps (trade-fair / marketing annex).
  * Spec: docs/schemes/PMS/pms.md
  */
 export const PMS_STEPS: SchemeStepDef[] = catalog([
@@ -308,11 +318,14 @@ export const PMS_STEPS: SchemeStepDef[] = catalog([
   { id: 'unit', title: 'Unit / product profile', contentStep: 4 },
   { id: 'market', title: 'Market / fair offtake', contentStep: 6 },
   { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 /**
- * National SC/ST Hub — 5 consecutive steps (procurement readiness).
+ * National SC/ST Hub — 8 consecutive steps (procurement readiness).
  * Spec: docs/schemes/SCST_HUB/scstHub.md
  */
 export const SCST_HUB_STEPS: SchemeStepDef[] = catalog([
@@ -320,11 +333,14 @@ export const SCST_HUB_STEPS: SchemeStepDef[] = catalog([
   { id: 'unit', title: 'Unit profile', contentStep: 4 },
   { id: 'market', title: 'Procurement focus', contentStep: 6 },
   { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 /**
- * ASPIRE — 10 consecutive steps (rural innovation / livelihood).
+ * ASPIRE — 11 consecutive steps (rural innovation / livelihood).
  * Spec: docs/schemes/ASPIRE/aspire.md
  */
 export const ASPIRE_STEPS: SchemeStepDef[] = catalog([
@@ -337,11 +353,12 @@ export const ASPIRE_STEPS: SchemeStepDef[] = catalog([
   { id: 'applicant', title: 'Applicant', contentStep: 11 },
   { id: 'cost', title: 'Light project cost', contentStep: 12 },
   { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 /**
- * NHDP — 10 consecutive steps (weaver / handloom).
+ * NHDP — 11 consecutive steps (weaver / handloom).
  * Spec: docs/schemes/NHDP/nhdp.md
  */
 export const NHDP_STEPS: SchemeStepDef[] = catalog([
@@ -354,6 +371,7 @@ export const NHDP_STEPS: SchemeStepDef[] = catalog([
   { id: 'applicant', title: 'Applicant', contentStep: 11 },
   { id: 'cost', title: 'Tools / WC cost', contentStep: 12 },
   { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
@@ -420,7 +438,7 @@ export const PTUAS_STEPS: SchemeStepDef[] = catalog([
 
 
 /**
- * PMPDS (pharma & medical devices) — 5 consecutive steps.
+ * PMPDS (pharma & medical devices) — 8 consecutive steps.
  * Spec: docs/schemes/PMPDS/pmpds.md
  */
 export const PMPDS_STEPS: SchemeStepDef[] = catalog([
@@ -428,6 +446,9 @@ export const PMPDS_STEPS: SchemeStepDef[] = catalog([
   { id: 'unit', title: 'Unit / product profile', contentStep: 4 },
   { id: 'market', title: 'Market / need', contentStep: 6 },
   { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
@@ -495,7 +516,7 @@ export const AP_CMEP_STEPS: SchemeStepDef[] = catalog([
 
 
 /**
- * AP OBMMS welfare self-employment — 10 consecutive steps.
+ * AP OBMMS welfare self-employment — 11 consecutive steps.
  * Spec: docs/schemes/OBMMS/obmms.md
  */
 export const OBMMS_STEPS: SchemeStepDef[] = catalog([
@@ -508,6 +529,7 @@ export const OBMMS_STEPS: SchemeStepDef[] = catalog([
   { id: 'applicant', title: 'Applicant', contentStep: 11 },
   { id: 'cost', title: 'Project / land cost', contentStep: 12 },
   { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
@@ -533,7 +555,7 @@ export const MSE_SPICE_STEPS: SchemeStepDef[] = catalog([
 
 
 /**
- * AP MSME-PARKS land rebate — 10 consecutive steps.
+ * AP MSME-PARKS land rebate — 11 consecutive steps.
  * Spec: docs/schemes/AP_PARKS/apParks.md
  */
 export const AP_PARKS_STEPS: SchemeStepDef[] = catalog([
@@ -546,12 +568,13 @@ export const AP_PARKS_STEPS: SchemeStepDef[] = catalog([
   { id: 'applicant', title: 'Applicant', contentStep: 11 },
   { id: 'cost', title: 'Project / land cost', contentStep: 12 },
   { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 
 
 /**
- * RAMP TEAM (ONDC) — 5 consecutive steps.
+ * RAMP TEAM (ONDC) — 8 consecutive steps.
  * Spec: docs/schemes/RAMP_TEAM/rampTeam.md
  */
 export const RAMP_TEAM_STEPS: SchemeStepDef[] = catalog([
@@ -559,6 +582,9 @@ export const RAMP_TEAM_STEPS: SchemeStepDef[] = catalog([
   { id: 'unit', title: 'Unit / product profile', contentStep: 4 },
   { id: 'market', title: 'Market / need', contentStep: 6 },
   { id: 'applicant', title: 'Applicant / firm', contentStep: 11 },
+  { id: 'cost', title: 'Project cost', contentStep: 12 },
+  { id: 'finance', title: 'Means of finance', contentStep: 13 },
+  { id: 'operating', title: 'Operating cost & sales', contentStep: 14 },
   { id: 'uploads', title: 'Documents & uploads', contentStep: 18 },
 ]);
 

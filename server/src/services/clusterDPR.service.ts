@@ -1258,7 +1258,7 @@ Return suggestions in JSON format with EXACTLY ${stepMapping.fields.length} sugg
 
 CRITICAL: You MUST return exactly ${stepMapping.fields.length} suggestions - one for each field key: ${stepMapping.fields.map(f => f.name).join(', ')}. Never rename those keys. Do not add any field that is not in this list.
 ${isIndividualDPR ? `- For any of these keys that are in this step — executiveSummary, processOfManufacture, sectorDescription, presentActivities, targetMarket, existingDemand, geography, landDetails, impactNote, waterAndEffluent — the suggestion value itself must be 320 to 450 words of finished prose.
-` : ''}${['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(schemeCode)) ? `
+` : ''}${isIndividualDPR ? `
 THIS STEP ONLY:
 - Suggestions may use ONLY these keys: ${stepMapping.fields.map(f => f.name).join(', ')}.
 - Do not invent new questions, headings, or extra JSON keys.
@@ -1398,7 +1398,7 @@ Return suggestions in JSON format only.`,
       }
 
       // Fallback stays on the catalog fields. For AP CMEP, do not invent instructional questions.
-      if (['AP_CMEP', 'PMEGP', 'STANDUP', 'AP_EDP'].includes(String(schemeCode))) return [];
+      if (isIndividualDPR) return [];
 
       // Fallback: return field-specific suggestions based on all previous step data
       // Note: step1Data, clusterName, district, natureOfBusiness, majorProducts, emptyFields, and filledFields
