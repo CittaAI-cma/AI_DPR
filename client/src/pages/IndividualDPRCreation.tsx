@@ -54,7 +54,7 @@ export const IndividualDPRCreation: React.FC = () => {
   } = useIndividualDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
-  const [requiredNotice, setRequiredNotice] = useState('');
+  const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [devMode, setDevMode] = useState(false);
   const isAdmin = isSuperAdmin(useAuthStore((s) => s.user?.role));
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
@@ -265,14 +265,10 @@ export const IndividualDPRCreation: React.FC = () => {
       const stepData = data[`step${content}`] || {};
       const missing = missingIndividualRequired(content, stepData, schemeCode);
       if (missing.length) {
-        const message = `${tf('Fill the required fields before continuing')}: ${missing
-          .map((field) => tf(field.label))
-          .join(', ')}`;
-        setRequiredNotice(message);
-        toast.error(message);
+        setInvalidFields(missing.map((field) => field.key));
         return;
       }
-      setRequiredNotice('');
+      setInvalidFields([]);
     }
     if (advancing) setIsStepping(true);
     try {
@@ -287,6 +283,27 @@ export const IndividualDPRCreation: React.FC = () => {
       if (advancing) setIsStepping(false);
     }
   };
+
+  const aiAssistedKey = JSON.stringify(data.schemeExtras?.aiAssistedSteps || []);
+  useEffect(() => {
+    const assisted: number[] = data.schemeExtras?.aiAssistedSteps || [];
+    const content = getContentStep(currentStep, schemeCode);
+    if (!assisted.includes(content)) return;
+    const missing = missingIndividualRequired(content, data[`step${content}`], schemeCode);
+    setInvalidFields(missing.map((field) => field.key));
+    // Highlight skipped required fields once AI content is applied on this step.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiAssistedKey]);
+
+  useEffect(() => {
+    if (!invalidFields.length) return;
+    const content = getContentStep(currentStep, schemeCode);
+    const still = missingIndividualRequired(content, data[`step${content}`], schemeCode).map(
+      (field) => field.key
+    );
+    const next = invalidFields.filter((key) => still.includes(key));
+    if (next.length !== invalidFields.length) setInvalidFields(next);
+  }, [data, currentStep, schemeCode, invalidFields]);
 
   const handleSaveDraft = async () => {
     const success = await saveToDatabase();
@@ -388,7 +405,7 @@ export const IndividualDPRCreation: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
@@ -409,7 +426,11 @@ export const IndividualDPRCreation: React.FC = () => {
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  {setupPhase === 'pick' ? t('common.back') : t('common.previous')}
+                  {setupPhase === 'pick'
+                    ? t('common.back')
+                    : setupPhase === 'brief'
+                      ? t('individualDpr.picker.backToSchemes', { defaultValue: 'All Schemes' })
+                      : t('common.previous')}
                 </Button>
                 <div>
                   <h1 className="text-2xl font-bold">{t('individualDpr.title')}</h1>
@@ -505,6 +526,12 @@ export const IndividualDPRCreation: React.FC = () => {
         {setupPhase === 'brief' && (
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex justify-end">
+                <Button variant="primary" onClick={handleBriefNext} className="gap-2">
+                  {t('individualDpr.picker.continueToForm', { defaultValue: 'Start DPR steps' })}
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
               <SchemeBriefPanel
                 schemeCode={data.matchedSchemeCode || null}
                 formNotes={{
@@ -515,11 +542,7 @@ export const IndividualDPRCreation: React.FC = () => {
               <div className="flex items-center justify-between gap-3">
                 <Button variant="outline" onClick={() => setSetupPhase('pick')} className="gap-2">
                   <ChevronLeft className="h-4 w-4" />
-                  {t('individualDpr.picker.backToSchemes', { defaultValue: 'All schemes' })}
-                </Button>
-                <Button variant="primary" onClick={handleBriefNext} className="gap-2">
-                  {t('individualDpr.picker.continueToForm', { defaultValue: 'Next — start DPR steps' })}
-                  <ChevronRight className="h-4 w-4" />
+                  {t('individualDpr.picker.backToSchemes', { defaultValue: 'All Schemes' })}
                 </Button>
               </div>
             </div>
@@ -528,7 +551,7 @@ export const IndividualDPRCreation: React.FC = () => {
 
         {setupPhase === 'form' && (
           <>
-        <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur border-b border-border">
+        <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
               {visibleSteps.map((step) => {
@@ -538,6 +561,7 @@ export const IndividualDPRCreation: React.FC = () => {
                   <button
                     key={step}
                     onClick={() => {
+                      setInvalidFields([]);
                       setCurrentStep(step);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
@@ -638,17 +662,19 @@ export const IndividualDPRCreation: React.FC = () => {
                       ) : null}
                     </CardHeader>
                     <CardContent>
-                      {requiredNotice ? (
-                        <div
-                          role="alert"
-                          className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
-                        >
-                          {requiredNotice}
-                        </div>
+                      {(data.schemeExtras?.aiAssistedSteps || []).includes(
+                        getContentStep(currentStep, data.matchedSchemeCode)
+                      ) ? (
+                        <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                          {tf(
+                            'AI-generated content. Please cross-check all details. The submitter is responsible for the accuracy of the final document.'
+                          )}
+                        </p>
                       ) : null}
                       <IndividualDPRForm
                         key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`}
                         currentStep={currentStep}
+                        invalidFields={invalidFields}
                         onNext={() => goAdjacent(1)}
                         onPrevious={() => goAdjacent(-1)}
                       />
@@ -687,7 +713,7 @@ export const IndividualDPRCreation: React.FC = () => {
 
             {(previewMode === 'preview' || previewMode === 'split') && (
               <div className="space-y-6">
-                <Card className="sticky top-[146px] max-h-[calc(100vh-170px)] overflow-hidden flex flex-col">
+                <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
                   <CardHeader className="flex-shrink-0 border-b border-border">
                     <div className="flex items-center justify-between">
                       <CardTitle>{t('individualDpr.livePreview')}</CardTitle>

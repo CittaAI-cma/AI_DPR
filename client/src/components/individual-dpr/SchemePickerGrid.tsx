@@ -8,6 +8,7 @@ import {
   loc,
 } from '@/lib/individualDpr/schemeBriefs';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { cardMatchesFilters, schemeKind, schemeLevel, type SchemeKind, type SchemeLevel } from '@/lib/schemePickerFilters';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
@@ -15,40 +16,35 @@ interface SchemePickerGridProps {
   onSelect: (schemeCode: string | null) => void;
 }
 
-type LevelFilter = 'all' | 'central' | 'state' | 'bank';
-type KindFilter = 'all' | 'subsidy' | 'loan' | 'guarantee' | 'other';
+const LEVELS: Array<{ id: SchemeLevel; label: string }> = [
+  { id: 'central', label: 'Central schemes' },
+  { id: 'state', label: 'Andhra Pradesh schemes' },
+  { id: 'bank', label: 'Bank term loan' },
+];
 
-function schemeLevel(typeEn: string): Exclude<LevelFilter, 'all'> {
-  if (typeEn === 'Central Scheme') return 'central';
-  if (typeEn === 'State Scheme') return 'state';
-  return 'bank';
+const KINDS: Array<{ id: SchemeKind; label: string }> = [
+  { id: 'subsidy', label: 'Subsidy' },
+  { id: 'loan', label: 'Loan' },
+  { id: 'guarantee', label: 'Guarantee' },
+  { id: 'other', label: 'Other support' },
+];
+
+function toggleValue<T>(list: T[], value: T): T[] {
+  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-function schemeKind(categoryEn: string): Exclude<KindFilter, 'all'> {
-  const text = categoryEn.toLowerCase();
-  if (text.includes('guarantee')) return 'guarantee';
-  if (
-    text.includes('subsidy') ||
-    text.includes('subvention') ||
-    text.includes('rebate') ||
-    text.includes('incentive')
-  ) {
-    return 'subsidy';
-  }
-  if (text.includes('loan') || text.includes('refinance') || text.includes('toolkit')) return 'loan';
-  return 'other';
-}
-
-const selectClass =
-  'h-12 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
+const chipClass = (on: boolean) =>
+  `h-10 rounded-full border px-3 text-sm ${
+    on ? 'border-primary bg-primary text-white' : 'border-input bg-background text-foreground'
+  }`;
 
 export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) => {
   const { t, i18n } = useTranslation();
   const tf = useClusterFormText();
   const lang = briefLangFromI18n(i18n.language);
   const [query, setQuery] = useState('');
-  const [level, setLevel] = useState<LevelFilter>('all');
-  const [kind, setKind] = useState<KindFilter>('all');
+  const [levels, setLevels] = useState<SchemeLevel[]>([]);
+  const [kinds, setKinds] = useState<SchemeKind[]>([]);
 
   const cards = useMemo(
     () =>
@@ -88,15 +84,9 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
     [lang]
   );
 
-  const filtered = cards.filter((card) => {
-    if (level !== 'all' && card.level !== level) return false;
-    if (kind !== 'all' && card.kind !== kind) return false;
-    const q = query.trim().toLowerCase();
-    if (q && !card.haystack.includes(q)) return false;
-    return true;
-  });
+  const filtered = cards.filter((card) => cardMatchesFilters(card, levels, kinds, query));
 
-  const filtersActive = query.trim() !== '' || level !== 'all' || kind !== 'all';
+  const filtersActive = query.trim() !== '' || levels.length > 0 || kinds.length > 0;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -123,39 +113,44 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
             className="h-12 pl-10"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            className={selectClass}
-            value={level}
-            onChange={(e) => setLevel(e.target.value as LevelFilter)}
-            aria-label={tf('All levels')}
-          >
-            <option value="all">{tf('All levels')}</option>
-            <option value="central">{tf('Central schemes')}</option>
-            <option value="state">{tf('Andhra Pradesh schemes')}</option>
-            <option value="bank">{tf('Bank term loan')}</option>
-          </select>
-          <select
-            className={selectClass}
-            value={kind}
-            onChange={(e) => setKind(e.target.value as KindFilter)}
-            aria-label={tf('All kinds')}
-          >
-            <option value="all">{tf('All kinds')}</option>
-            <option value="subsidy">{tf('Subsidy')}</option>
-            <option value="loan">{tf('Loan')}</option>
-            <option value="guarantee">{tf('Guarantee')}</option>
-            <option value="other">{tf('Other support')}</option>
-          </select>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tf('All levels')}>
+            <span className="text-xs font-medium text-muted-foreground">{tf('All levels')}</span>
+            {LEVELS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={levels.includes(item.id)}
+                className={chipClass(levels.includes(item.id))}
+                onClick={() => setLevels((current) => toggleValue(current, item.id))}
+              >
+                {tf(item.label)}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tf('All kinds')}>
+            <span className="text-xs font-medium text-muted-foreground">{tf('All kinds')}</span>
+            {KINDS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={kinds.includes(item.id)}
+                className={chipClass(kinds.includes(item.id))}
+                onClick={() => setKinds((current) => toggleValue(current, item.id))}
+              >
+                {tf(item.label)}
+              </button>
+            ))}
+          </div>
           {filtersActive && (
             <Button
               type="button"
               variant="outline"
-              className="h-12"
+              className="h-10 w-fit"
               onClick={() => {
                 setQuery('');
-                setLevel('all');
-                setKind('all');
+                setLevels([]);
+                setKinds([]);
               }}
             >
               <X className="h-4 w-4 mr-1" />

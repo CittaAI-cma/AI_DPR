@@ -100,6 +100,7 @@ const startServer = async () => {
 
     // Seed initial schemes (optional)
     await seedSchemes();
+    await seedRbacUsers();
 
     // Pre-warm RAG assistant cache (eliminates 5-10s overhead on first request)
     const { preWarmAssistantCache } = await import('./services/openai.service');
@@ -217,6 +218,34 @@ async function seedSchemes() {
   }
 
   await Scheme.deleteMany({ schemeCode: 'STANDUP' });
+}
+
+async function seedRbacUsers() {
+  const { User } = await import('./models/User.model');
+  const { PRIVACY_NOTICE_VERSION } = await import('./lib/privacyNotice');
+  const password = 'Rbac-Test-2026';
+  const accounts = [
+    { name: 'RBAC Admin', email: 'rbac.admin@msme.test', role: 'admin' },
+    { name: 'RBAC Consultant', email: 'rbac.consultant@msme.test', role: 'entrepreneur' },
+    { name: 'RBAC Officer', email: 'rbac.officer@msme.test', role: 'officer' },
+  ];
+  for (const account of accounts) {
+    const existing = await User.findOne({ email: account.email });
+    if (existing) continue;
+    await User.create({
+      ...account,
+      passwordHash: password,
+      privacy: {
+        noticeVersion: PRIVACY_NOTICE_VERSION,
+        noticeAcceptedAt: new Date(),
+        accountConsent: true,
+        accountConsentAt: new Date(),
+        aiAssist: true,
+        aiAssistAt: new Date(),
+      },
+    });
+    console.log(`✅ RBAC test login: ${account.email} / ${password} (${account.role})`);
+  }
 }
 
 // Graceful shutdown

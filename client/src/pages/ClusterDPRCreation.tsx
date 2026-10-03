@@ -530,7 +530,7 @@ export const ClusterDPRCreation: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -614,7 +614,7 @@ export const ClusterDPRCreation: React.FC = () => {
         </div>
 
         {/* Step Progress Indicator */}
-        <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur border-b border-border">
+        <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
               {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {
@@ -734,7 +734,7 @@ export const ClusterDPRCreation: React.FC = () => {
             {/* Right Panel: Preview */}
             {(previewMode === 'preview' || previewMode === 'split') && (
               <div className="space-y-6">
-                <Card className="sticky top-[146px] max-h-[calc(100vh-170px)] overflow-hidden flex flex-col">
+                <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
                   <CardHeader className="flex-shrink-0 border-b border-border">
                     <div className="flex items-center justify-between">
                       <CardTitle>{t('clusterDpr.livePreview')}</CardTitle>

@@ -27,6 +27,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { downloadBlob } from '@/lib/utils';
+import { dprDownloadName } from '@/lib/dprExportName';
+import { dprSchemeCode } from '@/lib/dprSearchTags';
 import { FormattedText } from '@/utils/textFormatter';
 import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
@@ -268,13 +270,21 @@ export const DPRPreview: React.FC = () => {
         }
       }
 
+      const fileName = (ext: string) =>
+        dprDownloadName({
+          schemeCode: dpr ? dprSchemeCode(dpr) : '',
+          projectName: project?.projectName,
+          language: viewLanguage,
+          ext,
+        });
+
       let blob;
       if (format === 'pdf') {
         // Cluster + Latest individual: capture the on-screen Q&A document (not the cluster server PDF)
         if (isIndividualDPR) {
           // Server A4 template (16mm margins) — DOM capture was clipping tables at the page edge
           blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
-          downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
+          downloadBlob(blob, fileName('pdf'));
         } else if (isClusterDPR) {
           const root = document.querySelector('.dpr-document');
           if (root) {
@@ -285,21 +295,21 @@ export const DPRPreview: React.FC = () => {
               console.warn('HTML PDF failed, using server PDF', htmlErr);
               blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
             }
-            downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
+            downloadBlob(blob, fileName('pdf'));
           } else {
             blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
-            downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
+            downloadBlob(blob, fileName('pdf'));
           }
         } else {
           blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
-          downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.pdf`);
+          downloadBlob(blob, fileName('pdf'));
         }
       } else if (format === 'docx') {
         blob = await api.downloadDOCX(dprId!, viewLanguage);
-        downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.docx`);
+        downloadBlob(blob, fileName('docx'));
       } else if (format === 'xls') {
         blob = await api.downloadXLS(dprId!, viewLanguage);
-        downloadBlob(blob, `DPR_${project?.projectName || 'Report'}_${viewLanguage}.xlsx`);
+        downloadBlob(blob, fileName('xlsx'));
       }
       toast.success(`${format.toUpperCase()} downloaded successfully!`);
     } catch (error) {

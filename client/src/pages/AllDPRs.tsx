@@ -28,6 +28,7 @@ import {
 import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { collectDprSearchTags, dprSchemeCode, dprSearchHaystack } from '@/lib/dprSearchTags';
+import { dprDownloadName } from '@/lib/dprExportName';
 
 interface DPR {
   _id: string;
@@ -281,14 +282,19 @@ export const AllDPRs: React.FC = () => {
     return 'Needs Improvement';
   };
 
-  const handleDownloadPDF = async (dprId: string, language: 'english' | 'telugu' = 'english') => {
+  const handleDownloadPDF = async (dpr: DPR, language: 'english' | 'telugu' = 'english') => {
     try {
-      const response = await api.downloadPDF(dprId, language);
+      const response = await api.downloadPDF(dpr._id, language);
       const blob = new Blob([response], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `DPR_${dprId}_${language}.pdf`;
+      a.download = dprDownloadName({
+        schemeCode: dprSchemeCode(dpr),
+        projectName: dpr.projectId?.projectName,
+        language,
+        ext: 'pdf',
+      });
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -796,7 +802,7 @@ export const AllDPRs: React.FC = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDownloadPDF(dpr._id, 'english')}
+                        onClick={() => handleDownloadPDF(dpr, 'english')}
                         className="border-2"
                       >
                         <Download className="h-4 w-4 mr-2" />

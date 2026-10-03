@@ -22,6 +22,108 @@ import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 
+const SUGGESTION_LABELS: Record<string, string> = {
+  year: 'Year',
+  label: 'Year',
+  sales: 'Sales (₹ Lakhs)',
+  rm: 'Raw material (₹ Lakhs)',
+  wages: 'Wages (₹ Lakhs)',
+  power: 'Power (₹ Lakhs)',
+  salaries: 'Salaries (₹ Lakhs)',
+  rent: 'Rent (₹ Lakhs)',
+  maintenance: 'Maintenance (₹ Lakhs)',
+  admin: 'Admin (₹ Lakhs)',
+  interest: 'Interest (₹ Lakhs)',
+  depreciation: 'Depreciation (₹ Lakhs)',
+  tax: 'Tax (₹ Lakhs)',
+  netProfit: 'Net profit (₹ Lakhs)',
+  percent: 'Utilisation (%)',
+  name: 'Name',
+  sharePercent: 'Share of output (%)',
+  sellingPrice: 'Selling price',
+  description: 'Description',
+  condition: 'Condition',
+  supplier: 'Supplier',
+  quantity: 'Quantity',
+  unitCost: 'Unit cost (₹ Lakhs)',
+  incurred: 'Already incurred',
+  proposed: 'To be incurred',
+};
+
+function parseStructuredSuggestion(text: string): unknown | null {
+  const trimmed = String(text || '').trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null;
+  try {
+    const value = JSON.parse(trimmed);
+    if (value && typeof value === 'object') return value;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function suggestionLabel(key: string): string {
+  if (SUGGESTION_LABELS[key]) return SUGGESTION_LABELS[key];
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function SuggestionValue({ text }: { text: string }) {
+  const tf = useClusterFormText();
+  const parsed = parseStructuredSuggestion(text);
+  if (Array.isArray(parsed) && parsed.every((row) => row && typeof row === 'object' && !Array.isArray(row))) {
+    const keys = [...new Set(parsed.flatMap((row) => Object.keys(row as Record<string, unknown>)))];
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr>
+              {keys.map((key) => (
+                <th key={key} className="p-1 text-left font-medium text-muted-foreground">
+                  {tf(suggestionLabel(key))}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {parsed.map((row, index) => (
+              <tr key={index}>
+                {keys.map((key) => (
+                  <td key={key} className="p-1">
+                    <input
+                      readOnly
+                      className="h-9 w-full min-w-[5.5rem] rounded-md border border-input bg-background px-2 text-sm"
+                      value={String((row as Record<string, unknown>)[key] ?? '')}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {Object.entries(parsed as Record<string, unknown>).map(([key, value]) => (
+          <label key={key} className="block text-xs">
+            <span className="mb-1 block font-medium text-muted-foreground">{tf(suggestionLabel(key))}</span>
+            <input
+              readOnly
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              value={value != null && typeof value === 'object' ? JSON.stringify(value) : String(value ?? '')}
+            />
+          </label>
+        ))}
+      </div>
+    );
+  }
+  return <p className="text-sm text-gray-700 whitespace-pre-wrap">{text}</p>;
+}
+
 interface AISuggestionsProps {
   currentStep: number;
   currentStepData: any;
@@ -87,6 +189,13 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   };
 
   const schemeCode = isIndividualDPR ? data?.matchedSchemeCode || null : null;
+  const markAiStep = () => {
+    if (!isIndividualDPR || !setSchemeExtrasProp) return;
+    const extras = data?.schemeExtras || {};
+    const current = Array.isArray(extras.aiAssistedSteps) ? extras.aiAssistedSteps : [];
+    if (current.includes(currentStep)) return;
+    setSchemeExtrasProp({ ...extras, aiAssistedSteps: [...current, currentStep] });
+  };
   const budget = isIndividualDPR ? data?.ventureMatchAnswers?.budget : undefined;
   const stepCatalogFields = isIndividualDPR
     ? getIndividualDocFields(currentStep, schemeCode, budget).filter(
@@ -209,6 +318,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         toast.error(tf('Could not apply this suggestion. Try again.'));
         return;
       }
+      markAiStep();
       // Do NOT call onApplySuggestion with raw AI text — that overwrites numbers with prose.
       setStepSuggestions((prev) => prev.filter((s) => s.field !== item.field));
       toast.success(tf('Applied suggestion for {label}').replace('{label}', item.label));
@@ -241,6 +351,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       if (applied === 0) {
         toast.error(tf('Could not apply suggestions. Try again.'));
       } else {
+        markAiStep();
         setStepSuggestions([]);
         toast.success(
           tf('Applied {n} suggestions.').replace('{n}', String(applied))
@@ -571,6 +682,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
       if (schemeExtraFields.includes(suggestion.field)) {
         if (onApplySuggestion) onApplySuggestion(suggestion.field, finalContent);
+        markAiStep();
         toast.success(`Applied AI suggestion to ${suggestion.field}`);
         return;
       }
@@ -587,6 +699,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
         onApplySuggestion(suggestion.field, finalContent);
       }
 
+      markAiStep();
       toast.success(`Applied AI suggestion to ${suggestion.field}`);
     } catch (error) {
       console.error('Error applying suggestion:', error);
@@ -706,6 +819,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       }
 
       setStepData(currentStep, updatedStepData);
+      markAiStep();
       toast.success(`Applied ${appliedCount} suggestion${appliedCount !== 1 ? 's' : ''}`);
     } finally {
       setApplyingAll(false);
@@ -975,16 +1089,16 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                       <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-primary mb-1">{item.label}</p>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                          {isNumericDprField(item.field)
-                            ? (() => {
-                                const n = suggestionToFieldValue(item.field, item.suggestion);
-                                return n == null || n === ''
-                                  ? item.suggestion
-                                  : String(n);
-                              })()
-                            : item.suggestion}
-                        </p>
+                        <SuggestionValue
+                          text={
+                            isNumericDprField(item.field)
+                              ? (() => {
+                                  const n = suggestionToFieldValue(item.field, item.suggestion);
+                                  return n == null || n === '' ? item.suggestion : String(n);
+                                })()
+                              : item.suggestion
+                          }
+                        />
                       </div>
                       <div className="flex flex-col gap-1.5 flex-shrink-0">
                         <button
@@ -1162,13 +1276,15 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                           {fieldLabel(suggestion.field)}:
                         </p>
                       )}
-                      <p className="text-sm text-gray-700">
-                        {typeof suggestion.suggestion === 'string'
-                          ? suggestion.suggestion
-                          : typeof suggestion.suggestion === 'object'
-                            ? JSON.stringify(suggestion.suggestion, null, 2)
-                            : String(suggestion.suggestion || '')}
-                      </p>
+                      <SuggestionValue
+                        text={
+                          typeof suggestion.suggestion === 'string'
+                            ? suggestion.suggestion
+                            : typeof suggestion.suggestion === 'object'
+                              ? JSON.stringify(suggestion.suggestion)
+                              : String(suggestion.suggestion || '')
+                        }
+                      />
                       {suggestion.reasoning && (
                         <p className="text-xs text-muted-foreground mt-1 italic">
                           {typeof suggestion.reasoning === 'string'
