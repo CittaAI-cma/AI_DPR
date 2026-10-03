@@ -359,6 +359,12 @@ export const ClusterDPRCreation: React.FC = () => {
           .join(', ')}`;
         setRequiredNotice(message);
         toast.error(message);
+        window.setTimeout(() => {
+          document.getElementById('cluster-required-notice')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }, 80);
         return;
       }
       setRequiredNotice('');
@@ -385,8 +391,29 @@ export const ClusterDPRCreation: React.FC = () => {
   };
 
   const handleStepClick = (step: number) => {
+    if (step === currentStep) return;
+    if (step > currentStep && !(isAdmin && devMode)) {
+      for (let s = currentStep; s < step; s += 1) {
+        const missing = missingClusterRequired(s, data[`step${s}`]);
+        if (missing.length) {
+          if (s !== currentStep) setCurrentStep(s);
+          const message = `${tf('Fill the required fields before continuing')}: ${missing
+            .map((field) => tf(field.label))
+            .join(', ')}`;
+          setRequiredNotice(message);
+          toast.error(message);
+          window.setTimeout(() => {
+            document.getElementById('cluster-required-notice')?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+          }, 80);
+          return;
+        }
+      }
+    }
+    setRequiredNotice('');
     setCurrentStep(step);
-    // Scroll to top of the page so the selected step appears to come from top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -679,6 +706,7 @@ export const ClusterDPRCreation: React.FC = () => {
                     <CardContent>
                       {requiredNotice ? (
                         <div
+                          id="cluster-required-notice"
                           role="alert"
                           className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
                         >

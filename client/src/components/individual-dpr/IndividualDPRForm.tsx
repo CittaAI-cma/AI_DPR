@@ -320,7 +320,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   };
 
   const fieldRing = (name: string, base = '') =>
-    `${base} ${invalidFields.includes(name) ? 'border-red-500 ring-2 ring-red-400' : ''}`.trim();
+    `${base} ${invalidFields.includes(name) ? 'scroll-mt-40 border-red-500 ring-2 ring-red-400' : ''}`.trim();
 
   const requiredHint = (name: string) =>
     invalidFields.includes(name) ? (
@@ -438,6 +438,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               )}
             </label>
             <Input
+            data-required-field="unitName"
             className={fieldRing('unitName')}
             value={String(stepData.unitName ?? stepData.clusterName ?? '')}
             onChange={(e) => handleInputChange('unitName', e.target.value)}
@@ -486,6 +487,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               )}
             </label>
             <ExpandableSelect
+              data-required-field="district"
               className={fieldRing('district', 'w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm')}
               value={stepData.district || ''}
               onChange={(e) => {
@@ -514,6 +516,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}
           </label>
             <ExpandableSelect
+              data-required-field="location"
               className={fieldRing('location', 'w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm')}
             value={stepData.location || ''}
             onChange={(e) => handleInputChange('location', e.target.value)}
@@ -2486,6 +2489,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <div>
           {renderLabel('sectorType', isLeanUnit ? 'Sector / industry type' : 'Sector / Industry Type', true)}
           <Input
+            data-required-field="sectorType"
             className={fieldRing('sectorType')}
             value={stepData.sectorType || ''}
             onChange={(e) => handleInputChange('sectorType', e.target.value)}
@@ -2497,6 +2501,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <div>
           {renderLabel('sectorDescription', isLeanUnit ? 'Short intro — what the unit does' : 'Sector Description', true)}
           <ExpandableTextarea
+            data-required-field="sectorDescription"
             className={fieldRing('sectorDescription', 'w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm')}
             value={stepData.sectorDescription || ''}
             onChange={(e) => handleInputChange('sectorDescription', e.target.value)}
@@ -2951,7 +2956,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
         {isApCmep && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+        <div>
               <label className="block text-sm font-medium mb-2">{tf('Number of looms / machines')}</label>
               <Input type="number" value={stepData.loomCount || ''} onChange={(e) => handleInputChange('loomCount', parseFloat(e.target.value) || 0)} />
             </div>
@@ -3412,6 +3417,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <div>
           {renderLabel('interventionType', 'Intervention Type', true)}
           <ExpandableSelect
+            data-required-field="interventionType"
             className={fieldRing('interventionType', 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm')}
             value={stepData.interventionType || ''}
             onChange={(e) => handleInputChange('interventionType', e.target.value)}
@@ -3477,6 +3483,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               true
             )}
             <Input
+              data-required-field="name"
               className={fieldRing('name')}
               value={stepData.name || ''}
               onChange={(e) => handleInputChange('name', e.target.value)}
@@ -3492,6 +3499,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <div>
             {renderLabel('location', 'Location', true)}
             <Input
+              data-required-field="location"
               className={fieldRing('location')}
               value={stepData.location || ''}
               onChange={(e) => handleInputChange('location', e.target.value)}
@@ -3995,7 +4003,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           )}
           {isApEdp && (
             <>
-              <div>
+          <div>
                 {renderLabel('furniture', 'Furniture and fixtures (₹ Lakhs)')}
                 <Input type="number" value={stepData.furniture || ''} onChange={(e) => handleInputChange('furniture', parseFloat(e.target.value) || 0)} placeholder={tf('0')} />
               </div>
@@ -4525,15 +4533,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const years = isApCmep
       ? cmepYears.filter((col) => col.period === 'projected')
       : stepData.yearProjections?.length
-        ? stepData.yearProjections
-        : [1, 2, 3, 4, 5].map((year) => ({
-            year,
+      ? stepData.yearProjections
+      : [1, 2, 3, 4, 5].map((year) => ({
+          year,
             sales: year === 1 ? toFiniteNumber(step14.annualSalesRealization) : 0,
             rm: year === 1 ? toFiniteNumber(step14.rawMaterialCost) : 0,
             wages: year === 1 ? toFiniteNumber(step14.wages) : 0,
             power: year === 1 ? toFiniteNumber(step14.powerCost) : 0,
-            netProfit: 0,
-          }));
+          netProfit: 0,
+        }));
     const updateYear = (index: number, field: string, value: number) => {
       const next = years.map((row: any, i: number) => (i === index ? { ...row, [field]: value } : row));
       handleInputChange('yearProjections', next);
