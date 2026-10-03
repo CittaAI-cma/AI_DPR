@@ -2951,7 +2951,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
         {isApCmep && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+        <div>
               <label className="block text-sm font-medium mb-2">{tf('Number of looms / machines')}</label>
               <Input type="number" value={stepData.loomCount || ''} onChange={(e) => handleInputChange('loomCount', parseFloat(e.target.value) || 0)} />
             </div>
@@ -3995,7 +3995,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           )}
           {isApEdp && (
             <>
-              <div>
+          <div>
                 {renderLabel('furniture', 'Furniture and fixtures (₹ Lakhs)')}
                 <Input type="number" value={stepData.furniture || ''} onChange={(e) => handleInputChange('furniture', parseFloat(e.target.value) || 0)} placeholder={tf('0')} />
               </div>
@@ -4525,15 +4525,15 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const years = isApCmep
       ? cmepYears.filter((col) => col.period === 'projected')
       : stepData.yearProjections?.length
-        ? stepData.yearProjections
-        : [1, 2, 3, 4, 5].map((year) => ({
-            year,
+      ? stepData.yearProjections
+      : [1, 2, 3, 4, 5].map((year) => ({
+          year,
             sales: year === 1 ? toFiniteNumber(step14.annualSalesRealization) : 0,
             rm: year === 1 ? toFiniteNumber(step14.rawMaterialCost) : 0,
             wages: year === 1 ? toFiniteNumber(step14.wages) : 0,
             power: year === 1 ? toFiniteNumber(step14.powerCost) : 0,
-            netProfit: 0,
-          }));
+          netProfit: 0,
+        }));
     const updateYear = (index: number, field: string, value: number) => {
       const next = years.map((row: any, i: number) => (i === index ? { ...row, [field]: value } : row));
       handleInputChange('yearProjections', next);
