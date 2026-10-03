@@ -218,7 +218,7 @@ export const IndividualDPRCreation: React.FC = () => {
   }, [schemeCode]);
 
   useEffect(() => {
-    setRequiredNotice('');
+    setInvalidFields([]);
   }, [currentStep]);
 
   const saveToDatabase = useCallback(async () => {
@@ -454,7 +454,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     on={devMode}
                     onChange={(next) => {
                       setDevMode(next);
-                      if (next) setRequiredNotice('');
+                      if (next) setInvalidFields([]);
                     }}
                   />
                 )}
