@@ -9,6 +9,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ArrowLeft, Download, FileText, Loader2 } from 'lucide-react';
 import { downloadBlob } from '@/lib/utils';
+import { dprDownloadName } from '@/lib/dprExportName';
+import { dprSchemeCode } from '@/lib/dprSearchTags';
 import { FormattedText } from '@/utils/textFormatter';
 
 export const DPRGeneration: React.FC = () => {
@@ -92,7 +94,15 @@ export const DPRGeneration: React.FC = () => {
         return;
       }
       const blob = await api.downloadPDF(dprId, viewLanguage);
-      downloadBlob(blob, `DPR_${project.projectName}_${viewLanguage}.pdf`);
+      downloadBlob(
+        blob,
+        dprDownloadName({
+          schemeCode: dpr ? dprSchemeCode(dpr) : project?.schemeCode,
+          projectName: project.projectName,
+          language: viewLanguage,
+          ext: 'pdf',
+        })
+      );
       toast.success('PDF downloaded successfully!');
     } catch (error) {
       toast.error('Failed to download PDF');
@@ -111,7 +121,15 @@ export const DPRGeneration: React.FC = () => {
         return;
       }
       const blob = await api.downloadDOCX(dprId, viewLanguage);
-      downloadBlob(blob, `DPR_${project.projectName}_${viewLanguage}.docx`);
+      downloadBlob(
+        blob,
+        dprDownloadName({
+          schemeCode: dpr ? dprSchemeCode(dpr) : project?.schemeCode,
+          projectName: project.projectName,
+          language: viewLanguage,
+          ext: 'docx',
+        })
+      );
       toast.success('DOCX downloaded successfully!');
     } catch (error) {
       toast.error('Failed to download DOCX');

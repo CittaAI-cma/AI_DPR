@@ -5,6 +5,7 @@ import { getIndividualDocFields, isLeanUnitScheme } from '@/lib/individualDpr/in
 import { suggestionToFieldValue, isNumericDprField, isStructuredDprField, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { mergeCmepProjectedSuggestion } from '@/lib/individualDpr/cmepProjections';
 import { machineryTotalLakhs, totalsFromCostPhasing, workingCapitalFromBuildup } from '@/lib/individualDpr/cmepBankPack';
+import { groundCostSuggestion } from '@/lib/individualDpr/costSuggestionGuard';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
@@ -458,7 +459,7 @@ export async function suggestCurrentStepWithAi(options: {
           ...previous,
           _promptContext: plainNumber
             ? `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number. No words and no extra fields.`
-            : `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs (e.g. 15 or 10.5). No words, no currency symbol, no explanation.`,
+            : `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs already stated in the previous steps. If no amount was stated, reply 0. Do not invent a project cost. No words and no currency symbol.`,
         };
       } else if (field === 'yearProjections') {
         const yearPrompt = options.schemeCode === 'AP_CMEP'
@@ -548,7 +549,7 @@ export async function suggestCurrentStepWithAi(options: {
       suggestions.push({
         field,
         label: fieldDef.label,
-        suggestion: String(text).trim(),
+        suggestion: groundCostSuggestion(field, String(text).trim(), previous),
         source: fieldDef.source === 'extras' ? 'extras' : 'step',
       });
     } catch (error) {

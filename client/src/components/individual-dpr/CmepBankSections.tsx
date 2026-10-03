@@ -146,33 +146,63 @@ export function CmepMachineryEditor({
     <div className="space-y-2">
       <h4 className="font-semibold">{tf('Machinery list')}</h4>
       {rows.map((row, index) => (
-        <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-2 items-center">
-          <Input className="md:col-span-2" value={row.description} placeholder={tf('Description')} onChange={(e) => update(index, { description: e.target.value })} />
-          <select
-            className="h-10 rounded-md border border-input bg-background px-2 text-sm"
-            value={row.condition}
-            onChange={(e) => update(index, { condition: e.target.value === 'used' ? 'used' : 'new' })}
-          >
-            <option value="new">{tf('New')}</option>
-            <option value="used">{tf('Used')}</option>
-          </select>
-          <Input value={row.supplier} placeholder={tf('Supplier')} onChange={(e) => update(index, { supplier: e.target.value })} />
-          <Input type="number" value={row.quantity || ''} placeholder={tf('Qty')} onChange={(e) => update(index, { quantity: parseFloat(e.target.value) || 0 })} />
-          <div className="flex gap-1">
-            <Input type="number" value={row.unitCost || ''} placeholder={tf('Unit cost (₹ Lakhs)')} onChange={(e) => update(index, { unitCost: parseFloat(e.target.value) || 0 })} />
-            <Button type="button" variant="ghost" size="sm" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+        <div key={index} className="space-y-3 rounded-md border p-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="min-w-0 sm:col-span-2">
+              <label className="mb-2 block text-sm font-medium">{tf('Description')}</label>
+              <Input value={row.description} placeholder={tf('Description')} onChange={(e) => update(index, { description: e.target.value })} />
+            </div>
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium">{tf('Condition')}</label>
+              <select
+                className="h-10 w-full rounded-md border border-input bg-background px-2 text-sm"
+                value={row.condition}
+                onChange={(e) => update(index, { condition: e.target.value === 'used' ? 'used' : 'new' })}
+              >
+                <option value="new">{tf('New')}</option>
+                <option value="used">{tf('Used')}</option>
+              </select>
+            </div>
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium">{tf('Supplier')}</label>
+              <Input value={row.supplier} placeholder={tf('Supplier')} onChange={(e) => update(index, { supplier: e.target.value })} />
+            </div>
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium">{tf('Qty')}</label>
+              <Input type="number" value={row.quantity || ''} placeholder={tf('Qty')} onChange={(e) => update(index, { quantity: parseFloat(e.target.value) || 0 })} />
+            </div>
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium">{tf('Unit cost (₹ Lakhs)')}</label>
+              <Input type="number" value={row.unitCost || ''} placeholder={tf('Unit cost (₹ Lakhs)')} onChange={(e) => update(index, { unitCost: parseFloat(e.target.value) || 0 })} />
+            </div>
+            {detailed && (
+              <>
+                <div className="min-w-0">
+                  <label className="mb-2 block text-sm font-medium">{tf('GST (₹ Lakhs)')}</label>
+                  <Input type="number" value={row.gst || ''} placeholder={tf('GST (₹ Lakhs)')} onChange={(e) => update(index, { gst: parseFloat(e.target.value) || 0 })} />
+                </div>
+                <div className="min-w-0">
+                  <label className="mb-2 block text-sm font-medium">{tf('Transport (₹ Lakhs)')}</label>
+                  <Input type="number" value={row.transport || ''} placeholder={tf('Transport (₹ Lakhs)')} onChange={(e) => update(index, { transport: parseFloat(e.target.value) || 0 })} />
+                </div>
+                <div className="min-w-0">
+                  <label className="mb-2 block text-sm font-medium">{tf('Installation (₹ Lakhs)')}</label>
+                  <Input type="number" value={row.installation || ''} placeholder={tf('Installation (₹ Lakhs)')} onChange={(e) => update(index, { installation: parseFloat(e.target.value) || 0 })} />
+                </div>
+                <div className="min-w-0">
+                  <label className="mb-2 block text-sm font-medium">{tf('Expected life (years)')}</label>
+                  <Input type="number" value={row.lifeYears || ''} placeholder={tf('Expected life (years)')} onChange={(e) => update(index, { lifeYears: parseFloat(e.target.value) || 0 })} />
+                </div>
+                <div className="min-w-0">
+                  <label className="mb-2 block text-sm font-medium">{tf('Yearly maintenance (₹ Lakhs)')}</label>
+                  <Input type="number" value={row.annualMaintenance || ''} placeholder={tf('Yearly maintenance (₹ Lakhs)')} onChange={(e) => update(index, { annualMaintenance: parseFloat(e.target.value) || 0 })} />
+                </div>
+              </>
+            )}
           </div>
-          {detailed && (
-            <>
-              <Input type="number" value={row.gst || ''} placeholder={tf('GST (₹ Lakhs)')} onChange={(e) => update(index, { gst: parseFloat(e.target.value) || 0 })} />
-              <Input type="number" value={row.transport || ''} placeholder={tf('Transport (₹ Lakhs)')} onChange={(e) => update(index, { transport: parseFloat(e.target.value) || 0 })} />
-              <Input type="number" value={row.installation || ''} placeholder={tf('Installation (₹ Lakhs)')} onChange={(e) => update(index, { installation: parseFloat(e.target.value) || 0 })} />
-              <Input type="number" value={row.lifeYears || ''} placeholder={tf('Expected life (years)')} onChange={(e) => update(index, { lifeYears: parseFloat(e.target.value) || 0 })} />
-              <Input type="number" value={row.annualMaintenance || ''} placeholder={tf('Yearly maintenance (₹ Lakhs)')} onChange={(e) => update(index, { annualMaintenance: parseFloat(e.target.value) || 0 })} />
-            </>
-          )}
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       ))}
       <Button

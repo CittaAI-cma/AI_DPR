@@ -37,7 +37,7 @@ function RowList<T>({
     <div className="space-y-2 border rounded-md p-4">
       <h4 className="font-semibold">{tf(title)}</h4>
       {rows.map((row, index) => (
-        <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-2 items-center">
+        <div key={index} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
           {render(row, index, (patch) => onChange(rows.map((item, i) => (i === index ? { ...item, ...patch } : item))))}
           <Button type="button" variant="ghost" size="sm" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
             <Trash2 className="h-4 w-4" />
@@ -125,9 +125,18 @@ export function RawMaterialEditor({ value, onChange }: { value: unknown; onChang
       addLabel="Add raw material"
       render={(row, _index, update) => (
         <>
-          <Input className="md:col-span-2" value={row.name} placeholder={tf('Material')} onChange={(e) => update({ name: e.target.value })} />
-          <Input className="md:col-span-2" value={row.use} placeholder={tf('Use')} onChange={(e) => update({ use: e.target.value })} />
-          <Input value={row.basis} placeholder={tf('How it is bought')} onChange={(e) => update({ basis: e.target.value })} />
+          <div className="min-w-0">
+            <label className="block text-sm font-medium mb-2">{tf('Material')}</label>
+            <Input value={row.name} placeholder={tf('Material')} onChange={(e) => update({ name: e.target.value })} />
+          </div>
+          <div className="min-w-0">
+            <label className="block text-sm font-medium mb-2">{tf('Use')}</label>
+            <Input value={row.use} placeholder={tf('Use')} onChange={(e) => update({ use: e.target.value })} />
+          </div>
+          <div className="min-w-0">
+            <label className="block text-sm font-medium mb-2">{tf('How it is bought')}</label>
+            <Input value={row.basis} placeholder={tf('How it is bought')} onChange={(e) => update({ basis: e.target.value })} />
+          </div>
         </>
       )}
     />
@@ -146,9 +155,18 @@ export function StaffRoleEditor({ value, onChange }: { value: unknown; onChange:
       addLabel="Add role"
       render={(row, _index, update) => (
         <>
-          <Input className="md:col-span-3" value={row.role} placeholder={tf('Role')} onChange={(e) => update({ role: e.target.value })} />
-          <Input type="number" value={row.count || ''} placeholder={tf('Number of people')} onChange={(e) => update({ count: parseFloat(e.target.value) || 0 })} />
-          <Input type="number" value={row.monthlyPay || ''} placeholder={tf('Monthly pay (₹)')} onChange={(e) => update({ monthlyPay: parseFloat(e.target.value) || 0 })} />
+          <div className="min-w-0">
+            <label className="block text-sm font-medium mb-2">{tf('Role')}</label>
+            <Input value={row.role} placeholder={tf('Role')} onChange={(e) => update({ role: e.target.value })} />
+          </div>
+          <div className="min-w-0">
+            <label className="block text-sm font-medium mb-2">{tf('Number of people')}</label>
+            <Input type="number" value={row.count || ''} placeholder={tf('Number of people')} onChange={(e) => update({ count: parseFloat(e.target.value) || 0 })} />
+          </div>
+          <div className="min-w-0">
+            <label className="block text-sm font-medium mb-2">{tf('Monthly pay (₹)')}</label>
+            <Input type="number" value={row.monthlyPay || ''} placeholder={tf('Monthly pay (₹)')} onChange={(e) => update({ monthlyPay: parseFloat(e.target.value) || 0 })} />
+          </div>
         </>
       )}
     />
@@ -167,8 +185,14 @@ export function RiskEditor({ value, onChange }: { value: unknown; onChange: (nex
       addLabel="Add risk"
       render={(row, _index, update) => (
         <>
-          <Input className="md:col-span-2" value={row.risk} placeholder={tf('Risk')} onChange={(e) => update({ risk: e.target.value })} />
-          <Input className="md:col-span-3" value={row.mitigation} placeholder={tf('How it will be handled')} onChange={(e) => update({ mitigation: e.target.value })} />
+          <div className="min-w-0">
+            <label className="block text-sm font-medium mb-2">{tf('Risk')}</label>
+            <Input value={row.risk} placeholder={tf('Risk')} onChange={(e) => update({ risk: e.target.value })} />
+          </div>
+          <div className="min-w-0 sm:col-span-2">
+            <label className="block text-sm font-medium mb-2">{tf('How it will be handled')}</label>
+            <Input value={row.mitigation} placeholder={tf('How it will be handled')} onChange={(e) => update({ mitigation: e.target.value })} />
+          </div>
         </>
       )}
     />

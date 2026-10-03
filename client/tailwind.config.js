@@ -18,6 +18,36 @@ export default {
     },
     extend: {
       colors: {
+        brand: {
+          DEFAULT: 'hsl(var(--brand))',
+          strong: 'hsl(var(--brand-strong))',
+          deep: 'hsl(var(--brand-deep))',
+          tint: 'hsl(var(--brand-tint))',
+          soft: 'hsl(var(--brand-soft))',
+        },
+        saffron: {
+          DEFAULT: 'hsl(var(--saffron))',
+          text: 'hsl(var(--saffron-text))',
+          tint: 'hsl(var(--saffron-tint))',
+        },
+        cta: {
+          DEFAULT: 'hsl(var(--cta))',
+          strong: 'hsl(var(--cta-strong))',
+        },
+        ink: {
+          DEFAULT: 'hsl(var(--ink))',
+          muted: 'hsl(var(--ink-muted))',
+          subtle: 'hsl(var(--ink-subtle))',
+          soft: 'hsl(var(--ink-soft))',
+        },
+        surface: {
+          DEFAULT: 'hsl(var(--surface))',
+          raised: 'hsl(var(--surface-raised))',
+        },
+        line: {
+          DEFAULT: 'hsl(var(--line))',
+          strong: 'hsl(var(--line-strong))',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

@@ -171,28 +171,20 @@ import {
   isNumericDprField,
 } from '@/lib/dprAiFieldNormalize';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
-
-function isReasonableIsoDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const parsed = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return false;
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, '0');
-  const day = String(parsed.getDate()).padStart(2, '0');
-  if (`${year}-${month}-${day}` !== value) return false;
-  return year >= 1990 && year <= 2100;
-}
+import { isReasonableIsoDate } from '@/lib/individualDpr/isoDate';
 
 interface IndividualDPRFormProps {
   currentStep: number;
   onNext: () => void;
   onPrevious: () => void;
+  invalidFields?: string[];
 }
 
 export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   currentStep,
   onNext,
   onPrevious,
+  invalidFields = [],
 }) => {
   const { data, setStepData, getStepData, setSchemeExtras } = useIndividualDPRStore();
   const { user } = useAuthStore();
@@ -315,8 +307,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const stepDescriptions = FIELD_DESCRIPTIONS[stepKey] || {};
     const description = stepDescriptions[fieldName];
 
+    const missed = invalidFields.includes(fieldName);
     return (
-      <label className={`block text-sm font-medium mb-2 ${required ? '' : ''} flex items-center gap-2`}>
+      <label className={`block text-sm font-medium mb-2 flex items-center gap-2 ${missed ? 'text-red-600' : ''}`}>
         {tf(label)}
         {required && <span className="text-red-500">*</span>}
         {description && (
@@ -325,6 +318,14 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       </label>
     );
   };
+
+  const fieldRing = (name: string, base = '') =>
+    `${base} ${invalidFields.includes(name) ? 'border-red-500 ring-2 ring-red-400' : ''}`.trim();
+
+  const requiredHint = (name: string) =>
+    invalidFields.includes(name) ? (
+      <p className="mt-1 text-xs font-medium text-red-600">{tf('Required')}</p>
+    ) : null;
 
   // Helper function to normalize array/string to array
   const normalizeToArray = (value: any): any[] => {
@@ -427,7 +428,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           }}
         />
           <div>
-            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+            <label className={`block text-sm font-medium mb-2 flex items-center gap-2 ${invalidFields.includes('unitName') ? 'text-red-600' : ''}`}>
               {tf('Unit / Project Name *')}
             {stepDescriptions.unitName && (
               <InfoTooltip content={tf(stepDescriptions.unitName)} />
@@ -437,10 +438,12 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               )}
             </label>
             <Input
+            className={fieldRing('unitName')}
             value={String(stepData.unitName ?? stepData.clusterName ?? '')}
             onChange={(e) => handleInputChange('unitName', e.target.value)}
             placeholder={tf('Enter unit or project name')}
           />
+          {requiredHint('unitName')}
           <div className="mt-2">
             <Button
               type="button"
@@ -476,14 +479,14 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+            <label className={`block text-sm font-medium mb-2 flex items-center gap-2 ${invalidFields.includes('district') ? 'text-red-600' : ''}`}>
               {tf('District *')}
               {stepDescriptions.district && (
                 <InfoTooltip content={tf(stepDescriptions.district)} />
               )}
             </label>
             <ExpandableSelect
-              className="w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm"
+              className={fieldRing('district', 'w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm')}
               value={stepData.district || ''}
               onChange={(e) => {
                 const nextDistrict = e.target.value;
@@ -501,16 +504,17 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 </option>
               ))}
             </ExpandableSelect>
+            {requiredHint('district')}
           </div>
         <div>
-          <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+          <label className={`block text-sm font-medium mb-2 flex items-center gap-2 ${invalidFields.includes('location') ? 'text-red-600' : ''}`}>
             {tf('Location *')}
             {stepDescriptions.location && (
               <InfoTooltip content={tf(stepDescriptions.location)} />
             )}
           </label>
             <ExpandableSelect
-              className="w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm"
+              className={fieldRing('location', 'w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm')}
             value={stepData.location || ''}
             onChange={(e) => handleInputChange('location', e.target.value)}
               label={tf('Location *')}
@@ -525,6 +529,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 </option>
               ))}
             </ExpandableSelect>
+            {requiredHint('location')}
           </div>
         </div>
 
@@ -2481,16 +2486,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <div>
           {renderLabel('sectorType', isLeanUnit ? 'Sector / industry type' : 'Sector / Industry Type', true)}
           <Input
+            className={fieldRing('sectorType')}
             value={stepData.sectorType || ''}
             onChange={(e) => handleInputChange('sectorType', e.target.value)}
             placeholder={tf("Enter sector type")}
           />
+          {requiredHint('sectorType')}
         </div>
 
         <div>
           {renderLabel('sectorDescription', isLeanUnit ? 'Short intro — what the unit does' : 'Sector Description', true)}
           <ExpandableTextarea
-            className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className={fieldRing('sectorDescription', 'w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm')}
             value={stepData.sectorDescription || ''}
             onChange={(e) => handleInputChange('sectorDescription', e.target.value)}
             placeholder={
@@ -2499,6 +2506,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 : tf('Describe the sector in detail')
             }
           />
+          {requiredHint('sectorDescription')}
         </div>
 
         {(isPmegp || isApCmep) && (
@@ -3404,7 +3412,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         <div>
           {renderLabel('interventionType', 'Intervention Type', true)}
           <ExpandableSelect
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className={fieldRing('interventionType', 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm')}
             value={stepData.interventionType || ''}
             onChange={(e) => handleInputChange('interventionType', e.target.value)}
           >
@@ -3413,6 +3421,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             <option value="Soft">{tf("Soft")}</option>
             <option value="Both">{tf("Both")}</option>
           </ExpandableSelect>
+          {requiredHint('interventionType')}
         </div>
         <div>
           {renderLabel('description', 'Description')}
@@ -3468,6 +3477,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               true
             )}
             <Input
+              className={fieldRing('name')}
               value={stepData.name || ''}
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder={
@@ -3476,15 +3486,18 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   : tf('Enter workplace or shed name')
               }
             />
+            {requiredHint('name')}
           </div>
           {!isLeanUnit && (
           <div>
             {renderLabel('location', 'Location', true)}
             <Input
+              className={fieldRing('location')}
               value={stepData.location || ''}
               onChange={(e) => handleInputChange('location', e.target.value)}
               placeholder={tf("Enter location")}
             />
+            {requiredHint('location')}
           </div>
           )}
         </div>

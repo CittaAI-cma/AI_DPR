@@ -1262,6 +1262,7 @@ ${isIndividualDPR ? `- For any of these keys that are in this step — executive
 THIS STEP ONLY:
 - Suggestions may use ONLY these keys: ${stepMapping.fields.map(f => f.name).join(', ')}.
 - Do not invent new questions, headings, or extra JSON keys.
+- For money fields (land, building, machinery, furniture, deposits, working capital, own contribution, bank loan, grant, operating costs): use only amounts already present in previous steps, in ₹ Lakhs. If no amount was given, use 0. Do not invent a project cost.
 ${schemeCode === 'AP_CMEP' ? `
 - promoters must be a JSON array of {name, relationName, age, dob, education, experienceYears, phone, address}.
 - machineryItems must be a JSON array of {description, condition, supplier, quantity, unitCost, gst, transport, installation, lifeYears, annualMaintenance} with condition "new" or "used". Amounts are ₹ Lakhs.
