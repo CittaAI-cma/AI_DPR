@@ -1,323 +1,331 @@
 // @ts-nocheck
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLinkHandler } from '@/lib/linkUtils';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { buttonVariants } from '@/components/ui/Button';
+import { HeroCarousel } from '@/components/landing/HeroCarousel';
+import { AccessibilityBar } from '@/components/layout/AccessibilityBar';
+import { HowItWorksShowcase } from '@/components/landing/HowItWorksShowcase';
+import { BenefitsAccordion } from '@/components/landing/BenefitsAccordion';
+import { FeaturesScroller } from '@/components/landing/FeaturesScroller';
+import { useLandingCopy } from '@/i18n/landingCopy';
 import {
-  Building2,
   Sparkles,
   FileText,
   TrendingUp,
   Globe,
   Shield,
-  ArrowRight,
   LogIn,
+  ArrowRight,
   UserPlus,
   Zap,
   BarChart3,
   MessageSquare,
   FileCheck,
-  CheckCircle2,
   Award,
   Clock,
   Users,
   Target,
 } from 'lucide-react';
 
+/* Section heading block shared by the homepage sections. */
+const SectionHead: React.FC<{ id: string; title: string; description: string; align?: 'center' | 'split' }> = ({
+  id,
+  title,
+  description,
+  align = 'center',
+}) =>
+  align === 'split' ? (
+    <div className="mb-10 flex flex-col gap-4 text-center md:mb-12 lg:flex-row lg:items-end lg:justify-between lg:gap-12 lg:text-left">
+      <div>
+        <span className="section-rule mx-auto mb-4 lg:mx-0" aria-hidden="true" />
+        <h2 id={id} className="type-h2 text-ink">
+          {title}
+        </h2>
+      </div>
+      <p className="mx-auto max-w-xl text-base leading-relaxed text-ink-muted md:text-lg lg:mx-0 lg:max-w-md">
+        {description}
+      </p>
+    </div>
+  ) : (
+    <div className="section-head mb-10 md:mb-14">
+      <span className="section-rule" aria-hidden="true" />
+      <h2 id={id} className="type-h2 text-ink mb-3">
+        {title}
+      </h2>
+      <p className="text-base md:text-lg leading-relaxed text-ink-muted">{description}</p>
+    </div>
+  );
+
+type Tone = 'brand' | 'saffron' | 'soft' | 'feature';
+
+/* Square icon tile used for benefits and features. */
+const IconTile: React.FC<{ icon: React.ElementType; tone?: Tone; className?: string }> = ({
+  icon: Icon,
+  tone = 'soft',
+  className = '',
+}) => {
+  const tones: Record<Tone, string> = {
+    feature:
+      'bg-brand-tint text-brand ring-1 ring-inset ring-brand-soft transition-colors group-hover:bg-brand group-hover:text-white group-hover:ring-brand',
+    brand: 'bg-brand text-white',
+    saffron: 'bg-saffron-tint text-saffron-text ring-1 ring-inset ring-saffron/40',
+    soft: 'bg-brand-tint text-brand ring-1 ring-inset ring-brand-soft',
+  };
+  return (
+    <span
+      className={`inline-flex h-12 w-12 flex-none items-center justify-center rounded-xl ${tones[tone]} ${className}`}
+      aria-hidden="true"
+    >
+      <Icon className="h-6 w-6" strokeWidth={1.9} aria-hidden="true" />
+    </span>
+  );
+};
+
 export const Landing: React.FC = () => {
   const handleLinkClick = useLinkHandler();
+  const { c } = useLandingCopy();
+  // soft shadow under the sticky header only once the page is scrolled (no divider line at rest)
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const features = [
-    {
-      icon: Sparkles,
-      title: 'AI-Powered DPR Creation',
-      description: 'Step-by-step guidance for creating professional, bank-ready Detailed Project Reports with intelligent automation',
-    },
-    {
-      icon: Globe,
-      title: 'Bilingual Support',
-      description: 'Generate DPRs in English, Telugu, or both languages seamlessly for wider accessibility',
-    },
-    {
-      icon: FileCheck,
-      title: 'Bank-Ready Quality',
-      description: 'Optimized for bank approval with industry-standard formatting, compliance, and comprehensive analytics',
-    },
-    {
-      icon: MessageSquare,
-      title: 'AI Chat Assistant',
-      description: 'Intelligent guidance with voice input support for effortless data entry and real-time assistance',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Financial Suggestions',
-      description: 'Auto-suggests financial data, cost structures, and sector benchmarks based on industry standards',
-    },
-    {
-      icon: Shield,
-      title: 'Scheme Recommendations',
-      description: 'AI-powered scheme matching from AP MSME ONE Portal with eligibility verification',
-    },
-    {
-      icon: BarChart3,
-      title: 'Quality Analytics',
-      description: 'Comprehensive DPR quality assessment, bankability analysis, and performance metrics',
-    },
-    {
-      icon: Zap,
-      title: 'Fast Track Export',
-      description: 'Export to PDF and DOCX formats with professional formatting for quick submission',
-    },
-  ];
+  const featureIcons = [Sparkles, Globe, FileCheck, MessageSquare, TrendingUp, Shield, BarChart3, Zap];
+  const features = c.features.items.map(([title, description], i) => ({ icon: featureIcons[i], title, description }));
 
-  const benefits = [
-    {
-      icon: Clock,
-      title: 'Save Time',
-      description: 'Reduce DPR creation time from weeks to hours with AI-powered automation',
-    },
-    {
-      icon: Award,
-      title: 'Increase Approval Rates',
-      description: 'Bank-ready quality reports that meet all regulatory and financial institution requirements',
-    },
-    {
-      icon: Target,
-      title: 'Accurate Projections',
-      description: 'Data-driven financial projections and market analysis for better decision making',
-    },
-    {
-      icon: Users,
-      title: 'Expert Guidance',
-      description: 'AI-powered recommendations based on industry best practices and successful projects',
-    },
+  const benefitMeta = [
+    { icon: Clock, image: '/benefits/benefit-01.webp', imagePosition: '40% center' },
+    { icon: Award, image: '/benefits/benefit-02.webp', imagePosition: '50% center' },
+    { icon: Target, image: '/benefits/benefit-03.webp', imagePosition: '50% center' },
+    { icon: Users, image: '/benefits/benefit-04.webp', imagePosition: '50% center' },
   ];
+  const benefits = c.benefits.items.map(([title, description], i) => ({ ...benefitMeta[i], title, description }));
+
+  const steps = c.how.items.map(([title, description]) => ({ title, description }));
+
+  const toTop = (e) => {
+    e.preventDefault();
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    history.replaceState(null, '', '#hero');
+    const h = document.getElementById('hero-title');
+    if (h) {
+      h.setAttribute('tabindex', '-1');
+      h.focus({ preventScroll: true });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="landing-page min-h-screen bg-white text-ink">
+      <AccessibilityBar />
       {/* Navigation Bar */}
-      <nav className="border-b bg-white/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/apmsme_logo.png" 
-                alt="APMSME Logo" 
-                className="h-12 w-auto object-contain"
+      <header
+        className={`sticky top-0 z-50 bg-white transition-shadow duration-200 max-[349px]:static ${
+          scrolled ? 'shadow-[0_6px_20px_-12px_rgba(16,40,40,0.35)]' : ''
+        }`}
+      >
+        <nav aria-label="Primary" className="page-container">
+          <div className="flex min-h-[64px] flex-wrap items-center justify-between gap-x-2 gap-y-2 py-2 sm:gap-x-3 md:min-h-[72px]">
+            <a
+              href="#hero"
+              onClick={toTop}
+              aria-label={c.nav.home}
+              className="flex min-w-0 items-center gap-2 rounded-lg sm:gap-3"
+            >
+              <img
+                src="/apmsme_logo.png"
+                alt=""
+                className="h-8 w-auto flex-none object-contain min-[375px]:h-9 sm:h-10 md:h-12"
               />
-              <span className="text-xl font-bold text-foreground">MSME DPR Tool</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <a href="/login" onClick={(e) => handleLinkClick(e, '/login')}>
-                <Button variant="ghost">Sign In</Button>
-              </a>
-              <a href="/register" onClick={(e) => handleLinkClick(e, '/register')}>
-                <Button variant="secondary">Get Started</Button>
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center justify-center mb-6">
-              <img 
-                src="/apmsme_logo.png" 
-                alt="APMSME Logo" 
-                className="h-24 w-auto object-contain"
-              />
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-              Create Professional, Bank-Ready
-              <span className="block bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Detailed Project Reports
+              <span className="hidden h-8 w-px bg-line sm:block" aria-hidden="true" />
+              <span className="min-w-0 text-sm font-bold leading-tight text-ink min-[350px]:whitespace-nowrap min-[400px]:text-[15px] sm:text-lg">
+                {c.nav.home.split(' – ')[0]}
               </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-              AI-powered platform that guides entrepreneurs step-by-step to create comprehensive DPRs
-              with extensive analytics and government scheme integration.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a href="/register" onClick={(e) => handleLinkClick(e, '/register')}>
-                <Button variant="secondary" size="lg" className="text-lg px-8 py-6 shadow-lg">
-                  <UserPlus className="mr-2 h-5 w-5" />
-                  Get Started Free
-                </Button>
+            </a>
+            <div className="flex items-center gap-1.5 max-[349px]:w-full min-[400px]:gap-2 sm:gap-3">
+              <a
+                href="/login"
+                onClick={(e) => handleLinkClick(e, '/login')}
+                className={buttonVariants({
+                  variant: 'brandOutline',
+                  className: 'h-11 whitespace-nowrap px-2.5 text-sm max-[349px]:flex-1 max-[374px]:px-2 min-[400px]:px-3.5 sm:px-5 sm:text-[15px]',
+                })}
+              >
+                {c.nav.signIn}
               </a>
-              <a href="/login" onClick={(e) => handleLinkClick(e, '/login')}>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-2">
-                  <LogIn className="mr-2 h-5 w-5" />
-                  Sign In
-                </Button>
+              <a
+                href="/register"
+                onClick={(e) => handleLinkClick(e, '/register')}
+                className={buttonVariants({
+                  variant: 'cta',
+                  className: 'h-11 whitespace-nowrap px-2.5 text-sm max-[349px]:flex-1 max-[374px]:px-2 min-[400px]:px-3.5 sm:px-5 sm:text-[15px]',
+                })}
+              >
+                {c.nav.getStarted}
               </a>
             </div>
           </div>
-        </div>
-      </section>
+        </nav>
+      </header>
 
-      {/* Benefits Section */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why Choose Our Platform?
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Empowering MSMEs with cutting-edge technology to secure funding and grow their businesses
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {benefits.map((benefit, index) => {
-              const Icon = benefit.icon;
-              return (
-                <Card
-                  key={index}
-                  className="p-6 text-center hover:shadow-lg transition-all duration-300 border hover:border-primary/30"
-                >
-                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-4">
-                    <Icon className="h-7 w-7 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground">{benefit.description}</p>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-muted/30 to-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Comprehensive Features
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to create professional DPRs and secure funding for your business
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={index}
-                  className="p-6 hover:shadow-xl transition-all duration-300 border hover:border-primary/30 bg-white"
-                >
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mb-4">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              How It Works
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Simple, streamlined process to create your Detailed Project Report
-            </p>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <span className="text-2xl font-bold text-white">1</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-foreground">Create Account</h3>
-                <p className="text-muted-foreground">
-                  Sign up for free and set up your profile in minutes
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <span className="text-2xl font-bold text-white">2</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-foreground">Build Your Project</h3>
-                <p className="text-muted-foreground">
-                  Use our AI-guided builder to input your project details
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <span className="text-2xl font-bold text-white">3</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-foreground">Generate & Export</h3>
-                <p className="text-muted-foreground">
-                  Get your bank-ready DPR in PDF or DOCX format instantly
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/10 via-white to-secondary/10">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto border-2 border-primary/20 shadow-xl bg-white">
-            <div className="p-8 md:p-12 text-center">
-              <FileText className="h-16 w-16 text-primary mx-auto mb-6" />
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-                Ready to Create Your DPR?
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join thousands of entrepreneurs who have successfully created bank-ready DPRs
-                and secured funding with our AI-powered platform.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/register" onClick={(e) => handleLinkClick(e, '/register')}>
-                  <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg">
-                    <UserPlus className="mr-2 h-5 w-5" />
-                    Get Started Free
-                  </Button>
-                </a>
-                <a href="/login" onClick={(e) => handleLinkClick(e, '/login')}>
-                  <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-2">
-                    <LogIn className="mr-2 h-5 w-5" />
-                    Sign In
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t bg-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/apmsme_logo.png" 
-                alt="APMSME Logo" 
-                className="h-12 w-auto object-contain"
+      <main id="main">
+        {/* Hero Section */}
+        <section id="hero" aria-labelledby="hero-title" className="relative scroll-mt-24 overflow-hidden bg-white">
+          <div className="page-container pt-12 sm:pt-14 lg:pt-16 lg:[@media(max-height:820px)]:pt-10">
+            <div className="relative z-10 mx-auto max-w-[60rem] text-center">
+              <img
+                src="/apmsme_logo.png"
+                alt="APMSME Logo"
+                className="mx-auto mb-4 h-14 w-auto object-contain md:h-16 lg:[@media(max-height:820px)]:mb-3 lg:[@media(max-height:820px)]:h-12"
               />
-              <span className="text-lg font-semibold text-foreground">MSME DPR Tool</span>
+              <h1 id="hero-title" className="type-display mx-auto text-ink">
+                {c.hero.pre}
+                <span className="whitespace-nowrap">{c.hero.nowrap}</span>
+                <span className="mt-1 block text-brand">{c.hero.accent}</span>
+              </h1>
+              <p className="type-lead mx-auto mt-4 max-w-[44rem] text-[#7d888e] md:mt-5">
+                {c.hero.sub}
+              </p>
+              <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center md:mt-8">
+                <a
+                  href="/register"
+                  onClick={(e) => handleLinkClick(e, '/register')}
+                  className={buttonVariants({
+                    variant: 'cta',
+                    size: 'xl',
+                    className: 'rounded-full shadow-[0_8px_20px_-10px_rgba(201,80,12,0.75)] sm:min-w-[13rem]',
+                  })}
+                >
+                  <UserPlus className="h-5 w-5" aria-hidden="true" />
+                  {c.nav.getStartedFree}
+                </a>
+                <a
+                  href="/login"
+                  onClick={(e) => handleLinkClick(e, '/login')}
+                  className={buttonVariants({ variant: 'brandOutline', size: 'xl', className: 'rounded-full sm:min-w-[10rem]' })}
+                >
+                  <LogIn className="h-5 w-5" aria-hidden="true" />
+                  {c.nav.signIn}
+                </a>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground text-center md:text-right">
-              © 2026 AI-Enabled MSME DPR Generation Tool.{' '}
-              <a href="/privacy" className="underline hover:text-foreground">
-                Privacy notice
-              </a>
-            </p>
           </div>
-        </div>
-      </footer>
+
+          {/* Curved image carousel (full-bleed) */}
+          <div className="mt-4 pb-6 md:pb-8">
+            <HeroCarousel />
+          </div>
+        </section>
+
+        {/* Benefits Section */}
+        <section aria-labelledby="benefits-title" className="bg-[#f2f6f5] py-16 md:py-24">
+          <div className="page-container">
+            <div className="mb-8 flex flex-col gap-4 md:mb-10 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+              <h2 id="benefits-title" className="type-section max-w-xl text-ink">
+                {c.benefits.title}
+              </h2>
+              <p className="type-sub max-w-md text-[#7d888e] lg:text-right">
+                <span>{c.benefits.sub[0]}</span>
+                <span className="sm:block">{c.benefits.sub[1]}</span>
+              </p>
+            </div>
+            <BenefitsAccordion items={benefits} />
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <FeaturesScroller
+          features={features}
+          heading={
+            <>
+              <h2 id="features-title" className="type-section mx-auto max-w-3xl text-ink">
+                {c.features.title}
+                <span className="text-brand">{c.features.accent}</span>
+              </h2>
+              <p className="type-sub mx-auto mt-4 max-w-xl text-[#7d888e]">
+                {c.features.sub}
+              </p>
+            </>
+          }
+        />
+
+        {/* How It Works Section */}
+        <section aria-labelledby="how-title" className="bg-[#f2f6f5] py-16 md:py-24">
+          <div className="page-container">
+            <div className="mb-8 flex flex-col gap-4 md:mb-12 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+              <h2 id="how-title" className="type-section max-w-xl text-ink">
+                {c.how.title}
+              </h2>
+              <p className="type-sub max-w-md text-[#7d888e] lg:text-right">
+                <span>{c.how.sub[0]}</span>
+                <span className="sm:block">{c.how.sub[1]}</span>
+              </p>
+            </div>
+            <HowItWorksShowcase steps={steps} />
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section aria-labelledby="cta-title" className="on-dark bg-[#1e4341] py-10 md:py-14">
+          <div className="page-container">
+            <div className="cta-card relative lg:min-h-[500px]">
+              {/* L-shaped photo (desktop): the photo fills the right side and the
+                  bottom; a rounded "notch" in the card colour carves out its
+                  top-left corner, with inverse fillets so both outer corners stay
+                  curved. On smaller screens the photo sits below the text. */}
+              <div className="relative h-64 overflow-hidden rounded-[22px] max-lg:order-2 sm:h-80 lg:absolute lg:bottom-0 lg:left-[40%] lg:right-0 lg:top-0 lg:h-auto">
+                <img
+                  src="/cta/cta.webp"
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.03] motion-reduce:transition-none"
+                  style={{ objectPosition: '68% 22%' }}
+                />
+              </div>
+              <span className="cta-notch hidden lg:block" aria-hidden="true" />
+              <span className="cta-fillet cta-fillet-a hidden lg:block" aria-hidden="true" />
+              <span className="cta-fillet cta-fillet-b hidden lg:block" aria-hidden="true" />
+
+              <div className="relative z-10 flex flex-col py-6 max-lg:pb-8 lg:min-h-[500px] lg:w-[60%] lg:py-4 lg:pr-12">
+                <div className="max-w-[34rem]">
+                  <h2 id="cta-title" className="type-section text-white">
+                    {c.cta.title}
+                  </h2>
+                  <p className="type-sub mt-4 text-[#b8c4c4]">
+                    {c.cta.sub}
+                  </p>
+                </div>
+                <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 lg:mt-auto">
+                  <a
+                    href="/register"
+                    onClick={(e) => handleLinkClick(e, '/register')}
+                    className="group inline-flex min-h-12 items-center gap-3 rounded-full bg-[#c14e0b] py-1.5 pl-5 pr-1.5 text-base font-semibold text-white transition-colors hover:bg-[#a8440b]"
+                  >
+                    {c.nav.getStartedFree}
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#c14e0b] transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none">
+                      <ArrowRight className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
+                    </span>
+                  </a>
+                  <a
+                    href="/login"
+                    onClick={(e) => handleLinkClick(e, '/login')}
+                    className="group inline-flex min-h-12 items-center gap-2.5 rounded-full px-1 text-base font-semibold text-white transition-colors hover:text-[#d4e6e4]"
+                  >
+                    {c.nav.signIn}
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-current transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none">
+                      <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
     </div>
   );
 };
