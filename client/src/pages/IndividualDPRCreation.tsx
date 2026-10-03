@@ -55,6 +55,7 @@ export const IndividualDPRCreation: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
+  const [requiredNotice, setRequiredNotice] = useState('');
   const [devMode, setDevMode] = useState(false);
   const isAdmin = isSuperAdmin(useAuthStore((s) => s.user?.role));
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
@@ -217,10 +218,6 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   }, [schemeCode]);
 
-  useEffect(() => {
-    setInvalidFields([]);
-  }, [currentStep]);
-
   const saveToDatabase = useCallback(async () => {
     try {
       if (hasUnder18Applicant(data)) {
@@ -257,18 +254,53 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   }, [dprPayload, data, setDprIds, t]);
 
+  const warnRequired = (missing: { key: string; label: string }[]) => {
+    const keys = missing.map((field) => field.key);
+    setInvalidFields(keys);
+    const message = `${tf('Fill the required fields before continuing')}: ${missing
+      .map((field) => tf(field.label))
+      .join(', ')}`;
+    setRequiredNotice(message);
+    toast.error(message);
+    window.setTimeout(() => {
+      const root = document.getElementById('individual-dpr-form');
+      const first = keys
+        .map((key) => root?.querySelector(`[data-required-field="${key}"]`))
+        .find(Boolean) as HTMLElement | undefined;
+      (first || document.getElementById('required-fields-notice'))?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 80);
+  };
+
+  const guardForward = (targetStep: number) => {
+    if (isAdmin && devMode) return true;
+    const from = visibleSteps.indexOf(currentStep);
+    const to = visibleSteps.indexOf(targetStep);
+    if (to <= from) return true;
+    for (let i = from; i < to; i += 1) {
+      const step = visibleSteps[i];
+      const content = getContentStep(step, schemeCode);
+      const missing = missingIndividualRequired(content, data[`step${content}`], schemeCode);
+      if (missing.length) {
+        if (step !== currentStep) setCurrentStep(step);
+        warnRequired(missing);
+        return false;
+      }
+    }
+    return true;
+  };
+
   const goAdjacent = async (dir: 1 | -1) => {
     if (isStepping) return;
     const advancing = dir === 1;
-    if (advancing && !(isAdmin && devMode)) {
-      const content = getContentStep(currentStep, schemeCode);
-      const stepData = data[`step${content}`] || {};
-      const missing = missingIndividualRequired(content, stepData, schemeCode);
-      if (missing.length) {
-        setInvalidFields(missing.map((field) => field.key));
-        return;
-      }
+    const idx = visibleSteps.indexOf(currentStep);
+    const target = visibleSteps[idx + dir];
+    if (advancing && target && !guardForward(target)) return;
+    if (advancing) {
       setInvalidFields([]);
+      setRequiredNotice('');
     }
     if (advancing) setIsStepping(true);
     try {
@@ -302,7 +334,10 @@ export const IndividualDPRCreation: React.FC = () => {
       (field) => field.key
     );
     const next = invalidFields.filter((key) => still.includes(key));
-    if (next.length !== invalidFields.length) setInvalidFields(next);
+    if (next.length !== invalidFields.length) {
+      setInvalidFields(next);
+      if (!next.length) setRequiredNotice('');
+    }
   }, [data, currentStep, schemeCode, invalidFields]);
 
   const handleSaveDraft = async () => {
@@ -454,7 +489,10 @@ export const IndividualDPRCreation: React.FC = () => {
                     on={devMode}
                     onChange={(next) => {
                       setDevMode(next);
-                      if (next) setInvalidFields([]);
+                      if (next) {
+                        setInvalidFields([]);
+                        setRequiredNotice('');
+                      }
                     }}
                   />
                 )}
@@ -561,7 +599,10 @@ export const IndividualDPRCreation: React.FC = () => {
                   <button
                     key={step}
                     onClick={() => {
+                      if (step === currentStep) return;
+                      if (!guardForward(step)) return;
                       setInvalidFields([]);
+                      setRequiredNotice('');
                       setCurrentStep(step);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
@@ -662,6 +703,15 @@ export const IndividualDPRCreation: React.FC = () => {
                       ) : null}
                     </CardHeader>
                     <CardContent>
+                      {requiredNotice ? (
+                        <div
+                          id="required-fields-notice"
+                          role="alert"
+                          className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+                        >
+                          {requiredNotice}
+                        </div>
+                      ) : null}
                       {(data.schemeExtras?.aiAssistedSteps || []).includes(
                         getContentStep(currentStep, data.matchedSchemeCode)
                       ) ? (
