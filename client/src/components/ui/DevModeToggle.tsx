@@ -20,7 +20,7 @@ export const DevModeToggle: React.FC<DevModeToggleProps> = ({ on, onChange }) =>
       role="switch"
       aria-checked={on}
       onClick={() => onChange(!on)}
-      className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm font-medium ${
+      className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-sm font-medium ${
         on
           ? 'border-amber-400 bg-amber-50 text-amber-950'
           : 'border-border bg-background text-muted-foreground'
@@ -28,16 +28,12 @@ export const DevModeToggle: React.FC<DevModeToggleProps> = ({ on, onChange }) =>
     >
       <span>{tf('Dev mode')}</span>
       <span
-        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-          on ? 'bg-amber-500' : 'bg-muted-foreground/30'
+        className={`inline-flex h-5 w-9 shrink-0 items-center rounded-full px-0.5 transition-colors ${
+          on ? 'justify-end bg-amber-500' : 'justify-start bg-muted-foreground/30'
         }`}
         aria-hidden
       >
-        <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-            on ? 'translate-x-4' : 'translate-x-0.5'
-          }`}
-        />
+        <span className="h-4 w-4 rounded-full bg-white shadow" />
       </span>
     </button>
   );
