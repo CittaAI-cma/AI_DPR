@@ -275,6 +275,10 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       setStepSuggestions(result.suggestions);
       setHasGenerated(true);
 
+      if (result.suggestions.length === 0 && result.failed.length === 0) {
+        toast.success(tf('This step is already filled.'));
+        return;
+      }
       if (result.suggestions.length === 0) {
         toast.error(tf('Could not get suggestions for this step. Try again.'));
         return;
