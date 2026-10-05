@@ -578,12 +578,6 @@ export const IndividualDPRCreation: React.FC = () => {
                   bullets: schemeImpact.bullets.map((b) => tf(b)),
                 }}
               />
-              <div className="flex items-center justify-between gap-3">
-                <Button variant="outline" onClick={() => setSetupPhase('pick')} className="gap-2">
-                  <ChevronLeft className="h-4 w-4" />
-                  {t('individualDpr.picker.backToSchemes', { defaultValue: 'All Schemes' })}
-                </Button>
-              </div>
             </div>
           </div>
         )}
