@@ -483,14 +483,13 @@ export const IndividualDPRCreation: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                {setupPhase === 'brief' ? (
+                {setupPhase === 'brief' && (
                   <Button variant="primary" onClick={handleBriefNext} className="gap-2">
                     {t('individualDpr.picker.continueToForm', { defaultValue: 'Start DPR steps' })}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                ) : (
-                  <LanguageToggle />
                 )}
+                {setupPhase === 'form' && <LanguageToggle />}
                 {setupPhase === 'form' && (
                   <DevModeToggle
                     on={devMode}
