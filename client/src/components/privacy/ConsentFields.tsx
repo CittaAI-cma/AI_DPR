@@ -78,7 +78,7 @@ export const ConsentFields: React.FC<ConsentFieldsProps> = ({
         <span>
           {t('privacy.aiConsent')}
           {!value.aiAssist && (
-            <span className="block mt-1 text-xs text-amber-800">{t('privacy.aiOffWarning')}</span>
+            <span className="block mt-1 text-xs font-medium text-red-700">{t('privacy.aiOffWarning')}</span>
           )}
         </span>
       </label>

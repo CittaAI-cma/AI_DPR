@@ -155,11 +155,11 @@ export const SchemeBriefPanel: React.FC<SchemeBriefPanelProps> = ({ schemeCode, 
       </div>
 
       {formNotes ? (
-        <div className="border-t border-amber-200 bg-amber-50 px-6 sm:px-8 py-4">
-          <p className="text-sm font-semibold text-foreground">
+        <div className="border-t border-red-200 bg-red-50 px-6 sm:px-8 py-4">
+          <p className="text-sm font-semibold text-red-700">
             {t('individualDpr.brief.formNotes', { title: formNotes.title })}
           </p>
-          <ul className="mt-1 text-sm text-muted-foreground list-disc pl-5 space-y-0.5">
+          <ul className="mt-1 text-sm text-red-700 list-disc pl-5 space-y-0.5">
             {formNotes.bullets.map((b) => (
               <li key={b}>{b}</li>
             ))}

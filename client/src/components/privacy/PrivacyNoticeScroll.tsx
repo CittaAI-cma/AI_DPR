@@ -64,7 +64,7 @@ export const PrivacyNoticeScroll: React.FC<PrivacyNoticeScrollProps> = ({
         <PrivacyNoticeArticle language={i18n.language} compact />
         <div ref={bottomRef} className="h-2" data-notice-end />
       </div>
-      <p className={`text-xs ${reachedEnd ? 'text-emerald-700' : 'text-amber-800'}`}>
+      <p className={`text-xs font-medium ${reachedEnd ? 'text-emerald-700' : 'text-red-700'}`}>
         {reachedEnd ? t('privacy.noticeRead') : t('privacy.scrollToEnable')}
       </p>
     </div>

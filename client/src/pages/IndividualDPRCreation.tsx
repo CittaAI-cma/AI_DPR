@@ -709,7 +709,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       {(data.schemeExtras?.aiAssistedSteps || []).includes(
                         getContentStep(currentStep, data.matchedSchemeCode)
                       ) ? (
-                        <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                        <p className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                           {tf(
                             'AI-generated content. Please cross-check all details. The submitter is responsible for the accuracy of the final document.'
                           )}
