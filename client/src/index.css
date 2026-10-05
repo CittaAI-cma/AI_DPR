@@ -508,15 +508,21 @@ html.a11y-hc .pattern-lattice, html.a11y-hc .pattern-dots { background-image: no
 @media (min-width: 768px) {
   .form-field-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 0.5rem;
   }
-  .form-field-grid > div:not(:has(> :nth-child(3))) {
-    display: flex;
-    flex-direction: column;
+  /* Labels share a row, inputs share the next. Extra controls stay under their own field. */
+  .form-field-grid > div {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 3;
+    align-items: start;
     min-width: 0;
   }
-  .form-field-grid > div:not(:has(> :nth-child(3))) > label {
-    flex: 1 1 auto;
-    align-items: flex-start;
+  .form-field-grid > div:has(> :nth-child(4)) {
+    grid-row: span 4;
+  }
+  .form-field-grid > div > label {
+    margin-bottom: 0;
   }
 }
 .form-field-grid select {
