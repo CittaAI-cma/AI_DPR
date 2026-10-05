@@ -5,7 +5,18 @@ import { getIndividualDocFields, isLeanUnitScheme } from '@/lib/individualDpr/in
 import { suggestionToFieldValue, isNumericDprField, isStructuredDprField, toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { mergeCmepProjectedSuggestion } from '@/lib/individualDpr/cmepProjections';
 import { machineryTotalLakhs, totalsFromCostPhasing, workingCapitalFromBuildup } from '@/lib/individualDpr/cmepBankPack';
-import { groundCostSuggestion } from '@/lib/individualDpr/costSuggestionGuard';
+import { isCostSuggestionField } from '@/lib/individualDpr/costSuggestionGuard';
+import { isReasonableIsoDate } from '@/lib/individualDpr/isoDate';
+import {
+  acceptByKind,
+  buildFactsCard,
+  isLongProseField,
+  machineryCostsFit,
+  splitUnfilledFields,
+  yearToIsoDate,
+  type FactsCard,
+  type SuggestionKind,
+} from '@/lib/individualDpr/stepSuggestionCheck';
 import { Budget, VentureMatchAnswers } from '@/lib/ventureMatch/types';
 
 const IDENTITY_FIELDS = ['clusterName', 'unitName', 'district', 'location'];
@@ -386,9 +397,62 @@ function buildStepSuggestContext(options: {
   return { catalogFields, previous, stepData, extraFieldNames, exclude, budget };
 }
 
+function suggestionKind(field: string, schemeCode: string | null): SuggestionKind {
+  if (isLongProseField(field)) return 'prose';
+  if (field === 'costPhasing') return 'json-object';
+  if (isStructuredDprField(field)) return 'json-list';
+  if (
+    field === 'startDate' ||
+    field === 'endDate' ||
+    field === 'commitmentDate' ||
+    (field === 'yearOfEstablishment' && isLeanUnitScheme(schemeCode))
+  ) {
+    return 'date';
+  }
+  if (isCostSuggestionField(field)) return 'cost';
+  if (isNumericDprField(field)) return 'number';
+  return 'text';
+}
+
+function checkedFieldSuggestion(
+  field: string,
+  raw: string,
+  facts: FactsCard,
+  schemeCode: string | null
+): string | null {
+  const kind = suggestionKind(field, schemeCode);
+  const prepared = kind === 'date' ? toDateInputValue(raw) || yearToIsoDate(raw) || raw : raw;
+  const accepted = acceptByKind(kind, prepared, facts);
+  if (!accepted) return null;
+  if (field !== 'machineryItems') return accepted;
+  try {
+    return machineryCostsFit(JSON.parse(accepted), facts) ? accepted : null;
+  } catch {
+    return null;
+  }
+}
+
+function factsPayload(
+  facts: FactsCard,
+  schemeCode: string | null,
+  budget: string | null | undefined,
+  batchKind: 'short' | 'long',
+  promptContext?: string
+) {
+  return {
+    _isIndividualDPR: true,
+    ...(schemeCode ? { _schemeCode: schemeCode } : {}),
+    ...(budget ? { _budget: budget } : {}),
+    _factsCard: facts,
+    _batchKind: batchKind,
+    ...(promptContext ? { _promptContext: promptContext } : {}),
+  };
+}
+
 /**
  * Fetch AI suggestions for this step's catalog questions only — does not write to the form.
- * One API call per field so the model cannot invent keys from other steps.
+ * Unfilled short fields share one call. Unfilled long write-ups share a second call.
+ * A field that fails the check is retried once, then left blank.
  */
 export async function suggestCurrentStepWithAi(options: {
   contentStep: number;
@@ -407,158 +471,99 @@ export async function suggestCurrentStepWithAi(options: {
     return { suggestions: [], failed: [] };
   }
 
+  const facts = buildFactsCard(previous);
+  const grouped = splitUnfilledFields(catalogFields, stepData);
+  const groups = [grouped.short, grouped.long].filter((group) => group.length > 0);
   const suggestions: StepFieldSuggestion[] = [];
   const failed: string[] = [];
+  const schemeCode = options.schemeCode;
 
-  for (let i = 0; i < catalogFields.length; i++) {
-    const fieldDef = catalogFields[i];
-    const field = fieldDef.name;
-    onProgress?.({
-      field,
-      label: fieldDef.label,
-      index: i + 1,
-      total: catalogFields.length,
-    });
+  const ask = async (group: typeof catalogFields, batchKind: 'short' | 'long') => {
+    const names = new Set(group.map((field) => field.name));
+    const excludeNames = catalogFields.map((field) => field.name).filter((name) => !names.has(name)).concat(exclude);
+    return AISuggestionsService.getSuggestionsForStep(
+      contentStep,
+      stepData,
+      factsPayload(facts, schemeCode, options.answers?.budget, batchKind),
+      excludeNames
+    );
+  };
 
-    const otherExcludes = catalogFields
-      .map((f) => f.name)
-      .filter((name) => name !== field)
-      .concat(exclude);
-
-    try {
-      let previousForField = previous;
-      if (isNumericDprField(field)) {
-        const plainNumber = [
-          'interestRate',
-          'moratoriumMonths',
-          'loanTenureMonths',
-          'subsidyPercent',
-          'capacityPerDay',
-          'workingDays',
-          'capacityUtilisation',
-          'sellingPricePerUnit',
-          'monthlyRent',
-          'monthlySalaries',
-          'monthlyPower',
-          'annualExpenseGrowth',
-          'loomCount',
-          'shifts',
-          'workshopAreaSqft',
-          'productionAreaSqft',
-          'storageAreaSqft',
-          'officeAreaSqft',
-          'leaseYears',
-          'wcRawStock',
-          'wcWip',
-          'wcFinished',
-          'wcReceivables',
-          'wcSupplierCredit',
-          'wcCash',
-        ].includes(field);
-        previousForField = {
-          ...previous,
-          _promptContext: plainNumber
-            ? `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number. No words and no extra fields.`
-            : `For field "${field}" ("${fieldDef.label}"): reply with ONLY a number in ₹ Lakhs already stated in the previous steps. If no amount was stated, reply 0. Do not invent a project cost. No words and no currency symbol.`,
-        };
-      } else if (field === 'yearProjections') {
-        const yearPrompt = options.schemeCode === 'AP_CMEP'
-          ? `For field "yearProjections": reply with ONLY a JSON array of 8 objects for the next 8 financial years, values in ₹ Lakhs. Keys: year, sales, rm, wages, power, salaries, rent, maintenance, admin, interest, depreciation, tax, netProfit. Do not add previous-year columns and do not add any other field.`
-          : `For field "yearProjections": reply with ONLY a JSON array of 5 objects, values in ₹ Lakhs (not rupees). Example: [{"year":1,"sales":18,"rm":8,"wages":3,"power":1.5,"netProfit":4},{"year":2,"sales":20,"rm":9,"wages":3.2,"power":1.6,"netProfit":4.5},{"year":3,"sales":22,"rm":10,"wages":3.5,"power":1.7,"netProfit":5},{"year":4,"sales":24,"rm":11,"wages":3.8,"power":1.8,"netProfit":5.5},{"year":5,"sales":26,"rm":12,"wages":4,"power":2,"netProfit":6}]. Fill sales, rm, wages, power, and netProfit for EVERY year. No prose.`;
-        previousForField = {
-          ...previous,
-          _promptContext: yearPrompt,
-        };
-      } else if (
-        (field === 'promoters' || field === 'costPhasing') && options.schemeCode === 'AP_CMEP' ||
-        field === 'machineryItems' ||
-        field === 'productMix' ||
-        field === 'rawMaterialItems' ||
-        field === 'staffRoles' ||
-        field === 'risks' ||
-        field === 'utilisationByYear'
-      ) {
-        const shape = field === 'promoters'
-          ? '[{"name":"","relationName":"","age":"","dob":"","education":"","experienceYears":"","phone":"","address":""}]'
-          : field === 'machineryItems'
-            ? options.schemeCode === 'AP_CMEP'
-              ? '[{"description":"","condition":"new","supplier":"","quantity":1,"unitCost":0,"gst":0,"transport":0,"installation":0,"lifeYears":0,"annualMaintenance":0}]'
-              : '[{"description":"","condition":"new","supplier":"","quantity":1,"unitCost":0}]'
-            : field === 'productMix'
-              ? '[{"name":"","sharePercent":0,"sellingPrice":0}]'
-              : field === 'rawMaterialItems'
-                ? '[{"name":"","use":"","basis":""}]'
-                : field === 'staffRoles'
-                  ? '[{"role":"","count":0,"monthlyPay":0}]'
-                  : field === 'risks'
-                    ? '[{"risk":"","mitigation":""}]'
-                    : field === 'utilisationByYear'
-                      ? '[{"label":"2026-2027","percent":60}]'
-            : '{"land":{"incurred":0,"proposed":0},"building":{"incurred":0,"proposed":0},"machinery":{"incurred":0,"proposed":0},"furniture":{"incurred":0,"proposed":0},"deposits":{"incurred":0,"proposed":0},"workingCapital":{"incurred":0,"proposed":0}}';
-        previousForField = {
-          ...previous,
-          _promptContext: `For field "${field}": reply with ONLY JSON in this shape: ${shape}. Do not add any other question or key.`,
-        };
-      } else if (field === 'milestones') {
-        previousForField = {
-          ...previous,
-          _promptContext: `For field "milestones": reply with ONLY a JSON array of 3–5 objects. Example: [{"activity":"Machinery order / installation","timeRequired":"30 days","startDate":"2026-04-01","endDate":"2026-04-30"},{"activity":"Power connection","timeRequired":"15 days","startDate":"2026-05-01","endDate":"2026-05-15"},{"activity":"Trial run / commercial production","timeRequired":"15 days","startDate":"2026-05-16","endDate":"2026-05-31"}]. Dates must be YYYY-MM-DD. No prose.`,
-        };
-      } else if (
-        field === 'startDate' ||
-        field === 'endDate' ||
-        field === 'commitmentDate' ||
-        (field === 'yearOfEstablishment' && isLeanUnitScheme(options.schemeCode))
-      ) {
-        previousForField = {
-          ...previous,
-          _promptContext: `For field "${field}": reply with ONLY a date in YYYY-MM-DD format (e.g. 2026-06-01). No words.`,
-        };
-      } else if (field === 'employmentGeneration' || field === 'indirectEmployment') {
-        previousForField = {
-          ...previous,
-          _promptContext: `For field "${field}" ("${fieldDef.label}"): reply with ONLY a whole number (headcount), e.g. 4. No words.`,
-        };
-      } else if (
-        ['executiveSummary', 'processOfManufacture', 'sectorDescription', 'presentActivities', 'targetMarket', 'existingDemand', 'geography', 'landDetails', 'impactNote', 'waterAndEffluent'].includes(field)
-      ) {
-        previousForField = {
-          ...previous,
-          _promptContext: `For field "${field}" ("${fieldDef.label}"): write 320 to 450 words of finished bank-ready prose for this one field only. Do not invent extra questions or headings.`,
-        };
-      }
-      const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
-        contentStep,
-        stepData,
-        previousForField,
-        otherExcludes
-      );
-      const match = (aiSuggestions || []).find((s) => s.field === field);
-      if (!match) {
-        failed.push(field);
-        continue;
-      }
-      const text =
-        typeof match.suggestion === 'string'
+  const acceptGroup = (group: typeof catalogFields, returned: { field: string; suggestion: string }[]) => {
+    const rejected: typeof catalogFields = [];
+    for (const fieldDef of group) {
+      const match = returned.find((item) => item.field === fieldDef.name);
+      const raw = match
+        ? typeof match.suggestion === 'string'
           ? match.suggestion
-          : JSON.stringify(match.suggestion);
-      if (!String(text || '').trim()) {
-        failed.push(field);
+          : JSON.stringify(match.suggestion)
+        : '';
+      const suggestion = checkedFieldSuggestion(fieldDef.name, raw, facts, schemeCode);
+      if (!suggestion || !isReasonableFieldDate(fieldDef.name, suggestion, schemeCode)) {
+        rejected.push(fieldDef);
         continue;
       }
       suggestions.push({
-        field,
+        field: fieldDef.name,
         label: fieldDef.label,
-        suggestion: groundCostSuggestion(field, String(text).trim(), previous),
+        suggestion,
         source: fieldDef.source === 'extras' ? 'extras' : 'step',
       });
+    }
+    return rejected;
+  };
+
+  for (let index = 0; index < groups.length; index++) {
+    const group = groups[index];
+    const batchKind = isLongProseField(group[0].name) ? 'long' : 'short';
+    onProgress?.({
+      field: group[0].name,
+      label: batchKind === 'long' ? 'Long answers' : 'Short answers',
+      index: index + 1,
+      total: groups.length,
+    });
+    try {
+      let returned: { field: string; suggestion: string }[] | null = null;
+      try {
+        returned = await ask(group, batchKind);
+      } catch (error) {
+        console.error(`AI suggest failed for content step ${contentStep}, retrying the batch once:`, error);
+        returned = await ask(group, batchKind);
+      }
+      const rejected = acceptGroup(group, returned || []);
+      for (const fieldDef of rejected) {
+        onProgress?.({
+          field: fieldDef.name,
+          label: fieldDef.label,
+          index: index + 1,
+          total: groups.length,
+        });
+        try {
+          const retry = await ask([fieldDef], batchKind);
+          const stillRejected = acceptGroup([fieldDef], retry || []);
+          if (stillRejected.length) failed.push(fieldDef.name);
+        } catch (error) {
+          console.error(`AI retry failed for ${fieldDef.name} on content step ${contentStep}:`, error);
+          failed.push(fieldDef.name);
+        }
+      }
     } catch (error) {
-      console.error(`AI suggest failed for ${field} on content step ${contentStep}:`, error);
-      failed.push(field);
+      console.error(`AI suggest failed for content step ${contentStep}:`, error);
+      group.forEach((fieldDef) => failed.push(fieldDef.name));
     }
   }
 
   return { suggestions, failed };
+}
+
+function isReasonableFieldDate(field: string, suggestion: string, schemeCode: string | null): boolean {
+  const dated =
+    field === 'startDate' ||
+    field === 'endDate' ||
+    field === 'commitmentDate' ||
+    (field === 'yearOfEstablishment' && isLeanUnitScheme(schemeCode));
+  if (!dated) return true;
+  return isReasonableIsoDate(suggestion);
 }
 
 /**
@@ -604,10 +609,14 @@ export async function regenerateStepFieldSuggestion(options: {
       : '',
   ].filter(Boolean);
 
-  const previousWithHint = {
-    ...previous,
-    _promptContext: promptParts.join('\n\n'),
-  };
+  const facts = buildFactsCard(previous);
+  const previousWithHint = factsPayload(
+    facts,
+    options.schemeCode,
+    options.answers?.budget,
+    isLongProseField(field) ? 'long' : 'short',
+    promptParts.join('\n\n')
+  );
 
   const aiSuggestions = await AISuggestionsService.getSuggestionsForStep(
     contentStep,
@@ -621,12 +630,13 @@ export async function regenerateStepFieldSuggestion(options: {
     typeof match.suggestion === 'string'
       ? match.suggestion
       : JSON.stringify(match.suggestion);
-  if (!String(text || '').trim()) return null;
+  const suggestion = checkedFieldSuggestion(field, String(text || ''), facts, options.schemeCode);
+  if (!suggestion) return null;
 
   return {
     field,
     label: fieldDef.label || label,
-    suggestion: String(text).trim(),
+    suggestion,
     source: options.source || (fieldDef.source === 'extras' ? 'extras' : 'step'),
   };
 }
@@ -673,8 +683,10 @@ export function applyCatalogSuggestionToForm(options: {
     suggestion.field === 'commitmentDate' ||
     (suggestion.field === 'yearOfEstablishment' && isLeanUnitScheme(schemeCode))
   ) {
-    value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion);
+    value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion) || yearToIsoDate(String(suggestion.suggestion || ''));
     if (!value) return { ok: false, value: null };
+  } else if (Array.isArray(value)) {
+    value = String(suggestion.suggestion || '').trim();
   } else if (isNumericDprField(suggestion.field)) {
     // Never store prose in ₹ Lakhs / numeric buckets — that breaks totals via string concat.
     if (value === null || value === undefined || value === '') {

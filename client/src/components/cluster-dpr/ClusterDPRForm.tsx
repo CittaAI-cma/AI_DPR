@@ -143,7 +143,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
 
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
               {tf('Cluster Name *')}
@@ -201,7 +201,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             <label className="block text-sm font-medium mb-2 flex items-center gap-2">
               {tf('Nature of Business')}
@@ -366,7 +366,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('investmentPerUnit', 'Investment per Unit (₹ Lakhs)')}
             <Input
@@ -389,7 +389,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
 
         <div className="border-t pt-4">
           <h3 className="text-lg font-semibold mb-4">{tf("Market Served (%)")}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-field-grid">
             <div>
               {renderLabel('marketServed', 'Domestic')}
               <Input
@@ -558,7 +558,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             placeholder={tf("Describe key economic activities")}
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('rawMaterialAvailability', 'Raw Material Availability')}
             <textarea
@@ -1119,7 +1119,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('name', 'CFC Name', true)}
             <Input
@@ -1222,7 +1222,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('spvName', 'SPV Name', true)}
             <Input
@@ -1240,7 +1240,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('yearOfIncorporation', 'Year of Incorporation')}
             <Input
@@ -1458,7 +1458,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('land', 'Land (₹ Lakhs)')}
             <Input
@@ -1542,7 +1542,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('spvContribution', 'SPV Contribution (₹ Lakhs)')}
             <Input
@@ -1603,7 +1603,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('rawMaterialCost', 'Raw Material Cost (₹ Lakhs)')}
             <Input
@@ -1696,7 +1696,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
         {/* Basic Financial Indicators */}
         <div className="border rounded-lg p-6 space-y-4">
           <h4 className="text-lg font-semibold">{tf("Basic Financial Indicators")}</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-field-grid">
             <div>
               {renderLabel('breakEvenPoint', 'Break-even Point (₹ Lakhs)')}
               <Input
@@ -1850,7 +1850,7 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
             handleInputChange(field, content);
           }}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field-grid">
           <div>
             {renderLabel('increaseInUnits', 'Increase in Units')}
             <Input

@@ -4,6 +4,15 @@ import { dprDownloadName } from './dprExportName.ts';
 import { cardMatchesFilters, schemeKind, schemeLevel } from './schemePickerFilters.ts';
 import { isReasonableIsoDate } from './individualDpr/isoDate.ts';
 import { groundCostSuggestion } from './individualDpr/costSuggestionGuard.ts';
+import {
+  acceptByKind,
+  buildFactsCard,
+  costFigureFits,
+  fieldIsFilled,
+  machineryCostsFit,
+  splitUnfilledFields,
+  yearToIsoDate,
+} from './individualDpr/stepSuggestionCheck.ts';
 
 describe('dpr download name', () => {
   it('uses scheme, project, short language, and DDMMYY', () => {
@@ -69,5 +78,57 @@ describe('cost suggestions', () => {
       groundCostSuggestion('machinery', '12', { step12: { machinery: 12 } }),
       '12'
     );
+  });
+});
+
+describe('step suggestion batch', () => {
+  const emptyFacts = { unitName: '', district: '', location: '', products: '', amounts: {} };
+
+  it('keeps filled answers out of the batch and splits long write-ups', () => {
+    const groups = splitUnfilledFields(
+      [
+        { name: 'sectorType' },
+        { name: 'sectorDescription' },
+        { name: 'executiveSummary' },
+      ],
+      { sectorType: 'Manufacturing', sectorDescription: '', executiveSummary: '' }
+    );
+    assert.deepEqual(groups.short.map((field) => field.name), []);
+    assert.deepEqual(groups.long.map((field) => field.name), ['sectorDescription', 'executiveSummary']);
+    assert.equal(fieldIsFilled(0), false);
+    assert.equal(fieldIsFilled('Cotton yarn'), true);
+  });
+
+  it('builds a facts card from earlier steps', () => {
+    const card = buildFactsCard({
+      step1: { unitName: 'Kavya Silks', district: 'Guntur', location: 'Tenali', majorProducts: 'Sarees' },
+      step12: { machinery: 12 },
+    });
+    assert.equal(card.unitName, 'Kavya Silks');
+    assert.equal(card.district, 'Guntur');
+    assert.equal(card.products, 'Sarees');
+    assert.equal(card.amounts.machinery, 12);
+  });
+
+  it('keeps a cost only when it agrees with amounts already entered', () => {
+    assert.equal(acceptByKind('cost', '42', emptyFacts), '0');
+    assert.equal(costFigureFits(80, { machinery: 2 }), false);
+    assert.equal(acceptByKind('cost', '8', { ...emptyFacts, amounts: { machinery: 2 } }), '8');
+    assert.equal(
+      machineryCostsFit([{ description: 'Loom', quantity: 1, unitCost: 40 }], { ...emptyFacts, amounts: { machinery: 2 } }),
+      false
+    );
+  });
+
+  it('turns a bare year into a start date', () => {
+    assert.equal(yearToIsoDate('2019'), '2019-01-01');
+    assert.equal(yearToIsoDate('started in 2023'), '2023-01-01');
+    assert.equal(yearToIsoDate(''), '');
+  });
+
+  it('rejects a bad date and a short essay', () => {
+    assert.equal(acceptByKind('date', '2026-02-31', emptyFacts), null);
+    assert.equal(acceptByKind('date', '2026-04-01', emptyFacts), '2026-04-01');
+    assert.equal(acceptByKind('prose', 'Too short.', emptyFacts), null);
   });
 });

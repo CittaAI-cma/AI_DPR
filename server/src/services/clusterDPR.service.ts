@@ -22,6 +22,143 @@ function isBankProseField(fieldName: string, individual: boolean): boolean {
   return individual && BANK_PROSE_FIELDS.includes(String(fieldName));
 }
 
+const INDIVIDUAL_STEP_SYSTEM = `You fill one step of an individual MSME Detailed Project Report for a bank or scheme.
+Reply only with JSON matching the schema. Each suggestion is a string.
+Use only the field names you are given. Do not invent questions, headings, or extra keys.
+Money is in ₹ Lakhs. Use only amounts listed in the facts. If the facts list no amount, every money field is 0. Do not invent a project cost.
+Number fields are digits only. Dates are YYYY-MM-DD. Lists and objects are JSON text inside the suggestion string.`;
+
+const FIELD_SHAPES: Record<string, string> = {
+  promoters: 'promoters is a JSON array of {name, relationName, age, dob, education, experienceYears, phone, address}.',
+  machineryItems: 'machineryItems is a JSON array of {description, condition, supplier, quantity, unitCost}. condition is "new" or "used". unitCost is ₹ Lakhs. Add gst, transport, installation, lifeYears, annualMaintenance only when those keys are already part of this step.',
+  costPhasing: 'costPhasing is a JSON object whose keys are only land, building, machinery, furniture, deposits, workingCapital. Each value is {incurred, proposed} in ₹ Lakhs.',
+  yearProjections: 'yearProjections is a JSON array of future-year objects with keys year, sales, rm, wages, power, salaries, rent, maintenance, admin, interest, depreciation, tax, netProfit. Amounts are ₹ Lakhs.',
+  productMix: 'productMix is a JSON array of {name, sharePercent, sellingPrice}.',
+  rawMaterialItems: 'rawMaterialItems is a JSON array of {name, use, basis}.',
+  staffRoles: 'staffRoles is a JSON array of {role, count, monthlyPay}.',
+  risks: 'risks is a JSON array of {risk, mitigation}.',
+  utilisationByYear: 'utilisationByYear is a JSON array of {label, percent}.',
+  milestones: 'milestones is a JSON array of {activity, timeRequired, startDate, endDate}. Dates are YYYY-MM-DD.',
+  yearOfEstablishment: 'yearOfEstablishment is the unit Start Date. Reply with only YYYY-MM-DD. Do not reply with a year alone.',
+  commitmentDate: 'commitmentDate is YYYY-MM-DD and must be on or after the Start Date (yearOfEstablishment).',
+  startDate: 'startDate is YYYY-MM-DD.',
+  endDate: 'endDate is YYYY-MM-DD.',
+};
+
+function logStepTokens(step: number, kind: string, fieldCount: number, usage: { prompt_tokens?: number; completion_tokens?: number } | undefined) {
+  console.log(
+    `llm.step step=${step} kind=${kind} fields=${fieldCount} inputTokens=${usage?.prompt_tokens ?? 0} outputTokens=${usage?.completion_tokens ?? 0}`
+  );
+}
+
+async function suggestIndividualFromFacts(options: {
+  currentStep: number;
+  fields: Array<{ name: string; label?: string }>;
+  factsCard: any;
+  batchKind: 'short' | 'long';
+  userPromptContext: string;
+}): Promise<Array<{ field: string; suggestion: string; reasoning?: string }>> {
+  const { currentStep, fields, factsCard, batchKind, userPromptContext } = options;
+  const names = fields.map((field) => field.name).filter(Boolean);
+  if (!names.length) return [];
+
+  const amounts = factsCard?.amounts && typeof factsCard.amounts === 'object' ? factsCard.amounts : {};
+  const factsText = [
+    `Unit: ${factsCard?.unitName || '(not provided)'}`,
+    `District: ${factsCard?.district || '(not provided)'}`,
+    `Location: ${factsCard?.location || '(not provided)'}`,
+    `Products: ${factsCard?.products || '(not provided)'}`,
+    `Amounts already entered (₹ Lakhs): ${Object.keys(amounts).length ? JSON.stringify(amounts) : 'none'}`,
+  ].join('\n');
+  const shapes = names.map((name) => FIELD_SHAPES[name]).filter(Boolean);
+  const long = batchKind === 'long';
+  const prompt = [
+    'Facts already on this DPR:',
+    factsText,
+    '',
+    `Answer ONLY these fields: ${names.join(', ')}`,
+    long
+      ? 'Each suggestion must be 320 to 450 words of finished prose for that field alone.'
+      : 'Keep short fields short. Do not write an essay for a number, date, or list.',
+    shapes.length ? shapes.join('\n') : '',
+    userPromptContext || '',
+  ].filter(Boolean).join('\n');
+
+  const schema = {
+    type: 'json_schema' as const,
+    json_schema: {
+      name: 'dpr_step_suggestions',
+      strict: true,
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          suggestions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                field: { type: 'string', enum: names },
+                suggestion: { type: 'string' },
+              },
+              required: ['field', 'suggestion'],
+            },
+          },
+        },
+        required: ['suggestions'],
+      },
+    },
+  };
+
+  const messages = [
+    { role: 'system' as const, content: INDIVIDUAL_STEP_SYSTEM },
+    { role: 'user' as const, content: prompt },
+  ];
+  const maxTokens = long ? 4000 : 2500;
+  let response;
+  try {
+    response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: long ? 0.7 : 0.2,
+      max_tokens: maxTokens,
+      response_format: schema,
+      messages,
+    });
+  } catch (error: any) {
+    console.error('llm.step schema rejected, retrying as json_object:', error?.message || error);
+    response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: long ? 0.7 : 0.2,
+      max_tokens: maxTokens,
+      response_format: { type: 'json_object' },
+      messages,
+    });
+  }
+
+  logStepTokens(currentStep, batchKind, names.length, response.usage);
+
+  const responseText = response.choices[0]?.message?.content || '';
+  try {
+    const parsed = JSON.parse(responseText);
+    const allowed = new Set(names);
+    const byField = new Map<string, { field: string; suggestion: string; reasoning: string }>();
+    for (const item of parsed?.suggestions || []) {
+      const field = typeof item?.field === 'string' ? item.field.trim() : '';
+      if (!allowed.has(field) || byField.has(field)) continue;
+      const suggestion = typeof item.suggestion === 'string'
+        ? item.suggestion
+        : JSON.stringify(item.suggestion ?? '');
+      if (!suggestion.trim()) continue;
+      byField.set(field, { field, suggestion, reasoning: '' });
+    }
+    return names.map((field) => byField.get(field)).filter(Boolean) as Array<{ field: string; suggestion: string; reasoning?: string }>;
+  } catch (error) {
+    console.error(`llm.step parse failed for step ${currentStep}:`, error);
+    return [];
+  }
+}
+
 export class ClusterDPRService {
   /**
    * Enhance cluster DPR data using OpenAI
@@ -967,14 +1104,18 @@ Use exact values from the data above. Write in a formal, persuasive tone suitabl
     excludeFields: string[] = []
   ): Promise<Array<{ field: string; suggestion: string; reasoning?: string }>> {
     try {
-      // For Step 1, we don't require previous data
-      // For other steps, check if we have at least Step 1 data
-      if (currentStep > 1 && (!previousStepsData.step1 || Object.keys(previousStepsData.step1).length === 0)) {
+      const isIndividualDPR = previousStepsData?._isIndividualDPR === true;
+      const factsCard = previousStepsData?._factsCard;
+      // For Step 1, we don't require previous data.
+      // Later steps need Step 1, unless this call already carries the facts card.
+      if (
+        currentStep > 1 &&
+        !factsCard &&
+        (!previousStepsData.step1 || Object.keys(previousStepsData.step1).length === 0)
+      ) {
         console.log('No Step 1 data available for AI suggestions');
         return [];
       }
-
-      const isIndividualDPR = previousStepsData?._isIndividualDPR === true;
       const schemeCode = previousStepsData?._schemeCode || null;
       const budget = previousStepsData?._budget || null;
       const stepMappingRaw = getStepFieldsMapping(currentStep, isIndividualDPR, schemeCode, budget);
@@ -996,6 +1137,16 @@ Use exact values from the data above. Write in a formal, persuasive tone suitabl
         typeof previousStepsData?._promptContext === 'string'
           ? previousStepsData._promptContext.trim()
           : '';
+
+      if (isIndividualDPR && factsCard) {
+        return await suggestIndividualFromFacts({
+          currentStep,
+          fields: stepMapping.fields,
+          factsCard,
+          batchKind: previousStepsData?._batchKind === 'long' ? 'long' : 'short',
+          userPromptContext,
+        });
+      }
 
       const previousForText = { ...previousStepsData };
       delete previousForText._isIndividualDPR;
