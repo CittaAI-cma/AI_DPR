@@ -588,7 +588,7 @@ export const Dashboard: React.FC = () => {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/dpr/view/${dpr._id}`);
+                          navigate(`/dpr/view/${dpr._id}`, { state: { updatedAt: dpr.updatedAt } });
                         }}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
                       >

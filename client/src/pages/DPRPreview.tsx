@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { Layout } from '@/components/layout/Layout';
@@ -39,6 +39,7 @@ export const DPRPreview: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { dprId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [dpr, setDpr] = useState<any>(null);
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -72,21 +73,27 @@ export const DPRPreview: React.FC = () => {
   const [isIndividualDPR, setIsIndividualDPR] = useState(false);
 
   const loadDPR = async () => {
+    const unwrapDpr = (response: any) => {
+      if (response?.data && typeof response.data === 'object' && !Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response?.data)) return response.data[0] || response;
+      return response;
+    };
+    const listedAt = location.state?.updatedAt ? new Date(location.state.updatedAt).getTime() : 0;
+    let cachedResponse = api.peekCachedDpr(dprId!);
+    const cachedRecord = cachedResponse ? unwrapDpr(cachedResponse) : null;
+    const cachedAt = cachedRecord?.updatedAt ? new Date(cachedRecord.updatedAt).getTime() : 0;
+    const cacheFresh = !!cachedRecord && (!listedAt || !cachedAt || listedAt <= cachedAt);
+    if (cachedRecord && !cacheFresh) {
+      api.invalidateDpr(dprId!);
+      cachedResponse = null;
+    }
+
     try {
-      setLoading(true);
-      const [dprResponse, qualityResponse] = await Promise.all([
-        api.getDPR(dprId!),
-        api.analyzeDPRQuality(dprId!).catch(() => null),
-      ]);
+      if (!cacheFresh) setLoading(true);
+      const dprResponse = cacheFresh ? cachedResponse : await api.getDPR(dprId!);
 
       // Handle different response structures (API vs mock data)
-      let dprData = dprResponse;
-      if (dprResponse.data && typeof dprResponse.data === 'object') {
-        dprData = dprResponse.data;
-      } else if (dprResponse.data && Array.isArray(dprResponse.data)) {
-        // If it's an array, take the first one (shouldn't happen for getDPR, but handle it)
-        dprData = dprResponse.data[0] || dprResponse;
-      }
+      let dprData = unwrapDpr(dprResponse);
       
       setDpr(dprData);
       
@@ -135,6 +142,12 @@ export const DPRPreview: React.FC = () => {
           }
         }
       }
+
+      const hasStoredQuality =
+        (dprData.qualityScore !== undefined && dprData.qualityScore !== null) || !!dprData.qualityFeedback;
+      const qualityResponse = hasStoredQuality
+        ? null
+        : await api.analyzeDPRQuality(dprId!).catch(() => null);
 
       // Handle quality feedback
       if (qualityResponse) {
