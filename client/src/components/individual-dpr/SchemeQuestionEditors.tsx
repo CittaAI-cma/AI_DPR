@@ -37,11 +37,18 @@ function RowList<T>({
     <div className="space-y-2 border rounded-md p-4">
       <h4 className="font-semibold">{tf(title)}</h4>
       {rows.map((row, index) => (
-        <div key={index} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
-          {render(row, index, (patch) => onChange(rows.map((item, i) => (i === index ? { ...item, ...patch } : item))))}
-          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
+        <div key={index} className="relative rounded-md border p-3">
+          <button
+            type="button"
+            aria-label={tf('Remove')}
+            className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            onClick={() => onChange(rows.filter((_, i) => i !== index))}
+          >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </button>
+          <div className="grid grid-cols-1 gap-3 pr-8">
+            {render(row, index, (patch) => onChange(rows.map((item, i) => (i === index ? { ...item, ...patch } : item))))}
+          </div>
         </div>
       ))}
       <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => onChange([...rows, blank])}>
@@ -61,42 +68,43 @@ export function ProductMixEditor({ value, onChange }: { value: unknown; onChange
     <div className="space-y-3">
       <h4 className="font-semibold">{tf('Products, share of output and selling price')}</h4>
       {shown.map((row, index) => (
-        <div key={index} className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 items-end">
-          <div>
-            <label className="block text-sm font-medium mb-2">{tf('Product Name')}</label>
-            <Input
-              value={row.name}
-              placeholder={tf('Enter Product Name')}
-              onChange={(e) => write(shown.map((item, i) => (i === index ? { ...item, name: e.target.value } : item)))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">{tf('Share of Output (%)')}</label>
-            <Input
-              type="number"
-              value={row.sharePercent || ''}
-              placeholder={tf('Enter Percentage Share')}
-              onChange={(e) => write(shown.map((item, i) => (i === index ? { ...item, sharePercent: parseFloat(e.target.value) || 0 } : item)))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">{tf('Selling Price (per unit)')}</label>
-            <Input
-              type="number"
-              value={row.sellingPrice || ''}
-              placeholder={tf('Enter Selling Price')}
-              onChange={(e) => write(shown.map((item, i) => (i === index ? { ...item, sellingPrice: parseFloat(e.target.value) || 0 } : item)))}
-            />
-          </div>
-          <Button
+        <div key={index} className="relative rounded-md border p-3">
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
-            className="mb-0.5"
+            aria-label={tf('Remove')}
+            className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
             onClick={() => write(shown.filter((_, i) => i !== index))}
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </button>
+          <div className="grid grid-cols-1 gap-3 pr-8">
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium">{tf('Product Name')}</label>
+              <Input
+                value={row.name}
+                placeholder={tf('Enter Product Name')}
+                onChange={(e) => write(shown.map((item, i) => (i === index ? { ...item, name: e.target.value } : item)))}
+              />
+            </div>
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium">{tf('Share of Output (%)')}</label>
+              <Input
+                type="number"
+                value={row.sharePercent || ''}
+                placeholder={tf('Enter Percentage Share')}
+                onChange={(e) => write(shown.map((item, i) => (i === index ? { ...item, sharePercent: parseFloat(e.target.value) || 0 } : item)))}
+              />
+            </div>
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium">{tf('Selling Price (per unit)')}</label>
+              <Input
+                type="number"
+                value={row.sellingPrice || ''}
+                placeholder={tf('Enter Selling Price')}
+                onChange={(e) => write(shown.map((item, i) => (i === index ? { ...item, sellingPrice: parseFloat(e.target.value) || 0 } : item)))}
+              />
+            </div>
+          </div>
         </div>
       ))}
       <Button
