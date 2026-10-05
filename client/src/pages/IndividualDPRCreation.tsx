@@ -483,7 +483,14 @@ export const IndividualDPRCreation: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <LanguageToggle />
+                {setupPhase === 'brief' ? (
+                  <Button variant="primary" onClick={handleBriefNext} className="gap-2">
+                    {t('individualDpr.picker.continueToForm', { defaultValue: 'Start DPR steps' })}
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <LanguageToggle />
+                )}
                 {setupPhase === 'form' && (
                   <DevModeToggle
                     on={devMode}
@@ -564,12 +571,6 @@ export const IndividualDPRCreation: React.FC = () => {
         {setupPhase === 'brief' && (
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="max-w-5xl mx-auto space-y-6">
-              <div className="flex justify-end">
-                <Button variant="primary" onClick={handleBriefNext} className="gap-2">
-                  {t('individualDpr.picker.continueToForm', { defaultValue: 'Start DPR steps' })}
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
               <SchemeBriefPanel
                 schemeCode={data.matchedSchemeCode || null}
                 formNotes={{
