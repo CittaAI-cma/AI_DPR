@@ -280,12 +280,8 @@ export const DPRPreview: React.FC = () => {
 
       let blob;
       if (format === 'pdf') {
-        // Cluster + Latest individual: capture the on-screen Q&A document (not the cluster server PDF)
-        if (isIndividualDPR) {
-          // Server A4 template (16mm margins) — DOM capture was clipping tables at the page edge
-          blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
-          downloadBlob(blob, fileName('pdf'));
-        } else if (isClusterDPR) {
+        // Latest individual and cluster: print the on-screen document, not the server template.
+        if (isIndividualDPR || isClusterDPR) {
           const root = document.querySelector('.dpr-document');
           if (root) {
             try {
