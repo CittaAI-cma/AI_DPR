@@ -275,7 +275,7 @@ export function WorkingCapitalBuildupEditor({
     onChange({ [field]: value, workingCapitalMargin: workingCapitalFromBuildup(next) });
   };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-md p-4">
+    <div className="form-field-grid border rounded-md p-4">
       <h4 className="md:col-span-2 font-semibold">{tf('Working capital buildup')}</h4>
       <p className="md:col-span-2 text-sm text-muted-foreground">
         {tf('Stock, work in progress, finished goods, receivables and cash, less supplier credit.')}

@@ -241,7 +241,7 @@ export function CmepLoanTermsEditor({
     </div>
   );
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-md p-4">
+    <div className="form-field-grid border rounded-md p-4">
       <h4 className="md:col-span-2 font-semibold">{tf(includeSubsidy ? 'Term loan and subsidy terms' : 'Term loan terms')}</h4>
       {includeSubsidy && numberField('cashCreditLimit', 'Cash credit / working capital limit (₹ Lakhs)')}
       <div>
@@ -275,7 +275,7 @@ export function CmepAssumptionsEditor({
     ['annualExpenseGrowth', 'Annual expense increase (%)'],
   ];
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-md p-4">
+    <div className="form-field-grid border rounded-md p-4">
       <h4 className="md:col-span-2 font-semibold">{tf('Projection assumptions')}</h4>
       {fields.map(([field, label]) => (
         <div key={field}>
