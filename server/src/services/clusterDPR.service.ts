@@ -39,6 +39,10 @@ const FIELD_SHAPES: Record<string, string> = {
   risks: 'risks is a JSON array of {risk, mitigation}.',
   utilisationByYear: 'utilisationByYear is a JSON array of {label, percent}.',
   milestones: 'milestones is a JSON array of {activity, timeRequired, startDate, endDate}. Dates are YYYY-MM-DD.',
+  yearOfEstablishment: 'yearOfEstablishment is the unit Start Date. Reply with only YYYY-MM-DD. Do not reply with a year alone.',
+  commitmentDate: 'commitmentDate is YYYY-MM-DD and must be on or after the Start Date (yearOfEstablishment).',
+  startDate: 'startDate is YYYY-MM-DD.',
+  endDate: 'endDate is YYYY-MM-DD.',
 };
 
 function logStepTokens(step: number, kind: string, fieldCount: number, usage: { prompt_tokens?: number; completion_tokens?: number } | undefined) {

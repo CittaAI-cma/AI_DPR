@@ -11,6 +11,7 @@ import {
   fieldIsFilled,
   machineryCostsFit,
   splitUnfilledFields,
+  yearToIsoDate,
 } from './individualDpr/stepSuggestionCheck.ts';
 
 describe('dpr download name', () => {
@@ -117,6 +118,12 @@ describe('step suggestion batch', () => {
       machineryCostsFit([{ description: 'Loom', quantity: 1, unitCost: 40 }], { ...emptyFacts, amounts: { machinery: 2 } }),
       false
     );
+  });
+
+  it('turns a bare year into a start date', () => {
+    assert.equal(yearToIsoDate('2019'), '2019-01-01');
+    assert.equal(yearToIsoDate('started in 2023'), '2023-01-01');
+    assert.equal(yearToIsoDate(''), '');
   });
 
   it('rejects a bad date and a short essay', () => {

@@ -13,6 +13,7 @@ import {
   isLongProseField,
   machineryCostsFit,
   splitUnfilledFields,
+  yearToIsoDate,
   type FactsCard,
   type SuggestionKind,
 } from '@/lib/individualDpr/stepSuggestionCheck';
@@ -420,7 +421,7 @@ function checkedFieldSuggestion(
   schemeCode: string | null
 ): string | null {
   const kind = suggestionKind(field, schemeCode);
-  const prepared = kind === 'date' ? toDateInputValue(raw) || raw : raw;
+  const prepared = kind === 'date' ? toDateInputValue(raw) || yearToIsoDate(raw) || raw : raw;
   const accepted = acceptByKind(kind, prepared, facts);
   if (!accepted) return null;
   if (field !== 'machineryItems') return accepted;
@@ -682,7 +683,7 @@ export function applyCatalogSuggestionToForm(options: {
     suggestion.field === 'commitmentDate' ||
     (suggestion.field === 'yearOfEstablishment' && isLeanUnitScheme(schemeCode))
   ) {
-    value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion);
+    value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion) || yearToIsoDate(String(suggestion.suggestion || ''));
     if (!value) return { ok: false, value: null };
   } else if (Array.isArray(value)) {
     value = String(suggestion.suggestion || '').trim();

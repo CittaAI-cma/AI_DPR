@@ -67,6 +67,14 @@ function reasonableDate(value: string): boolean {
   return year >= 1990 && year <= 2100;
 }
 
+/** A bare year such as 2019 becomes 2019-01-01 so a date box can show it. */
+export function yearToIsoDate(raw: string): string {
+  const match = String(raw ?? '').trim().match(/\b((?:19|20)\d{2})\b/);
+  if (!match) return '';
+  const iso = `${match[1]}-01-01`;
+  return reasonableDate(iso) ? iso : '';
+}
+
 function groundMoney(raw: string, facts: FactsCard): string {
   if (Object.keys(facts.amounts).length > 0) return raw;
   return '0';
