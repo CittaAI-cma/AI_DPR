@@ -146,9 +146,17 @@ export function CmepMachineryEditor({
     <div className="space-y-2">
       <h4 className="font-semibold">{tf('Machinery list')}</h4>
       {rows.map((row, index) => (
-        <div key={index} className="space-y-3 rounded-md border p-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div className="min-w-0 sm:col-span-2">
+        <div key={index} className="relative rounded-md border p-3">
+          <button
+            type="button"
+            aria-label={tf('Remove')}
+            className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            onClick={() => onChange(rows.filter((_, i) => i !== index))}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <div className="grid grid-cols-1 gap-3 pr-8">
+            <div className="min-w-0">
               <label className="mb-2 block text-sm font-medium">{tf('Description')}</label>
               <Input value={row.description} placeholder={tf('Description')} onChange={(e) => update(index, { description: e.target.value })} />
             </div>
@@ -200,9 +208,6 @@ export function CmepMachineryEditor({
               </>
             )}
           </div>
-          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
         </div>
       ))}
       <Button
