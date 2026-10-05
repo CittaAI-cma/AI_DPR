@@ -17,6 +17,8 @@ import {
   type StaffRoleRow,
 } from '@/lib/individualDpr/cmepBankPack';
 
+const roomyInput = 'h-12 px-4 text-base';
+
 function RowList<T>({
   title,
   rows,
@@ -24,6 +26,7 @@ function RowList<T>({
   blank,
   render,
   addLabel,
+  roomy = false,
 }: {
   title: string;
   rows: T[];
@@ -31,6 +34,7 @@ function RowList<T>({
   blank: T;
   render: (row: T, index: number, update: (patch: Partial<T>) => void) => React.ReactNode;
   addLabel: string;
+  roomy?: boolean;
 }) {
   const tf = useClusterFormText();
   return (
@@ -41,12 +45,16 @@ function RowList<T>({
           <button
             type="button"
             aria-label={tf('Remove')}
-            className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            className={
+              roomy
+                ? 'absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground'
+                : 'absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground'
+            }
             onClick={() => onChange(rows.filter((_, i) => i !== index))}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className={roomy ? 'h-3 w-3' : 'h-4 w-4'} />
           </button>
-          <div className="grid grid-cols-1 gap-3 pr-8">
+          <div className={roomy ? 'grid grid-cols-1 gap-3 pr-6' : 'grid grid-cols-1 gap-3 pr-8'}>
             {render(row, index, (patch) => onChange(rows.map((item, i) => (i === index ? { ...item, ...patch } : item))))}
           </div>
         </div>
@@ -131,19 +139,20 @@ export function RawMaterialEditor({ value, onChange }: { value: unknown; onChang
       onChange={onChange}
       blank={{ name: '', use: '', basis: '' }}
       addLabel="Add raw material"
+      roomy
       render={(row, _index, update) => (
         <>
           <div className="min-w-0">
             <label className="block text-sm font-medium mb-2">{tf('Material')}</label>
-            <Input value={row.name} placeholder={tf('Material')} onChange={(e) => update({ name: e.target.value })} />
+            <Input className={roomyInput} value={row.name} placeholder={tf('Material')} onChange={(e) => update({ name: e.target.value })} />
           </div>
           <div className="min-w-0">
             <label className="block text-sm font-medium mb-2">{tf('Use')}</label>
-            <Input value={row.use} placeholder={tf('Use')} onChange={(e) => update({ use: e.target.value })} />
+            <Input className={roomyInput} value={row.use} placeholder={tf('Use')} onChange={(e) => update({ use: e.target.value })} />
           </div>
           <div className="min-w-0">
             <label className="block text-sm font-medium mb-2">{tf('How it is bought')}</label>
-            <Input value={row.basis} placeholder={tf('How it is bought')} onChange={(e) => update({ basis: e.target.value })} />
+            <Input className={roomyInput} value={row.basis} placeholder={tf('How it is bought')} onChange={(e) => update({ basis: e.target.value })} />
           </div>
         </>
       )}
@@ -161,19 +170,20 @@ export function StaffRoleEditor({ value, onChange }: { value: unknown; onChange:
       onChange={onChange}
       blank={{ role: '', count: 0, monthlyPay: 0 }}
       addLabel="Add role"
+      roomy
       render={(row, _index, update) => (
         <>
           <div className="min-w-0">
             <label className="block text-sm font-medium mb-2">{tf('Role')}</label>
-            <Input value={row.role} placeholder={tf('Role')} onChange={(e) => update({ role: e.target.value })} />
+            <Input className={roomyInput} value={row.role} placeholder={tf('Role')} onChange={(e) => update({ role: e.target.value })} />
           </div>
           <div className="min-w-0">
             <label className="block text-sm font-medium mb-2">{tf('Number of people')}</label>
-            <Input type="number" value={row.count || ''} placeholder={tf('Number of people')} onChange={(e) => update({ count: parseFloat(e.target.value) || 0 })} />
+            <Input className={roomyInput} type="number" value={row.count || ''} placeholder={tf('Number of people')} onChange={(e) => update({ count: parseFloat(e.target.value) || 0 })} />
           </div>
           <div className="min-w-0">
             <label className="block text-sm font-medium mb-2">{tf('Monthly pay (₹)')}</label>
-            <Input type="number" value={row.monthlyPay || ''} placeholder={tf('Monthly pay (₹)')} onChange={(e) => update({ monthlyPay: parseFloat(e.target.value) || 0 })} />
+            <Input className={roomyInput} type="number" value={row.monthlyPay || ''} placeholder={tf('Monthly pay (₹)')} onChange={(e) => update({ monthlyPay: parseFloat(e.target.value) || 0 })} />
           </div>
         </>
       )}
