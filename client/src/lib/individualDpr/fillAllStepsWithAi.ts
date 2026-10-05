@@ -684,6 +684,8 @@ export function applyCatalogSuggestionToForm(options: {
   ) {
     value = toDateInputValue(value) || toDateInputValue(suggestion.suggestion);
     if (!value) return { ok: false, value: null };
+  } else if (Array.isArray(value)) {
+    value = String(suggestion.suggestion || '').trim();
   } else if (isNumericDprField(suggestion.field)) {
     // Never store prose in ₹ Lakhs / numeric buckets — that breaks totals via string concat.
     if (value === null || value === undefined || value === '') {

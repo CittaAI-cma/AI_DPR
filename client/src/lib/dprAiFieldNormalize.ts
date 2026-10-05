@@ -254,6 +254,27 @@ function parseYearProjectionsFromText(text: string): Array<{
   });
 }
 
+/** An essay that merely mentions a list should stay prose. A bare JSON array is the answer. */
+function proseAroundJson(text: string): boolean {
+  const start = text.indexOf('[');
+  if (start < 0) return false;
+  let depth = 0;
+  let end = -1;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '[') depth++;
+    else if (text[i] === ']') {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  if (end < 0) return false;
+  const rest = `${text.slice(0, start)} ${text.slice(end + 1)}`.replace(/\s+/g, ' ').trim();
+  return rest.split(' ').filter(Boolean).length > 12;
+}
+
 function firstJsonArray(text: string): any[] | null {
   const start = text.indexOf('[');
   if (start < 0) return null;
@@ -421,7 +442,10 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
     if (field === 'staffRoles') return normalizeStaffRoles(suggestion);
     if (field === 'risks') return normalizeRisks(suggestion);
     if (field === 'utilisationByYear') return normalizeUtilisationYears(suggestion);
-    if (field === 'startDate' || field === 'endDate') return toDateInputValue(suggestion) || null;
+    if (field === 'startDate' || field === 'endDate' || field === 'commitmentDate') return toDateInputValue(suggestion) || null;
+    if (field === 'yearOfEstablishment' && /\d{4}-\d{1,2}-\d{1,2}/.test(String(suggestion))) {
+      return toDateInputValue(suggestion) || null;
+    }
     if (isNumericDprField(field)) {
       const n = Number(suggestion);
       return Number.isFinite(n) ? n : asNumber(String(suggestion));
@@ -432,7 +456,10 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
   const text = suggestion.trim();
   if (!text) return null;
 
-  if (field === 'startDate' || field === 'endDate') {
+  if (field === 'startDate' || field === 'endDate' || field === 'commitmentDate') {
+    return toDateInputValue(text) || null;
+  }
+  if (field === 'yearOfEstablishment' && /\d{4}-\d{1,2}-\d{1,2}/.test(text)) {
     return toDateInputValue(text) || null;
   }
 
@@ -488,7 +515,7 @@ export function suggestionToFieldValue(field: string, suggestion: unknown): any 
   }
 
   const arr = firstJsonArray(text);
-  if (arr) {
+  if (arr && !proseAroundJson(text)) {
     if (field === 'rawMaterials' && arr.length && typeof arr[0] === 'string') {
       return arr.map((name: string) => ({ name, source: '' }));
     }

@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { Sparkles, Loader2, ChevronDown, ChevronUp, Check, RefreshCw, X } from 'lucide-react';
 import { AISuggestionsService, AISuggestion } from '@/services/aiSuggestions.service';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
+import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { toast } from 'react-hot-toast';
 import { extraFieldsForScheme } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps } from '@/lib/individualDpr/schemeStepCatalog';
@@ -191,7 +192,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
   const schemeCode = isIndividualDPR ? data?.matchedSchemeCode || null : null;
   const markAiStep = () => {
     if (!isIndividualDPR || !setSchemeExtrasProp) return;
-    const extras = data?.schemeExtras || {};
+    // Read the store after apply. The render copy is stale and would wipe answers just written.
+    const extras = useIndividualDPRStore.getState().data.schemeExtras || data?.schemeExtras || {};
     const current = Array.isArray(extras.aiAssistedSteps) ? extras.aiAssistedSteps : [];
     if (current.includes(currentStep)) return;
     setSchemeExtrasProp({ ...extras, aiAssistedSteps: [...current, currentStep] });
@@ -343,22 +345,27 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     setApplyingAll(true);
     setApplyingFields(new Set(stepSuggestions.map((s) => s.field)));
     try {
-      const { applied } = applyAllCatalogSuggestionsToForm({
+      const { applied, values } = applyAllCatalogSuggestionsToForm({
         contentStep: currentStep,
         suggestions: stepSuggestions,
         getStepData,
         setStepData,
         setSchemeExtras: setSchemeExtrasProp,
-        schemeExtras: data?.schemeExtras,
+        schemeExtras: useIndividualDPRStore.getState().data.schemeExtras || data?.schemeExtras,
         schemeCode,
       });
+      const missed = stepSuggestions.filter((item) => values[item.field] == null);
       if (applied === 0) {
         toast.error(tf('Could not apply suggestions. Try again.'));
       } else {
         markAiStep();
-        setStepSuggestions([]);
+        setStepSuggestions(missed);
         toast.success(
-          tf('Applied {n} suggestions.').replace('{n}', String(applied))
+          missed.length
+            ? tf('Applied {n} suggestions. {left} still need a manual answer.')
+                .replace('{n}', String(applied))
+                .replace('{left}', String(missed.length))
+            : tf('Applied {n} suggestions.').replace('{n}', String(applied))
         );
       }
     } finally {
