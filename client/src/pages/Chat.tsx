@@ -370,8 +370,10 @@ export const Chat: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
-      <Navbar />
+    <div className="flex flex-col h-screen bg-background overflow-hidden max-[1528px]:pl-[4.75rem]">
+      <div className="max-[1528px]:-ml-[4.75rem] max-[1528px]:w-[calc(100%+4.75rem)]">
+        <Navbar />
+      </div>
       {/* Header */}
       <div className="border-b border-border bg-white flex-shrink-0">
         <div className="max-w-4xl mx-auto px-4 py-3">
