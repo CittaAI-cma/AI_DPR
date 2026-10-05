@@ -68,8 +68,14 @@ export const SideMenu: React.FC = () => {
   }, [open]);
 
   const isActive = (path: string) => {
-    if (path === '/admin') return location.pathname === '/admin';
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+    const current = location.pathname.replace(/\/$/, '') || '/';
+    const target = path.replace(/\/$/, '') || '/';
+    if (current === target) return true;
+    if (!current.startsWith(`${target}/`)) return false;
+    return !links.some((link) => {
+      const other = link.path.replace(/\/$/, '') || '/';
+      return other !== target && other.length > target.length && (current === other || current.startsWith(`${other}/`));
+    });
   };
 
   return (
