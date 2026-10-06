@@ -699,15 +699,19 @@ export function StyleEditor({
       </div>
       <div className="relative min-h-0 flex-1">
         <div className="flex h-full min-h-0">
-          <div style={{ width: paneWidths.sections }} className="hidden h-full min-h-0 shrink-0 overflow-hidden border-r bg-white lg:block">
-            {sectionsPanel}
+          <div style={{ width: paneWidths.sections }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r bg-white pt-3 lg:flex">
+            <div className="min-h-0 flex-1 overflow-hidden">
+              {sectionsPanel}
+            </div>
           </div>
           {paneHandle('sections')}
-          <div style={{ width: paneWidths.style }} className="hidden h-full min-h-0 shrink-0 overflow-hidden border-r bg-white lg:block">
-            {stylePanel}
+          <div style={{ width: paneWidths.style }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r bg-white pt-3 lg:flex">
+            <div className="min-h-0 flex-1 overflow-hidden">
+              {stylePanel}
+            </div>
           </div>
           {paneHandle('style')}
-          <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col">
+          <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col pt-3">
             <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
               <div className="flex items-center gap-1">
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
@@ -736,7 +740,7 @@ export function StyleEditor({
           </div>
           {renderEditor ? paneHandle('edit') : null}
           {renderEditor ? (
-            <div style={{ width: paneWidths.edit }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-l bg-white lg:flex">
+            <div style={{ width: paneWidths.edit }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-l bg-white pt-3 lg:flex">
               <div className="border-b px-3 py-2">
                 <p className="text-sm font-semibold">{tf('Fill & edit')}</p>
                 <p className="truncate text-xs text-slate-500">{tf((editStep || steps[0])?.title || '')}</p>

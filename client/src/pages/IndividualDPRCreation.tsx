@@ -364,6 +364,8 @@ export const IndividualDPRCreation: React.FC = () => {
     const saved = data.schemeExtras?.documentStyle;
     if (saved) {
       setDocStyle(resolveDocumentStyle(saved, schemeCode));
+      setEditStepN(currentStep);
+      setEditNonce((n) => n + 1);
       setStyling(true);
       return;
     }
@@ -373,6 +375,8 @@ export const IndividualDPRCreation: React.FC = () => {
     } catch {
       setDocStyle(defaultStyleForScheme(schemeCode));
     }
+    setEditStepN(currentStep);
+    setEditNonce((n) => n + 1);
     setStyling(true);
   };
 
@@ -507,8 +511,10 @@ export const IndividualDPRCreation: React.FC = () => {
   return (
     <Layout fullBleed={Boolean(styling && docStyle)}>
       <div className={styling && docStyle ? 'flex min-h-0 flex-1 flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
-        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className={styling && docStyle
+          ? 'shrink-0 border-b border-border bg-background px-4 pb-4 pt-2'
+          : 'sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}>
+          <div className={styling && docStyle ? '' : 'max-w-[1920px] mx-auto px-4 py-4 sm:px-6 lg:px-8'}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
                 <Button
@@ -644,6 +650,44 @@ export const IndividualDPRCreation: React.FC = () => {
                   bullets: schemeImpact.bullets.map((b) => tf(b)),
                 }}
               />
+            </div>
+          </div>
+        )}
+
+        {setupPhase === 'form' && styling && docStyle && (
+          <div className="shrink-0 border-b border-border bg-background px-3 py-2">
+            <div className="flex items-center gap-2 overflow-x-auto">
+              {visibleSteps.map((step) => {
+                const isCompleted = getStepCompletion(step);
+                const isCurrent = step === currentStep;
+                return (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => {
+                      if (step !== currentStep && !guardForward(step)) return;
+                      setInvalidFields([]);
+                      setRequiredNotice('');
+                      setCurrentStep(step);
+                      setEditStepN(step);
+                      setEditNonce((n) => n + 1);
+                    }}
+                    className={`
+                      flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all
+                      ${isCurrent
+                        ? (schemeUi?.stepActiveClass || 'bg-primary text-primary-foreground shadow-sm')
+                        : isCompleted
+                        ? 'border border-success/20 bg-success/10 text-success hover:bg-success/20'
+                        : (schemeUi?.stepIdleClass || 'bg-muted/50 text-muted-foreground hover:bg-muted')}
+                    `}
+                  >
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${isCurrent ? 'bg-primary-foreground/20' : isCompleted ? 'bg-success' : 'bg-muted-foreground/20'}`}>
+                      {isCompleted && !isCurrent ? '✓' : step}
+                    </span>
+                    <span>{t('individualDpr.stepShort', { n: step })}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
