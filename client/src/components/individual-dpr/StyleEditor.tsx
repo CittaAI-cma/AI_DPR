@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Eye, EyeOff, GripVertical, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, GripVertical, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -54,6 +54,23 @@ function readImageFile(file: File): Promise<string> {
   });
 }
 
+function StyleGroup({ title, open, onToggle, children }) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-white">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-700 hover:bg-slate-50"
+      >
+        <span>{title}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
+      {open ? <div className="space-y-2 border-t border-slate-200 px-3 py-3">{children}</div> : null}
+    </section>
+  );
+}
+
 export function StyleEditor({
   style,
   schemeCode,
@@ -83,6 +100,8 @@ export function StyleEditor({
   const [dropHint, setDropHint] = useState(null);
   const [panel, setPanel] = useState(null);
   const [side, setSide] = useState(null);
+  const [openGroups, setOpenGroups] = useState({});
+  const toggleGroup = (id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
   const [editStep, setEditStep] = useState(null);
   const [zoom, setZoom] = useState(0.55);
   const [fitWidth, setFitWidth] = useState(true);
@@ -436,9 +455,8 @@ export function StyleEditor({
 
   const stylePanel = (
     <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l">
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Presets')}</p>
+      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+        <StyleGroup title={tf('Presets')} open={!!openGroups.presets} onToggle={() => toggleGroup('presets')}>
           <div className="flex flex-wrap gap-1.5">
             {PRESET_IDS.map((id) => (
               <button
@@ -453,10 +471,9 @@ export function StyleEditor({
               </button>
             ))}
           </div>
-        </div>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Page')}</legend>
+        <StyleGroup title={tf('Page')} open={!!openGroups.page} onToggle={() => toggleGroup('page')}>
           <label className="block text-xs">
             {tf('Page size')}
             <select
@@ -495,10 +512,9 @@ export function StyleEditor({
               </label>
             ))}
           </div>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Type')}</legend>
+        <StyleGroup title={tf('Type')} open={!!openGroups.type} onToggle={() => toggleGroup('type')}>
           {ROLE_KEYS.map((key) => (
             <div key={key} className={`rounded-md border p-2 ${problemFor('body-font') && key === 'body' ? 'border-red-500' : 'border-slate-200'}`}>
               <p className="mb-1 text-xs font-medium">{tf(ROLE_LABELS[key])}</p>
@@ -567,10 +583,9 @@ export function StyleEditor({
               onChange={(event) => commit({ ...style, paragraphGap: Number(event.target.value) })}
             />
           </label>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Colors')}</legend>
+        <StyleGroup title={tf('Colors')} open={!!openGroups.colors} onToggle={() => toggleGroup('colors')}>
           {([
             ['primary', 'Primary'],
             ['header', 'Header'],
@@ -593,10 +608,9 @@ export function StyleEditor({
           {['primary', 'header', 'table', 'border'].map((key) =>
             problemFor(key) ? <p key={key} className="text-xs font-medium text-red-700">{tf(problemFor(key))}</p> : null
           )}
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Header and footer')}</legend>
+        <StyleGroup title={tf('Header and footer')} open={!!openGroups.header} onToggle={() => toggleGroup('header')}>
           <label className="block text-xs">
             {tf('Logo place')}
             <select
@@ -661,10 +675,9 @@ export function StyleEditor({
               {tf('Remove logo')}
             </button>
           ) : null}
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Watermark')}</legend>
+        <StyleGroup title={tf('Watermark')} open={!!openGroups.watermark} onToggle={() => toggleGroup('watermark')}>
           <input
             className="w-full rounded-md border px-2 py-1.5 text-sm"
             value={style.watermark}
@@ -693,10 +706,9 @@ export function StyleEditor({
               onChange={(event) => commit({ ...style, watermarkAngle: Number(event.target.value) })}
             />
           </label>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Tables')}</legend>
+        <StyleGroup title={tf('Tables')} open={!!openGroups.tables} onToggle={() => toggleGroup('tables')}>
           <label className="flex items-center gap-2 text-xs">
             <input
               type="checkbox"
@@ -705,10 +717,9 @@ export function StyleEditor({
             />
             {tf('Striped rows')}
           </label>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Pictures')}</legend>
+        <StyleGroup title={tf('Pictures')} open={!!openGroups.pictures} onToggle={() => toggleGroup('pictures')}>
           <p className="text-xs text-slate-500">{tf('Choose where a new picture starts. Name it, then drag it in Sections.')}</p>
           <select className="w-full rounded-md border px-2 py-1.5 text-sm" value={slot} onChange={(event) => setSlot(event.target.value)}>
             <option value="cover">{tf('Cover')}</option>
@@ -744,7 +755,7 @@ export function StyleEditor({
             }}
           />
           {imageError ? <p className="text-xs font-medium text-red-700">{tf(imageError)}</p> : null}
-        </fieldset>
+        </StyleGroup>
       </div>
     </aside>
   );
