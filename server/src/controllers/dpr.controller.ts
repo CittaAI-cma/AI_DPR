@@ -881,9 +881,25 @@ export class DPRController {
       let pdfBuffer: Buffer;
       try {
         const isIndividual = html.includes('individual-dpr-document');
+        const styled = html.includes('data-dpr-styled="1"');
+        const sizeMatch = html.match(/data-page-size="(A4|A3|Letter|Legal)"/);
+        const edgeTop = html.match(/data-page-edge-top="([\d.]+)"/);
+        const edgeBottom = html.match(/data-page-edge-bottom="([\d.]+)"/);
+        const format = (sizeMatch?.[1] || 'A4') as 'A4' | 'A3' | 'Letter' | 'Legal';
         pdfBuffer = await DPRService.generatePDFFromHTML(
           html,
-          isIndividual ? { margin: '16mm' } : undefined
+          styled
+            ? {
+                marginTop: `${edgeTop?.[1] || 12}mm`,
+                marginBottom: `${edgeBottom?.[1] || 12}mm`,
+                marginLeft: '0',
+                marginRight: '0',
+                format,
+                preferCssPageSize: true,
+              }
+            : isIndividual
+              ? { margin: '16mm' }
+              : undefined
         );
       } catch (htmlError: any) {
         console.warn('⚠️ Exact HTML PDF failed, falling back to scheme/server PDF:', htmlError?.message);

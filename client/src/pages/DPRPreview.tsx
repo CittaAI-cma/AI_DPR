@@ -32,7 +32,12 @@ import { dprSchemeCode } from '@/lib/dprSearchTags';
 import { FormattedText } from '@/utils/textFormatter';
 import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
-import { isIndividualDprRecord } from '@/lib/individualDpr/individualDocModel';
+import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
+import { isIndividualDprRecord, extractIndividualDocData, extractSchemeCode, getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle } from '@/lib/individualDpr/documentStyle';
+import { PageSheet } from '@/components/individual-dpr/PageSheet';
+import { useAuthStore } from '@/store/authStore';
+import { isSuperAdmin } from '@/lib/rbac';
 import { captureElementAsStandaloneHTML } from '@/lib/htmlCapture';
 
 export const DPRPreview: React.FC = () => {
@@ -53,6 +58,11 @@ export const DPRPreview: React.FC = () => {
   const [translating, setTranslating] = useState(false);
   const [hasTelugu, setHasTelugu] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
+  const [styling, setStyling] = useState(false);
+  const [draftStyle, setDraftStyle] = useState<any>(null);
+  const [hotSectionId, setHotSectionId] = useState<string | null>(null);
+  const [styleSaving, setStyleSaving] = useState(false);
+  const canSaveSchemeDefault = isSuperAdmin(useAuthStore((s) => s.user?.role));
 
   // Update i18n language when viewLanguage changes
   useEffect(() => {
@@ -216,6 +226,90 @@ export const DPRPreview: React.FC = () => {
       toast.error('Failed to load DPR');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openStyleEditor = async () => {
+    const record = extractIndividualDocData(dpr, project);
+    const scheme = extractSchemeCode(dpr, project, record);
+    const saved = record?.schemeExtras?.documentStyle;
+    if (saved) {
+      setDraftStyle(resolveDocumentStyle(saved, scheme));
+      setStyling(true);
+      return;
+    }
+    try {
+      const res = scheme ? await api.getSchemeDocumentStyle(scheme) : null;
+      setDraftStyle(resolveDocumentStyle(res?.data?.documentStyle, scheme));
+    } catch {
+      setDraftStyle(defaultStyleForScheme(scheme));
+    }
+    setStyling(true);
+  };
+
+  const saveReportStyle = async () => {
+    if (!draftStyle || !dprId) return;
+    try {
+      setStyleSaving(true);
+      const record = extractIndividualDocData(dpr, project) || {};
+      const cluster = {
+        ...record,
+        schemeExtras: { ...(record.schemeExtras || {}), documentStyle: draftStyle },
+      };
+      await api.updateDPRContent(dprId, { clusterData: cluster }, 'english');
+      const teluguCluster = dpr.content?.telugu?.clusterData;
+      if (teluguCluster && typeof teluguCluster === 'object') {
+        await api.updateDPRContent(
+          dprId,
+          {
+            clusterData: {
+              ...teluguCluster,
+              schemeExtras: { ...(teluguCluster.schemeExtras || {}), documentStyle: draftStyle },
+            },
+          },
+          'telugu'
+        );
+      }
+      const lang = dpr.content?.english || {};
+      setDpr({
+        ...dpr,
+        content: {
+          ...dpr.content,
+          english: { ...lang, clusterData: cluster },
+          ...(teluguCluster
+            ? {
+                telugu: {
+                  ...dpr.content.telugu,
+                  clusterData: {
+                    ...teluguCluster,
+                    schemeExtras: { ...(teluguCluster.schemeExtras || {}), documentStyle: draftStyle },
+                  },
+                },
+              }
+            : {}),
+        },
+      });
+      toast.success('Style saved on this DPR');
+      setStyling(false);
+    } catch {
+      toast.error('Could not save the style');
+    } finally {
+      setStyleSaving(false);
+    }
+  };
+
+  const saveSchemeDefault = async () => {
+    const record = extractIndividualDocData(dpr, project);
+    const scheme = extractSchemeCode(dpr, project, record);
+    if (!scheme || !draftStyle) return;
+    try {
+      setStyleSaving(true);
+      await api.saveSchemeDocumentStyle(scheme, draftStyle);
+      toast.success('The next DPR for this scheme starts from this look');
+    } catch {
+      toast.error('Could not save the scheme default');
+    } finally {
+      setStyleSaving(false);
     }
   };
 
@@ -823,7 +917,12 @@ export const DPRPreview: React.FC = () => {
               <div className="flex items-center justify-between">
                 <CardTitle>DPR Preview</CardTitle>
                 <div className="flex items-center gap-2">
-                  {/* Zoom Controls */}
+                  {isIndividualDPR && !styling ? (
+                    <Button variant="outline" size="sm" onClick={openStyleEditor}>
+                      Style this report
+                    </Button>
+                  ) : null}
+                  {!styling ? (
                   <div className="flex items-center gap-1 border rounded-lg p-1">
                     <Button
                       variant="ghost"
@@ -856,10 +955,40 @@ export const DPRPreview: React.FC = () => {
                       <RotateCcw className="h-4 w-4" />
                     </Button>
                   </div>
+                  ) : null}
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="overflow-auto p-4 bg-gray-100" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+            <CardContent className={styling ? 'p-0' : 'overflow-auto p-4 bg-gray-100'} style={styling ? undefined : { maxHeight: 'calc(100vh - 300px)' }}>
+              {styling && draftStyle && isIndividualDPR ? (
+                <StyleEditor
+                  style={draftStyle}
+                  schemeCode={extractSchemeCode(dpr, project, extractIndividualDocData(dpr, project))}
+                  steps={getSchemeDocSteps(extractSchemeCode(dpr, project, extractIndividualDocData(dpr, project))).map((step) => ({
+                    id: step.id,
+                    title: sectionTitleFromStep(step),
+                  }))}
+                  activeSectionId={hotSectionId}
+                  onActiveSection={setHotSectionId}
+                  onChange={setDraftStyle}
+                  onSave={saveReportStyle}
+                  onClose={() => setStyling(false)}
+                  saving={styleSaving}
+                  canSaveSchemeDefault={canSaveSchemeDefault}
+                  onSaveSchemeDefault={saveSchemeDefault}
+                  language={viewLanguage}
+                  onLanguage={(lang) => setViewLanguage(lang)}
+                  hasTelugu={hasTelugu}
+                >
+                  <IndividualDPRDocumentView
+                    dpr={dpr}
+                    project={project}
+                    viewLanguage={viewLanguage}
+                    documentStyle={draftStyle}
+                    activeSectionId={hotSectionId}
+                  />
+                </StyleEditor>
+              ) : (
               <div 
                 className="w-full overflow-auto"
                 style={{ 
@@ -869,14 +998,35 @@ export const DPRPreview: React.FC = () => {
                   height: `${100 / previewZoom}%`,
                 }}
               >
-                <div className="bg-white shadow-2xl mx-auto" style={{ width: '21cm', minHeight: '29.7cm', padding: '2rem' }}>
-                  {isIndividualDprRecord(dpr, project) ? (
+                {(() => {
+                  const record = isIndividualDPR ? extractIndividualDocData(dpr, project) : null;
+                  const saved = record?.schemeExtras?.documentStyle;
+                  const look = saved ? resolveDocumentStyle(saved, extractSchemeCode(dpr, project, record)) : null;
+                  const doc = isIndividualDprRecord(dpr, project) ? (
                     <IndividualDPRDocumentView dpr={dpr} project={project} viewLanguage={viewLanguage} />
                   ) : (
                     <ClusterDPRDocumentView dpr={dpr} project={project} viewLanguage={viewLanguage} />
-                  )}
-                </div>
+                  );
+                  if (!look) {
+                    return (
+                      <div className="bg-white shadow-2xl mx-auto" style={{ width: '21cm', minHeight: '29.7cm', padding: '2rem' }}>
+                        {doc}
+                      </div>
+                    );
+                  }
+                  return (
+                    <PageSheet
+                      className="bg-white shadow-2xl mx-auto"
+                      pageSize={look.pageSize}
+                      edgeTopMm={pageEdgeMm(look.marginMm.top)}
+                      edgeBottomMm={pageEdgeMm(look.marginMm.bottom)}
+                    >
+                      {doc}
+                    </PageSheet>
+                  );
+                })()}
               </div>
+              )}
             </CardContent>
           </Card>
         ) : (

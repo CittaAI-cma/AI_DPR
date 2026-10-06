@@ -8,6 +8,10 @@ import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maxim
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
+import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
+import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle } from '@/lib/individualDpr/documentStyle';
+import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
@@ -51,6 +55,7 @@ export const IndividualDPRCreation: React.FC = () => {
     loadDataFromProject,
     setMatchedSchemeCode,
     setVentureMatchAnswers,
+    setSchemeExtras,
   } = useIndividualDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
@@ -80,6 +85,11 @@ export const IndividualDPRCreation: React.FC = () => {
   const skipNextDiffRef = useRef(true);
   const [previewHitIndex, setPreviewHitIndex] = useState(0);
   const [previewHitCount, setPreviewHitCount] = useState(0);
+  const [styling, setStyling] = useState(false);
+  const [docStyle, setDocStyle] = useState<any>(null);
+  const [hotSectionId, setHotSectionId] = useState<string | null>(null);
+  const [styleSaving, setStyleSaving] = useState(false);
+  const styleBeforeEdit = useRef<any>(null);
   const previewHitsRef = useRef<HTMLElement[]>([]);
 
   const refreshHits = useCallback((paths: string[]) => {
@@ -345,6 +355,61 @@ export const IndividualDPRCreation: React.FC = () => {
     if (success) toast.success(t('individualDpr.toasts.saveSuccess'));
     else if (!getUnitName(data.step1)) toast.error(t('individualDpr.toasts.needUnitName'));
     else toast.error(t('individualDpr.toasts.saveFailed'));
+  };
+
+  const openStyleEditor = async () => {
+    styleBeforeEdit.current = data.schemeExtras?.documentStyle || null;
+    const saved = data.schemeExtras?.documentStyle;
+    if (saved) {
+      setDocStyle(resolveDocumentStyle(saved, schemeCode));
+      setStyling(true);
+      return;
+    }
+    try {
+      const res = schemeCode ? await api.getSchemeDocumentStyle(schemeCode) : null;
+      setDocStyle(resolveDocumentStyle(res?.data?.documentStyle, schemeCode));
+    } catch {
+      setDocStyle(defaultStyleForScheme(schemeCode));
+    }
+    setStyling(true);
+  };
+
+  const onStyleChange = (next: any) => {
+    setDocStyle(next);
+    const current = useIndividualDPRStore.getState().data.schemeExtras || {};
+    setSchemeExtras({ ...current, documentStyle: next });
+  };
+
+  const saveReportStyle = async () => {
+    const latest = useIndividualDPRStore.getState().data;
+    const extras = { ...(latest.schemeExtras || {}), documentStyle: docStyle };
+    setSchemeExtras(extras);
+    try {
+      setStyleSaving(true);
+      const response = await individualDprApi.saveDraft(toIndividualPayload({ ...latest, schemeExtras: extras }));
+      if (response?.success && response.data?.dprId && response.data?.projectId) {
+        setDprIds(response.data.dprId, response.data.projectId);
+      }
+      toast.success('Style saved on this DPR');
+      setStyling(false);
+    } catch {
+      toast.error('Could not save the style. Save the draft after the unit name is filled.');
+    } finally {
+      setStyleSaving(false);
+    }
+  };
+
+  const saveSchemeDefault = async () => {
+    if (!schemeCode || !docStyle) return;
+    try {
+      setStyleSaving(true);
+      await api.saveSchemeDocumentStyle(schemeCode, docStyle);
+      toast.success('The next DPR for this scheme starts from this look');
+    } catch {
+      toast.error('Could not save the scheme default');
+    } finally {
+      setStyleSaving(false);
+    }
   };
 
   const handleGenerateDPR = async () => {
@@ -674,6 +739,62 @@ export const IndividualDPRCreation: React.FC = () => {
           </div>
 
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {styling && docStyle ? (
+            <StyleEditor
+              style={docStyle}
+              schemeCode={schemeCode}
+              steps={getSchemeDocSteps(schemeCode).map((step) => ({
+                id: step.id,
+                title: sectionTitleFromStep(step),
+              }))}
+              activeSectionId={hotSectionId}
+              onActiveSection={setHotSectionId}
+              onChange={onStyleChange}
+              onSave={saveReportStyle}
+              onClose={() => {
+                const current = useIndividualDPRStore.getState().data.schemeExtras || {};
+                if (styleBeforeEdit.current) {
+                  setSchemeExtras({ ...current, documentStyle: styleBeforeEdit.current });
+                } else {
+                  const next = { ...current };
+                  delete next.documentStyle;
+                  setSchemeExtras(next);
+                }
+                setStyling(false);
+              }}
+              saving={styleSaving}
+              canSaveSchemeDefault={isAdmin}
+              onSaveSchemeDefault={saveSchemeDefault}
+              language={viewLanguage}
+              onLanguage={(lang) => i18n.changeLanguage(lang === 'telugu' ? 'te' : 'en')}
+              hasTelugu
+            >
+              <IndividualDPRDocumentView
+                trackFieldHits
+                documentStyle={docStyle}
+                activeSectionId={hotSectionId}
+                dpr={{
+                  content: { english: { clusterData: dprPayload } },
+                  metadata: {
+                    clusterData: dprPayload,
+                    isIndividualDPR: true,
+                    matchedSchemeCode: data.matchedSchemeCode || null,
+                  },
+                }}
+                project={project || {
+                  _id: data.projectId,
+                  id: data.projectId,
+                  projectName: getUnitName(data.step1),
+                  projectType: 'individual',
+                  stepData: dprPayload,
+                }}
+                viewLanguage={viewLanguage}
+                onSectionClick={(stepNumber: number) => {
+                  if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                }}
+              />
+            </StyleEditor>
+          ) : (
           <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {(previewMode === 'form' || previewMode === 'split') && (
               <div id="individual-dpr-form" className="space-y-6">
@@ -758,32 +879,38 @@ export const IndividualDPRCreation: React.FC = () => {
             {(previewMode === 'preview' || previewMode === 'split') && (
               <div className="space-y-6">
                 <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
-                  <CardHeader className="flex-shrink-0 border-b border-border">
-                    <div className="flex items-center justify-between">
-                      <CardTitle>{t('individualDpr.livePreview')}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 border rounded-lg p-1">
-                          <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))} className="h-7 w-7 p-0">
-                            <ZoomOut className="h-4 w-4" />
-                          </Button>
-                          <span className="text-xs px-2 min-w-[3rem] text-center">{Math.round(previewZoom * 100)}%</span>
-                          <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.min(2, previewZoom + 0.1))} className="h-7 w-7 p-0">
-                            <ZoomIn className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(1)} className="h-7 w-7 p-0">
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
-                          className="gap-2"
-                        >
-                          <Maximize2 className="h-4 w-4" />
-                          {t('individualDpr.fullscreen')}
+                  <CardHeader className="flex-shrink-0 space-y-3 border-b border-border">
+                    <CardTitle>{t('individualDpr.livePreview')}</CardTitle>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1 rounded-lg border p-1">
+                        <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))} className="h-7 w-7 p-0">
+                          <ZoomOut className="h-4 w-4" />
+                        </Button>
+                        <span className="min-w-[3rem] px-2 text-center text-xs">{Math.round(previewZoom * 100)}%</span>
+                        <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.min(2, previewZoom + 0.1))} className="h-7 w-7 p-0">
+                          <ZoomIn className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(1)} className="h-7 w-7 p-0">
+                          <RotateCcw className="h-4 w-4" />
                         </Button>
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={openStyleEditor}
+                        className="h-9 shrink-0 whitespace-nowrap px-3"
+                      >
+                        {tf('Style this report')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
+                        className="h-9 shrink-0 gap-2 whitespace-nowrap px-3"
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                        {t('individualDpr.fullscreen')}
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 min-h-0 overflow-hidden p-0 bg-gray-100 relative flex flex-col">
@@ -833,39 +960,61 @@ export const IndividualDPRCreation: React.FC = () => {
                         className="py-4"
                         style={{ zoom: previewZoom } as React.CSSProperties}
                       >
-                        <div
-                          id="dpr-preview"
-                          className="bg-white mx-auto shadow-lg"
-                          style={{ minHeight: '100%', width: '21cm', padding: '2rem' }}
-                        >
-                          <IndividualDPRDocumentView
-                            trackFieldHits
-                            dpr={{
-                              content: {
-                                english: {
-                                  clusterData: dprPayload,
+                        {(() => {
+                          const saved = data.schemeExtras?.documentStyle;
+                          const look = saved ? resolveDocumentStyle(saved, schemeCode) : null;
+                          const doc = (
+                            <IndividualDPRDocumentView
+                              trackFieldHits
+                              dpr={{
+                                content: {
+                                  english: {
+                                    clusterData: dprPayload,
+                                  },
                                 },
-                              },
-                              metadata: {
-                                clusterData: dprPayload,
-                                isIndividualDPR: true,
-                                matchedSchemeCode: data.matchedSchemeCode || null,
-                              },
-                            }}
-                            project={project || {
-                              _id: data.projectId,
-                              id: data.projectId,
-                              projectName: getUnitName(data.step1),
-                              projectType: 'individual',
-                              stepData: dprPayload,
-                            }}
-                            viewLanguage={viewLanguage}
-                            onSectionClick={(stepNumber: number) => {
-                              if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                          />
-                        </div>
+                                metadata: {
+                                  clusterData: dprPayload,
+                                  isIndividualDPR: true,
+                                  matchedSchemeCode: data.matchedSchemeCode || null,
+                                },
+                              }}
+                              project={project || {
+                                _id: data.projectId,
+                                id: data.projectId,
+                                projectName: getUnitName(data.step1),
+                                projectType: 'individual',
+                                stepData: dprPayload,
+                              }}
+                              viewLanguage={viewLanguage}
+                              onSectionClick={(stepNumber: number) => {
+                                if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                            />
+                          );
+                          if (!look) {
+                            return (
+                              <div
+                                id="dpr-preview"
+                                className="bg-white mx-auto shadow-lg"
+                                style={{ minHeight: '100%', width: '21cm', padding: '2rem' }}
+                              >
+                                {doc}
+                              </div>
+                            );
+                          }
+                          return (
+                            <PageSheet
+                              id="dpr-preview"
+                              className="bg-white mx-auto shadow-lg"
+                              pageSize={look.pageSize}
+                              edgeTopMm={pageEdgeMm(look.marginMm.top)}
+                              edgeBottomMm={pageEdgeMm(look.marginMm.bottom)}
+                            >
+                              {doc}
+                            </PageSheet>
+                          );
+                        })()}
                       </div>
                     </div>
                   </CardContent>
@@ -873,6 +1022,7 @@ export const IndividualDPRCreation: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
           </>
         )}

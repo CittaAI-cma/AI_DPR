@@ -13,6 +13,13 @@ import {
   type IndividualDocField,
 } from '@/lib/individualDpr/individualDocModel';
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
+import {
+  applySectionOrder,
+  pageEdgeMm,
+  resolveDocumentStyle,
+  styleCssVars,
+  type DocumentStyle,
+} from '@/lib/individualDpr/documentStyle';
 import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
 import {
   CMEP_COST_HEADS,
@@ -48,6 +55,9 @@ export interface IndividualDPRDocumentViewProps {
   viewLanguage?: 'english' | 'telugu';
   trackFieldHits?: boolean;
   onSectionClick?: (localStep: number) => void;
+  /** When set, this DPR wears the saved style and section order. */
+  documentStyle?: DocumentStyle | null;
+  activeSectionId?: string | null;
 }
 
 function fieldHit(
@@ -65,14 +75,19 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   viewLanguage = 'english',
   trackFieldHits = false,
   onSectionClick,
+  documentStyle,
+  activeSectionId = null,
 }) => {
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
   const schemeCode = extractSchemeCode(dpr, project, data);
   const schemeUi = getSchemeUiTemplate(schemeCode);
-  const steps = getSchemeDocSteps(schemeCode);
-  const step1 = data.step1 || {};
+  const catalogSteps = getSchemeDocSteps(schemeCode);
   const extras = data.schemeExtras || {};
+  const explicitStyle = documentStyle !== undefined ? documentStyle : extras.documentStyle;
+  const style = explicitStyle ? resolveDocumentStyle(explicitStyle, schemeCode) : null;
+  const steps = style ? applySectionOrder(catalogSteps, style) : catalogSteps;
+  const step1 = data.step1 || {};
   const cover = getIndividualCoverLines(
     step1,
     schemeCode,
@@ -295,10 +310,35 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       return <div className="individual-sec-body">{blocks}</div>;
   };
 
+  const pageNumber =
+    style?.pageNumberStyle === 'of' ? tf('Page 1 of …') : '1';
+
   return (
     <div
-      className={`dpr-document individual-dpr-document${schemeUi ? ` ${schemeUi.documentClass}` : ''}`}
+      className={`dpr-document individual-dpr-document${schemeUi ? ` ${schemeUi.documentClass}` : ''}${
+        style ? ' dpr-styled' : ''
+      }${style?.tableStriped ? ' dpr-striped' : ''}${style?.wideTablesLandscape ? ' dpr-wide-landscape' : ''}`}
+      style={style ? styleCssVars(style) : undefined}
+      data-dpr-styled={style ? '1' : undefined}
+      data-page-size={style?.pageSize}
+      data-page-edge-top={style ? String(pageEdgeMm(style.marginMm.top)) : undefined}
+      data-page-edge-bottom={style ? String(pageEdgeMm(style.marginMm.bottom)) : undefined}
+      data-wide-landscape={style?.wideTablesLandscape ? '1' : undefined}
+      data-page-numbers={style?.pageNumberStyle}
     >
+      {style?.watermark ? (
+        <div className="dpr-watermark" aria-hidden="true">
+          {style.watermark}
+        </div>
+      ) : null}
+      {style && (style.agencyName || style.logoDataUrl || style.headerLine) ? (
+        <div
+          className={`dpr-style-header is-${style.logoAlign}${style.headerLine ? ' has-line' : ''}`}
+        >
+          {style.logoDataUrl ? <img src={style.logoDataUrl} alt="" className="dpr-style-logo" /> : null}
+          {style.agencyName ? <span>{style.agencyName}</span> : null}
+        </div>
+      ) : null}
       <header className="individual-cover">
         {schemeUi?.id === 'PMEGP' ? (
           <>
@@ -342,6 +382,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         </div>
         {schemeUi?.id === 'PMEGP' ? <div className="pmegp-cover-rule" aria-hidden="true" /> : null}
       </header>
+      {style?.images.cover ? (
+        <figure className="dpr-slot-figure">
+          <img src={style.images.cover} alt="" />
+        </figure>
+      ) : null}
 
       <section className="individual-toc">
         <h2 className="individual-sec-title">
@@ -349,26 +394,29 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           {tf('Table of Contents')}
         </h2>
         <ol className="individual-toc-list">
-          {steps.map((def) => (
+          {steps.map((def, index) => (
             <li
               key={def.id}
               className={onSectionClick ? 'is-clickable' : undefined}
               onClick={() => onSectionClick?.(def.n)}
             >
-              <span className="toc-num">{def.n}</span>
+              <span className="toc-num">{style ? index + 1 : def.n}</span>
               <span className="toc-label">{tf(sectionTitleFromStep(def))}</span>
             </li>
           ))}
         </ol>
       </section>
 
-      {steps.map((def) => {
+      {steps.map((def, index) => {
         const title = tf(sectionTitleFromStep(def));
+        const num = style ? index + 1 : def.n;
+        const hot = activeSectionId === def.id;
+        const afterImage = style?.images.after?.[def.id];
         if (def.id === 'uploads' || def.contentStep === 18) {
           return (
-            <section key={def.id} id={`individual-section-${def.n}`} className="individual-sec">
+            <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
               <h2 className="individual-sec-title">
-                <span className="individual-sec-num">{def.n}</span>
+                <span className="individual-sec-num">{num}</span>
                 {title}
               </h2>
               {uploads.length === 0 ? (
@@ -386,23 +434,52 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   })}
                 </ul>
               )}
+              {afterImage ? (
+                <figure className="dpr-slot-figure">
+                  <img src={afterImage} alt="" />
+                </figure>
+              ) : null}
             </section>
           );
         }
 
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
         return (
-          <section key={def.id} id={`individual-section-${def.n}`} className="individual-sec">
+          <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
             <h2 className="individual-sec-title">
-              <span className="individual-sec-num">{def.n}</span>
+              <span className="individual-sec-num">{num}</span>
               {title}
             </h2>
             {renderSectionFields(fields)}
+            {afterImage ? (
+              <figure className="dpr-slot-figure">
+                <img src={afterImage} alt="" />
+              </figure>
+            ) : null}
           </section>
         );
       })}
 
-      {schemeUi?.id === 'PMEGP' ? (
+      {style?.images.annexure ? (
+        <section className="individual-sec">
+          <h2 className="individual-sec-title">
+            <span className="individual-sec-num">{steps.length + 1}</span>
+            {tf('Annexure')}
+          </h2>
+          <figure className="dpr-slot-figure">
+            <img src={style.images.annexure} alt="" />
+          </figure>
+        </section>
+      ) : null}
+
+      {style ? (
+        <footer className="dpr-style-footer">
+          <span>{style.agencyName}</span>
+          <span>{pageNumber}</span>
+        </footer>
+      ) : null}
+
+      {schemeUi?.id === 'PMEGP' && !style ? (
         <footer className="pmegp-doc-footer">
           <span>PMEGP · Bank-unit Detailed Project Report</span>
           <span>Confidential — for lending appraisal</span>

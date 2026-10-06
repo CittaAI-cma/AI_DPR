@@ -615,6 +615,18 @@ class APIClient {
     return response.data;
   }
 
+  async getSchemeDocumentStyle(schemeCode: string) {
+    const response = await this.client.get(`/dpr/scheme-style/${encodeURIComponent(schemeCode)}`);
+    return response.data;
+  }
+
+  async saveSchemeDocumentStyle(schemeCode: string, documentStyle: any) {
+    const response = await this.client.put(`/dpr/scheme-style/${encodeURIComponent(schemeCode)}`, {
+      documentStyle,
+    });
+    return response.data;
+  }
+
   async submitDPR(dprId: string, submittedTo: string = 'admin') {
     const response = await this.client.post(`/dpr/${dprId}/submit`, { submittedTo });
     this.invalidateDpr(dprId);

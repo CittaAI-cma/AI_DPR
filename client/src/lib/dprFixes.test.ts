@@ -13,6 +13,15 @@ import {
   splitUnfilledFields,
   yearToIsoDate,
 } from './individualDpr/stepSuggestionCheck.ts';
+import {
+  applySectionOrder,
+  contrastOk,
+  defaultStyleForScheme,
+  moveSection,
+  pageEdgeMm,
+  resolveDocumentStyle,
+  shiftForPageEdge,
+} from './individualDpr/documentStyle.ts';
 
 describe('dpr download name', () => {
   it('uses scheme, project, short language, and DDMMYY', () => {
@@ -130,5 +139,45 @@ describe('step suggestion batch', () => {
     assert.equal(acceptByKind('date', '2026-02-31', emptyFacts), null);
     assert.equal(acceptByKind('date', '2026-04-01', emptyFacts), '2026-04-01');
     assert.equal(acceptByKind('prose', 'Too short.', emptyFacts), null);
+  });
+});
+
+describe('report style', () => {
+  it('starts PMEGP from its preset and other schemes from the government look', () => {
+    assert.equal(defaultStyleForScheme('PMEGP').preset, 'pmegp');
+    assert.equal(defaultStyleForScheme('AP_CMEP').preset, 'apCmep');
+    assert.equal(defaultStyleForScheme('PMFME').preset, 'government');
+  });
+
+  it('keeps a half-saved style on the preset', () => {
+    const style = resolveDocumentStyle({ colors: { header: '#111827' } }, 'PMEGP');
+    assert.equal(style.colors.header, '#111827');
+    assert.equal(style.colors.primary, defaultStyleForScheme('PMEGP').colors.primary);
+    assert.equal(style.watermark, 'Confidential — for lending appraisal');
+  });
+
+  it('moves a section with its place in the print order and can hide it', () => {
+    const steps = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    const order = moveSection([], steps, 'c', 'a');
+    assert.deepEqual(order, ['c', 'a', 'b']);
+    const visible = applySectionOrder(steps, { sectionOrder: order, hiddenSectionIds: ['a'] });
+    assert.deepEqual(visible.map((step) => step.id), ['c', 'b']);
+  });
+
+  it('rejects a color that would hide the text', () => {
+    assert.equal(contrastOk('#ffffff', '#ffffff'), false);
+    assert.equal(contrastOk('#111827', '#ffffff'), true);
+    assert.equal(contrastOk('#ffffff', '#1e3a5f'), true);
+  });
+
+  it('keeps a block off the page edge and off the break', () => {
+    const page = 1000;
+    const edge = 80;
+    assert.equal(pageEdgeMm(8), 12);
+    assert.equal(pageEdgeMm(16), 16);
+    assert.equal(shiftForPageEdge(100, 40, page, edge, edge), 0);
+    assert.equal(shiftForPageEdge(20, 40, page, edge, edge), 60);
+    assert.equal(shiftForPageEdge(900, 150, page, edge, edge), 180);
+    assert.equal(shiftForPageEdge(400, 900, page, edge, edge), 0);
   });
 });
