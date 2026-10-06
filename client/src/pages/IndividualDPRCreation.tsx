@@ -66,8 +66,11 @@ export const IndividualDPRCreation: React.FC = () => {
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [setupPhase, setSetupPhase] = useState<SetupPhase>('pick');
+  const isNewDraft = searchParams.get('new') === 'true';
+  const [isLoadingData, setIsLoadingData] = useState(!isNewDraft);
+  const [setupPhase, setSetupPhase] = useState<SetupPhase>(
+    isNewDraft && searchParams.get('scheme') ? 'brief' : 'pick'
+  );
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
 
   const currentStep = data.currentStep || 1;
@@ -165,7 +168,6 @@ export const IndividualDPRCreation: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        setIsLoadingData(true);
         const projectIdFromUrl = params.projectId || searchParams.get('projectId');
         const dprIdFromUrl = params.dprId || searchParams.get('dprId');
         const isNew = searchParams.get('new') === 'true';
@@ -191,6 +193,7 @@ export const IndividualDPRCreation: React.FC = () => {
           return;
         }
 
+        setIsLoadingData(true);
         if (projectIdFromUrl) {
           try {
             const projectResponse = await api.getProject(projectIdFromUrl);
@@ -378,19 +381,24 @@ export const IndividualDPRCreation: React.FC = () => {
     const start = step || currentStep;
     styleBeforeEdit.current = latest.schemeExtras?.documentStyle || null;
     const saved = latest.schemeExtras?.documentStyle;
-    if (saved) {
-      setDocStyle(resolveDocumentStyle(saved, code));
-    } else {
-      try {
-        const res = code ? await api.getSchemeDocumentStyle(code) : null;
-        setDocStyle(resolveDocumentStyle(res?.data?.documentStyle, code));
-      } catch {
-        setDocStyle(defaultStyleForScheme(code));
-      }
-    }
     setEditStepN(start);
     setEditNonce((n) => n + 1);
+    if (saved) {
+      setDocStyle(resolveDocumentStyle(saved, code));
+      setStyling(true);
+      return;
+    }
+    setDocStyle(defaultStyleForScheme(code));
     setStyling(true);
+    if (!code) return;
+    try {
+      const res = await api.getSchemeDocumentStyle(code);
+      if (res?.data?.documentStyle) {
+        setDocStyle(resolveDocumentStyle(res.data.documentStyle, code));
+      }
+    } catch {
+      /* the local default is already on screen */
+    }
   };
 
   const onStyleChange = (next: any) => {
@@ -590,7 +598,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     }}
                   />
                 )}
-                {setupPhase === 'form' && (
+                {setupPhase === 'form' && !styling && (
                   <>
                     <label className="flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground whitespace-nowrap">
