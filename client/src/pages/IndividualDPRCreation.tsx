@@ -505,8 +505,8 @@ export const IndividualDPRCreation: React.FC = () => {
           });
 
   return (
-    <Layout>
-      <div className={styling && docStyle ? 'flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
+    <Layout fullBleed={Boolean(styling && docStyle)}>
+      <div className={styling && docStyle ? 'flex min-h-0 flex-1 flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
         <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
