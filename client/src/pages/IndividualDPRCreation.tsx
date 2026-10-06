@@ -4,13 +4,13 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setPictureFrame } from '@/lib/individualDpr/documentStyle';
+import { defaultStyleForScheme, pageEdgeMm, parseBlockFrameSlot, resolveDocumentStyle, selectionStepOrder, setBlockFrame, setBlockText, setPictureFrame } from '@/lib/individualDpr/documentStyle';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
@@ -25,6 +25,7 @@ import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
 import { missingIndividualRequired } from '@/lib/requiredStepFields';
 import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
+import { patchFromDocEdit } from '@/lib/individualDpr/liveDocEdit';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { hasUnder18Applicant } from '@/lib/privacy/under18';
 import { GuardianNotice } from '@/components/privacy/GuardianNotice';
@@ -57,24 +58,31 @@ export const IndividualDPRCreation: React.FC = () => {
     setVentureMatchAnswers,
     setSchemeExtras,
   } = useIndividualDPRStore();
+  const onEditField = useCallback((path: string, text: string) => {
+    const store = useIndividualDPRStore.getState();
+    const patch = patchFromDocEdit(store.data, path, text);
+    if (!patch) return;
+    if (patch.extras) store.setSchemeExtras(patch.extras);
+    if (patch.step != null && patch.stepData) store.setStepData(patch.step, patch.stepData);
+  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [requiredNotice, setRequiredNotice] = useState('');
   const [devMode, setDevMode] = useState(false);
   const isAdmin = isSuperAdmin(useAuthStore((s) => s.user?.role));
-  const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [setupPhase, setSetupPhase] = useState<SetupPhase>('pick');
+  const isNewDraft = searchParams.get('new') === 'true';
+  const [isLoadingData, setIsLoadingData] = useState(!isNewDraft);
+  const [setupPhase, setSetupPhase] = useState<SetupPhase>(
+    isNewDraft && searchParams.get('scheme') ? 'brief' : 'pick'
+  );
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
 
   const currentStep = data.currentStep || 1;
   const schemeCode = data.matchedSchemeCode || null;
   const visibleSteps = getVisibleSteps(schemeCode);
-  const lastVisible = visibleSteps[visibleSteps.length - 1] || getSchemeStepCount(schemeCode);
-  const stepOrdinal = Math.max(1, visibleSteps.indexOf(currentStep) + 1);
   const schemeImpact = getSchemeImpact(schemeCode);
   const dprPayload = toIndividualPayload(data);
 
@@ -87,6 +95,9 @@ export const IndividualDPRCreation: React.FC = () => {
   const [previewHitCount, setPreviewHitCount] = useState(0);
   const [styling, setStyling] = useState(false);
   const [docStyle, setDocStyle] = useState<any>(null);
+  const selectionSteps = selectionStepOrder(getSchemeDocSteps(schemeCode), docStyle?.sectionOrder, visibleSteps);
+  const lastVisible = selectionSteps[selectionSteps.length - 1] || getSchemeStepCount(schemeCode);
+  const stepOrdinal = Math.max(1, selectionSteps.indexOf(currentStep) + 1);
   const docStyleRef = useRef<any>(null);
   docStyleRef.current = docStyle;
   const [hotSectionId, setHotSectionId] = useState<string | null>(null);
@@ -165,7 +176,6 @@ export const IndividualDPRCreation: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        setIsLoadingData(true);
         const projectIdFromUrl = params.projectId || searchParams.get('projectId');
         const dprIdFromUrl = params.dprId || searchParams.get('dprId');
         const isNew = searchParams.get('new') === 'true';
@@ -191,6 +201,7 @@ export const IndividualDPRCreation: React.FC = () => {
           return;
         }
 
+        setIsLoadingData(true);
         if (projectIdFromUrl) {
           try {
             const projectResponse = await api.getProject(projectIdFromUrl);
@@ -293,11 +304,11 @@ export const IndividualDPRCreation: React.FC = () => {
 
   const guardForward = (targetStep: number) => {
     if (isAdmin && devMode) return true;
-    const from = visibleSteps.indexOf(currentStep);
-    const to = visibleSteps.indexOf(targetStep);
+    const from = selectionSteps.indexOf(currentStep);
+    const to = selectionSteps.indexOf(targetStep);
     if (to <= from) return true;
     for (let i = from; i < to; i += 1) {
-      const step = visibleSteps[i];
+      const step = selectionSteps[i];
       const content = getContentStep(step, schemeCode);
       const missing = missingIndividualRequired(content, data[`step${content}`], schemeCode);
       if (missing.length) {
@@ -312,8 +323,8 @@ export const IndividualDPRCreation: React.FC = () => {
   const goAdjacent = async (dir: 1 | -1) => {
     if (isStepping) return;
     const advancing = dir === 1;
-    const idx = visibleSteps.indexOf(currentStep);
-    const target = visibleSteps[idx + dir];
+    const idx = selectionSteps.indexOf(currentStep);
+    const target = selectionSteps[idx + dir];
     if (advancing && target && !guardForward(target)) return;
     if (advancing) {
       setInvalidFields([]);
@@ -322,8 +333,8 @@ export const IndividualDPRCreation: React.FC = () => {
     if (advancing) setIsStepping(true);
     try {
       await saveToDatabase();
-      const idx = visibleSteps.indexOf(currentStep);
-      const next = visibleSteps[idx + dir];
+      const idx = selectionSteps.indexOf(currentStep);
+      const next = selectionSteps[idx + dir];
       if (next) {
         setCurrentStep(next);
         if (styling) {
@@ -378,19 +389,24 @@ export const IndividualDPRCreation: React.FC = () => {
     const start = step || currentStep;
     styleBeforeEdit.current = latest.schemeExtras?.documentStyle || null;
     const saved = latest.schemeExtras?.documentStyle;
-    if (saved) {
-      setDocStyle(resolveDocumentStyle(saved, code));
-    } else {
-      try {
-        const res = code ? await api.getSchemeDocumentStyle(code) : null;
-        setDocStyle(resolveDocumentStyle(res?.data?.documentStyle, code));
-      } catch {
-        setDocStyle(defaultStyleForScheme(code));
-      }
-    }
     setEditStepN(start);
     setEditNonce((n) => n + 1);
+    if (saved) {
+      setDocStyle(resolveDocumentStyle(saved, code));
+      setStyling(true);
+      return;
+    }
+    setDocStyle(defaultStyleForScheme(code));
     setStyling(true);
+    if (!code) return;
+    try {
+      const res = await api.getSchemeDocumentStyle(code);
+      if (res?.data?.documentStyle) {
+        setDocStyle(resolveDocumentStyle(res.data.documentStyle, code));
+      }
+    } catch {
+      /* the local default is already on screen */
+    }
   };
 
   const onStyleChange = (next: any) => {
@@ -614,15 +630,19 @@ export const IndividualDPRCreation: React.FC = () => {
                       {t('individualDpr.saveDraft')}
                     </Button>
                     <div className="flex items-center gap-1 border rounded-lg p-1">
-                      <Button variant={previewMode === 'form' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('form')}>
+                      <Button
+                        variant={!styling ? 'primary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setStyling(false)}
+                      >
                         {t('individualDpr.form')}
                       </Button>
-                      <Button variant={previewMode === 'split' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('split')}>
-                        {t('individualDpr.split')}
-                      </Button>
-                      <Button variant={previewMode === 'preview' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('preview')} className="gap-2">
-                        <Eye className="h-4 w-4" />
-                        {t('individualDpr.preview')}
+                      <Button
+                        variant={styling ? 'primary' : 'ghost'}
+                        size="sm"
+                        onClick={() => { void openStyleEditor(); }}
+                      >
+                        {t('individualDpr.customise', { defaultValue: 'Customise' })}
                       </Button>
                     </div>
                     <Button
@@ -672,7 +692,7 @@ export const IndividualDPRCreation: React.FC = () => {
         {setupPhase === 'form' && styling && docStyle && (
           <div className="shrink-0 border-b border-border bg-background px-3 py-2">
             <div className="flex items-center gap-2 overflow-x-auto">
-              {visibleSteps.map((step) => {
+              {selectionSteps.map((step) => {
                 const isCompleted = getStepCompletion(step);
                 const isCurrent = step === currentStep;
                 return (
@@ -713,7 +733,7 @@ export const IndividualDPRCreation: React.FC = () => {
         <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              {visibleSteps.map((step) => {
+              {selectionSteps.map((step) => {
                 const isCompleted = getStepCompletion(step);
                 const isCurrent = step === currentStep;
                 return (
@@ -837,7 +857,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => goAdjacent(-1)}
-                      disabled={step.n === visibleSteps[0] || isStepping}
+                      disabled={step.n === selectionSteps[0] || isStepping}
                       className="gap-2"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -896,6 +916,7 @@ export const IndividualDPRCreation: React.FC = () => {
             >
               <IndividualDPRDocumentView
                 trackFieldHits
+                onEditField={onEditField}
                 documentStyle={docStyle}
                 activeSectionId={hotSectionId}
                 dpr={{
@@ -914,9 +935,16 @@ export const IndividualDPRCreation: React.FC = () => {
                   stepData: dprPayload,
                 }}
                 viewLanguage={viewLanguage}
+                onEditBlock={(sectionId, blockId, text) => {
+                  const raw = docStyleRef.current;
+                  if (!raw) return;
+                  onStyleChange(setBlockText(raw, sectionId, blockId, text));
+                }}
                 onImageFrame={(slot, box) => {
                   if (!docStyleRef.current) return;
-                  onStyleChange(setPictureFrame(docStyleRef.current, slot, box));
+                  onStyleChange(parseBlockFrameSlot(slot)
+                    ? setBlockFrame(docStyleRef.current, slot, box)
+                    : setPictureFrame(docStyleRef.current, slot, box));
                 }}
                 onSectionClick={(stepNumber: number) => {
                   if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
@@ -926,8 +954,7 @@ export const IndividualDPRCreation: React.FC = () => {
               />
             </StyleEditor>
           ) : (
-          <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-            {(previewMode === 'form' || previewMode === 'split') && (
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
               <div id="individual-dpr-form" className="space-y-6">
                 {isLoadingData ? (
                   <Card>
@@ -979,7 +1006,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === visibleSteps[0] || isStepping} className="gap-2">
+                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === selectionSteps[0] || isStepping} className="gap-2">
                     <ChevronLeft className="h-4 w-4" />
                     {t('common.previous')}
                   </Button>
@@ -1005,9 +1032,7 @@ export const IndividualDPRCreation: React.FC = () => {
                   )}
                 </div>
               </div>
-            )}
 
-            {(previewMode === 'preview' || previewMode === 'split') && (
               <div className="space-y-6">
                 <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
                   <CardHeader className="flex-shrink-0 space-y-3 border-b border-border">
@@ -1024,16 +1049,16 @@ export const IndividualDPRCreation: React.FC = () => {
                         <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(1)} className="h-7 w-7 p-0">
                           <RotateCcw className="h-4 w-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
+                          className="h-7 shrink-0 gap-1 whitespace-nowrap px-2"
+                        >
+                          <Maximize2 className="h-4 w-4" />
+                          {t('individualDpr.preview')}
+                        </Button>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
-                        className="h-9 shrink-0 gap-2 whitespace-nowrap px-3"
-                      >
-                        <Maximize2 className="h-4 w-4" />
-                        {t('individualDpr.fullscreen')}
-                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 min-h-0 overflow-hidden p-0 bg-gray-100 relative flex flex-col">
@@ -1089,6 +1114,18 @@ export const IndividualDPRCreation: React.FC = () => {
                           const doc = (
                             <IndividualDPRDocumentView
                               trackFieldHits
+                              onEditField={onEditField}
+                              onEditBlock={(sectionId, blockId, text) => {
+                                const raw = docStyleRef.current || data.schemeExtras?.documentStyle;
+                                if (!raw) return;
+                                onStyleChange(setBlockText(resolveDocumentStyle(raw, schemeCode), sectionId, blockId, text));
+                              }}
+                              onImageFrame={(slot, box) => {
+                                const raw = docStyleRef.current || data.schemeExtras?.documentStyle;
+                                if (!raw) return;
+                                const current = resolveDocumentStyle(raw, schemeCode);
+                                onStyleChange(parseBlockFrameSlot(slot) ? setBlockFrame(current, slot, box) : setPictureFrame(current, slot, box));
+                              }}
                               dpr={{
                                 content: {
                                   english: {
@@ -1143,7 +1180,6 @@ export const IndividualDPRCreation: React.FC = () => {
                   </CardContent>
                 </Card>
               </div>
-            )}
           </div>
           )}
         </div>

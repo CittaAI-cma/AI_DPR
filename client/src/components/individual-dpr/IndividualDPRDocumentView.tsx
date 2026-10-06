@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
@@ -14,7 +14,6 @@ import {
 } from '@/lib/individualDpr/individualDocModel';
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import {
-  applySectionOrder,
   layoutOrder,
   pageEdgeMm,
   pictureIdFromToken,
@@ -25,7 +24,8 @@ import {
   type ImageBox,
   type ImageHandle,
 } from '@/lib/individualDpr/documentStyle';
-import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { cmepProjectionsHaveFigures, normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { isEnteredDocRow, isEnteredDocText } from '@/lib/individualDpr/docEntries';
 import {
   CMEP_COST_HEADS,
   deriveCmepBankSheets,
@@ -65,6 +65,10 @@ export interface IndividualDPRDocumentViewProps {
   activeSectionId?: string | null;
   /** Drag a picture handle in the live report. Slot is cover, annexure, or a section id. */
   onImageFrame?: (slot: string, box: ImageBox) => void;
+  /** Type straight into the live document. Path is stepN.field or stepN.field[i].key. */
+  onEditField?: (path: string, text: string) => void;
+  /** Type a text block that was inserted into a section. */
+  onEditBlock?: (sectionId: string, blockId: string, text: string) => void;
 }
 
 const IMAGE_HANDLES: ImageHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -144,6 +148,60 @@ function fieldHit(
   return <span data-dpr-field={path}>{children}</span>;
 }
 
+function isPlainValue(value: unknown): boolean {
+  return value == null || value === '' || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+}
+
+function EditableDocText({
+  path,
+  display,
+  placeholder,
+  onEdit,
+  multiline,
+  track,
+}: {
+  path: string;
+  display: string;
+  placeholder: string;
+  onEdit: (path: string, text: string) => void;
+  multiline?: boolean;
+  track?: boolean;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const focused = useRef(false);
+  const shown = !display || display === '—' ? '' : display;
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || focused.current) return;
+    if (el.textContent !== shown) el.textContent = shown;
+  }, [shown]);
+  return (
+    <span
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      role="textbox"
+      spellCheck
+      data-dpr-field={track ? path : undefined}
+      data-placeholder={placeholder}
+      className="dpr-inline-edit"
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+      onFocus={() => { focused.current = true; }}
+      onBlur={() => {
+        focused.current = false;
+        onEdit(path, ref.current?.textContent ?? '');
+      }}
+      onKeyDown={(event) => {
+        if (!multiline && event.key === 'Enter') {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement).blur();
+        }
+      }}
+    />
+  );
+}
+
 export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps> = ({
   dpr,
   project,
@@ -153,6 +211,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   documentStyle,
   activeSectionId = null,
   onImageFrame,
+  onEditField,
+  onEditBlock,
 }) => {
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
@@ -162,7 +222,6 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const extras = data.schemeExtras || {};
   const explicitStyle = documentStyle !== undefined ? documentStyle : extras.documentStyle;
   const style = explicitStyle ? resolveDocumentStyle(explicitStyle, schemeCode) : null;
-  const steps = style ? applySectionOrder(catalogSteps, style) : catalogSteps;
   const step1 = data.step1 || {};
   const cover = getIndividualCoverLines(
     step1,
@@ -173,17 +232,64 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const uploads = getIndividualUploads(schemeCode, data);
   const uploadStore = data.step18 || data.uploads || {};
 
-  const renderSectionFields = (fields: IndividualDocField[]) => {
-    if (!fields.length) {
-      return <p className="individual-empty">{tf('No answers for this section yet.')}</p>;
+  const typeHere = tf('Type here');
+  const renderBlocks = (sectionId: string) => {
+    const blocks = style?.sectionBlocks?.[sectionId] || [];
+    if (!blocks.length) return null;
+    return blocks.map((block) => {
+      if (block.kind === 'text') {
+        if (!block.text.trim() && !onEditBlock) return null;
+        return (
+          <div key={block.id} className="individual-qa-a mt-2">
+            {onEditBlock ? (
+              <EditableDocText
+                path={`block:${sectionId}:${block.id}`}
+                display={block.text || '—'}
+                placeholder={typeHere}
+                multiline
+                onEdit={(_path, text) => onEditBlock(sectionId, block.id, text)}
+              />
+            ) : (block.text || '—')}
+          </div>
+        );
+      }
+      if (block.hidden) return null;
+      return (
+        <SlotFigure
+          key={block.id}
+          src={block.src}
+          frame={block.frame}
+          onFrame={onImageFrame ? (box) => onImageFrame(`block:${sectionId}:${block.id}`, box) : undefined}
+        />
+      );
+    });
+  };
+  const editableValue = (path: string, display: string, raw: unknown, multiline = false) => {
+    if (onEditField && isPlainValue(raw)) {
+      return (
+        <EditableDocText
+          path={path}
+          display={display}
+          placeholder={typeHere}
+          onEdit={onEditField}
+          multiline={multiline}
+          track={trackFieldHits}
+        />
+      );
     }
+    return fieldHit(path, display === '—' ? '—' : tf(display), trackFieldHits);
+  };
+
+  const renderSectionFields = (fields: IndividualDocField[]) => {
+    if (!fields.length) return null;
 
     const blocks: React.ReactNode[] = [];
       let particulars: IndividualDocField[] = [];
       const flushParticulars = () => {
         if (!particulars.length) return;
-        const rows = particulars;
+        const rows = particulars.filter((field) => formatDocValue(readDocField(field, data)) !== '—');
         particulars = [];
+        if (!rows.length) return;
         blocks.push(
           <table key={rows.map((field) => field.path).join('|')} className="individual-particulars">
             <thead>
@@ -200,7 +306,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   <tr key={field.path}>
                     <td className="part">{tf(field.label)}</td>
                     <td className={empty ? 'is-empty' : ''}>
-                      {fieldHit(field.path, empty ? '—' : tf(text), trackFieldHits)}
+                      {editableValue(field.path, text, readDocField(field, data))}
                     </td>
                   </tr>
                 );
@@ -213,25 +319,50 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <article key={field.path} className="individual-qa-block">
           <h3 className="individual-qa-q">{tf(field.label)}</h3>
           <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
-            {fieldHit(field.path, text === '—' ? '—' : text, trackFieldHits)}
+            {editableValue(field.path, text, readDocField(field, data), true)}
           </div>
         </article>
       );
-      const dataTable = (key: string, title: string, headers: string[], body: string[][]) => (
+      const dataTable = (
+        key: string,
+        title: string,
+        headers: string[],
+        body: string[][],
+        cellPaths?: Array<Array<string | null>>,
+        skipIndexes: number[] = [],
+        keepAll = false
+      ) => {
+        const paired = body.map((row, index) => ({ row, paths: cellPaths?.[index] }));
+        const kept = keepAll ? paired : paired.filter(({ row }) => isEnteredDocRow(row, skipIndexes));
+        if (!kept.length) return null;
+        return (
         <table key={key} className="individual-particulars">
           <caption className="individual-qa-q">{tf(title)}</caption>
           <thead>
             <tr>{headers.map((header) => <th key={header}>{tf(header)}</th>)}</tr>
           </thead>
           <tbody>
-            {body.length ? body.map((row, index) => (
-              <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell || '—'}</td>)}</tr>
-            )) : (
-              <tr><td colSpan={headers.length}>—</td></tr>
-            )}
+            {kept.map(({ row, paths }, index) => (
+              <tr key={index}>{row.map((cell, cellIndex) => {
+                const cellPath = paths?.[cellIndex];
+                return (
+                  <td key={cellIndex}>
+                    {cellPath && onEditField ? (
+                      <EditableDocText path={cellPath} display={cell || '—'} placeholder={typeHere} onEdit={onEditField} track={trackFieldHits} />
+                    ) : (cell || '—')}
+                  </td>
+                );
+              })}</tr>
+            ))}
           </tbody>
         </table>
-      );
+        );
+      };
+      const editPaths = (base: string, keys: Array<string | null>, count: number) => {
+        if (!onEditField) return undefined;
+        const rows = Math.max(count, 1);
+        return Array.from({ length: rows }, (_, index) => keys.map((key) => (key ? `${base}[${index}].${key}` : null)));
+      };
 
       for (const field of fields) {
         const raw = readDocField(field, data);
@@ -252,27 +383,43 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                 String(item.power ?? ''),
                 String(item.netProfit ?? ''),
               ];
-            })
+            }),
+            editPaths(field.path, [null, 'sales', 'rm', 'wages', 'power', 'netProfit'], years.length),
+            [0]
           ));
           continue;
         }
         if (field.name === 'yearProjections' && schemeCode === 'AP_CMEP') {
           flushParticulars();
           const columns = normalizeCmepProjections(raw);
+          if (!cmepProjectionsHaveFigures(columns)) continue;
           const amount = (value: number) => (Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100));
           blocks.push(dataTable(
             field.path,
             'Sales and operating costs (₹ Lakhs)',
             ['Year', 'Sales', 'Raw material', 'Wages', 'Power', 'Salaries', 'Rent', 'Maintenance', 'Admin'],
-            columns.map((col) => [col.label, amount(col.sales), amount(col.rm), amount(col.wages), amount(col.power), amount(col.salaries), amount(col.rent), amount(col.maintenance), amount(col.admin)])
+            columns.map((col) => [col.label, amount(col.sales), amount(col.rm), amount(col.wages), amount(col.power), amount(col.salaries), amount(col.rent), amount(col.maintenance), amount(col.admin)]),
+            undefined,
+            [0],
+            true
           ));
           blocks.push(dataTable(
             `${field.path}.profit`,
             'Interest, depreciation and profit (₹ Lakhs)',
             ['Year', 'Interest', 'Depreciation', 'Tax', 'Net profit'],
-            columns.map((col) => [col.label, amount(col.interest), amount(col.depreciation), amount(col.tax), amount(col.netProfit)])
+            columns.map((col) => [col.label, amount(col.interest), amount(col.depreciation), amount(col.tax), amount(col.netProfit)]),
+            undefined,
+            [0],
+            true
           ));
           const derived = deriveCmepBankSheets({ step12: data.step12, step13: data.step13, step15: data.step15 });
+          const derivedEntered = [
+            derived.repayment.amount,
+            derived.breakEvenSales,
+            derived.averageDscr,
+          ].some((value) => Number(value) !== 0)
+            || derived.depreciation.some((asset) => asset.years.some((year) => year.additions !== 0 || year.depreciation !== 0));
+          if (!derivedEntered) continue;
           blocks.push(
             <table key="cmep-repay" className="individual-particulars">
               <caption className="individual-qa-q">{tf('Repayment, break-even and DSCR')}</caption>
@@ -285,14 +432,14 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               <tbody>
                 {[
                   ['Term loan (₹ Lakhs)', amount(derived.repayment.amount)],
-                  ['Interest rate (% per year)', amount(derived.repayment.rate)],
+                  ['Interest rate (% per year)', amount(Number(data.step13?.interestRate) || 0)],
                   ['Moratorium (months)', String(derived.repayment.moratoriumMonths || 0)],
-                  ['Loan tenure (months)', String(derived.repayment.tenureMonths || 0)],
+                  ['Loan tenure (months)', String(Number(data.step13?.loanTenureMonths) || 0)],
                   ['Indicative EMI (₹ Lakhs)', amount(derived.repayment.emi)],
                   ['Break-even sales (₹ Lakhs)', amount(derived.breakEvenSales)],
                   ['Break-even capacity (%)', amount(derived.breakEvenCapacity)],
                   ['Average DSCR', amount(derived.averageDscr)],
-                ].map(([label, value]) => (
+                ].filter(([, value]) => isEnteredDocText(value)).map(([label, value]) => (
                   <tr key={label}>
                     <td className="part">{tf(label)}</td>
                     <td>{value}</td>
@@ -305,64 +452,90 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             'cmep-dscr',
             'DSCR by year (₹ Lakhs)',
             ['Year', 'Cash profit', 'Repayment', 'DSCR'],
-            derived.dscr.map((row) => [row.label, amount(row.cashProfit), amount(row.repayment), amount(row.ratio)])
+            derived.dscr.map((row) => [row.label, amount(row.cashProfit), amount(row.repayment), amount(row.ratio)]),
+            undefined,
+            [0]
           ));
           derived.depreciation.forEach((asset) => {
             blocks.push(dataTable(
               `cmep-dep-${asset.asset}`,
               `${asset.asset} — depreciation ${Math.round(asset.rate * 100)}%`,
               ['Year', 'Opening', 'Additions', 'Depreciation', 'Closing'],
-              asset.years.map((year) => [year.label, amount(year.opening), amount(year.additions), amount(year.depreciation), amount(year.closing)])
+              asset.years.map((year) => [year.label, amount(year.opening), amount(year.additions), amount(year.depreciation), amount(year.closing)]),
+              undefined,
+              [0]
             ));
           });
           continue;
         }
         if (field.name === 'productMix') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Product', 'Share of output (%)', 'Selling price (₹)'], normalizeProductMix(raw).map((row) => [row.name, String(row.sharePercent || ''), String(row.sellingPrice || '')])));
+          const mix = normalizeProductMix(raw);
+          blocks.push(dataTable(field.path, field.label, ['Product', 'Share of output (%)', 'Selling price (₹)'], mix.map((row) => [row.name, String(row.sharePercent || ''), String(row.sellingPrice || '')]), editPaths(field.path, ['name', 'sharePercent', 'sellingPrice'], mix.length)));
           continue;
         }
         if (field.name === 'rawMaterialItems') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Material', 'Use', 'How it is bought'], normalizeRawMaterials(raw).map((row) => [row.name, row.use, row.basis])));
+          const materials = normalizeRawMaterials(raw);
+          blocks.push(dataTable(field.path, field.label, ['Material', 'Use', 'How it is bought'], materials.map((row) => [row.name, row.use, row.basis]), editPaths(field.path, ['name', 'use', 'basis'], materials.length)));
           continue;
         }
         if (field.name === 'staffRoles') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Role', 'Number of people', 'Monthly pay (₹)'], normalizeStaffRoles(raw).map((row) => [row.role, String(row.count || ''), String(row.monthlyPay || '')])));
+          const roles = normalizeStaffRoles(raw);
+          blocks.push(dataTable(field.path, field.label, ['Role', 'Number of people', 'Monthly pay (₹)'], roles.map((row) => [row.role, String(row.count || ''), String(row.monthlyPay || '')]), editPaths(field.path, ['role', 'count', 'monthlyPay'], roles.length)));
           continue;
         }
         if (field.name === 'risks') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Risk', 'How it will be handled'], normalizeRisks(raw).map((row) => [row.risk, row.mitigation])));
+          const risks = normalizeRisks(raw);
+          blocks.push(dataTable(field.path, field.label, ['Risk', 'How it will be handled'], risks.map((row) => [row.risk, row.mitigation]), editPaths(field.path, ['risk', 'mitigation'], risks.length)));
           continue;
         }
         if (field.name === 'utilisationByYear') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Year', 'Capacity utilisation (%)'], normalizeUtilisationYears(raw).map((row) => [row.label, String(row.percent || '')])));
+          const utilisation = normalizeUtilisationYears(raw);
+          blocks.push(dataTable(field.path, field.label, ['Year', 'Capacity utilisation (%)'], utilisation.map((row) => [row.label, String(row.percent || '')]), editPaths(field.path, ['label', 'percent'], utilisation.length)));
           continue;
         }
         if (field.name === 'milestones') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Activity', 'Time', 'Start', 'End'], normalizeMilestones(raw).map((row) => [row.activity, row.timeRequired, row.startDate, row.endDate])));
+          const milestones = normalizeMilestones(raw);
+          blocks.push(dataTable(field.path, field.label, ['Activity', 'Time', 'Start', 'End'], milestones.map((row) => [row.activity, row.timeRequired, row.startDate, row.endDate]), editPaths(field.path, ['activity', 'timeRequired', 'startDate', 'endDate'], milestones.length)));
           continue;
         }
         if (field.name === 'promoters') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone'], normalizePromoters(raw).filter((row) => row.name || row.phone).map((row) => [row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone])));
+          const promoters = (Array.isArray(raw) ? normalizePromoters(raw) : []).filter((row) => isEnteredDocRow([
+            row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone,
+          ]));
+          blocks.push(dataTable(field.path, field.label, ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone'], promoters.map((row) => [row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone]), editPaths(field.path, ['name', 'relationName', 'age', 'education', 'experienceYears', 'phone'], promoters.length)));
           continue;
         }
         if (field.name === 'machineryItems') {
           flushParticulars();
-          const items = normalizeMachineryItems(raw);
+          const items = normalizeMachineryItems(raw).filter((row) => isEnteredDocRow([
+            row.description,
+            row.condition,
+            row.supplier,
+            row.quantity > 1 ? row.quantity : '',
+            row.unitCost,
+            row.gst,
+            row.transport,
+            row.installation,
+            row.lifeYears,
+            row.annualMaintenance,
+          ]));
           const detailed = schemeCode === 'AP_CMEP';
           const headers = ['Description', 'New / used', 'Supplier', 'Qty', 'Unit cost (₹ Lakhs)'];
           if (detailed) headers.push('GST', 'Transport', 'Installation', 'Life (years)', 'Yearly maintenance');
+          const machineKeys = ['description', 'condition', 'supplier', 'quantity', 'unitCost'];
+          if (detailed) machineKeys.push('gst', 'transport', 'installation', 'lifeYears', 'annualMaintenance');
           blocks.push(dataTable(field.path, field.label, headers, items.map((row) => {
             const cells = [row.description, row.condition, row.supplier, String(row.quantity || ''), String(row.unitCost || '')];
             if (detailed) cells.push(String(row.gst || ''), String(row.transport || ''), String(row.installation || ''), String(row.lifeYears || ''), String(row.annualMaintenance || ''));
             return cells;
-          })));
+          }), editPaths(field.path, machineKeys, items.length)));
           continue;
         }
         if (field.name === 'costPhasing') {
@@ -371,11 +544,12 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           blocks.push(dataTable(field.path, field.label, ['Particulars', 'Already incurred', 'To be incurred', 'Total'], CMEP_COST_HEADS.map((head) => {
             const cell = phasing[head.key];
             return [tf(head.label), String(cell.incurred || 0), String(cell.proposed || 0), String((cell.incurred || 0) + (cell.proposed || 0))];
-          })));
+          }), undefined, [0]));
           continue;
         }
         const text = formatDocValue(raw);
-        if (NARRATIVE_FIELDS.has(field.name) || (text !== '—' && text.length > 160)) {
+        if (text === '—') continue;
+        if (NARRATIVE_FIELDS.has(field.name) || text.length > 160) {
           flushParticulars();
           blocks.push(prose(field, text));
           continue;
@@ -383,11 +557,72 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         particulars.push(field);
       }
       flushParticulars();
-      return <div className="individual-sec-body">{blocks}</div>;
+      const visible = blocks.filter(Boolean);
+      if (!visible.length) return null;
+      return <div className="individual-sec-body">{visible}</div>;
   };
+
+  const blockVisible = (sectionId: string) => (style?.sectionBlocks?.[sectionId] || []).some((block) => {
+    if (block.kind === 'image') return !block.hidden;
+    return Boolean(block.text?.trim()) || Boolean(onEditBlock);
+  });
+  const fieldHasAnswers = (field: IndividualDocField) => {
+    const raw = readDocField(field, data);
+    if (field.name === 'yearProjections' && schemeCode === 'AP_CMEP') {
+      return cmepProjectionsHaveFigures(normalizeCmepProjections(raw));
+    }
+    if (field.name === 'yearProjections') {
+      const years = Array.isArray(raw) ? raw : [];
+      return years.some((row) => {
+        const item = row && typeof row === 'object' ? row as Record<string, unknown> : {};
+        return isEnteredDocRow([item.sales, item.rm, item.wages, item.power, item.netProfit]);
+      });
+    }
+    if (field.name === 'productMix') return normalizeProductMix(raw).some((row) => isEnteredDocRow([row.name, row.sharePercent, row.sellingPrice]));
+    if (field.name === 'rawMaterialItems') return normalizeRawMaterials(raw).some((row) => isEnteredDocRow([row.name, row.use, row.basis]));
+    if (field.name === 'staffRoles') return normalizeStaffRoles(raw).some((row) => isEnteredDocRow([row.role, row.count, row.monthlyPay]));
+    if (field.name === 'risks') return normalizeRisks(raw).some((row) => isEnteredDocRow([row.risk, row.mitigation]));
+    if (field.name === 'utilisationByYear') return normalizeUtilisationYears(raw).some((row) => isEnteredDocRow([row.label, row.percent]));
+    if (field.name === 'milestones') return normalizeMilestones(raw).some((row) => isEnteredDocRow([row.activity, row.timeRequired, row.startDate, row.endDate]));
+    if (field.name === 'promoters') {
+      return (Array.isArray(raw) ? normalizePromoters(raw) : []).some((row) => isEnteredDocRow([
+        row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone,
+      ]));
+    }
+    if (field.name === 'machineryItems') {
+      return normalizeMachineryItems(raw).some((row) => isEnteredDocRow([
+        row.description, row.condition, row.supplier, row.quantity > 1 ? row.quantity : '', row.unitCost,
+        row.gst, row.transport, row.installation, row.lifeYears, row.annualMaintenance,
+      ]));
+    }
+    if (field.name === 'costPhasing') {
+      const phasing = normalizeCostPhasing(raw, data.step12);
+      return CMEP_COST_HEADS.some((head) => isEnteredDocRow([phasing[head.key]?.incurred, phasing[head.key]?.proposed]));
+    }
+    return formatDocValue(raw) !== '—';
+  };
+  const sectionHasAnswers = (def: (typeof catalogSteps)[number]) => {
+    if (style?.hiddenSectionIds.includes(def.id)) return false;
+    if (def.id === 'uploads' || def.contentStep === 18) {
+      return uploads.some((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label])) || blockVisible(def.id);
+    }
+    return getIndividualDocFields(def.contentStep, schemeCode, budget).some(fieldHasAnswers) || blockVisible(def.id);
+  };
+  const reportEntries = (style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).flatMap((token) => {
+    if (pictureIdFromToken(token)) return [];
+    const custom = style?.customSections?.find((item) => item.id === token);
+    if (custom) {
+      if (style?.hiddenSectionIds.includes(custom.id)) return [];
+      return [{ id: custom.id, title: custom.title, custom: true as const, n: 0 }];
+    }
+    const def = catalogSteps.find((step) => step.id === token);
+    if (!def || !sectionHasAnswers(def)) return [];
+    return [{ id: def.id, title: sectionTitleFromStep(def), custom: false as const, n: def.n }];
+  });
 
   const pageNumber =
     style?.pageNumberStyle === 'of' ? tf('Page 1 of …') : '1';
+  const unitTitle = String(step1.unitName || step1.clusterName || '').trim();
 
   return (
     <div
@@ -433,52 +668,78 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <p className="cover-kicker">{schemeUi ? tf(schemeUi.coverKicker) : 'DETAILED PROJECT REPORT'}</p>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
-        <h1 className="cover-unit">
-          {fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
-        </h1>
+        {unitTitle ? (
+          <h1 className="cover-unit">
+            {onEditField
+              ? editableValue('step1.unitName', unitTitle, step1.unitName || step1.clusterName || '')
+              : fieldHit('step1.unitName', unitTitle, trackFieldHits)}
+          </h1>
+        ) : null}
         <div className="cover-scheme-block">
           <p className="cover-scheme">{cover.underLine}</p>
           {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
         </div>
-        <div className={`cover-meta${schemeUi?.id === 'PMEGP' ? ' pmegp-cover-meta' : ''}`}>
-          <div>
-            <span>{tf('District')}</span>
-            {fieldHit('step1.district', step1.district || '—', trackFieldHits)}
+        {(step1.district || step1.location || extras.entrepreneurName) ? (
+          <div className={`cover-meta${schemeUi?.id === 'PMEGP' ? ' pmegp-cover-meta' : ''}`}>
+            {step1.district ? (
+              <div>
+                <span>{tf('District')}</span>
+                {editableValue('step1.district', step1.district, step1.district)}
+              </div>
+            ) : null}
+            {step1.location ? (
+              <div>
+                <span>{tf('Location')}</span>
+                {editableValue('step1.location', step1.location, step1.location)}
+              </div>
+            ) : null}
+            {extras.entrepreneurName ? (
+              <div>
+                <span>{tf('Entrepreneur name')}</span>
+                {editableValue('schemeExtras.entrepreneurName', extras.entrepreneurName, extras.entrepreneurName)}
+              </div>
+            ) : null}
           </div>
-          <div>
-            <span>{tf('Location')}</span>
-            {fieldHit('step1.location', step1.location || '—', trackFieldHits)}
-          </div>
-          {extras.entrepreneurName && (
-            <div>
-              <span>{tf('Entrepreneur name')}</span>
-              {fieldHit('schemeExtras.entrepreneurName', extras.entrepreneurName, trackFieldHits)}
-            </div>
-          )}
-        </div>
+        ) : null}
         {schemeUi?.id === 'PMEGP' ? <div className="pmegp-cover-rule" aria-hidden="true" /> : null}
       </header>
 
+      {reportEntries.length ? (
       <section className="individual-toc">
         <h2 className="individual-sec-title">
           <span className="individual-sec-num">0</span>
           {tf('Table of Contents')}
         </h2>
         <ol className="individual-toc-list">
-          {steps.map((def, index) => (
+          {reportEntries.map((entry, index) => (
             <li
-              key={def.id}
-              className={onSectionClick ? 'is-clickable' : undefined}
-              onClick={() => onSectionClick?.(def.n)}
+              key={entry.id}
+              className={onSectionClick && !entry.custom ? 'is-clickable' : undefined}
+              onClick={() => { if (!entry.custom) onSectionClick?.(entry.n); }}
             >
-              <span className="toc-num">{style ? index + 1 : def.n}</span>
-              <span className="toc-label">{tf(sectionTitleFromStep(def))}</span>
+              <span className="toc-num">{index + 1}</span>
+              <span className="toc-label">{entry.custom ? entry.title : tf(entry.title)}</span>
             </li>
           ))}
         </ol>
       </section>
+      ) : null}
 
       {(style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).map((token) => {
+        const custom = style?.customSections?.find((item) => item.id === token);
+        if (custom) {
+          if (style?.hiddenSectionIds.includes(custom.id)) return null;
+          const customNum = reportEntries.findIndex((entry) => entry.id === custom.id) + 1;
+          return (
+            <section key={custom.id} data-dpr-section={custom.id} className="individual-sec">
+              <h2 className="individual-sec-title">
+                <span className="individual-sec-num">{customNum}</span>
+                {custom.title}
+              </h2>
+              {renderBlocks(custom.id)}
+            </section>
+          );
+        }
         const picId = pictureIdFromToken(token);
         if (picId) {
           const picture = style?.pictures?.find((item) => item.id === picId);
@@ -493,43 +754,41 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           );
         }
         const def = catalogSteps.find((step) => step.id === token);
-        if (!def || style?.hiddenSectionIds.includes(def.id)) return null;
+        if (!def || !sectionHasAnswers(def)) return null;
         const title = tf(sectionTitleFromStep(def));
-        const num = style ? steps.findIndex((step) => step.id === def.id) + 1 : def.n;
+        const num = reportEntries.findIndex((entry) => entry.id === def.id) + 1;
         const hot = activeSectionId === def.id;
         if (def.id === 'uploads' || def.contentStep === 18) {
+          const uploaded = uploads.filter((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label]));
           return (
-            <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+            <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
               <h2 className="individual-sec-title">
                 <span className="individual-sec-num">{num}</span>
                 {title}
               </h2>
-              {uploads.length === 0 ? (
-                <p className="individual-empty">—</p>
-              ) : (
+              {uploaded.length ? (
                 <ul className="individual-doc-list">
-                  {uploads.map((u) => {
-                    const present = isKycUploaded(uploadStore[u.id] || uploadStore[u.label]);
-                    return (
-                      <li key={u.id} className={present ? 'is-uploaded' : 'is-pending'}>
-                        <span className="doc-label">{tf(u.label)}</span>
-                        <span className="doc-status">{tf(present ? 'Uploaded' : 'Pending')}</span>
-                      </li>
-                    );
-                  })}
+                  {uploaded.map((u) => (
+                    <li key={u.id} className="is-uploaded">
+                      <span className="doc-label">{tf(u.label)}</span>
+                      <span className="doc-status">{tf('Uploaded')}</span>
+                    </li>
+                  ))}
                 </ul>
-              )}
+              ) : null}
+              {renderBlocks(def.id)}
             </section>
           );
         }
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
         return (
-          <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+          <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
             <h2 className="individual-sec-title">
               <span className="individual-sec-num">{num}</span>
               {title}
             </h2>
             {renderSectionFields(fields)}
+            {renderBlocks(def.id)}
           </section>
         );
       })}

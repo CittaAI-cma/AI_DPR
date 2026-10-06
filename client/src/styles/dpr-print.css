@@ -1268,3 +1268,13 @@
   font-size: 9pt;
   color: var(--dpr-header, #111827);
 }
+
+@media print {
+  .dpr-inline-edit {
+    background: none !important;
+    box-shadow: none !important;
+  }
+  .dpr-inline-edit:empty:before {
+    content: none;
+  }
+}

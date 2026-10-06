@@ -901,6 +901,25 @@ function tableCell(value: unknown): string {
   return String(value);
 }
 
+function cellEntered(value: string): boolean {
+  const text = String(value ?? '').trim();
+  return text !== '' && text !== '—' && text !== '0';
+}
+
+function rowEntered(cells: string[], skipIndexes: number[] = []): boolean {
+  return cells.some((cell, index) => !skipIndexes.includes(index) && cellEntered(cell));
+}
+
+function keepEnteredRows(name: string, rows: string[][]): string[][] {
+  const skip = name === 'yearProjections' || name === 'costPhasing' ? [0] : [];
+  return rows.filter((cells) => {
+    const probe = name === 'machineryItems'
+      ? cells.map((cell, index) => (index === 3 && cell === '1' ? '0' : cell))
+      : cells;
+    return rowEntered(probe, skip);
+  });
+}
+
 function bankDataTable(
   name: string,
   raw: unknown,
@@ -1006,6 +1025,27 @@ function bankDataTable(
   return null;
 }
 
+function cmepUserFigures(data: Record<string, any>): boolean {
+  const num = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const step12 = data.step12 || {};
+  const step13 = data.step13 || {};
+  const costKeys = ['land', 'building', 'machinery', 'furniture', 'utilitiesAndInfrastructure', 'preliminaryAndPreOperative', 'workingCapitalMargin', 'ownContribution', 'securityDeposits'];
+  if (costKeys.some((key) => num(step12[key]) !== 0)) return true;
+  if (['bankLoan', 'interestRate', 'loanTenureMonths', 'moratoriumMonths'].some((key) => num(step13[key]) !== 0)) return true;
+  const columns = Array.isArray(data.step15?.yearProjections) ? data.step15.yearProjections : [];
+  const lineKeys = ['sales', 'rm', 'wages', 'power', 'salaries', 'rent', 'maintenance', 'admin', 'interest', 'depreciation', 'tax', 'netProfit'];
+  return columns.some((col: any) => col && typeof col === 'object' && lineKeys.some((key) => num(col[key]) !== 0));
+}
+
+function sectionsForReport(doc: IndividualDocument): DocSection[] {
+  return doc.sections
+    .map((section) => ({ ...section, rows: section.rows.filter((row) => row.filled) }))
+    .filter((section) => section.rows.length > 0);
+}
+
 export function buildIndividualDocument(dpr: any, project?: any): IndividualDocument {
   const data = extractIndividualDocData(dpr, project);
   const schemeCode = extractSchemeCode(dpr, project, data);
@@ -1063,11 +1103,12 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
       }
       const table = bankDataTable(field.name, raw, schemeCode);
       if (table) {
+        const kept = { ...table, rows: keepEnteredRows(field.name, table.rows) };
         rows.push({
           label: field.label,
-          value: JSON.stringify(table),
+          value: JSON.stringify(kept),
           path: field.path,
-          filled: table.rows.length > 0,
+          filled: kept.rows.length > 0,
           embed: 'data-table',
         });
         continue;
@@ -1088,7 +1129,7 @@ export function buildIndividualDocument(dpr: any, project?: any): IndividualDocu
       const formatted = formatDocValue(raw);
       rows.push({ label: field.label, value: formatted, path: field.path, filled: isFilled(formatted) });
     }
-    if (schemeCode === 'AP_CMEP' && def.contentStep === 15) {
+    if (schemeCode === 'AP_CMEP' && def.contentStep === 15 && cmepUserFigures(data)) {
       rows.push({
         label: 'Depreciation, DSCR, break-even and repayment',
         value: JSON.stringify(buildCmepDerived(data)),
@@ -1390,7 +1431,13 @@ function buildCmepDerived(data: Record<string, any>) {
     averageDscr: dscr.length ? dscr.reduce((sum, row) => sum + row.ratio, 0) / dscr.length : 0,
     breakEvenSales,
     breakEvenCapacity,
-    repayment: { amount: loan, rate, moratorium, tenure, emi },
+    repayment: {
+      amount: loan,
+      rate: num(step13.interestRate),
+      moratorium,
+      tenure: num(step13.loanTenureMonths),
+      emi,
+    },
   };
 }
 
@@ -1448,17 +1495,19 @@ function renderCmepEmbedHtml(kind: string, json: string): string {
       ['Break-even sales (₹ Lakhs)', fmt(parsed.breakEvenSales)],
       ['Break-even capacity (%)', fmt(parsed.breakEvenCapacity)],
       ['Average DSCR', fmt(parsed.averageDscr)],
-    ];
+    ].filter((pair): pair is [string, string] => Boolean(pair[1] && pair[1] !== '–' && pair[1] !== '0'));
     const factRows = facts
       .map(([label, value]) => `<tr><td class="part">${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`)
       .join('');
     const dscrBody = (Array.isArray(parsed.dscr) ? parsed.dscr : [])
+      .filter((row: any) => Number(row.cash) || Number(row.repayment) || Number(row.ratio))
       .map(
         (row: any) =>
           `<tr><td>${escapeHtml(String(row.label || ''))}</td><td>${fmt(row.cash)}</td><td>${fmt(row.repayment)}</td><td>${fmt(row.ratio)}</td></tr>`
       )
       .join('');
     const depTables = (Array.isArray(parsed.depreciation) ? parsed.depreciation : [])
+      .filter((asset: any) => (Array.isArray(asset.years) ? asset.years : []).some((year: any) => Number(year.additions) || Number(year.depreciation) || Number(year.opening)))
       .map((asset: any) => {
         const body = (Array.isArray(asset.years) ? asset.years : [])
           .map(
@@ -1471,8 +1520,12 @@ function renderCmepEmbedHtml(kind: string, json: string): string {
       })
       .join('');
     return (
-      `<table class="particulars"><caption>Repayment, break-even and DSCR</caption><thead><tr><th>Particular</th><th>Details</th></tr></thead><tbody>${factRows}</tbody></table>` +
-      `<table class="fin-table particulars"><caption>DSCR by year (₹ Lakhs)</caption><thead><tr><th>Year</th><th>Cash profit</th><th>Repayment</th><th>DSCR</th></tr></thead><tbody>${dscrBody}</tbody></table>` +
+      (factRows
+        ? `<table class="particulars"><caption>Repayment, break-even and DSCR</caption><thead><tr><th>Particular</th><th>Details</th></tr></thead><tbody>${factRows}</tbody></table>`
+        : '') +
+      (dscrBody
+        ? `<table class="fin-table particulars"><caption>DSCR by year (₹ Lakhs)</caption><thead><tr><th>Year</th><th>Cash profit</th><th>Repayment</th><th>DSCR</th></tr></thead><tbody>${dscrBody}</tbody></table>`
+        : '') +
       depTables
     );
   }
@@ -1567,20 +1620,22 @@ function renderSectionRowsHtml(rows: DocRow[], _schemeCode?: string | null): str
 
 export function renderIndividualDprHtml(doc: IndividualDocument): string {
   const isPmegp = doc.schemeCode === 'PMEGP';
-  const toc = doc.sections
-    .map((s) => `<li><span class="toc-num">${s.n}</span><span class="toc-label">${escapeHtml(s.title)}</span></li>`)
+  const shown = sectionsForReport(doc);
+  const namedUnit = doc.unitName && doc.unitName !== 'UNIT NAME' ? doc.unitName : '';
+  const toc = shown
+    .map((s, index) => `<li><span class="toc-num">${index + 1}</span><span class="toc-label">${escapeHtml(s.title)}</span></li>`)
     .join('');
 
-  const sectionsHtml = doc.sections
+  const sectionsHtml = shown
     .map(
-      (s) =>
-        `<section class="sec"><h2><span class="sec-num">${s.n}</span>${escapeHtml(s.title)}</h2>${renderSectionRowsHtml(s.rows, doc.schemeCode)}</section>`
+      (s, index) =>
+        `<section class="sec"><h2><span class="sec-num">${index + 1}</span>${escapeHtml(s.title)}</h2>${renderSectionRowsHtml(s.rows, doc.schemeCode)}</section>`
     )
     .join('\n');
 
   const coverMeta = `
-      <div><span>District</span>${escapeHtml(doc.district || '—')}</div>
-      <div><span>Location</span>${escapeHtml(doc.location || '—')}</div>
+      ${doc.district ? `<div><span>District</span>${escapeHtml(doc.district)}</div>` : ''}
+      ${doc.location ? `<div><span>Location</span>${escapeHtml(doc.location)}</div>` : ''}
       ${doc.entrepreneurName ? `<div><span>Entrepreneur name</span>${escapeHtml(doc.entrepreneurName)}</div>` : ''}`;
 
   if (isPmegp) {
@@ -1750,7 +1805,7 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
       <div class="kicker">PMEGP DETAILED PROJECT REPORT</div>
       <div class="on">On</div>
       <div class="action">${escapeHtml(doc.actionLine)}</div>
-      <div class="unit">${escapeHtml(doc.unitName)}</div>
+      ${namedUnit ? `<div class="unit">${escapeHtml(namedUnit)}</div>` : ''}
       <div class="scheme-block">
         <div class="scheme">${escapeHtml(doc.underLine)}</div>
         <div class="tagline">Credit-linked margin money · bank-style single-unit DPR</div>
@@ -1834,7 +1889,7 @@ export function renderIndividualDprHtml(doc: IndividualDocument): string {
     <div class="kicker">DETAILED PROJECT REPORT</div>
     <div class="on">On</div>
     <div class="action">${escapeHtml(doc.actionLine)}</div>
-    <div class="unit">${escapeHtml(doc.unitName)}</div>
+    ${namedUnit ? `<div class="unit">${escapeHtml(namedUnit)}</div>` : ''}
     <div class="scheme">${escapeHtml(doc.underLine)}</div>
     <div class="cover-meta">${coverMeta}</div>
   </div>
@@ -2033,13 +2088,15 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
     }),
     new Paragraph({ text: 'On', alignment: AlignmentType.CENTER }),
     new Paragraph({ text: doc.actionLine, alignment: AlignmentType.CENTER }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: doc.unitName.toUpperCase(), bold: true, color: '059669', size: 36 })],
-    }),
+    ...(doc.unitName && doc.unitName !== 'UNIT NAME'
+      ? [new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: doc.unitName.toUpperCase(), bold: true, color: '059669', size: 36 })],
+      })]
+      : []),
     new Paragraph({ text: doc.underLine, alignment: AlignmentType.CENTER }),
-    new Paragraph({ text: `District: ${doc.district || '—'}` }),
-    new Paragraph({ text: `Location: ${doc.location || '—'}` }),
+    ...(doc.district ? [new Paragraph({ text: `District: ${doc.district}` })] : []),
+    ...(doc.location ? [new Paragraph({ text: `Location: ${doc.location}` })] : []),
     ...(doc.entrepreneurName
       ? [new Paragraph({ text: `Entrepreneur name: ${doc.entrepreneurName}` })]
       : []),
@@ -2047,28 +2104,29 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
     new Paragraph({ text: 'Table of Contents', heading: HeadingLevel.HEADING_2 }),
   ];
 
-  for (const s of doc.sections) {
+  const shown = sectionsForReport(doc);
+  shown.forEach((s, index) => {
     children.push(
       new Paragraph({
         spacing: { after: 60 },
         children: [
-          new TextRun({ text: `${s.n}. `, bold: true }),
+          new TextRun({ text: `${index + 1}. `, bold: true }),
           new TextRun({ text: s.title }),
         ],
       })
     );
-  }
+  });
 
-  for (const section of doc.sections) {
+  shown.forEach((section, index) => {
     children.push(new Paragraph({ text: '' }));
     children.push(
       new Paragraph({
-        text: `${section.n}. ${section.title}`,
+        text: `${index + 1}. ${section.title}`,
         heading: HeadingLevel.HEADING_2,
       })
     );
     children.push(...sectionBlocks(section.rows));
-  }
+  });
 
   const word = new Document({
     sections: [{ children }],
@@ -2077,10 +2135,10 @@ export async function generateIndividualDprDocx(doc: IndividualDocument): Promis
 }
 
 export function individualQaPlainText(doc: IndividualDocument): string {
-  return doc.sections
-    .map((s) => {
+  return sectionsForReport(doc)
+    .map((s, index) => {
       const rows = s.rows.map((r) => `${r.label}: ${r.value}`).join('\n');
-      return `${s.n}. ${s.title}\n${rows}`;
+      return `${index + 1}. ${s.title}\n${rows}`;
     })
     .join('\n\n');
 }

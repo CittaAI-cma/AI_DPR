@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { isEnteredDocRow, isEnteredDocText } from './individualDpr/docEntries.ts';
 import { dprDownloadName } from './dprExportName.ts';
+import { patchFromDocEdit } from './individualDpr/liveDocEdit.ts';
 import { cardMatchesFilters, schemeKind, schemeLevel } from './schemePickerFilters.ts';
 import { isReasonableIsoDate } from './individualDpr/isoDate.ts';
 import { groundCostSuggestion } from './individualDpr/costSuggestionGuard.ts';
@@ -18,14 +20,29 @@ import {
   contrastOk,
   defaultStyleForScheme,
   insertPicture,
+  addCustomSection,
+  addSectionBlock,
   layoutOrder,
   moveSection,
+  selectionStepOrder,
   pageEdgeMm,
   resizeImageBox,
   resolveDocumentStyle,
   setImageWidth,
   shiftForPageEdge,
 } from './individualDpr/documentStyle.ts';
+
+describe('report entries', () => {
+  it('keeps a filled answer and drops a blank, a dash, and a zero', () => {
+    assert.equal(isEnteredDocText('Visakhapatnam'), true);
+    assert.equal(isEnteredDocText(''), false);
+    assert.equal(isEnteredDocText('—'), false);
+    assert.equal(isEnteredDocText('0'), false);
+    assert.equal(isEnteredDocRow(['Year 1', '', '0', '12'], [0]), true);
+    assert.equal(isEnteredDocRow(['Land', '0', '0', '0'], [0]), false);
+    assert.equal(isEnteredDocRow(['', '0', '0']), false);
+  });
+});
 
 describe('dpr download name', () => {
   it('uses scheme, project, short language, and DDMMYY', () => {
@@ -146,6 +163,42 @@ describe('step suggestion batch', () => {
   });
 });
 
+describe('custom sections', () => {
+  it('adds a section and keeps a text block and an image inside it', () => {
+    const steps = [{ id: 'a' }, { id: 'b' }];
+    let style = defaultStyleForScheme('PMFME');
+    style = addCustomSection(style, steps, 'Site photos', 'csec_site');
+    assert.ok(layoutOrder(steps, style).includes('csec_site'));
+    style = addSectionBlock(style, 'a', { id: 'blk_note', kind: 'text', text: 'Hello from the section' });
+    style = addSectionBlock(style, 'csec_site', {
+      id: 'blk_pic',
+      kind: 'image',
+      name: 'Front',
+      src: 'data:image/png;base64,aaaa',
+      hidden: false,
+      frame: { w: 80, h: 0, x: 0, y: 0 },
+    });
+    const saved = resolveDocumentStyle(style, 'PMFME');
+    assert.equal(saved.customSections[0].title, 'Site photos');
+    assert.equal(saved.sectionBlocks.a[0].text, 'Hello from the section');
+    assert.equal(saved.sectionBlocks.csec_site[0].name, 'Front');
+    assert.ok(layoutOrder(steps, saved).includes('csec_site'));
+  });
+});
+
+describe('live document typing', () => {
+  it('writes a cover field and a table cell back onto the draft', () => {
+    const unit = patchFromDocEdit({ step1: {} }, 'step1.unitName', 'Screen Test Unit');
+    assert.equal(unit?.stepData?.unitName, 'Screen Test Unit');
+    assert.equal(unit?.stepData?.clusterName, 'Screen Test Unit');
+    const same = patchFromDocEdit({ step1: { unitName: 'Screen Test Unit', clusterName: 'Screen Test Unit' } }, 'step1.unitName', 'Screen Test Unit');
+    assert.equal(same, null);
+    const row = patchFromDocEdit({ step14: { staffRoles: [{ role: 'Helper', count: 1 }] } }, 'step14.staffRoles[0].count', '3');
+    assert.equal(row?.stepData?.staffRoles[0].count, 3);
+    assert.equal(row?.stepData?.staffRoles[0].role, 'Helper');
+  });
+});
+
 describe('report style', () => {
   it('starts PMEGP from its preset and other schemes from the government look', () => {
     assert.equal(defaultStyleForScheme('PMEGP').preset, 'pmegp');
@@ -166,6 +219,18 @@ describe('report style', () => {
     assert.deepEqual(order, ['c', 'a', 'b']);
     const visible = applySectionOrder(steps, { sectionOrder: order, hiddenSectionIds: ['a'] });
     assert.deepEqual(visible.map((step) => step.id), ['c', 'b']);
+  });
+
+  it('drops a section after the row under the pointer and reorders step selection', () => {
+    const steps = [
+      { id: 'a', n: 1 },
+      { id: 'b', n: 2 },
+      { id: 'c', n: 3 },
+    ];
+    const order = moveSection(['a', 'b', 'c'], steps, 'a', 'b', 'after');
+    assert.deepEqual(order, ['b', 'a', 'c']);
+    assert.deepEqual(selectionStepOrder(steps, order, [1, 2, 3]), [2, 1, 3]);
+    assert.deepEqual(selectionStepOrder(steps, ['pic:shop', 'c', 'a', 'b'], [1, 2, 3]), [3, 1, 2]);
   });
 
   it('rejects a color that would hide the text', () => {

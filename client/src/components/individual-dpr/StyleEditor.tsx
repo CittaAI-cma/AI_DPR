@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Eye, EyeOff, GripVertical, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, GripVertical, ImagePlus, Maximize2, Plus, Type, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -13,9 +13,15 @@ import {
   applyPreset,
   contrastOk,
   defaultStyleForScheme,
+  addCustomSection,
+  addSectionBlock,
   insertPicture,
   layoutOrder,
   moveSection,
+  newContentId,
+  removeCustomSection,
+  removeSectionBlock,
+  renameCustomSection,
   pageEdgeMm,
   pageWidthMm,
   pictureToken,
@@ -54,6 +60,23 @@ function readImageFile(file: File): Promise<string> {
   });
 }
 
+function StyleGroup({ title, open, onToggle, children }) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-white">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-700 hover:bg-slate-50"
+      >
+        <span>{title}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
+      {open ? <div className="space-y-2 border-t border-slate-200 px-3 py-3">{children}</div> : null}
+    </section>
+  );
+}
+
 export function StyleEditor({
   style,
   schemeCode,
@@ -80,7 +103,11 @@ export function StyleEditor({
   const future = useRef<DocumentStyle[]>([]);
   const [historyTick, setHistoryTick] = useState(0);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [dropHint, setDropHint] = useState(null);
   const [panel, setPanel] = useState(null);
+  const [side, setSide] = useState(null);
+  const [openGroups, setOpenGroups] = useState({});
+  const toggleGroup = (id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
   const [editStep, setEditStep] = useState(null);
   const [zoom, setZoom] = useState(0.55);
   const [fitWidth, setFitWidth] = useState(true);
@@ -88,34 +115,25 @@ export function StyleEditor({
   const [slot, setSlot] = useState('cover');
   const [imageError, setImageError] = useState('');
   const [pendingPictures, setPendingPictures] = useState([]);
+  const [addingSection, setAddingSection] = useState(false);
+  const [sectionTitle, setSectionTitle] = useState('');
+  const blockFileRef = useRef(null);
+  const blockSectionRef = useRef('');
   const [pictureName, setPictureName] = useState('');
   const [deletePictureId, setDeletePictureId] = useState('');
   const [wideTable, setWideTable] = useState(false);
   const [blockedColor, setBlockedColor] = useState('');
-  const [paneWidths, setPaneWidths] = useState({ sections: 200, style: 240, edit: 300 });
+  const [paneWidths, setPaneWidths] = useState({ edit: 300 });
   const centerRef = useRef<HTMLDivElement>(null);
   const clampPane = (value, min, max) => Math.min(max, Math.max(min, value));
 
   const startPaneResize = (key) => (event) => {
     event.preventDefault();
     const startX = event.clientX;
-    const start = { ...paneWidths };
+    const startEdit = paneWidths.edit;
     const move = (moveEvent) => {
       const dx = moveEvent.clientX - startX;
-      setPaneWidths(() => {
-        const next = { ...start };
-        if (key === 'sections') {
-          const grown = clampPane(start.sections + dx, 160, 480);
-          const styleWidth = start.style - (grown - start.sections);
-          if (styleWidth >= 200 && styleWidth <= 560) {
-            next.sections = grown;
-            next.style = styleWidth;
-          }
-        }
-        if (key === 'style') next.style = clampPane(start.style + dx, 200, 560);
-        if (key === 'edit') next.edit = clampPane(start.edit - dx, 240, 720);
-        return next;
-      });
+      if (key === 'edit') setPaneWidths({ edit: clampPane(startEdit - dx, 240, 720) });
     };
     const stop = () => {
       window.removeEventListener('pointermove', move);
@@ -157,7 +175,24 @@ export function StyleEditor({
     const observer = new ResizeObserver(() => applyFit());
     observer.observe(box);
     return () => observer.disconnect();
-  }, [style.pageSize, fitWidth, panel]);
+  }, [style.pageSize, fitWidth, panel, side]);
+
+  const scrollLiveToSection = (step) => {
+    const id = step?.id;
+    if (!id) return;
+    requestAnimationFrame(() => {
+      const root = centerRef.current;
+      if (!root) return;
+      const target = root.querySelector(`[data-dpr-section="${CSS.escape(id)}"]`);
+      if (!(target instanceof HTMLElement)) return;
+      const parentRect = root.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      root.scrollTo({
+        top: Math.max(0, root.scrollTop + (targetRect.top - parentRect.top) - 8),
+        behavior: 'smooth',
+      });
+    });
+  };
 
   const openEdit = (step) => {
     if (!renderEditor || !step) return;
@@ -165,6 +200,7 @@ export function StyleEditor({
     setPanel('edit');
     onActiveSection?.(step.id);
     onEditSection?.(step);
+    scrollLiveToSection(step);
   };
 
   useEffect(() => {
@@ -234,13 +270,50 @@ export function StyleEditor({
     commit({ ...style, marginMm: { ...style.marginMm, [side]: value } });
   };
 
-  const onDrop = (targetId: string) => {
-    if (!dragId) return;
-    const order = layoutOrder(steps, style);
-    commit({ ...style, sectionOrder: moveSection(order, steps, dragId, targetId) });
+  const placeFromEvent = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+  };
+
+  const onRowDragOver = (id) => (event) => {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    if (!dragId || dragId === id) {
+      if (dropHint) setDropHint(null);
+      return;
+    }
+    const place = placeFromEvent(event);
+    setDropHint((current) => (current?.id === id && current.place === place ? current : { id, place }));
+  };
+
+  const clearDrag = () => {
     setDragId(null);
+    setDropHint(null);
     onActiveSection?.(null);
   };
+
+  const onDrop = (targetId, event) => {
+    event.preventDefault();
+    if (!dragId || dragId === targetId) {
+      clearDrag();
+      return;
+    }
+    const place = placeFromEvent(event);
+    const order = layoutOrder(steps, style);
+    commit({ ...style, sectionOrder: moveSection(order, steps, dragId, targetId, place) });
+    clearDrag();
+  };
+
+  const dropLine = (id, place) => (
+    dropHint?.id === id && dropHint.place === place ? (
+      <div
+        data-drop-line={place}
+        className={`pointer-events-none absolute left-1 right-1 z-10 h-1 rounded-full bg-teal-600 ${
+          place === 'before' ? '-top-1' : '-bottom-1'
+        }`}
+      />
+    ) : null
+  );
 
   const toggleHidden = (id: string) => {
     const hidden = new Set(style.hiddenSectionIds);
@@ -251,10 +324,26 @@ export function StyleEditor({
 
   const orderedIds = layoutOrder(steps, style);
   const pictureById = new Map((style.pictures || []).map((picture) => [picture.id, picture]));
+  const customById = new Map((style.customSections || []).map((section) => [section.id, section]));
+  const addTextBlock = (sectionId) => {
+    commit(addSectionBlock(style, sectionId, { id: newContentId('blk'), kind: 'text', text: '' }));
+  };
+  const pickSectionImage = (sectionId) => {
+    blockSectionRef.current = sectionId;
+    blockFileRef.current?.click();
+  };
   const sidebarRows = orderedIds.reduce((acc, token) => {
     if (token.startsWith('pic:')) {
       const picture = pictureById.get(token.slice(4));
       if (picture) acc.rows.push({ kind: 'picture', picture });
+      return acc;
+    }
+    const custom = customById.get(token);
+    if (custom) {
+      const hidden = style.hiddenSectionIds.includes(custom.id);
+      const num = hidden ? '–' : acc.next;
+      acc.rows.push({ kind: 'custom', section: custom, hidden, num });
+      if (!hidden) acc.next += 1;
       return acc;
     }
     const step = steps.find((item) => item.id === token);
@@ -277,22 +366,127 @@ export function StyleEditor({
     </PageSheet>
   );
 
+  const sectionBlockTools = (sectionId) => (
+    <div className="basis-full pl-7">
+      <div className="flex flex-wrap items-center gap-1">
+        {(style.sectionBlocks?.[sectionId] || []).map((block) => (
+          <span key={block.id} className="inline-flex max-w-full items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[11px] text-slate-600">
+            <span className="max-w-[8rem] truncate">{block.kind === 'text' ? (block.text || tf('Text')) : block.name}</span>
+            <button
+              type="button"
+              className="text-red-700"
+              title={tf('Delete')}
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={() => commit(removeSectionBlock(style, sectionId, block.id))}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px]"
+          title={tf('Add text')}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => addTextBlock(sectionId)}
+        >
+          <Type className="h-3 w-3" />
+          {tf('Text')}
+        </button>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px]"
+          title={tf('Add image')}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => pickSectionImage(sectionId)}
+        >
+          <ImagePlus className="h-3 w-3" />
+          {tf('Image')}
+        </button>
+      </div>
+    </div>
+  );
+
   const sectionsPanel = (
     <aside className="flex h-full min-h-0 flex-col border-border bg-white lg:border-r">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <p className="text-sm font-semibold">{tf('Sections')}</p>
-        <button
-          type="button"
-          className="text-xs font-medium text-primary"
-          onClick={() => commit({
-            ...style,
-            hiddenSectionIds: [],
-            sectionOrder: layoutOrder(steps, { ...style, sectionOrder: steps.map((step) => step.id) }),
-          })}
-        >
-          {tf('Original order')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+            onClick={() => { setAddingSection(true); setSectionTitle(''); }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {tf('New section')}
+          </button>
+          <button
+            type="button"
+            className="text-xs font-medium text-primary"
+            onClick={() => commit({
+              ...style,
+              hiddenSectionIds: [],
+              sectionOrder: layoutOrder(steps, { ...style, sectionOrder: steps.map((step) => step.id) }),
+            })}
+          >
+            {tf('Original order')}
+          </button>
+        </div>
       </div>
+      {addingSection ? (
+        <form
+          className="flex items-center gap-2 border-b px-3 py-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const title = sectionTitle.trim();
+            if (!title) return;
+            commit(addCustomSection(style, steps, title));
+            setSectionTitle('');
+            setAddingSection(false);
+          }}
+        >
+          <input
+            className="min-w-0 flex-1 rounded-md border px-2 py-1 text-sm"
+            value={sectionTitle}
+            autoFocus
+            placeholder={tf('Section title')}
+            onChange={(event) => setSectionTitle(event.target.value)}
+          />
+          <Button type="submit" size="sm" disabled={!sectionTitle.trim()}>{tf('Add')}</Button>
+        </form>
+      ) : null}
+      <input
+        ref={blockFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          const sectionId = blockSectionRef.current;
+          if (!file || !sectionId) return;
+          try {
+            const src = await readImageFile(file);
+            if (src.length > 500_000) {
+              setImageError('That image is too large.');
+              return;
+            }
+            const name = file.name.replace(/\.[^.]+$/, '').slice(0, 80) || 'Picture';
+            commit(addSectionBlock(style, sectionId, {
+              id: newContentId('blk'),
+              kind: 'image',
+              name,
+              src,
+              hidden: false,
+              frame: { w: 100, h: 0, x: 0, y: 0 },
+            }));
+            setImageError('');
+          } catch (error) {
+            setImageError(error?.message || 'Could not read that image.');
+          }
+        }}
+      />
+      {imageError ? <p className="px-3 py-1 text-xs font-medium text-red-700">{tf(imageError)}</p> : null}
       <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
         {sidebarRows.map((row) => {
           if (row.kind === 'picture') {
@@ -303,14 +497,19 @@ export function StyleEditor({
               <li
                 key={token}
                 draggable
-                onDragStart={() => setDragId(token)}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={() => onDrop(token)}
-                onDragEnd={() => setDragId(null)}
-                className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
-                  hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
+                onDragStart={(event) => {
+                  setDragId(token);
+                  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={onRowDragOver(token)}
+                onDrop={(event) => onDrop(token, event)}
+                onDragEnd={clearDrag}
+                className={`relative flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+                  dragId === token ? 'opacity-50' : hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
                 } ${picture.hidden ? 'opacity-45' : ''}`}
               >
+                {dropLine(token, 'before')}
+                {dropLine(token, 'after')}
                 <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
                 <span className="min-w-0 flex-1 truncate text-left">{picture.name}</span>
                 <button
@@ -339,26 +538,75 @@ export function StyleEditor({
               </li>
             );
           }
+          if (row.kind === 'custom') {
+            const { section, hidden, num } = row;
+            return (
+              <li
+                key={section.id}
+                draggable
+                onDragStart={(event) => {
+                  setDragId(section.id);
+                  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={onRowDragOver(section.id)}
+                onDrop={(event) => onDrop(section.id, event)}
+                onDragEnd={clearDrag}
+                className={`relative flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+                  dragId === section.id ? 'opacity-50' : 'border-transparent bg-slate-50'
+                } ${hidden ? 'opacity-45' : ''}`}
+              >
+                {dropLine(section.id, 'before')}
+                {dropLine(section.id, 'after')}
+                <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
+                <span className="w-5 shrink-0 text-xs text-slate-500">{num}</span>
+                <input
+                  className="min-w-0 flex-1 bg-transparent text-sm"
+                  value={section.title}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onChange={(event) => commit(renameCustomSection(style, section.id, event.target.value))}
+                />
+                <button
+                  type="button"
+                  className="rounded p-1 text-slate-500 hover:bg-white"
+                  title={hidden ? tf('Show section') : tf('Hide section')}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => toggleHidden(section.id)}
+                >
+                  {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  className="rounded p-1 text-red-700 hover:bg-white"
+                  title={tf('Delete section')}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => commit(removeCustomSection(style, section.id))}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                {sectionBlockTools(section.id)}
+              </li>
+            );
+          }
           const { step, hidden, num } = row;
           const hot = dragId === step.id || activeSectionId === step.id;
           return (
             <li
               key={step.id}
               draggable
-              onDragStart={() => {
+              onDragStart={(event) => {
                 setDragId(step.id);
                 onActiveSection?.(step.id);
+                if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
               }}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => onDrop(step.id)}
-              onDragEnd={() => {
-                setDragId(null);
-                onActiveSection?.(null);
-              }}
-              className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
-                hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
+              onDragOver={onRowDragOver(step.id)}
+              onDrop={(event) => onDrop(step.id, event)}
+              onDragEnd={clearDrag}
+              className={`relative flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+                dragId === step.id ? 'opacity-50' : hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
               } ${hidden ? 'opacity-45' : ''}`}
             >
+              {dropLine(step.id, 'before')}
+              {dropLine(step.id, 'after')}
               <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
               <span className="w-5 shrink-0 text-xs text-slate-500">{num}</span>
               <button
@@ -378,6 +626,7 @@ export function StyleEditor({
               >
                 {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
+              {sectionBlockTools(step.id)}
             </li>
           );
         })}
@@ -387,9 +636,8 @@ export function StyleEditor({
 
   const stylePanel = (
     <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l">
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Presets')}</p>
+      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+        <StyleGroup title={tf('Presets')} open={!!openGroups.presets} onToggle={() => toggleGroup('presets')}>
           <div className="flex flex-wrap gap-1.5">
             {PRESET_IDS.map((id) => (
               <button
@@ -404,10 +652,9 @@ export function StyleEditor({
               </button>
             ))}
           </div>
-        </div>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Page')}</legend>
+        <StyleGroup title={tf('Page')} open={!!openGroups.page} onToggle={() => toggleGroup('page')}>
           <label className="block text-xs">
             {tf('Page size')}
             <select
@@ -446,10 +693,9 @@ export function StyleEditor({
               </label>
             ))}
           </div>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Type')}</legend>
+        <StyleGroup title={tf('Type')} open={!!openGroups.type} onToggle={() => toggleGroup('type')}>
           {ROLE_KEYS.map((key) => (
             <div key={key} className={`rounded-md border p-2 ${problemFor('body-font') && key === 'body' ? 'border-red-500' : 'border-slate-200'}`}>
               <p className="mb-1 text-xs font-medium">{tf(ROLE_LABELS[key])}</p>
@@ -518,10 +764,9 @@ export function StyleEditor({
               onChange={(event) => commit({ ...style, paragraphGap: Number(event.target.value) })}
             />
           </label>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Colors')}</legend>
+        <StyleGroup title={tf('Colors')} open={!!openGroups.colors} onToggle={() => toggleGroup('colors')}>
           {([
             ['primary', 'Primary'],
             ['header', 'Header'],
@@ -544,10 +789,9 @@ export function StyleEditor({
           {['primary', 'header', 'table', 'border'].map((key) =>
             problemFor(key) ? <p key={key} className="text-xs font-medium text-red-700">{tf(problemFor(key))}</p> : null
           )}
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Header and footer')}</legend>
+        <StyleGroup title={tf('Header and footer')} open={!!openGroups.header} onToggle={() => toggleGroup('header')}>
           <label className="block text-xs">
             {tf('Logo place')}
             <select
@@ -612,10 +856,9 @@ export function StyleEditor({
               {tf('Remove logo')}
             </button>
           ) : null}
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Watermark')}</legend>
+        <StyleGroup title={tf('Watermark')} open={!!openGroups.watermark} onToggle={() => toggleGroup('watermark')}>
           <input
             className="w-full rounded-md border px-2 py-1.5 text-sm"
             value={style.watermark}
@@ -644,10 +887,9 @@ export function StyleEditor({
               onChange={(event) => commit({ ...style, watermarkAngle: Number(event.target.value) })}
             />
           </label>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Tables')}</legend>
+        <StyleGroup title={tf('Tables')} open={!!openGroups.tables} onToggle={() => toggleGroup('tables')}>
           <label className="flex items-center gap-2 text-xs">
             <input
               type="checkbox"
@@ -656,10 +898,9 @@ export function StyleEditor({
             />
             {tf('Striped rows')}
           </label>
-        </fieldset>
+        </StyleGroup>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Pictures')}</legend>
+        <StyleGroup title={tf('Pictures')} open={!!openGroups.pictures} onToggle={() => toggleGroup('pictures')}>
           <p className="text-xs text-slate-500">{tf('Choose where a new picture starts. Name it, then drag it in Sections.')}</p>
           <select className="w-full rounded-md border px-2 py-1.5 text-sm" value={slot} onChange={(event) => setSlot(event.target.value)}>
             <option value="cover">{tf('Cover')}</option>
@@ -695,7 +936,7 @@ export function StyleEditor({
             }}
           />
           {imageError ? <p className="text-xs font-medium text-red-700">{tf(imageError)}</p> : null}
-        </fieldset>
+        </StyleGroup>
       </div>
     </aside>
   );
@@ -731,8 +972,6 @@ export function StyleEditor({
         </div>
       </div>
       <div className="flex items-center gap-2 border-b bg-white px-3 py-2 lg:hidden">
-        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel(panel === 'sections' ? null : 'sections')}>{tf('Sections')}</Button>
-        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel(panel === 'style' ? null : 'style')}>{tf('Style')}</Button>
         {renderEditor ? (
           <Button
             type="button"
@@ -747,19 +986,35 @@ export function StyleEditor({
       </div>
       <div className="relative min-h-0 flex-1">
         <div className="flex h-full min-h-0">
-          <div style={{ width: paneWidths.sections }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r bg-white pt-3 lg:flex">
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {sectionsPanel}
-            </div>
+          <div className="flex w-12 shrink-0 flex-col border-r bg-white">
+            {[
+              ['sections', 'Sections'],
+              ['style', 'Style'],
+            ].map(([id, label]) => {
+              const open = side === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={open}
+                  onClick={() => setSide(open ? null : id)}
+                  className={`flex min-h-0 flex-1 items-center justify-center border-b px-1 text-xs font-semibold tracking-wide ${
+                    open ? 'bg-teal-800 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                  style={{ writingMode: 'vertical-lr' }}
+                >
+                  {tf(label)}
+                </button>
+              );
+            })}
           </div>
-          {paneHandle('sections')}
-          <div style={{ width: paneWidths.style }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r bg-white pt-3 lg:flex">
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {stylePanel}
+          {side === 'sections' || side === 'style' ? (
+            <div className="flex h-full w-80 max-w-[42%] shrink-0 flex-col overflow-hidden border-r bg-white">
+              {side === 'sections' ? sectionsPanel : stylePanel}
             </div>
-          </div>
-          {paneHandle('style')}
-          <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col pt-3">
+          ) : null}
+          <div className="relative flex h-full min-h-0 min-w-0 flex-1">
+            <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col">
             <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
               <div className="flex items-center gap-1">
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
@@ -771,6 +1026,16 @@ export function StyleEditor({
                 </Button>
                 <Button type="button" variant="ghost" size="sm" className="h-7 whitespace-nowrap px-2 text-xs" onClick={() => { fitWidthRef.current = true; setFitWidth(true); }}>
                   {tf('Fit page')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1 whitespace-nowrap px-2 text-xs"
+                  onClick={() => centerRef.current?.requestFullscreen?.()}
+                >
+                  <Maximize2 className="h-4 w-4" />
+                  {tf('Preview')}
                 </Button>
               </div>
               <select
@@ -785,7 +1050,7 @@ export function StyleEditor({
             <div ref={centerRef} className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3">
               <div style={{ zoom }}>{sheet}</div>
             </div>
-          </div>
+            </div>
           {renderEditor ? paneHandle('edit') : null}
           {renderEditor ? (
             <div style={{ width: paneWidths.edit }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-l bg-white pt-3 lg:flex">
@@ -798,17 +1063,8 @@ export function StyleEditor({
               </div>
             </div>
           ) : null}
+          </div>
         </div>
-        {panel === 'sections' ? (
-          <div className="absolute inset-y-0 left-0 z-30 w-72 max-w-[90%] overflow-hidden border-r bg-white shadow-xl lg:hidden">
-            {sectionsPanel}
-          </div>
-        ) : null}
-        {panel === 'style' ? (
-          <div className="absolute inset-y-0 right-0 z-30 w-80 max-w-[90%] overflow-hidden border-l bg-white shadow-xl lg:hidden">
-            {stylePanel}
-          </div>
-        ) : null}
         {panel === 'edit' && editStep && renderEditor ? (
           <div className="absolute inset-y-0 left-0 z-30 flex w-[min(40rem,92%)] max-w-full flex-col border-r bg-white shadow-xl lg:hidden">
             <div className="flex items-center justify-between gap-2 border-b px-3 py-2">

@@ -3984,22 +3984,28 @@ export class DPRService {
         pdf.fontSize(14).font('Helvetica').text('On', { align: 'center' });
         pdf.text(docModel.actionLine, { align: 'center' });
         pdf.moveDown(0.3);
-        pdf.fillColor('#059669').fontSize(18).font('Helvetica-Bold').text(docModel.unitName.toUpperCase(), { align: 'center' });
+        if (docModel.unitName && docModel.unitName !== 'UNIT NAME') {
+          pdf.fillColor('#059669').fontSize(18).font('Helvetica-Bold').text(docModel.unitName.toUpperCase(), { align: 'center' });
+        }
         pdf.fillColor('#000000').fontSize(12).font('Helvetica').text(docModel.underLine, { align: 'center' });
         pdf.moveDown(0.8);
-        pdf.fontSize(11).text(`District: ${docModel.district || '—'}`);
-        pdf.text(`Location: ${docModel.location || '—'}`);
+        pdf.fontSize(11);
+        if (docModel.district) pdf.text(`District: ${docModel.district}`);
+        if (docModel.location) pdf.text(`Location: ${docModel.location}`);
         if (docModel.entrepreneurName) pdf.text(`Entrepreneur name: ${docModel.entrepreneurName}`);
         pdf.moveDown(1);
+        const shown = docModel.sections
+          .map((section) => ({ ...section, rows: section.rows.filter((row) => row.filled) }))
+          .filter((section) => section.rows.length > 0);
         pdf.fontSize(14).font('Helvetica-Bold').text('Table of Contents');
         pdf.moveDown(0.4);
         pdf.fontSize(11).font('Helvetica');
-        docModel.sections.forEach((s) => {
-          pdf.text(`${s.n}. ${s.title}`);
+        shown.forEach((s, index) => {
+          pdf.text(`${index + 1}. ${s.title}`);
         });
-        docModel.sections.forEach((s) => {
+        shown.forEach((s, index) => {
           pdf.addPage();
-          pdf.fontSize(14).font('Helvetica-Bold').text(`${s.n}. ${s.title}`);
+          pdf.fontSize(14).font('Helvetica-Bold').text(`${index + 1}. ${s.title}`);
           pdf.moveDown(0.4);
           pdf.fontSize(10).font('Helvetica');
           s.rows.forEach((r) => {
