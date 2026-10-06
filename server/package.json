@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
-    "test": "node --experimental-strip-types --import ./register-tests.mjs --test src/production.backend.test.ts"
+    "test": "node --experimental-strip-types --import ./register-tests.mjs --test src/production.backend.test.ts",
+    "test:api": "node --experimental-strip-types --test --test-concurrency=1 src/api.live.test.ts"
   },
   "keywords": [
     "msme",
