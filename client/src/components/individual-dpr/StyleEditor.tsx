@@ -147,12 +147,30 @@ export function StyleEditor({
     return () => observer.disconnect();
   }, [style.pageSize, fitWidth, panel, side]);
 
+  const scrollLiveToSection = (step) => {
+    const id = step?.id;
+    if (!id) return;
+    requestAnimationFrame(() => {
+      const root = centerRef.current;
+      if (!root) return;
+      const target = root.querySelector(`[data-dpr-section="${CSS.escape(id)}"]`);
+      if (!(target instanceof HTMLElement)) return;
+      const parentRect = root.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      root.scrollTo({
+        top: Math.max(0, root.scrollTop + (targetRect.top - parentRect.top) - 8),
+        behavior: 'smooth',
+      });
+    });
+  };
+
   const openEdit = (step) => {
     if (!renderEditor || !step) return;
     setEditStep(step);
     setPanel('edit');
     onActiveSection?.(step.id);
     onEditSection?.(step);
+    scrollLiveToSection(step);
   };
 
   useEffect(() => {

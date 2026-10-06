@@ -499,7 +499,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         const hot = activeSectionId === def.id;
         if (def.id === 'uploads' || def.contentStep === 18) {
           return (
-            <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+            <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
               <h2 className="individual-sec-title">
                 <span className="individual-sec-num">{num}</span>
                 {title}
@@ -524,7 +524,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         }
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
         return (
-          <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+          <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
             <h2 className="individual-sec-title">
               <span className="individual-sec-num">{num}</span>
               {title}
