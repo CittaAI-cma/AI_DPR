@@ -19,6 +19,8 @@ import {
   contrastOk,
   defaultStyleForScheme,
   insertPicture,
+  addCustomSection,
+  addSectionBlock,
   layoutOrder,
   moveSection,
   selectionStepOrder,
@@ -145,6 +147,29 @@ describe('step suggestion batch', () => {
     assert.equal(acceptByKind('date', '2026-02-31', emptyFacts), null);
     assert.equal(acceptByKind('date', '2026-04-01', emptyFacts), '2026-04-01');
     assert.equal(acceptByKind('prose', 'Too short.', emptyFacts), null);
+  });
+});
+
+describe('custom sections', () => {
+  it('adds a section and keeps a text block and an image inside it', () => {
+    const steps = [{ id: 'a' }, { id: 'b' }];
+    let style = defaultStyleForScheme('PMFME');
+    style = addCustomSection(style, steps, 'Site photos', 'csec_site');
+    assert.ok(layoutOrder(steps, style).includes('csec_site'));
+    style = addSectionBlock(style, 'a', { id: 'blk_note', kind: 'text', text: 'Hello from the section' });
+    style = addSectionBlock(style, 'csec_site', {
+      id: 'blk_pic',
+      kind: 'image',
+      name: 'Front',
+      src: 'data:image/png;base64,aaaa',
+      hidden: false,
+      frame: { w: 80, h: 0, x: 0, y: 0 },
+    });
+    const saved = resolveDocumentStyle(style, 'PMFME');
+    assert.equal(saved.customSections[0].title, 'Site photos');
+    assert.equal(saved.sectionBlocks.a[0].text, 'Hello from the section');
+    assert.equal(saved.sectionBlocks.csec_site[0].name, 'Front');
+    assert.ok(layoutOrder(steps, saved).includes('csec_site'));
   });
 });
 

@@ -67,6 +67,8 @@ export interface IndividualDPRDocumentViewProps {
   onImageFrame?: (slot: string, box: ImageBox) => void;
   /** Type straight into the live document. Path is stepN.field or stepN.field[i].key. */
   onEditField?: (path: string, text: string) => void;
+  /** Type a text block that was inserted into a section. */
+  onEditBlock?: (sectionId: string, blockId: string, text: string) => void;
 }
 
 const IMAGE_HANDLES: ImageHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -210,6 +212,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   activeSectionId = null,
   onImageFrame,
   onEditField,
+  onEditBlock,
 }) => {
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
@@ -231,6 +234,36 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const uploadStore = data.step18 || data.uploads || {};
 
   const typeHere = tf('Type here');
+  const renderBlocks = (sectionId: string) => {
+    const blocks = style?.sectionBlocks?.[sectionId] || [];
+    if (!blocks.length) return null;
+    return blocks.map((block) => {
+      if (block.kind === 'text') {
+        return (
+          <div key={block.id} className="individual-qa-a mt-2">
+            {onEditBlock ? (
+              <EditableDocText
+                path={`block:${sectionId}:${block.id}`}
+                display={block.text || '—'}
+                placeholder={typeHere}
+                multiline
+                onEdit={(_path, text) => onEditBlock(sectionId, block.id, text)}
+              />
+            ) : (block.text || '—')}
+          </div>
+        );
+      }
+      if (block.hidden) return null;
+      return (
+        <SlotFigure
+          key={block.id}
+          src={block.src}
+          frame={block.frame}
+          onFrame={onImageFrame ? (box) => onImageFrame(`block:${sectionId}:${block.id}`, box) : undefined}
+        />
+      );
+    });
+  };
   const editableValue = (path: string, display: string, raw: unknown, multiline = false) => {
     if (onEditField && isPlainValue(raw)) {
       return (
@@ -568,20 +601,48 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           {tf('Table of Contents')}
         </h2>
         <ol className="individual-toc-list">
-          {steps.map((def, index) => (
+          {(style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).flatMap((token) => {
+            if (pictureIdFromToken(token)) return [];
+            const custom = style?.customSections?.find((item) => item.id === token);
+            if (custom) {
+              if (style?.hiddenSectionIds.includes(custom.id)) return [];
+              return [{ id: custom.id, title: custom.title, n: 0, custom: true }];
+            }
+            const def = catalogSteps.find((step) => step.id === token);
+            if (!def || style?.hiddenSectionIds.includes(def.id)) return [];
+            return [{ id: def.id, title: sectionTitleFromStep(def), n: def.n, custom: false }];
+          }).map((entry, index) => (
             <li
-              key={def.id}
-              className={onSectionClick ? 'is-clickable' : undefined}
-              onClick={() => onSectionClick?.(def.n)}
+              key={entry.id}
+              className={onSectionClick && !entry.custom ? 'is-clickable' : undefined}
+              onClick={() => { if (!entry.custom) onSectionClick?.(entry.n); }}
             >
-              <span className="toc-num">{style ? index + 1 : def.n}</span>
-              <span className="toc-label">{tf(sectionTitleFromStep(def))}</span>
+              <span className="toc-num">{style ? index + 1 : entry.n}</span>
+              <span className="toc-label">{entry.custom ? entry.title : tf(entry.title)}</span>
             </li>
           ))}
         </ol>
       </section>
 
       {(style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).map((token) => {
+        const custom = style?.customSections?.find((item) => item.id === token);
+        if (custom) {
+          if (style?.hiddenSectionIds.includes(custom.id)) return null;
+          const customNum = (style ? layoutOrder(catalogSteps, style) : []).filter((item) => {
+            if (pictureIdFromToken(item)) return false;
+            if (style?.hiddenSectionIds.includes(item)) return false;
+            return true;
+          }).indexOf(custom.id) + 1;
+          return (
+            <section key={custom.id} data-dpr-section={custom.id} className="individual-sec">
+              <h2 className="individual-sec-title">
+                <span className="individual-sec-num">{customNum}</span>
+                {custom.title}
+              </h2>
+              {renderBlocks(custom.id)}
+            </section>
+          );
+        }
         const picId = pictureIdFromToken(token);
         if (picId) {
           const picture = style?.pictures?.find((item) => item.id === picId);
@@ -622,6 +683,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   })}
                 </ul>
               )}
+              {renderBlocks(def.id)}
             </section>
           );
         }
@@ -633,6 +695,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               {title}
             </h2>
             {renderSectionFields(fields)}
+            {renderBlocks(def.id)}
           </section>
         );
       })}

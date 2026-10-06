@@ -62,7 +62,18 @@ export interface DocumentStyle {
   imageWidths: { cover: number; annexure: number; after: Record<string, number> };
   imageFrames: { cover: ImageBox; annexure: ImageBox; after: Record<string, ImageBox> };
   pictures: ReportPicture[];
+  customSections: CustomSection[];
+  sectionBlocks: Record<string, SectionBlock[]>;
 }
+
+export type CustomSection = {
+  id: string;
+  title: string;
+};
+
+export type SectionBlock =
+  | { id: string; kind: 'text'; text: string }
+  | { id: string; kind: 'image'; name: string; src: string; hidden: boolean; frame: ImageBox };
 
 /** A named picture in the section list. `place` is where it was first inserted. */
 export type ReportPicture = {
@@ -216,6 +227,8 @@ export function presetStyle(id: DocPresetId): DocumentStyle {
     imageWidths: emptyWidths(),
     imageFrames: emptyFrames(),
     pictures: emptyPictures(),
+    customSections: [] as CustomSection[],
+    sectionBlocks: {} as Record<string, SectionBlock[]>,
   };
 
   if (id === 'bank') {
@@ -353,6 +366,43 @@ function safeImage(value: unknown): string {
   return value;
 }
 
+function readCustomSections(raw: unknown): CustomSection[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const id = typeof item.id === 'string' ? item.id : '';
+    const title = typeof item.title === 'string' ? item.title.trim().slice(0, 80) : '';
+    if (!/^csec_[A-Za-z0-9]+$/.test(id) || !title) return [];
+    return [{ id: id.slice(0, 40), title }];
+  });
+}
+
+function readSectionBlocks(raw: unknown): Record<string, SectionBlock[]> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, SectionBlock[]> = {};
+  for (const [sectionId, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(sectionId) || !Array.isArray(value)) continue;
+    const blocks = value.flatMap((rawBlock) => {
+      if (!rawBlock || typeof rawBlock !== 'object') return [];
+      const item = rawBlock as { id?: unknown; kind?: unknown; text?: unknown; name?: unknown; src?: unknown; hidden?: unknown; frame?: Partial<ImageBox> };
+      const id = typeof item.id === 'string' ? item.id.replace(/[^A-Za-z0-9_]/g, '').slice(0, 40) : '';
+      if (!id) return [];
+      if (item.kind === 'text') {
+        return [{ id, kind: 'text' as const, text: typeof item.text === 'string' ? item.text.slice(0, 8000) : '' }];
+      }
+      if (item.kind === 'image') {
+        const src = safeImage(item.src);
+        if (!src) return [];
+        const name = typeof item.name === 'string' && item.name.trim() ? item.name.trim().slice(0, 80) : 'Picture';
+        return [{ id, kind: 'image' as const, name, src, hidden: Boolean(item.hidden), frame: clampImageBox(item.frame) }];
+      }
+      return [];
+    });
+    if (blocks.length) out[sectionId] = blocks;
+  }
+  return out;
+}
+
 export function resolveDocumentStyle(saved: unknown, schemeCode?: string | null): DocumentStyle {
   const base = defaultStyleForScheme(schemeCode);
   if (!saved || typeof saved !== 'object') return base;
@@ -415,6 +465,8 @@ export function resolveDocumentStyle(saved: unknown, schemeCode?: string | null)
       annexure: Boolean(safeImage(s.images?.annexure)),
       after,
     }),
+    customSections: readCustomSections(s.customSections),
+    sectionBlocks: readSectionBlocks(s.sectionBlocks),
     pictures: readPictures(s, {
       cover: safeImage(s.images?.cover),
       annexure: safeImage(s.images?.annexure),
@@ -556,6 +608,8 @@ export function applyPreset(current: DocumentStyle, id: DocPresetId): DocumentSt
     imageWidths: current.imageWidths,
     imageFrames: current.imageFrames,
     pictures: current.pictures,
+    customSections: current.customSections,
+    sectionBlocks: current.sectionBlocks,
     logoDataUrl: current.logoDataUrl,
     agencyName: current.agencyName || next.agencyName,
     pageSize: current.pageSize,
@@ -618,11 +672,18 @@ export function selectionStepOrder(
   return ordered.length ? ordered : visible;
 }
 
-/** Section ids and pic: tokens, with any new picture sitting at its saved place. */
-export function layoutOrder(steps: { id: string }[], style: Pick<DocumentStyle, 'sectionOrder' | 'pictures'>): string[] {
+/** Section ids, custom sections, and pic: tokens, with any new picture sitting at its saved place. */
+export function layoutOrder(
+  steps: { id: string }[],
+  style: Pick<DocumentStyle, 'sectionOrder' | 'pictures' | 'customSections'>
+): string[] {
+  const customIds = (style.customSections || []).map((section) => section.id);
   const ids = style.sectionOrder?.length ? [...style.sectionOrder] : steps.map((step) => step.id);
   for (const step of steps) {
     if (!ids.includes(step.id)) ids.push(step.id);
+  }
+  for (const id of customIds) {
+    if (!ids.includes(id)) ids.push(id);
   }
   for (const picture of style.pictures || []) {
     const token = pictureToken(picture.id);
@@ -634,9 +695,91 @@ export function layoutOrder(steps: { id: string }[], style: Pick<DocumentStyle, 
   }
   const known = new Set([
     ...steps.map((step) => step.id),
+    ...customIds,
     ...(style.pictures || []).map((picture) => pictureToken(picture.id)),
   ]);
   return ids.filter((id) => known.has(id));
+}
+
+export function newContentId(prefix: string): string {
+  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 40);
+}
+
+export function addCustomSection(
+  style: DocumentStyle,
+  steps: { id: string }[],
+  title: string,
+  id = newContentId('csec')
+): DocumentStyle {
+  const section = { id, title: title.trim().slice(0, 80) || 'New section' };
+  const customSections = [...(style.customSections || []).filter((item) => item.id !== id), section];
+  const next = { ...style, customSections };
+  return { ...next, sectionOrder: layoutOrder(steps, next) };
+}
+
+export function renameCustomSection(style: DocumentStyle, id: string, title: string): DocumentStyle {
+  return {
+    ...style,
+    customSections: (style.customSections || []).map((section) => (
+      section.id === id ? { ...section, title: title.trim().slice(0, 80) || section.title } : section
+    )),
+  };
+}
+
+export function removeCustomSection(style: DocumentStyle, id: string): DocumentStyle {
+  const blocks = { ...(style.sectionBlocks || {}) };
+  delete blocks[id];
+  return {
+    ...style,
+    customSections: (style.customSections || []).filter((section) => section.id !== id),
+    sectionBlocks: blocks,
+    sectionOrder: (style.sectionOrder || []).filter((token) => token !== id),
+    hiddenSectionIds: (style.hiddenSectionIds || []).filter((token) => token !== id),
+  };
+}
+
+export function addSectionBlock(style: DocumentStyle, sectionId: string, block: SectionBlock): DocumentStyle {
+  const sectionBlocks = { ...(style.sectionBlocks || {}) };
+  sectionBlocks[sectionId] = [...(sectionBlocks[sectionId] || []), block];
+  return { ...style, sectionBlocks };
+}
+
+export function removeSectionBlock(style: DocumentStyle, sectionId: string, blockId: string): DocumentStyle {
+  const sectionBlocks = { ...(style.sectionBlocks || {}) };
+  sectionBlocks[sectionId] = (sectionBlocks[sectionId] || []).filter((block) => block.id !== blockId);
+  return { ...style, sectionBlocks };
+}
+
+export function setBlockText(style: DocumentStyle, sectionId: string, blockId: string, text: string): DocumentStyle {
+  const sectionBlocks = { ...(style.sectionBlocks || {}) };
+  sectionBlocks[sectionId] = (sectionBlocks[sectionId] || []).map((block) => (
+    block.id === blockId && block.kind === 'text' ? { ...block, text: text.slice(0, 8000) } : block
+  ));
+  return { ...style, sectionBlocks };
+}
+
+export function blockFrameSlot(sectionId: string, blockId: string): string {
+  return `block:${sectionId}:${blockId}`;
+}
+
+export function parseBlockFrameSlot(slot: string): { sectionId: string; blockId: string } | null {
+  if (!slot.startsWith('block:')) return null;
+  const rest = slot.slice('block:'.length);
+  const cut = rest.lastIndexOf(':');
+  if (cut <= 0) return null;
+  return { sectionId: rest.slice(0, cut), blockId: rest.slice(cut + 1) };
+}
+
+export function setBlockFrame(style: DocumentStyle, slot: string, box: Partial<ImageBox>): DocumentStyle {
+  const parsed = parseBlockFrameSlot(slot);
+  if (!parsed) return style;
+  const sectionBlocks = { ...(style.sectionBlocks || {}) };
+  sectionBlocks[parsed.sectionId] = (sectionBlocks[parsed.sectionId] || []).map((block) => (
+    block.id === parsed.blockId && block.kind === 'image'
+      ? { ...block, frame: clampImageBox({ ...block.frame, ...box }) }
+      : block
+  ));
+  return { ...style, sectionBlocks };
 }
 
 export function insertPicture(

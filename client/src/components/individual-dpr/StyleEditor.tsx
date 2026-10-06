@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronDown, Eye, EyeOff, GripVertical, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, GripVertical, ImagePlus, Maximize2, Plus, Type, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -13,9 +13,15 @@ import {
   applyPreset,
   contrastOk,
   defaultStyleForScheme,
+  addCustomSection,
+  addSectionBlock,
   insertPicture,
   layoutOrder,
   moveSection,
+  newContentId,
+  removeCustomSection,
+  removeSectionBlock,
+  renameCustomSection,
   pageEdgeMm,
   pageWidthMm,
   pictureToken,
@@ -109,6 +115,10 @@ export function StyleEditor({
   const [slot, setSlot] = useState('cover');
   const [imageError, setImageError] = useState('');
   const [pendingPictures, setPendingPictures] = useState([]);
+  const [addingSection, setAddingSection] = useState(false);
+  const [sectionTitle, setSectionTitle] = useState('');
+  const blockFileRef = useRef(null);
+  const blockSectionRef = useRef('');
   const [pictureName, setPictureName] = useState('');
   const [deletePictureId, setDeletePictureId] = useState('');
   const [wideTable, setWideTable] = useState(false);
@@ -314,10 +324,26 @@ export function StyleEditor({
 
   const orderedIds = layoutOrder(steps, style);
   const pictureById = new Map((style.pictures || []).map((picture) => [picture.id, picture]));
+  const customById = new Map((style.customSections || []).map((section) => [section.id, section]));
+  const addTextBlock = (sectionId) => {
+    commit(addSectionBlock(style, sectionId, { id: newContentId('blk'), kind: 'text', text: '' }));
+  };
+  const pickSectionImage = (sectionId) => {
+    blockSectionRef.current = sectionId;
+    blockFileRef.current?.click();
+  };
   const sidebarRows = orderedIds.reduce((acc, token) => {
     if (token.startsWith('pic:')) {
       const picture = pictureById.get(token.slice(4));
       if (picture) acc.rows.push({ kind: 'picture', picture });
+      return acc;
+    }
+    const custom = customById.get(token);
+    if (custom) {
+      const hidden = style.hiddenSectionIds.includes(custom.id);
+      const num = hidden ? '–' : acc.next;
+      acc.rows.push({ kind: 'custom', section: custom, hidden, num });
+      if (!hidden) acc.next += 1;
       return acc;
     }
     const step = steps.find((item) => item.id === token);
@@ -340,22 +366,127 @@ export function StyleEditor({
     </PageSheet>
   );
 
+  const sectionBlockTools = (sectionId) => (
+    <div className="basis-full pl-7">
+      <div className="flex flex-wrap items-center gap-1">
+        {(style.sectionBlocks?.[sectionId] || []).map((block) => (
+          <span key={block.id} className="inline-flex max-w-full items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[11px] text-slate-600">
+            <span className="max-w-[8rem] truncate">{block.kind === 'text' ? (block.text || tf('Text')) : block.name}</span>
+            <button
+              type="button"
+              className="text-red-700"
+              title={tf('Delete')}
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={() => commit(removeSectionBlock(style, sectionId, block.id))}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px]"
+          title={tf('Add text')}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => addTextBlock(sectionId)}
+        >
+          <Type className="h-3 w-3" />
+          {tf('Text')}
+        </button>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px]"
+          title={tf('Add image')}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => pickSectionImage(sectionId)}
+        >
+          <ImagePlus className="h-3 w-3" />
+          {tf('Image')}
+        </button>
+      </div>
+    </div>
+  );
+
   const sectionsPanel = (
     <aside className="flex h-full min-h-0 flex-col border-border bg-white lg:border-r">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <p className="text-sm font-semibold">{tf('Sections')}</p>
-        <button
-          type="button"
-          className="text-xs font-medium text-primary"
-          onClick={() => commit({
-            ...style,
-            hiddenSectionIds: [],
-            sectionOrder: layoutOrder(steps, { ...style, sectionOrder: steps.map((step) => step.id) }),
-          })}
-        >
-          {tf('Original order')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+            onClick={() => { setAddingSection(true); setSectionTitle(''); }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {tf('New section')}
+          </button>
+          <button
+            type="button"
+            className="text-xs font-medium text-primary"
+            onClick={() => commit({
+              ...style,
+              hiddenSectionIds: [],
+              sectionOrder: layoutOrder(steps, { ...style, sectionOrder: steps.map((step) => step.id) }),
+            })}
+          >
+            {tf('Original order')}
+          </button>
+        </div>
       </div>
+      {addingSection ? (
+        <form
+          className="flex items-center gap-2 border-b px-3 py-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const title = sectionTitle.trim();
+            if (!title) return;
+            commit(addCustomSection(style, steps, title));
+            setSectionTitle('');
+            setAddingSection(false);
+          }}
+        >
+          <input
+            className="min-w-0 flex-1 rounded-md border px-2 py-1 text-sm"
+            value={sectionTitle}
+            autoFocus
+            placeholder={tf('Section title')}
+            onChange={(event) => setSectionTitle(event.target.value)}
+          />
+          <Button type="submit" size="sm" disabled={!sectionTitle.trim()}>{tf('Add')}</Button>
+        </form>
+      ) : null}
+      <input
+        ref={blockFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          const sectionId = blockSectionRef.current;
+          if (!file || !sectionId) return;
+          try {
+            const src = await readImageFile(file);
+            if (src.length > 500_000) {
+              setImageError('That image is too large.');
+              return;
+            }
+            const name = file.name.replace(/\.[^.]+$/, '').slice(0, 80) || 'Picture';
+            commit(addSectionBlock(style, sectionId, {
+              id: newContentId('blk'),
+              kind: 'image',
+              name,
+              src,
+              hidden: false,
+              frame: { w: 100, h: 0, x: 0, y: 0 },
+            }));
+            setImageError('');
+          } catch (error) {
+            setImageError(error?.message || 'Could not read that image.');
+          }
+        }}
+      />
+      {imageError ? <p className="px-3 py-1 text-xs font-medium text-red-700">{tf(imageError)}</p> : null}
       <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
         {sidebarRows.map((row) => {
           if (row.kind === 'picture') {
@@ -407,6 +538,55 @@ export function StyleEditor({
               </li>
             );
           }
+          if (row.kind === 'custom') {
+            const { section, hidden, num } = row;
+            return (
+              <li
+                key={section.id}
+                draggable
+                onDragStart={(event) => {
+                  setDragId(section.id);
+                  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={onRowDragOver(section.id)}
+                onDrop={(event) => onDrop(section.id, event)}
+                onDragEnd={clearDrag}
+                className={`relative flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+                  dragId === section.id ? 'opacity-50' : 'border-transparent bg-slate-50'
+                } ${hidden ? 'opacity-45' : ''}`}
+              >
+                {dropLine(section.id, 'before')}
+                {dropLine(section.id, 'after')}
+                <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
+                <span className="w-5 shrink-0 text-xs text-slate-500">{num}</span>
+                <input
+                  className="min-w-0 flex-1 bg-transparent text-sm"
+                  value={section.title}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onChange={(event) => commit(renameCustomSection(style, section.id, event.target.value))}
+                />
+                <button
+                  type="button"
+                  className="rounded p-1 text-slate-500 hover:bg-white"
+                  title={hidden ? tf('Show section') : tf('Hide section')}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => toggleHidden(section.id)}
+                >
+                  {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  className="rounded p-1 text-red-700 hover:bg-white"
+                  title={tf('Delete section')}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => commit(removeCustomSection(style, section.id))}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                {sectionBlockTools(section.id)}
+              </li>
+            );
+          }
           const { step, hidden, num } = row;
           const hot = dragId === step.id || activeSectionId === step.id;
           return (
@@ -421,7 +601,7 @@ export function StyleEditor({
               onDragOver={onRowDragOver(step.id)}
               onDrop={(event) => onDrop(step.id, event)}
               onDragEnd={clearDrag}
-              className={`relative flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+              className={`relative flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
                 dragId === step.id ? 'opacity-50' : hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
               } ${hidden ? 'opacity-45' : ''}`}
             >
@@ -446,6 +626,7 @@ export function StyleEditor({
               >
                 {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
+              {sectionBlockTools(step.id)}
             </li>
           );
         })}

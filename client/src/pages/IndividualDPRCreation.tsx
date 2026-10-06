@@ -10,7 +10,7 @@ import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, selectionStepOrder, setPictureFrame } from '@/lib/individualDpr/documentStyle';
+import { defaultStyleForScheme, pageEdgeMm, parseBlockFrameSlot, resolveDocumentStyle, selectionStepOrder, setBlockFrame, setBlockText, setPictureFrame } from '@/lib/individualDpr/documentStyle';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
@@ -935,9 +935,16 @@ export const IndividualDPRCreation: React.FC = () => {
                   stepData: dprPayload,
                 }}
                 viewLanguage={viewLanguage}
+                onEditBlock={(sectionId, blockId, text) => {
+                  const raw = docStyleRef.current;
+                  if (!raw) return;
+                  onStyleChange(setBlockText(raw, sectionId, blockId, text));
+                }}
                 onImageFrame={(slot, box) => {
                   if (!docStyleRef.current) return;
-                  onStyleChange(setPictureFrame(docStyleRef.current, slot, box));
+                  onStyleChange(parseBlockFrameSlot(slot)
+                    ? setBlockFrame(docStyleRef.current, slot, box)
+                    : setPictureFrame(docStyleRef.current, slot, box));
                 }}
                 onSectionClick={(stepNumber: number) => {
                   if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
@@ -1108,6 +1115,17 @@ export const IndividualDPRCreation: React.FC = () => {
                             <IndividualDPRDocumentView
                               trackFieldHits
                               onEditField={onEditField}
+                              onEditBlock={(sectionId, blockId, text) => {
+                                const raw = docStyleRef.current || data.schemeExtras?.documentStyle;
+                                if (!raw) return;
+                                onStyleChange(setBlockText(resolveDocumentStyle(raw, schemeCode), sectionId, blockId, text));
+                              }}
+                              onImageFrame={(slot, box) => {
+                                const raw = docStyleRef.current || data.schemeExtras?.documentStyle;
+                                if (!raw) return;
+                                const current = resolveDocumentStyle(raw, schemeCode);
+                                onStyleChange(parseBlockFrameSlot(slot) ? setBlockFrame(current, slot, box) : setPictureFrame(current, slot, box));
+                              }}
                               dpr={{
                                 content: {
                                   english: {
