@@ -434,6 +434,7 @@ export const FORM_FIELD_TE: Record<string, string> = {
   'Save on this DPR': 'ఈ నివేదికపై భద్రపరచు',
   Saving: 'భద్రపరుస్తోంది',
   'Fit page': 'పేజీని సరిపెట్టు',
+  Preview: 'ప్రివ్యూ',
   'Drag to resize': 'లాగి పరిమాణం మార్చు',
   'Fill & edit': 'నింపు మరియు మార్చు',
   Style: 'రూపం',

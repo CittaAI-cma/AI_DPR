@@ -1032,16 +1032,16 @@ export const IndividualDPRCreation: React.FC = () => {
                         <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(1)} className="h-7 w-7 p-0">
                           <RotateCcw className="h-4 w-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
+                          className="h-7 shrink-0 gap-1 whitespace-nowrap px-2"
+                        >
+                          <Maximize2 className="h-4 w-4" />
+                          {t('individualDpr.preview')}
+                        </Button>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
-                        className="h-9 shrink-0 gap-2 whitespace-nowrap px-3"
-                      >
-                        <Maximize2 className="h-4 w-4" />
-                        {t('individualDpr.fullscreen')}
-                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 min-h-0 overflow-hidden p-0 bg-gray-100 relative flex flex-col">

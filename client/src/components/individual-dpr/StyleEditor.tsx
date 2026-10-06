@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Eye, EyeOff, GripVertical, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { Eye, EyeOff, GripVertical, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -771,6 +771,16 @@ export function StyleEditor({
                 </Button>
                 <Button type="button" variant="ghost" size="sm" className="h-7 whitespace-nowrap px-2 text-xs" onClick={() => { fitWidthRef.current = true; setFitWidth(true); }}>
                   {tf('Fit page')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1 whitespace-nowrap px-2 text-xs"
+                  onClick={() => centerRef.current?.requestFullscreen?.()}
+                >
+                  <Maximize2 className="h-4 w-4" />
+                  {tf('Preview')}
                 </Button>
               </div>
               <select
