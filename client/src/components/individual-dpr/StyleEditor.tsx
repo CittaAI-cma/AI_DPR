@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Eye, EyeOff, GripVertical, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
@@ -15,6 +15,7 @@ import {
   defaultStyleForScheme,
   moveSection,
   pageEdgeMm,
+  pageWidthMm,
   styleProblems,
   type DocumentStyle,
   type DocPresetId,
@@ -65,6 +66,10 @@ export function StyleEditor({
   language,
   onLanguage,
   hasTelugu,
+  renderEditor,
+  editNonce,
+  editStepN,
+  onEditSection,
   children,
 }) {
   const tf = useClusterFormText();
@@ -72,13 +77,54 @@ export function StyleEditor({
   const future = useRef<DocumentStyle[]>([]);
   const [historyTick, setHistoryTick] = useState(0);
   const [dragId, setDragId] = useState<string | null>(null);
-  const [panel, setPanel] = useState<'sections' | 'style' | null>(null);
-  const [zoom, setZoom] = useState(0.7);
+  const [panel, setPanel] = useState(null);
+  const [editStep, setEditStep] = useState(null);
+  const [zoom, setZoom] = useState(0.55);
+  const [fitWidth, setFitWidth] = useState(true);
+  const fitWidthRef = useRef(true);
   const [slot, setSlot] = useState('cover');
   const [imageError, setImageError] = useState('');
   const [wideTable, setWideTable] = useState(false);
   const [blockedColor, setBlockedColor] = useState('');
   const centerRef = useRef<HTMLDivElement>(null);
+
+  const applyFit = () => {
+    const box = centerRef.current;
+    if (!box || !fitWidthRef.current) return;
+    const probe = document.createElement('div');
+    probe.style.cssText = `width:${pageWidthMm(style.pageSize)}mm;height:0;position:absolute;visibility:hidden;pointer-events:none`;
+    box.appendChild(probe);
+    const pagePx = probe.offsetWidth;
+    box.removeChild(probe);
+    if (!pagePx) return;
+    const available = Math.max(240, box.clientWidth - 48);
+    const next = Math.min(1.35, Math.max(0.22, available / pagePx));
+    setZoom(Math.round(next * 100) / 100);
+  };
+
+  useLayoutEffect(() => {
+    fitWidthRef.current = fitWidth;
+    const box = centerRef.current;
+    if (!box) return;
+    applyFit();
+    const observer = new ResizeObserver(() => applyFit());
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [style.pageSize, fitWidth, panel]);
+
+  const openEdit = (step) => {
+    if (!renderEditor || !step) return;
+    setEditStep(step);
+    setPanel('edit');
+    onActiveSection?.(step.id);
+    onEditSection?.(step);
+  };
+
+  useEffect(() => {
+    if (!editNonce || editStepN == null) return;
+    const step = steps.find((item) => item.n === editStepN);
+    if (step) openEdit(step);
+  }, [editNonce]);
 
   const commit = (next: DocumentStyle) => {
     past.current.push(style);
@@ -214,7 +260,14 @@ export function StyleEditor({
             >
               <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
               <span className="w-5 shrink-0 text-xs text-slate-500">{num}</span>
-              <span className="min-w-0 flex-1 truncate">{tf(step.title)}</span>
+              <button
+                type="button"
+                className="min-w-0 flex-1 truncate text-left"
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={() => openEdit(step)}
+              >
+                {tf(step.title)}
+              </button>
               <button
                 type="button"
                 className="rounded p-1 text-slate-500 hover:bg-white"
@@ -589,44 +642,90 @@ export function StyleEditor({
         </div>
       </div>
       <div className="flex items-center gap-2 border-b bg-white px-3 py-2 lg:hidden">
-        <Button type="button" variant="outline" size="sm" onClick={() => setPanel(panel === 'sections' ? null : 'sections')}>{tf('Sections')}</Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => setPanel(panel === 'style' ? null : 'style')}>{tf('Style')}</Button>
-      </div>
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)_18rem]">
-        <div className={`min-h-0 ${panel === 'sections' ? 'fixed inset-x-3 top-24 z-40 max-h-[70vh] overflow-hidden rounded-xl border shadow-xl lg:static lg:inset-auto lg:z-auto lg:max-h-none lg:rounded-none lg:border-0 lg:shadow-none' : 'hidden lg:block'}`}>
-          {sectionsPanel}
-        </div>
-        <div className="flex min-h-0 min-w-0 flex-col">
-          <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
-            <div className="flex items-center gap-1">
-              <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setZoom((z) => Math.max(0.4, Math.round((z - 0.1) * 10) / 10))}>
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <span className="w-10 text-center text-xs">{Math.round(zoom * 100)}%</span>
-              <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setZoom((z) => Math.min(1.6, Math.round((z + 0.1) * 10) / 10))}>
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-            </div>
-            <select
-              className="h-8 rounded-md border px-2 text-xs"
-              value={language}
-              onChange={(event) => onLanguage?.(event.target.value)}
-            >
-              <option value="english">{tf('English')}</option>
-              <option value="telugu" disabled={hasTelugu === false}>{tf('Telugu')}</option>
-            </select>
-          </div>
-          <div
-            ref={centerRef}
-            className="min-h-0 flex-1 overflow-auto p-4"
-            onClick={() => setPanel(null)}
+        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel(panel === 'sections' ? null : 'sections')}>{tf('Sections')}</Button>
+        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel(panel === 'style' ? null : 'style')}>{tf('Style')}</Button>
+        {renderEditor ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0 whitespace-nowrap"
+            onClick={() => openEdit(editStep || steps[0])}
           >
-            <div style={{ zoom }}>{sheet}</div>
+            {tf('Fill & edit')}
+          </Button>
+        ) : null}
+      </div>
+      <div className="relative min-h-0 flex-1">
+        <div className={`grid h-full min-h-0 grid-cols-1 ${renderEditor ? 'lg:grid-cols-[14rem_17rem_minmax(0,1fr)_minmax(18rem,26rem)]' : 'lg:grid-cols-[14rem_17rem_minmax(0,1fr)]'}`}>
+          <div className="hidden h-full min-h-0 overflow-hidden border-r bg-white lg:block">
+            {sectionsPanel}
           </div>
+          <div className="hidden h-full min-h-0 overflow-hidden border-r bg-white lg:block">
+            {stylePanel}
+          </div>
+          <div className="flex h-full min-h-0 min-w-0 flex-col">
+            <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
+              <div className="flex items-center gap-1">
+                <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <span className="w-10 text-center text-xs">{Math.round(zoom * 100)}%</span>
+                <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.min(1.35, Math.round((z + 0.05) * 100) / 100)); }}>
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="ghost" size="sm" className="h-7 whitespace-nowrap px-2 text-xs" onClick={() => { fitWidthRef.current = true; setFitWidth(true); }}>
+                  {tf('Fit page')}
+                </Button>
+              </div>
+              <select
+                className="h-8 rounded-md border px-2 text-xs"
+                value={language}
+                onChange={(event) => onLanguage?.(event.target.value)}
+              >
+                <option value="english">{tf('English')}</option>
+                <option value="telugu" disabled={hasTelugu === false}>{tf('Telugu')}</option>
+              </select>
+            </div>
+            <div ref={centerRef} className="min-h-0 flex-1 overflow-auto p-4">
+              <div style={{ zoom }}>{sheet}</div>
+            </div>
+          </div>
+          {renderEditor ? (
+            <div className="hidden h-full min-h-0 flex-col overflow-hidden border-l bg-white lg:flex">
+              <div className="border-b px-3 py-2">
+                <p className="text-sm font-semibold">{tf('Fill & edit')}</p>
+                <p className="truncate text-xs text-slate-500">{tf((editStep || steps[0])?.title || '')}</p>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                {(editStep || steps[0]) ? renderEditor(editStep || steps[0]) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
-        <div className={`min-h-0 ${panel === 'style' ? 'fixed inset-x-3 top-24 z-40 max-h-[70vh] overflow-hidden rounded-xl border shadow-xl lg:static lg:inset-auto lg:z-auto lg:max-h-none lg:rounded-none lg:border-0 lg:shadow-none' : 'hidden lg:block'}`}>
-          {stylePanel}
-        </div>
+        {panel === 'sections' ? (
+          <div className="absolute inset-y-0 left-0 z-30 w-72 max-w-[90%] overflow-hidden border-r bg-white shadow-xl lg:hidden">
+            {sectionsPanel}
+          </div>
+        ) : null}
+        {panel === 'style' ? (
+          <div className="absolute inset-y-0 right-0 z-30 w-80 max-w-[90%] overflow-hidden border-l bg-white shadow-xl lg:hidden">
+            {stylePanel}
+          </div>
+        ) : null}
+        {panel === 'edit' && editStep && renderEditor ? (
+          <div className="absolute inset-y-0 left-0 z-30 flex w-[min(40rem,92%)] max-w-full flex-col border-r bg-white shadow-xl lg:hidden">
+            <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
+              <p className="min-w-0 truncate text-sm font-semibold">{tf(editStep.title)}</p>
+              <button type="button" className="shrink-0 text-xs font-medium text-slate-600" onClick={() => setPanel(null)}>
+                {tf('Close')}
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              {renderEditor(editStep)}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

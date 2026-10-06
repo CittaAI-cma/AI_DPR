@@ -89,6 +89,8 @@ export const IndividualDPRCreation: React.FC = () => {
   const [docStyle, setDocStyle] = useState<any>(null);
   const [hotSectionId, setHotSectionId] = useState<string | null>(null);
   const [styleSaving, setStyleSaving] = useState(false);
+  const [editNonce, setEditNonce] = useState(0);
+  const [editStepN, setEditStepN] = useState<number | null>(null);
   const styleBeforeEdit = useRef<any>(null);
   const previewHitsRef = useRef<HTMLElement[]>([]);
 
@@ -746,9 +748,23 @@ export const IndividualDPRCreation: React.FC = () => {
               steps={getSchemeDocSteps(schemeCode).map((step) => ({
                 id: step.id,
                 title: sectionTitleFromStep(step),
+                n: step.n,
               }))}
               activeSectionId={hotSectionId}
               onActiveSection={setHotSectionId}
+              onEditSection={(step) => {
+                if (step?.n && visibleSteps.includes(step.n)) setCurrentStep(step.n);
+              }}
+              renderEditor={(step) => (
+                <IndividualDPRForm
+                  currentStep={step.n}
+                  invalidFields={invalidFields}
+                  onNext={() => {}}
+                  onPrevious={() => {}}
+                />
+              )}
+              editNonce={editNonce}
+              editStepN={editStepN}
               onChange={onStyleChange}
               onSave={saveReportStyle}
               onClose={() => {
@@ -791,6 +807,8 @@ export const IndividualDPRCreation: React.FC = () => {
                 viewLanguage={viewLanguage}
                 onSectionClick={(stepNumber: number) => {
                   if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                  setEditStepN(stepNumber);
+                  setEditNonce((n) => n + 1);
                 }}
               />
             </StyleEditor>
