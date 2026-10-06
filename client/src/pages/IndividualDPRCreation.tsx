@@ -506,7 +506,7 @@ export const IndividualDPRCreation: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background">
+      <div className={styling && docStyle ? 'flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
         <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -650,6 +650,7 @@ export const IndividualDPRCreation: React.FC = () => {
 
         {setupPhase === 'form' && (
           <>
+        {!styling && (
         <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -686,7 +687,9 @@ export const IndividualDPRCreation: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
+        {!styling && (
         <div className={schemeUi?.bannerClass || 'bg-amber-50 border-b border-amber-200'}>
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
               {schemeUi ? (
@@ -739,8 +742,9 @@ export const IndividualDPRCreation: React.FC = () => {
               )}
             </div>
           </div>
+        )}
 
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className={styling && docStyle ? 'min-h-0 flex-1' : 'max-w-[1920px] mx-auto px-4 py-6 sm:px-6 lg:px-8'}>
           {styling && docStyle ? (
             <StyleEditor
               style={docStyle}

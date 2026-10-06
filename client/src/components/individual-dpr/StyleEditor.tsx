@@ -86,7 +86,48 @@ export function StyleEditor({
   const [imageError, setImageError] = useState('');
   const [wideTable, setWideTable] = useState(false);
   const [blockedColor, setBlockedColor] = useState('');
+  const [paneWidths, setPaneWidths] = useState({ sections: 200, style: 240, edit: 300 });
   const centerRef = useRef<HTMLDivElement>(null);
+  const clampPane = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const startPaneResize = (key) => (event) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const start = { ...paneWidths };
+    const move = (moveEvent) => {
+      const dx = moveEvent.clientX - startX;
+      setPaneWidths(() => {
+        const next = { ...start };
+        if (key === 'sections') {
+          const grown = clampPane(start.sections + dx, 160, 480);
+          const styleWidth = start.style - (grown - start.sections);
+          if (styleWidth >= 200 && styleWidth <= 560) {
+            next.sections = grown;
+            next.style = styleWidth;
+          }
+        }
+        if (key === 'style') next.style = clampPane(start.style + dx, 200, 560);
+        if (key === 'edit') next.edit = clampPane(start.edit - dx, 240, 720);
+        return next;
+      });
+    };
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  };
+
+  const paneHandle = (key) => (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      title={tf('Drag to resize')}
+      onPointerDown={startPaneResize(key)}
+      className="group relative hidden w-2 shrink-0 cursor-col-resize bg-slate-200 hover:bg-teal-600 lg:block"
+    />
+  );
 
   const applyFit = () => {
     const box = centerRef.current;
@@ -97,7 +138,7 @@ export function StyleEditor({
     const pagePx = probe.offsetWidth;
     box.removeChild(probe);
     if (!pagePx) return;
-    const available = Math.max(240, box.clientWidth - 48);
+    const available = Math.max(120, box.clientWidth - 24);
     const next = Math.min(1.35, Math.max(0.22, available / pagePx));
     setZoom(Math.round(next * 100) / 100);
   };
@@ -612,7 +653,7 @@ export function StyleEditor({
   );
 
   return (
-    <div className={`flex h-[calc(100vh-8rem)] min-h-[32rem] flex-col rounded-xl border bg-slate-100 ${panel ? 'overflow-visible' : 'overflow-hidden'}`}>
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-slate-100">
       <div className="flex flex-wrap items-center gap-2 border-b bg-white px-3 py-2">
         <Button type="button" variant="ghost" size="sm" onClick={undo} disabled={historyTick < 0 || !past.current.length}>{tf('Undo')}</Button>
         <Button type="button" variant="ghost" size="sm" onClick={redo} disabled={historyTick < 0 || !future.current.length}>{tf('Redo')}</Button>
@@ -657,14 +698,16 @@ export function StyleEditor({
         ) : null}
       </div>
       <div className="relative min-h-0 flex-1">
-        <div className={`grid h-full min-h-0 grid-cols-1 ${renderEditor ? 'lg:grid-cols-[14rem_17rem_minmax(0,1fr)_minmax(18rem,26rem)]' : 'lg:grid-cols-[14rem_17rem_minmax(0,1fr)]'}`}>
-          <div className="hidden h-full min-h-0 overflow-hidden border-r bg-white lg:block">
+        <div className="flex h-full min-h-0">
+          <div style={{ width: paneWidths.sections }} className="hidden h-full min-h-0 shrink-0 overflow-hidden border-r bg-white lg:block">
             {sectionsPanel}
           </div>
-          <div className="hidden h-full min-h-0 overflow-hidden border-r bg-white lg:block">
+          {paneHandle('sections')}
+          <div style={{ width: paneWidths.style }} className="hidden h-full min-h-0 shrink-0 overflow-hidden border-r bg-white lg:block">
             {stylePanel}
           </div>
-          <div className="flex h-full min-h-0 min-w-0 flex-col">
+          {paneHandle('style')}
+          <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col">
             <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
               <div className="flex items-center gap-1">
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
@@ -687,12 +730,13 @@ export function StyleEditor({
                 <option value="telugu" disabled={hasTelugu === false}>{tf('Telugu')}</option>
               </select>
             </div>
-            <div ref={centerRef} className="min-h-0 flex-1 overflow-auto p-4">
+            <div ref={centerRef} className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3">
               <div style={{ zoom }}>{sheet}</div>
             </div>
           </div>
+          {renderEditor ? paneHandle('edit') : null}
           {renderEditor ? (
-            <div className="hidden h-full min-h-0 flex-col overflow-hidden border-l bg-white lg:flex">
+            <div style={{ width: paneWidths.edit }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-l bg-white lg:flex">
               <div className="border-b px-3 py-2">
                 <p className="text-sm font-semibold">{tf('Fill & edit')}</p>
                 <p className="truncate text-xs text-slate-500">{tf((editStep || steps[0])?.title || '')}</p>

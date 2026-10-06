@@ -959,7 +959,7 @@ export const DPRPreview: React.FC = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className={styling ? 'p-0' : 'overflow-auto p-4 bg-gray-100'} style={styling ? undefined : { maxHeight: 'calc(100vh - 300px)' }}>
+            <CardContent className={styling ? 'h-[calc(100dvh-14rem)] p-0' : 'overflow-auto p-4 bg-gray-100'} style={styling ? undefined : { maxHeight: 'calc(100vh - 300px)' }}>
               {styling && draftStyle && isIndividualDPR ? (
                 <StyleEditor
                   style={draftStyle}
