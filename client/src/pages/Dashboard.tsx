@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
-import { useProjectStore } from '@/store/projectStore';
 import { useDPRStore } from '@/store/dprStore';
 import { api } from '@/lib/api';
 import { Layout } from '@/components/layout/Layout';
@@ -42,7 +41,6 @@ export const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { projects, setProjects, isStale: isProjectsStale } = useProjectStore();
   const { dprs: cachedDPRs, setDPRs, isStale: isDPRsStale } = useDPRStore();
   const [dprs, setDprs] = useState<DPR[]>(cachedDPRs);
   const [stats, setStats] = useState({
@@ -53,7 +51,7 @@ export const Dashboard: React.FC = () => {
     approved: 0,
     avgQualityScore: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(cachedDPRs.length === 0);
   const [insights, setInsights] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -64,34 +62,16 @@ export const Dashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
-      setLoading(true);
-      
-      // Use cached data if available and not stale
+      setLoading(cachedDPRs.length === 0);
+
       const useCachedDPRs = cachedDPRs.length > 0 && !isDPRsStale();
-      const useCachedProjects = projects.length > 0 && !isProjectsStale();
-      
-      if (useCachedDPRs && useCachedProjects) {
-        console.log('📦 Using cached DPRs and projects data');
+      if (useCachedDPRs) {
         processDPRsData(cachedDPRs);
         setLoading(false);
         return;
       }
 
-      const promises: Promise<any>[] = [];
-      
-      if (!useCachedDPRs) {
-        promises.push(api.getUserDPRs());
-      } else {
-        promises.push(Promise.resolve(null));
-      }
-      
-      if (!useCachedProjects) {
-        promises.push(api.getProjects({ limit: 100 }));
-      } else {
-        promises.push(Promise.resolve(null));
-      }
-
-      const [dprsResponse, projectsResponse] = await Promise.all(promises);
+      const dprsResponse = await api.getUserDPRs();
 
       // Process DPRs response if we fetched new data
       let dprsData: DPR[] = useCachedDPRs ? cachedDPRs : [];
@@ -119,13 +99,7 @@ export const Dashboard: React.FC = () => {
         // Update store with new data
         setDPRs(dprsData);
       }
-      
-      // Process projects response if we fetched new data
-      if (projectsResponse && projectsResponse.data) {
-        const projectsData = projectsResponse.data.projects || [];
-        setProjects(projectsData);
-      }
-      
+
       processDPRsData(dprsData);
     } catch (error: any) {
       console.error('Failed to load data:', error);
@@ -318,18 +292,7 @@ export const Dashboard: React.FC = () => {
     return t('dashboard.needsImprovement');
   };
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-            <p className="text-muted-foreground">{t('dashboard.loadingDashboard')}</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const showPlaceholders = loading && dprs.length === 0;
 
   return (
     <Layout>
@@ -378,8 +341,14 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground mb-1">
                     {t('dashboard.totalDPRs')}
                   </p>
-                  <h3 className="text-3xl font-bold text-foreground">{stats.total}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{stats.total} {t('dashboard.dprs')}</p>
+                  {showPlaceholders ? (
+                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
+                  ) : (
+                    <h3 className="text-3xl font-bold text-foreground">{stats.total}</h3>
+                  )}
+                  {!showPlaceholders && (
+                    <p className="text-sm text-muted-foreground mt-1">{stats.total} {t('dashboard.dprs')}</p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
                   <FileText className="h-6 w-6 text-primary" />
@@ -395,8 +364,14 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground mb-1">
                     {t('dashboard.draft')}
                   </p>
-                  <h3 className="text-3xl font-bold text-foreground">{stats.draft}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{stats.draft} {t('dashboard.drafts')}</p>
+                  {showPlaceholders ? (
+                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
+                  ) : (
+                    <h3 className="text-3xl font-bold text-foreground">{stats.draft}</h3>
+                  )}
+                  {!showPlaceholders && (
+                    <p className="text-sm text-muted-foreground mt-1">{stats.draft} {t('dashboard.drafts')}</p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center">
                   <Clock className="h-6 w-6 text-warning" />
@@ -412,8 +387,14 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground mb-1">
                     {t('dashboard.submitted')}
                   </p>
-                  <h3 className="text-3xl font-bold text-foreground">{stats.submitted}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{stats.submitted} {t('dashboard.submitted')}</p>
+                  {showPlaceholders ? (
+                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
+                  ) : (
+                    <h3 className="text-3xl font-bold text-foreground">{stats.submitted}</h3>
+                  )}
+                  {!showPlaceholders && (
+                    <p className="text-sm text-muted-foreground mt-1">{stats.submitted} {t('dashboard.submitted')}</p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-lg bg-secondary/10 flex items-center justify-center">
                   <AlertCircle className="h-6 w-6 text-secondary" />
@@ -429,8 +410,14 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground mb-1">
                     Analyzed
                   </p>
-                  <h3 className="text-3xl font-bold text-foreground">{stats.analyzed}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{stats.analyzed} Analyzed DPRs</p>
+                  {showPlaceholders ? (
+                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
+                  ) : (
+                    <h3 className="text-3xl font-bold text-foreground">{stats.analyzed}</h3>
+                  )}
+                  {!showPlaceholders && (
+                    <p className="text-sm text-muted-foreground mt-1">{stats.analyzed} Analyzed DPRs</p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
                   <BarChart3 className="h-6 w-6 text-primary" />
@@ -446,10 +433,16 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground mb-1">
                     {t('dashboard.avgQuality')}
                   </p>
-                  <h3 className={`text-3xl font-bold ${getQualityColor(stats.avgQualityScore)}`}>
-                    {stats.avgQualityScore || 'N/A'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">{getQualityLabel(stats.avgQualityScore)}</p>
+                  {showPlaceholders ? (
+                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
+                  ) : (
+                    <h3 className={`text-3xl font-bold ${getQualityColor(stats.avgQualityScore)}`}>
+                      {stats.avgQualityScore || 'N/A'}
+                    </h3>
+                  )}
+                  {!showPlaceholders && (
+                    <p className="text-sm text-muted-foreground mt-1">{getQualityLabel(stats.avgQualityScore)}</p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-lg bg-success/10 flex items-center justify-center">
                   <BarChart3 className="h-6 w-6 text-success" />
@@ -519,7 +512,13 @@ export const Dashboard: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {dprs.length === 0 ? (
+            {showPlaceholders ? (
+              <div className="space-y-3" aria-busy="true">
+                {[0, 1, 2].map((row) => (
+                  <div key={row} className="h-16 animate-pulse rounded-lg bg-muted" />
+                ))}
+              </div>
+            ) : dprs.length === 0 ? (
               <div className="text-center py-16">
                 <div className="h-20 w-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
                   <FileText className="h-10 w-10 text-primary" />

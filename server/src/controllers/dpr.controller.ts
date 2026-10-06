@@ -1301,13 +1301,12 @@ export class DPRController {
       }
 
       const { Project } = await import('../models/Project.model');
-      
-      // Find projects belonging to this user - ensure userId matches exactly
-      // Handle both string and ObjectId cases
-      const projects = await Project.find({ 
-        userId: userId.toString() 
-      });
-      const projectIds = projects.map(p => p._id.toString());
+
+      const projects = await Project.find({ userId: userId.toString() })
+        .select('projectName industrySector subSector location projectType userId')
+        .lean();
+      const projectsById = new Map(projects.map((project) => [String(project._id), project]));
+      const projectIds = projects.map((project) => String(project._id));
 
       if (projectIds.length === 0) {
         res.status(200).json({
@@ -1317,58 +1316,44 @@ export class DPRController {
         return;
       }
 
-      // Find DPRs for user's projects - only select essential fields for dashboard
       const dprs = await DPRVersion.find({ projectId: { $in: projectIds } })
         .select(
           '_id projectId versionNumber status qualityScore generatedAt createdAt updatedAt eligibleSchemes.selectedSchemes content.english.matchedSchemeCode content.english.isIndividualDPR content.english.metadata.matchedSchemeCode content.english.metadata.isIndividualDPR content.english.clusterData.matchedSchemeCode content.english.clusterData.isIndividualDPR content.english.clusterData.step1.district content.english.clusterData.step1.natureOfBusiness content.english.clusterData.step1.majorProducts'
         )
         .sort({ createdAt: -1 })
-        .lean(); // Use lean() for faster queries
+        .lean();
 
-      // Additional safety check: Filter DPRs to ensure their projects belong to the user
-      // This prevents any edge cases where projectId might not match
-      const dprsWithProjects = await Promise.all(
-        dprs.map(async (dpr: any) => {
-          const project = await Project.findById(dpr.projectId)
-            .select('projectName industrySector subSector location projectType userId')
-            .lean();
-          
-          // Only include DPR if the project belongs to the current user
-          if (!project || project.userId?.toString() !== userId.toString()) {
-            return null;
-          }
+      const filteredDprs = dprs.flatMap((dpr: any) => {
+        const project = projectsById.get(String(dpr.projectId));
+        if (!project || project.userId?.toString() !== userId.toString()) return [];
 
-          const english = dpr.content?.english || {};
-          const schemeCode =
-            english.matchedSchemeCode ||
-            english.metadata?.matchedSchemeCode ||
-            english.clusterData?.matchedSchemeCode ||
-            null;
-          const searchTags = buildDprSearchTags({ project, dpr });
-          
-          return {
-            _id: dpr._id,
-            projectId: {
-              projectName: project.projectName || 'Unknown Project',
-              industrySector: project.industrySector || 'Unknown',
-              subSector: project.subSector || '',
-              location: project.location || 'Unknown',
-              projectType: project.projectType || (english.metadata?.isIndividualDPR || english.isIndividualDPR ? 'individual' : 'cluster'),
-            },
-            schemeCode,
-            searchTags,
-            versionNumber: dpr.versionNumber,
-            status: dpr.status,
-            qualityScore: dpr.qualityScore,
-            generatedAt: dpr.generatedAt,
-            createdAt: dpr.createdAt,
-            updatedAt: dpr.updatedAt,
-          };
-        })
-      );
+        const english = dpr.content?.english || {};
+        const schemeCode =
+          english.matchedSchemeCode ||
+          english.metadata?.matchedSchemeCode ||
+          english.clusterData?.matchedSchemeCode ||
+          null;
+        const searchTags = buildDprSearchTags({ project, dpr });
 
-      // Filter out any null values from the safety check
-      const filteredDprs = dprsWithProjects.filter(dpr => dpr !== null);
+        return [{
+          _id: dpr._id,
+          projectId: {
+            projectName: project.projectName || 'Unknown Project',
+            industrySector: project.industrySector || 'Unknown',
+            subSector: project.subSector || '',
+            location: project.location || 'Unknown',
+            projectType: project.projectType || (english.metadata?.isIndividualDPR || english.isIndividualDPR ? 'individual' : 'cluster'),
+          },
+          schemeCode,
+          searchTags,
+          versionNumber: dpr.versionNumber,
+          status: dpr.status,
+          qualityScore: dpr.qualityScore,
+          generatedAt: dpr.generatedAt,
+          createdAt: dpr.createdAt,
+          updatedAt: dpr.updatedAt,
+        }];
+      });
 
       console.log(`📊 Retrieved ${filteredDprs.length} DPRs for user ${userId} (from ${projects.length} projects)`);
 
