@@ -1,12 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BadgePercent,
   Banknote,
   Building2,
+  ChevronDown,
   ChevronRight,
   Landmark,
-  Layers,
-  LayoutGrid,
   MapPinned,
   Search,
   ShieldCheck,
@@ -47,37 +46,92 @@ function toggleValue<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-function FilterTile({
-  on,
-  label,
-  icon: Icon,
-  onClick,
+function MultiFilter<T extends string>({
+  emptyLabel,
+  options,
+  selected,
+  onToggle,
+  labelOf,
 }: {
-  on: boolean;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  onClick: () => void;
+  emptyLabel: string;
+  options: Array<{ id: T; label: string; icon: React.ComponentType<{ className?: string }> }>;
+  selected: T[];
+  onToggle: (id: T) => void;
+  labelOf: (label: string) => string;
 }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const summary = selected.length
+    ? options.filter((item) => selected.includes(item.id)).map((item) => labelOf(item.label)).join(', ')
+    : emptyLabel;
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
-      className={`flex h-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-        on
-          ? 'border-primary bg-primary/10 text-primary shadow-sm'
-          : 'border-border bg-background text-foreground hover:border-primary/30 hover:bg-muted/50'
-      }`}
-    >
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-          on ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+    <div ref={rootRef} className="relative min-w-0 flex-1">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => setOpen((current) => !current)}
+        className={`flex h-12 w-full items-center justify-between gap-3 rounded-xl border px-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+          selected.length
+            ? 'border-primary bg-primary/10 text-primary'
+            : 'border-border bg-background text-foreground hover:border-primary/30'
         }`}
       >
-        <Icon className="h-4 w-4" aria-hidden="true" />
-      </span>
-      <span className="text-sm font-medium leading-snug">{label}</span>
-    </button>
+        <span className="min-w-0 truncate text-sm font-medium">{summary}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+      </button>
+      {open ? (
+        <div
+          role="listbox"
+          aria-multiselectable="true"
+          aria-label={emptyLabel}
+          className="absolute z-30 mt-2 w-full min-w-[16rem] overflow-hidden rounded-xl border border-border bg-card py-1 shadow-lg"
+        >
+          {options.map((item) => {
+            const on = selected.includes(item.id);
+            const Icon = item.icon;
+            return (
+              <label
+                key={item.id}
+                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted/60"
+              >
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={on}
+                  onChange={() => onToggle(item.id)}
+                />
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    on ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="font-medium">{labelOf(item.label)}</span>
+              </label>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -157,40 +211,21 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
           />
         </div>
         <div className="rounded-2xl border border-border bg-card p-3 sm:p-4 space-y-3">
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" role="group" aria-label={tf('All levels')}>
-            <FilterTile
-              on={levels.length === 0}
-              label={tf('All levels')}
-              icon={LayoutGrid}
-              onClick={() => setLevels([])}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <MultiFilter
+              emptyLabel={tf('All levels')}
+              options={LEVELS}
+              selected={levels}
+              onToggle={(id) => setLevels((current) => toggleValue(current, id))}
+              labelOf={tf}
             />
-            {LEVELS.map((item) => (
-              <FilterTile
-                key={item.id}
-                on={levels.includes(item.id)}
-                label={tf(item.label)}
-                icon={item.icon}
-                onClick={() => setLevels((current) => toggleValue(current, item.id))}
-              />
-            ))}
-          </div>
-          <div className="h-px bg-border" />
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" role="group" aria-label={tf('All kinds')}>
-            <FilterTile
-              on={kinds.length === 0}
-              label={tf('All kinds')}
-              icon={Layers}
-              onClick={() => setKinds([])}
+            <MultiFilter
+              emptyLabel={tf('All kinds')}
+              options={KINDS}
+              selected={kinds}
+              onToggle={(id) => setKinds((current) => toggleValue(current, id))}
+              labelOf={tf}
             />
-            {KINDS.map((item) => (
-              <FilterTile
-                key={item.id}
-                on={kinds.includes(item.id)}
-                label={tf(item.label)}
-                icon={item.icon}
-                onClick={() => setKinds((current) => toggleValue(current, item.id))}
-              />
-            ))}
           </div>
           {filtersActive && (
             <div className="flex justify-end">
