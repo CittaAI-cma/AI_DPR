@@ -81,6 +81,7 @@ export function StyleEditor({
   const [historyTick, setHistoryTick] = useState(0);
   const [dragId, setDragId] = useState<string | null>(null);
   const [panel, setPanel] = useState(null);
+  const [side, setSide] = useState(null);
   const [editStep, setEditStep] = useState(null);
   const [zoom, setZoom] = useState(0.55);
   const [fitWidth, setFitWidth] = useState(true);
@@ -92,30 +93,17 @@ export function StyleEditor({
   const [deletePictureId, setDeletePictureId] = useState('');
   const [wideTable, setWideTable] = useState(false);
   const [blockedColor, setBlockedColor] = useState('');
-  const [paneWidths, setPaneWidths] = useState({ sections: 200, style: 240, edit: 300 });
+  const [paneWidths, setPaneWidths] = useState({ edit: 300 });
   const centerRef = useRef<HTMLDivElement>(null);
   const clampPane = (value, min, max) => Math.min(max, Math.max(min, value));
 
   const startPaneResize = (key) => (event) => {
     event.preventDefault();
     const startX = event.clientX;
-    const start = { ...paneWidths };
+    const startEdit = paneWidths.edit;
     const move = (moveEvent) => {
       const dx = moveEvent.clientX - startX;
-      setPaneWidths(() => {
-        const next = { ...start };
-        if (key === 'sections') {
-          const grown = clampPane(start.sections + dx, 160, 480);
-          const styleWidth = start.style - (grown - start.sections);
-          if (styleWidth >= 200 && styleWidth <= 560) {
-            next.sections = grown;
-            next.style = styleWidth;
-          }
-        }
-        if (key === 'style') next.style = clampPane(start.style + dx, 200, 560);
-        if (key === 'edit') next.edit = clampPane(start.edit - dx, 240, 720);
-        return next;
-      });
+      if (key === 'edit') setPaneWidths({ edit: clampPane(startEdit - dx, 240, 720) });
     };
     const stop = () => {
       window.removeEventListener('pointermove', move);
@@ -157,7 +145,7 @@ export function StyleEditor({
     const observer = new ResizeObserver(() => applyFit());
     observer.observe(box);
     return () => observer.disconnect();
-  }, [style.pageSize, fitWidth, panel]);
+  }, [style.pageSize, fitWidth, panel, side]);
 
   const openEdit = (step) => {
     if (!renderEditor || !step) return;
@@ -731,8 +719,6 @@ export function StyleEditor({
         </div>
       </div>
       <div className="flex items-center gap-2 border-b bg-white px-3 py-2 lg:hidden">
-        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel(panel === 'sections' ? null : 'sections')}>{tf('Sections')}</Button>
-        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel(panel === 'style' ? null : 'style')}>{tf('Style')}</Button>
         {renderEditor ? (
           <Button
             type="button"
@@ -747,19 +733,35 @@ export function StyleEditor({
       </div>
       <div className="relative min-h-0 flex-1">
         <div className="flex h-full min-h-0">
-          <div style={{ width: paneWidths.sections }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r bg-white pt-3 lg:flex">
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {sectionsPanel}
-            </div>
+          <div className="flex w-12 shrink-0 flex-col border-r bg-white">
+            {[
+              ['sections', 'Sections'],
+              ['style', 'Style'],
+            ].map(([id, label]) => {
+              const open = side === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={open}
+                  onClick={() => setSide(open ? null : id)}
+                  className={`flex min-h-0 flex-1 items-center justify-center border-b px-1 text-xs font-semibold tracking-wide ${
+                    open ? 'bg-teal-800 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                  style={{ writingMode: 'vertical-lr' }}
+                >
+                  {tf(label)}
+                </button>
+              );
+            })}
           </div>
-          {paneHandle('sections')}
-          <div style={{ width: paneWidths.style }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r bg-white pt-3 lg:flex">
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {stylePanel}
+          {side === 'sections' || side === 'style' ? (
+            <div className="flex h-full w-80 max-w-[42%] shrink-0 flex-col overflow-hidden border-r bg-white">
+              {side === 'sections' ? sectionsPanel : stylePanel}
             </div>
-          </div>
-          {paneHandle('style')}
-          <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col pt-3">
+          ) : null}
+          <div className="relative flex h-full min-h-0 min-w-0 flex-1">
+            <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col">
             <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
               <div className="flex items-center gap-1">
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
@@ -795,7 +797,7 @@ export function StyleEditor({
             <div ref={centerRef} className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3">
               <div style={{ zoom }}>{sheet}</div>
             </div>
-          </div>
+            </div>
           {renderEditor ? paneHandle('edit') : null}
           {renderEditor ? (
             <div style={{ width: paneWidths.edit }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-l bg-white pt-3 lg:flex">
@@ -808,17 +810,8 @@ export function StyleEditor({
               </div>
             </div>
           ) : null}
+          </div>
         </div>
-        {panel === 'sections' ? (
-          <div className="absolute inset-y-0 left-0 z-30 w-72 max-w-[90%] overflow-hidden border-r bg-white shadow-xl lg:hidden">
-            {sectionsPanel}
-          </div>
-        ) : null}
-        {panel === 'style' ? (
-          <div className="absolute inset-y-0 right-0 z-30 w-80 max-w-[90%] overflow-hidden border-l bg-white shadow-xl lg:hidden">
-            {stylePanel}
-          </div>
-        ) : null}
         {panel === 'edit' && editStep && renderEditor ? (
           <div className="absolute inset-y-0 left-0 z-30 flex w-[min(40rem,92%)] max-w-full flex-col border-r bg-white shadow-xl lg:hidden">
             <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
