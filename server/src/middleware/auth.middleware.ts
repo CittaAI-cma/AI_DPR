@@ -3,6 +3,7 @@ import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../types';
 import { getJwtSecret } from '../lib/jwtSecret';
+import { roleAllowed } from '../lib/roleGate';
 
 export const authenticate = (
   req: AuthRequest,
@@ -41,7 +42,8 @@ export const authenticate = (
 
 export const authorize = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
+    const gate = roleAllowed(req.user?.role, roles);
+    if (gate === 'unauthenticated') {
       res.status(401).json({ 
         success: false, 
         message: 'Authentication required' 
@@ -49,7 +51,7 @@ export const authorize = (...roles: string[]) => {
       return;
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (gate === 'forbidden') {
       res.status(403).json({ 
         success: false, 
         message: 'Insufficient permissions' 

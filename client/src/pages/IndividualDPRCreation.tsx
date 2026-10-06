@@ -209,6 +209,9 @@ export const IndividualDPRCreation: React.FC = () => {
             const pid = projectData._id || projectData.id;
             setDprIds(dprData?._id || dprData?.id || '', pid);
             setSetupPhase('form');
+            const loaded = useIndividualDPRStore.getState().data;
+            const first = getVisibleSteps(loaded.matchedSchemeCode)[0] || 1;
+            void openStyleEditor(first);
           } catch {
             resetData();
             setSetupPhase('pick');
@@ -369,23 +372,23 @@ export const IndividualDPRCreation: React.FC = () => {
     else toast.error(t('individualDpr.toasts.saveFailed'));
   };
 
-  const openStyleEditor = async () => {
-    styleBeforeEdit.current = data.schemeExtras?.documentStyle || null;
-    const saved = data.schemeExtras?.documentStyle;
+  const openStyleEditor = async (step?: number) => {
+    const latest = useIndividualDPRStore.getState().data;
+    const code = latest.matchedSchemeCode || schemeCode;
+    const start = step || currentStep;
+    styleBeforeEdit.current = latest.schemeExtras?.documentStyle || null;
+    const saved = latest.schemeExtras?.documentStyle;
     if (saved) {
-      setDocStyle(resolveDocumentStyle(saved, schemeCode));
-      setEditStepN(currentStep);
-      setEditNonce((n) => n + 1);
-      setStyling(true);
-      return;
+      setDocStyle(resolveDocumentStyle(saved, code));
+    } else {
+      try {
+        const res = code ? await api.getSchemeDocumentStyle(code) : null;
+        setDocStyle(resolveDocumentStyle(res?.data?.documentStyle, code));
+      } catch {
+        setDocStyle(defaultStyleForScheme(code));
+      }
     }
-    try {
-      const res = schemeCode ? await api.getSchemeDocumentStyle(schemeCode) : null;
-      setDocStyle(resolveDocumentStyle(res?.data?.documentStyle, schemeCode));
-    } catch {
-      setDocStyle(defaultStyleForScheme(schemeCode));
-    }
-    setEditStepN(currentStep);
+    setEditStepN(start);
     setEditNonce((n) => n + 1);
     setStyling(true);
   };
@@ -408,7 +411,6 @@ export const IndividualDPRCreation: React.FC = () => {
         setDprIds(response.data.dprId, response.data.projectId);
       }
       toast.success('Style saved on this DPR');
-      setStyling(false);
     } catch {
       toast.error('Could not save the style. Save the draft after the unit name is filled.');
     } finally {
@@ -489,9 +491,10 @@ export const IndividualDPRCreation: React.FC = () => {
   };
 
   const handleBriefNext = () => {
+    const step = visibleSteps[0] || 1;
     setSetupPhase('form');
-    setCurrentStep(visibleSteps[0] || 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentStep(step);
+    void openStyleEditor(step);
   };
 
   const handleSchemeDropdownChange = (code: string) => {
@@ -537,6 +540,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       return;
                     }
                     if (setupPhase === 'form') {
+                      setStyling(false);
                       setSetupPhase('brief');
                       return;
                     }
@@ -879,7 +883,9 @@ export const IndividualDPRCreation: React.FC = () => {
                   delete next.documentStyle;
                   setSchemeExtras(next);
                 }
+                setDocStyle(null);
                 setStyling(false);
+                setSetupPhase('brief');
               }}
               saving={styleSaving}
               canSaveSchemeDefault={isAdmin}
@@ -1019,14 +1025,6 @@ export const IndividualDPRCreation: React.FC = () => {
                           <RotateCcw className="h-4 w-4" />
                         </Button>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={openStyleEditor}
-                        className="h-9 shrink-0 whitespace-nowrap px-3"
-                      >
-                        {tf('Style this report')}
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

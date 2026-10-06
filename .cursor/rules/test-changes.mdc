@@ -1,0 +1,12 @@
+---
+description: Ask before changing an existing test when behavior changes
+alwaysApply: true
+---
+
+# Tests stay unless the user says to change them
+
+When a requested functionality change would require editing an existing test, stop and ask before changing that test. Do this in Agent mode as well.
+
+Ask in one short question: name the test and what it currently expects, then ask whether to update the test to the new behavior or keep the test and adjust the change.
+
+Write new tests for new behavior without asking. Fix a test only when the user says it is wrong or tells you to update it.

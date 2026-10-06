@@ -6,6 +6,7 @@ import { DPRTemplate } from '../models/DPRTemplate.model';
 import { DPRSession } from '../models/DPRSession.model';
 import { Document } from '../models/Document.model';
 import { DPRService } from '../services/dpr.service';
+import { pdfOptionsFromCapturedHtml } from '../lib/pdfPageOptions';
 import { QualityService } from '../services/quality.service';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { AuthRequest } from '../types';
@@ -880,26 +881,10 @@ export class DPRController {
 
       let pdfBuffer: Buffer;
       try {
-        const isIndividual = html.includes('individual-dpr-document');
-        const styled = html.includes('data-dpr-styled="1"');
-        const sizeMatch = html.match(/data-page-size="(A4|A3|Letter|Legal)"/);
-        const edgeTop = html.match(/data-page-edge-top="([\d.]+)"/);
-        const edgeBottom = html.match(/data-page-edge-bottom="([\d.]+)"/);
-        const format = (sizeMatch?.[1] || 'A4') as 'A4' | 'A3' | 'Letter' | 'Legal';
+        const pdfOptions = pdfOptionsFromCapturedHtml(html);
         pdfBuffer = await DPRService.generatePDFFromHTML(
           html,
-          styled
-            ? {
-                marginTop: `${edgeTop?.[1] || 12}mm`,
-                marginBottom: `${edgeBottom?.[1] || 12}mm`,
-                marginLeft: '0',
-                marginRight: '0',
-                format,
-                preferCssPageSize: true,
-              }
-            : isIndividual
-              ? { margin: '16mm' }
-              : undefined
+          pdfOptions
         );
       } catch (htmlError: any) {
         console.warn('⚠️ Exact HTML PDF failed, falling back to scheme/server PDF:', htmlError?.message);

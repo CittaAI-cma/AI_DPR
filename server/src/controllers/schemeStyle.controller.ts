@@ -2,26 +2,13 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import { SchemeDocumentStyle } from '../models/SchemeDocumentStyle.model';
-
-const CODE = /^[A-Z0-9_-]{2,40}$/;
-
-function cleanStyle(input: unknown): Record<string, unknown> | null {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
-  let json = '';
-  try {
-    json = JSON.stringify(input);
-  } catch {
-    return null;
-  }
-  if (json.length > 1_500_000) return null;
-  return JSON.parse(json);
-}
+import { canSaveSchemeDefault, cleanDocumentStyle, SCHEME_CODE } from '../lib/schemeStyleRules';
 
 export class SchemeStyleController {
   static async get(req: AuthRequest, res: Response): Promise<void> {
     try {
       const schemeCode = String(req.params.schemeCode || '').toUpperCase();
-      if (!CODE.test(schemeCode)) {
+      if (!SCHEME_CODE.test(schemeCode)) {
         res.status(400).json({ success: false, message: 'Unknown scheme' });
         return;
       }
@@ -36,16 +23,16 @@ export class SchemeStyleController {
   static async save(req: AuthRequest, res: Response): Promise<void> {
     try {
       const role = req.user?.role;
-      if (role !== 'super_admin' && role !== 'admin') {
+      if (!canSaveSchemeDefault(role)) {
         res.status(403).json({ success: false, message: 'Only a super admin can save the scheme default' });
         return;
       }
       const schemeCode = String(req.params.schemeCode || '').toUpperCase();
-      if (!CODE.test(schemeCode)) {
+      if (!SCHEME_CODE.test(schemeCode)) {
         res.status(400).json({ success: false, message: 'Unknown scheme' });
         return;
       }
-      const documentStyle = cleanStyle(req.body?.documentStyle);
+      const documentStyle = cleanDocumentStyle(req.body?.documentStyle);
       if (!documentStyle) {
         res.status(400).json({ success: false, message: 'Style is missing or too large' });
         return;
