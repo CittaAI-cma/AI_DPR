@@ -14,7 +14,6 @@ import {
 } from '@/lib/individualDpr/individualDocModel';
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import {
-  applySectionOrder,
   layoutOrder,
   pageEdgeMm,
   pictureIdFromToken,
@@ -25,7 +24,8 @@ import {
   type ImageBox,
   type ImageHandle,
 } from '@/lib/individualDpr/documentStyle';
-import { normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { cmepProjectionsHaveFigures, normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { isEnteredDocRow, isEnteredDocText } from '@/lib/individualDpr/docEntries';
 import {
   CMEP_COST_HEADS,
   deriveCmepBankSheets,
@@ -222,7 +222,6 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const extras = data.schemeExtras || {};
   const explicitStyle = documentStyle !== undefined ? documentStyle : extras.documentStyle;
   const style = explicitStyle ? resolveDocumentStyle(explicitStyle, schemeCode) : null;
-  const steps = style ? applySectionOrder(catalogSteps, style) : catalogSteps;
   const step1 = data.step1 || {};
   const cover = getIndividualCoverLines(
     step1,
@@ -239,6 +238,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     if (!blocks.length) return null;
     return blocks.map((block) => {
       if (block.kind === 'text') {
+        if (!block.text.trim() && !onEditBlock) return null;
         return (
           <div key={block.id} className="individual-qa-a mt-2">
             {onEditBlock ? (
@@ -281,16 +281,15 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   };
 
   const renderSectionFields = (fields: IndividualDocField[]) => {
-    if (!fields.length) {
-      return <p className="individual-empty">{tf('No answers for this section yet.')}</p>;
-    }
+    if (!fields.length) return null;
 
     const blocks: React.ReactNode[] = [];
       let particulars: IndividualDocField[] = [];
       const flushParticulars = () => {
         if (!particulars.length) return;
-        const rows = particulars;
+        const rows = particulars.filter((field) => formatDocValue(readDocField(field, data)) !== '—');
         particulars = [];
+        if (!rows.length) return;
         blocks.push(
           <table key={rows.map((field) => field.path).join('|')} className="individual-particulars">
             <thead>
@@ -324,8 +323,18 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           </div>
         </article>
       );
-      const dataTable = (key: string, title: string, headers: string[], body: string[][], cellPaths?: Array<Array<string | null>>) => {
-        const rows = body.length ? body : (cellPaths?.length ? cellPaths.map(() => headers.map(() => '')) : []);
+      const dataTable = (
+        key: string,
+        title: string,
+        headers: string[],
+        body: string[][],
+        cellPaths?: Array<Array<string | null>>,
+        skipIndexes: number[] = [],
+        keepAll = false
+      ) => {
+        const paired = body.map((row, index) => ({ row, paths: cellPaths?.[index] }));
+        const kept = keepAll ? paired : paired.filter(({ row }) => isEnteredDocRow(row, skipIndexes));
+        if (!kept.length) return null;
         return (
         <table key={key} className="individual-particulars">
           <caption className="individual-qa-q">{tf(title)}</caption>
@@ -333,9 +342,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             <tr>{headers.map((header) => <th key={header}>{tf(header)}</th>)}</tr>
           </thead>
           <tbody>
-            {rows.length ? rows.map((row, index) => (
+            {kept.map(({ row, paths }, index) => (
               <tr key={index}>{row.map((cell, cellIndex) => {
-                const cellPath = cellPaths?.[index]?.[cellIndex];
+                const cellPath = paths?.[cellIndex];
                 return (
                   <td key={cellIndex}>
                     {cellPath && onEditField ? (
@@ -344,9 +353,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   </td>
                 );
               })}</tr>
-            )) : (
-              <tr><td colSpan={headers.length}>—</td></tr>
-            )}
+            ))}
           </tbody>
         </table>
         );
@@ -377,27 +384,42 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                 String(item.netProfit ?? ''),
               ];
             }),
-            editPaths(field.path, [null, 'sales', 'rm', 'wages', 'power', 'netProfit'], years.length)
+            editPaths(field.path, [null, 'sales', 'rm', 'wages', 'power', 'netProfit'], years.length),
+            [0]
           ));
           continue;
         }
         if (field.name === 'yearProjections' && schemeCode === 'AP_CMEP') {
           flushParticulars();
           const columns = normalizeCmepProjections(raw);
+          if (!cmepProjectionsHaveFigures(columns)) continue;
           const amount = (value: number) => (Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100));
           blocks.push(dataTable(
             field.path,
             'Sales and operating costs (₹ Lakhs)',
             ['Year', 'Sales', 'Raw material', 'Wages', 'Power', 'Salaries', 'Rent', 'Maintenance', 'Admin'],
-            columns.map((col) => [col.label, amount(col.sales), amount(col.rm), amount(col.wages), amount(col.power), amount(col.salaries), amount(col.rent), amount(col.maintenance), amount(col.admin)])
+            columns.map((col) => [col.label, amount(col.sales), amount(col.rm), amount(col.wages), amount(col.power), amount(col.salaries), amount(col.rent), amount(col.maintenance), amount(col.admin)]),
+            undefined,
+            [0],
+            true
           ));
           blocks.push(dataTable(
             `${field.path}.profit`,
             'Interest, depreciation and profit (₹ Lakhs)',
             ['Year', 'Interest', 'Depreciation', 'Tax', 'Net profit'],
-            columns.map((col) => [col.label, amount(col.interest), amount(col.depreciation), amount(col.tax), amount(col.netProfit)])
+            columns.map((col) => [col.label, amount(col.interest), amount(col.depreciation), amount(col.tax), amount(col.netProfit)]),
+            undefined,
+            [0],
+            true
           ));
           const derived = deriveCmepBankSheets({ step12: data.step12, step13: data.step13, step15: data.step15 });
+          const derivedEntered = [
+            derived.repayment.amount,
+            derived.breakEvenSales,
+            derived.averageDscr,
+          ].some((value) => Number(value) !== 0)
+            || derived.depreciation.some((asset) => asset.years.some((year) => year.additions !== 0 || year.depreciation !== 0));
+          if (!derivedEntered) continue;
           blocks.push(
             <table key="cmep-repay" className="individual-particulars">
               <caption className="individual-qa-q">{tf('Repayment, break-even and DSCR')}</caption>
@@ -410,14 +432,14 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               <tbody>
                 {[
                   ['Term loan (₹ Lakhs)', amount(derived.repayment.amount)],
-                  ['Interest rate (% per year)', amount(derived.repayment.rate)],
+                  ['Interest rate (% per year)', amount(Number(data.step13?.interestRate) || 0)],
                   ['Moratorium (months)', String(derived.repayment.moratoriumMonths || 0)],
-                  ['Loan tenure (months)', String(derived.repayment.tenureMonths || 0)],
+                  ['Loan tenure (months)', String(Number(data.step13?.loanTenureMonths) || 0)],
                   ['Indicative EMI (₹ Lakhs)', amount(derived.repayment.emi)],
                   ['Break-even sales (₹ Lakhs)', amount(derived.breakEvenSales)],
                   ['Break-even capacity (%)', amount(derived.breakEvenCapacity)],
                   ['Average DSCR', amount(derived.averageDscr)],
-                ].map(([label, value]) => (
+                ].filter(([, value]) => isEnteredDocText(value)).map(([label, value]) => (
                   <tr key={label}>
                     <td className="part">{tf(label)}</td>
                     <td>{value}</td>
@@ -430,14 +452,18 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             'cmep-dscr',
             'DSCR by year (₹ Lakhs)',
             ['Year', 'Cash profit', 'Repayment', 'DSCR'],
-            derived.dscr.map((row) => [row.label, amount(row.cashProfit), amount(row.repayment), amount(row.ratio)])
+            derived.dscr.map((row) => [row.label, amount(row.cashProfit), amount(row.repayment), amount(row.ratio)]),
+            undefined,
+            [0]
           ));
           derived.depreciation.forEach((asset) => {
             blocks.push(dataTable(
               `cmep-dep-${asset.asset}`,
               `${asset.asset} — depreciation ${Math.round(asset.rate * 100)}%`,
               ['Year', 'Opening', 'Additions', 'Depreciation', 'Closing'],
-              asset.years.map((year) => [year.label, amount(year.opening), amount(year.additions), amount(year.depreciation), amount(year.closing)])
+              asset.years.map((year) => [year.label, amount(year.opening), amount(year.additions), amount(year.depreciation), amount(year.closing)]),
+              undefined,
+              [0]
             ));
           });
           continue;
@@ -480,13 +506,26 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         }
         if (field.name === 'promoters') {
           flushParticulars();
-          const promoters = normalizePromoters(raw).filter((row) => onEditField || row.name || row.phone);
+          const promoters = (Array.isArray(raw) ? normalizePromoters(raw) : []).filter((row) => isEnteredDocRow([
+            row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone,
+          ]));
           blocks.push(dataTable(field.path, field.label, ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone'], promoters.map((row) => [row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone]), editPaths(field.path, ['name', 'relationName', 'age', 'education', 'experienceYears', 'phone'], promoters.length)));
           continue;
         }
         if (field.name === 'machineryItems') {
           flushParticulars();
-          const items = normalizeMachineryItems(raw);
+          const items = normalizeMachineryItems(raw).filter((row) => isEnteredDocRow([
+            row.description,
+            row.condition,
+            row.supplier,
+            row.quantity > 1 ? row.quantity : '',
+            row.unitCost,
+            row.gst,
+            row.transport,
+            row.installation,
+            row.lifeYears,
+            row.annualMaintenance,
+          ]));
           const detailed = schemeCode === 'AP_CMEP';
           const headers = ['Description', 'New / used', 'Supplier', 'Qty', 'Unit cost (₹ Lakhs)'];
           if (detailed) headers.push('GST', 'Transport', 'Installation', 'Life (years)', 'Yearly maintenance');
@@ -505,11 +544,12 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           blocks.push(dataTable(field.path, field.label, ['Particulars', 'Already incurred', 'To be incurred', 'Total'], CMEP_COST_HEADS.map((head) => {
             const cell = phasing[head.key];
             return [tf(head.label), String(cell.incurred || 0), String(cell.proposed || 0), String((cell.incurred || 0) + (cell.proposed || 0))];
-          })));
+          }), undefined, [0]));
           continue;
         }
         const text = formatDocValue(raw);
-        if (NARRATIVE_FIELDS.has(field.name) || (text !== '—' && text.length > 160)) {
+        if (text === '—') continue;
+        if (NARRATIVE_FIELDS.has(field.name) || text.length > 160) {
           flushParticulars();
           blocks.push(prose(field, text));
           continue;
@@ -517,11 +557,72 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         particulars.push(field);
       }
       flushParticulars();
-      return <div className="individual-sec-body">{blocks}</div>;
+      const visible = blocks.filter(Boolean);
+      if (!visible.length) return null;
+      return <div className="individual-sec-body">{visible}</div>;
   };
+
+  const blockVisible = (sectionId: string) => (style?.sectionBlocks?.[sectionId] || []).some((block) => {
+    if (block.kind === 'image') return !block.hidden;
+    return Boolean(block.text?.trim()) || Boolean(onEditBlock);
+  });
+  const fieldHasAnswers = (field: IndividualDocField) => {
+    const raw = readDocField(field, data);
+    if (field.name === 'yearProjections' && schemeCode === 'AP_CMEP') {
+      return cmepProjectionsHaveFigures(normalizeCmepProjections(raw));
+    }
+    if (field.name === 'yearProjections') {
+      const years = Array.isArray(raw) ? raw : [];
+      return years.some((row) => {
+        const item = row && typeof row === 'object' ? row as Record<string, unknown> : {};
+        return isEnteredDocRow([item.sales, item.rm, item.wages, item.power, item.netProfit]);
+      });
+    }
+    if (field.name === 'productMix') return normalizeProductMix(raw).some((row) => isEnteredDocRow([row.name, row.sharePercent, row.sellingPrice]));
+    if (field.name === 'rawMaterialItems') return normalizeRawMaterials(raw).some((row) => isEnteredDocRow([row.name, row.use, row.basis]));
+    if (field.name === 'staffRoles') return normalizeStaffRoles(raw).some((row) => isEnteredDocRow([row.role, row.count, row.monthlyPay]));
+    if (field.name === 'risks') return normalizeRisks(raw).some((row) => isEnteredDocRow([row.risk, row.mitigation]));
+    if (field.name === 'utilisationByYear') return normalizeUtilisationYears(raw).some((row) => isEnteredDocRow([row.label, row.percent]));
+    if (field.name === 'milestones') return normalizeMilestones(raw).some((row) => isEnteredDocRow([row.activity, row.timeRequired, row.startDate, row.endDate]));
+    if (field.name === 'promoters') {
+      return (Array.isArray(raw) ? normalizePromoters(raw) : []).some((row) => isEnteredDocRow([
+        row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone,
+      ]));
+    }
+    if (field.name === 'machineryItems') {
+      return normalizeMachineryItems(raw).some((row) => isEnteredDocRow([
+        row.description, row.condition, row.supplier, row.quantity > 1 ? row.quantity : '', row.unitCost,
+        row.gst, row.transport, row.installation, row.lifeYears, row.annualMaintenance,
+      ]));
+    }
+    if (field.name === 'costPhasing') {
+      const phasing = normalizeCostPhasing(raw, data.step12);
+      return CMEP_COST_HEADS.some((head) => isEnteredDocRow([phasing[head.key]?.incurred, phasing[head.key]?.proposed]));
+    }
+    return formatDocValue(raw) !== '—';
+  };
+  const sectionHasAnswers = (def: (typeof catalogSteps)[number]) => {
+    if (style?.hiddenSectionIds.includes(def.id)) return false;
+    if (def.id === 'uploads' || def.contentStep === 18) {
+      return uploads.some((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label])) || blockVisible(def.id);
+    }
+    return getIndividualDocFields(def.contentStep, schemeCode, budget).some(fieldHasAnswers) || blockVisible(def.id);
+  };
+  const reportEntries = (style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).flatMap((token) => {
+    if (pictureIdFromToken(token)) return [];
+    const custom = style?.customSections?.find((item) => item.id === token);
+    if (custom) {
+      if (style?.hiddenSectionIds.includes(custom.id)) return [];
+      return [{ id: custom.id, title: custom.title, custom: true as const, n: 0 }];
+    }
+    const def = catalogSteps.find((step) => step.id === token);
+    if (!def || !sectionHasAnswers(def)) return [];
+    return [{ id: def.id, title: sectionTitleFromStep(def), custom: false as const, n: def.n }];
+  });
 
   const pageNumber =
     style?.pageNumberStyle === 'of' ? tf('Page 1 of …') : '1';
+  const unitTitle = String(step1.unitName || step1.clusterName || '').trim();
 
   return (
     <div
@@ -567,72 +668,68 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <p className="cover-kicker">{schemeUi ? tf(schemeUi.coverKicker) : 'DETAILED PROJECT REPORT'}</p>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
-        <h1 className="cover-unit">
-          {onEditField
-            ? editableValue('step1.unitName', String(step1.unitName || step1.clusterName || '').trim() || '—', step1.unitName || step1.clusterName || '')
-            : fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
-        </h1>
+        {unitTitle ? (
+          <h1 className="cover-unit">
+            {onEditField
+              ? editableValue('step1.unitName', unitTitle, step1.unitName || step1.clusterName || '')
+              : fieldHit('step1.unitName', unitTitle, trackFieldHits)}
+          </h1>
+        ) : null}
         <div className="cover-scheme-block">
           <p className="cover-scheme">{cover.underLine}</p>
           {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
         </div>
-        <div className={`cover-meta${schemeUi?.id === 'PMEGP' ? ' pmegp-cover-meta' : ''}`}>
-          <div>
-            <span>{tf('District')}</span>
-            {editableValue('step1.district', step1.district || '—', step1.district)}
+        {(step1.district || step1.location || extras.entrepreneurName) ? (
+          <div className={`cover-meta${schemeUi?.id === 'PMEGP' ? ' pmegp-cover-meta' : ''}`}>
+            {step1.district ? (
+              <div>
+                <span>{tf('District')}</span>
+                {editableValue('step1.district', step1.district, step1.district)}
+              </div>
+            ) : null}
+            {step1.location ? (
+              <div>
+                <span>{tf('Location')}</span>
+                {editableValue('step1.location', step1.location, step1.location)}
+              </div>
+            ) : null}
+            {extras.entrepreneurName ? (
+              <div>
+                <span>{tf('Entrepreneur name')}</span>
+                {editableValue('schemeExtras.entrepreneurName', extras.entrepreneurName, extras.entrepreneurName)}
+              </div>
+            ) : null}
           </div>
-          <div>
-            <span>{tf('Location')}</span>
-            {editableValue('step1.location', step1.location || '—', step1.location)}
-          </div>
-          {(extras.entrepreneurName || onEditField) && (
-            <div>
-              <span>{tf('Entrepreneur name')}</span>
-              {editableValue('schemeExtras.entrepreneurName', extras.entrepreneurName || '—', extras.entrepreneurName)}
-            </div>
-          )}
-        </div>
+        ) : null}
         {schemeUi?.id === 'PMEGP' ? <div className="pmegp-cover-rule" aria-hidden="true" /> : null}
       </header>
 
+      {reportEntries.length ? (
       <section className="individual-toc">
         <h2 className="individual-sec-title">
           <span className="individual-sec-num">0</span>
           {tf('Table of Contents')}
         </h2>
         <ol className="individual-toc-list">
-          {(style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).flatMap((token) => {
-            if (pictureIdFromToken(token)) return [];
-            const custom = style?.customSections?.find((item) => item.id === token);
-            if (custom) {
-              if (style?.hiddenSectionIds.includes(custom.id)) return [];
-              return [{ id: custom.id, title: custom.title, n: 0, custom: true }];
-            }
-            const def = catalogSteps.find((step) => step.id === token);
-            if (!def || style?.hiddenSectionIds.includes(def.id)) return [];
-            return [{ id: def.id, title: sectionTitleFromStep(def), n: def.n, custom: false }];
-          }).map((entry, index) => (
+          {reportEntries.map((entry, index) => (
             <li
               key={entry.id}
               className={onSectionClick && !entry.custom ? 'is-clickable' : undefined}
               onClick={() => { if (!entry.custom) onSectionClick?.(entry.n); }}
             >
-              <span className="toc-num">{style ? index + 1 : entry.n}</span>
+              <span className="toc-num">{index + 1}</span>
               <span className="toc-label">{entry.custom ? entry.title : tf(entry.title)}</span>
             </li>
           ))}
         </ol>
       </section>
+      ) : null}
 
       {(style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).map((token) => {
         const custom = style?.customSections?.find((item) => item.id === token);
         if (custom) {
           if (style?.hiddenSectionIds.includes(custom.id)) return null;
-          const customNum = (style ? layoutOrder(catalogSteps, style) : []).filter((item) => {
-            if (pictureIdFromToken(item)) return false;
-            if (style?.hiddenSectionIds.includes(item)) return false;
-            return true;
-          }).indexOf(custom.id) + 1;
+          const customNum = reportEntries.findIndex((entry) => entry.id === custom.id) + 1;
           return (
             <section key={custom.id} data-dpr-section={custom.id} className="individual-sec">
               <h2 className="individual-sec-title">
@@ -657,32 +754,28 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           );
         }
         const def = catalogSteps.find((step) => step.id === token);
-        if (!def || style?.hiddenSectionIds.includes(def.id)) return null;
+        if (!def || !sectionHasAnswers(def)) return null;
         const title = tf(sectionTitleFromStep(def));
-        const num = style ? steps.findIndex((step) => step.id === def.id) + 1 : def.n;
+        const num = reportEntries.findIndex((entry) => entry.id === def.id) + 1;
         const hot = activeSectionId === def.id;
         if (def.id === 'uploads' || def.contentStep === 18) {
+          const uploaded = uploads.filter((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label]));
           return (
             <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
               <h2 className="individual-sec-title">
                 <span className="individual-sec-num">{num}</span>
                 {title}
               </h2>
-              {uploads.length === 0 ? (
-                <p className="individual-empty">—</p>
-              ) : (
+              {uploaded.length ? (
                 <ul className="individual-doc-list">
-                  {uploads.map((u) => {
-                    const present = isKycUploaded(uploadStore[u.id] || uploadStore[u.label]);
-                    return (
-                      <li key={u.id} className={present ? 'is-uploaded' : 'is-pending'}>
-                        <span className="doc-label">{tf(u.label)}</span>
-                        <span className="doc-status">{tf(present ? 'Uploaded' : 'Pending')}</span>
-                      </li>
-                    );
-                  })}
+                  {uploaded.map((u) => (
+                    <li key={u.id} className="is-uploaded">
+                      <span className="doc-label">{tf(u.label)}</span>
+                      <span className="doc-status">{tf('Uploaded')}</span>
+                    </li>
+                  ))}
                 </ul>
-              )}
+              ) : null}
               {renderBlocks(def.id)}
             </section>
           );

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { isEnteredDocRow, isEnteredDocText } from './individualDpr/docEntries.ts';
 import { dprDownloadName } from './dprExportName.ts';
 import { patchFromDocEdit } from './individualDpr/liveDocEdit.ts';
 import { cardMatchesFilters, schemeKind, schemeLevel } from './schemePickerFilters.ts';
@@ -30,6 +31,18 @@ import {
   setImageWidth,
   shiftForPageEdge,
 } from './individualDpr/documentStyle.ts';
+
+describe('report entries', () => {
+  it('keeps a filled answer and drops a blank, a dash, and a zero', () => {
+    assert.equal(isEnteredDocText('Visakhapatnam'), true);
+    assert.equal(isEnteredDocText(''), false);
+    assert.equal(isEnteredDocText('—'), false);
+    assert.equal(isEnteredDocText('0'), false);
+    assert.equal(isEnteredDocRow(['Year 1', '', '0', '12'], [0]), true);
+    assert.equal(isEnteredDocRow(['Land', '0', '0', '0'], [0]), false);
+    assert.equal(isEnteredDocRow(['', '0', '0']), false);
+  });
+});
 
 describe('dpr download name', () => {
   it('uses scheme, project, short language, and DDMMYY', () => {
