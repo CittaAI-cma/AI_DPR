@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { dprDownloadName } from './dprExportName.ts';
+import { patchFromDocEdit } from './individualDpr/liveDocEdit.ts';
 import { cardMatchesFilters, schemeKind, schemeLevel } from './schemePickerFilters.ts';
 import { isReasonableIsoDate } from './individualDpr/isoDate.ts';
 import { groundCostSuggestion } from './individualDpr/costSuggestionGuard.ts';
@@ -144,6 +145,19 @@ describe('step suggestion batch', () => {
     assert.equal(acceptByKind('date', '2026-02-31', emptyFacts), null);
     assert.equal(acceptByKind('date', '2026-04-01', emptyFacts), '2026-04-01');
     assert.equal(acceptByKind('prose', 'Too short.', emptyFacts), null);
+  });
+});
+
+describe('live document typing', () => {
+  it('writes a cover field and a table cell back onto the draft', () => {
+    const unit = patchFromDocEdit({ step1: {} }, 'step1.unitName', 'Screen Test Unit');
+    assert.equal(unit?.stepData?.unitName, 'Screen Test Unit');
+    assert.equal(unit?.stepData?.clusterName, 'Screen Test Unit');
+    const same = patchFromDocEdit({ step1: { unitName: 'Screen Test Unit', clusterName: 'Screen Test Unit' } }, 'step1.unitName', 'Screen Test Unit');
+    assert.equal(same, null);
+    const row = patchFromDocEdit({ step14: { staffRoles: [{ role: 'Helper', count: 1 }] } }, 'step14.staffRoles[0].count', '3');
+    assert.equal(row?.stepData?.staffRoles[0].count, 3);
+    assert.equal(row?.stepData?.staffRoles[0].role, 'Helper');
   });
 });
 

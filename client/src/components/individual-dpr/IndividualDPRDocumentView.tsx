@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
@@ -65,6 +65,8 @@ export interface IndividualDPRDocumentViewProps {
   activeSectionId?: string | null;
   /** Drag a picture handle in the live report. Slot is cover, annexure, or a section id. */
   onImageFrame?: (slot: string, box: ImageBox) => void;
+  /** Type straight into the live document. Path is stepN.field or stepN.field[i].key. */
+  onEditField?: (path: string, text: string) => void;
 }
 
 const IMAGE_HANDLES: ImageHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -144,6 +146,60 @@ function fieldHit(
   return <span data-dpr-field={path}>{children}</span>;
 }
 
+function isPlainValue(value: unknown): boolean {
+  return value == null || value === '' || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+}
+
+function EditableDocText({
+  path,
+  display,
+  placeholder,
+  onEdit,
+  multiline,
+  track,
+}: {
+  path: string;
+  display: string;
+  placeholder: string;
+  onEdit: (path: string, text: string) => void;
+  multiline?: boolean;
+  track?: boolean;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const focused = useRef(false);
+  const shown = !display || display === '—' ? '' : display;
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || focused.current) return;
+    if (el.textContent !== shown) el.textContent = shown;
+  }, [shown]);
+  return (
+    <span
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      role="textbox"
+      spellCheck
+      data-dpr-field={track ? path : undefined}
+      data-placeholder={placeholder}
+      className="dpr-inline-edit"
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+      onFocus={() => { focused.current = true; }}
+      onBlur={() => {
+        focused.current = false;
+        onEdit(path, ref.current?.textContent ?? '');
+      }}
+      onKeyDown={(event) => {
+        if (!multiline && event.key === 'Enter') {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement).blur();
+        }
+      }}
+    />
+  );
+}
+
 export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps> = ({
   dpr,
   project,
@@ -153,6 +209,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   documentStyle,
   activeSectionId = null,
   onImageFrame,
+  onEditField,
 }) => {
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
@@ -172,6 +229,23 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const budget = data.ventureMatchAnswers?.budget;
   const uploads = getIndividualUploads(schemeCode, data);
   const uploadStore = data.step18 || data.uploads || {};
+
+  const typeHere = tf('Type here');
+  const editableValue = (path: string, display: string, raw: unknown, multiline = false) => {
+    if (onEditField && isPlainValue(raw)) {
+      return (
+        <EditableDocText
+          path={path}
+          display={display}
+          placeholder={typeHere}
+          onEdit={onEditField}
+          multiline={multiline}
+          track={trackFieldHits}
+        />
+      );
+    }
+    return fieldHit(path, display === '—' ? '—' : tf(display), trackFieldHits);
+  };
 
   const renderSectionFields = (fields: IndividualDocField[]) => {
     if (!fields.length) {
@@ -200,7 +274,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   <tr key={field.path}>
                     <td className="part">{tf(field.label)}</td>
                     <td className={empty ? 'is-empty' : ''}>
-                      {fieldHit(field.path, empty ? '—' : tf(text), trackFieldHits)}
+                      {editableValue(field.path, text, readDocField(field, data))}
                     </td>
                   </tr>
                 );
@@ -213,25 +287,42 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <article key={field.path} className="individual-qa-block">
           <h3 className="individual-qa-q">{tf(field.label)}</h3>
           <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
-            {fieldHit(field.path, text === '—' ? '—' : text, trackFieldHits)}
+            {editableValue(field.path, text, readDocField(field, data), true)}
           </div>
         </article>
       );
-      const dataTable = (key: string, title: string, headers: string[], body: string[][]) => (
+      const dataTable = (key: string, title: string, headers: string[], body: string[][], cellPaths?: Array<Array<string | null>>) => {
+        const rows = body.length ? body : (cellPaths?.length ? cellPaths.map(() => headers.map(() => '')) : []);
+        return (
         <table key={key} className="individual-particulars">
           <caption className="individual-qa-q">{tf(title)}</caption>
           <thead>
             <tr>{headers.map((header) => <th key={header}>{tf(header)}</th>)}</tr>
           </thead>
           <tbody>
-            {body.length ? body.map((row, index) => (
-              <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell || '—'}</td>)}</tr>
+            {rows.length ? rows.map((row, index) => (
+              <tr key={index}>{row.map((cell, cellIndex) => {
+                const cellPath = cellPaths?.[index]?.[cellIndex];
+                return (
+                  <td key={cellIndex}>
+                    {cellPath && onEditField ? (
+                      <EditableDocText path={cellPath} display={cell || '—'} placeholder={typeHere} onEdit={onEditField} track={trackFieldHits} />
+                    ) : (cell || '—')}
+                  </td>
+                );
+              })}</tr>
             )) : (
               <tr><td colSpan={headers.length}>—</td></tr>
             )}
           </tbody>
         </table>
-      );
+        );
+      };
+      const editPaths = (base: string, keys: Array<string | null>, count: number) => {
+        if (!onEditField) return undefined;
+        const rows = Math.max(count, 1);
+        return Array.from({ length: rows }, (_, index) => keys.map((key) => (key ? `${base}[${index}].${key}` : null)));
+      };
 
       for (const field of fields) {
         const raw = readDocField(field, data);
@@ -252,7 +343,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                 String(item.power ?? ''),
                 String(item.netProfit ?? ''),
               ];
-            })
+            }),
+            editPaths(field.path, [null, 'sales', 'rm', 'wages', 'power', 'netProfit'], years.length)
           ));
           continue;
         }
@@ -319,37 +411,44 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         }
         if (field.name === 'productMix') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Product', 'Share of output (%)', 'Selling price (₹)'], normalizeProductMix(raw).map((row) => [row.name, String(row.sharePercent || ''), String(row.sellingPrice || '')])));
+          const mix = normalizeProductMix(raw);
+          blocks.push(dataTable(field.path, field.label, ['Product', 'Share of output (%)', 'Selling price (₹)'], mix.map((row) => [row.name, String(row.sharePercent || ''), String(row.sellingPrice || '')]), editPaths(field.path, ['name', 'sharePercent', 'sellingPrice'], mix.length)));
           continue;
         }
         if (field.name === 'rawMaterialItems') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Material', 'Use', 'How it is bought'], normalizeRawMaterials(raw).map((row) => [row.name, row.use, row.basis])));
+          const materials = normalizeRawMaterials(raw);
+          blocks.push(dataTable(field.path, field.label, ['Material', 'Use', 'How it is bought'], materials.map((row) => [row.name, row.use, row.basis]), editPaths(field.path, ['name', 'use', 'basis'], materials.length)));
           continue;
         }
         if (field.name === 'staffRoles') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Role', 'Number of people', 'Monthly pay (₹)'], normalizeStaffRoles(raw).map((row) => [row.role, String(row.count || ''), String(row.monthlyPay || '')])));
+          const roles = normalizeStaffRoles(raw);
+          blocks.push(dataTable(field.path, field.label, ['Role', 'Number of people', 'Monthly pay (₹)'], roles.map((row) => [row.role, String(row.count || ''), String(row.monthlyPay || '')]), editPaths(field.path, ['role', 'count', 'monthlyPay'], roles.length)));
           continue;
         }
         if (field.name === 'risks') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Risk', 'How it will be handled'], normalizeRisks(raw).map((row) => [row.risk, row.mitigation])));
+          const risks = normalizeRisks(raw);
+          blocks.push(dataTable(field.path, field.label, ['Risk', 'How it will be handled'], risks.map((row) => [row.risk, row.mitigation]), editPaths(field.path, ['risk', 'mitigation'], risks.length)));
           continue;
         }
         if (field.name === 'utilisationByYear') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Year', 'Capacity utilisation (%)'], normalizeUtilisationYears(raw).map((row) => [row.label, String(row.percent || '')])));
+          const utilisation = normalizeUtilisationYears(raw);
+          blocks.push(dataTable(field.path, field.label, ['Year', 'Capacity utilisation (%)'], utilisation.map((row) => [row.label, String(row.percent || '')]), editPaths(field.path, ['label', 'percent'], utilisation.length)));
           continue;
         }
         if (field.name === 'milestones') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Activity', 'Time', 'Start', 'End'], normalizeMilestones(raw).map((row) => [row.activity, row.timeRequired, row.startDate, row.endDate])));
+          const milestones = normalizeMilestones(raw);
+          blocks.push(dataTable(field.path, field.label, ['Activity', 'Time', 'Start', 'End'], milestones.map((row) => [row.activity, row.timeRequired, row.startDate, row.endDate]), editPaths(field.path, ['activity', 'timeRequired', 'startDate', 'endDate'], milestones.length)));
           continue;
         }
         if (field.name === 'promoters') {
           flushParticulars();
-          blocks.push(dataTable(field.path, field.label, ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone'], normalizePromoters(raw).filter((row) => row.name || row.phone).map((row) => [row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone])));
+          const promoters = normalizePromoters(raw).filter((row) => onEditField || row.name || row.phone);
+          blocks.push(dataTable(field.path, field.label, ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone'], promoters.map((row) => [row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone]), editPaths(field.path, ['name', 'relationName', 'age', 'education', 'experienceYears', 'phone'], promoters.length)));
           continue;
         }
         if (field.name === 'machineryItems') {
@@ -358,11 +457,13 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           const detailed = schemeCode === 'AP_CMEP';
           const headers = ['Description', 'New / used', 'Supplier', 'Qty', 'Unit cost (₹ Lakhs)'];
           if (detailed) headers.push('GST', 'Transport', 'Installation', 'Life (years)', 'Yearly maintenance');
+          const machineKeys = ['description', 'condition', 'supplier', 'quantity', 'unitCost'];
+          if (detailed) machineKeys.push('gst', 'transport', 'installation', 'lifeYears', 'annualMaintenance');
           blocks.push(dataTable(field.path, field.label, headers, items.map((row) => {
             const cells = [row.description, row.condition, row.supplier, String(row.quantity || ''), String(row.unitCost || '')];
             if (detailed) cells.push(String(row.gst || ''), String(row.transport || ''), String(row.installation || ''), String(row.lifeYears || ''), String(row.annualMaintenance || ''));
             return cells;
-          })));
+          }), editPaths(field.path, machineKeys, items.length)));
           continue;
         }
         if (field.name === 'costPhasing') {
@@ -434,7 +535,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
         <h1 className="cover-unit">
-          {fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
+          {onEditField
+            ? editableValue('step1.unitName', String(step1.unitName || step1.clusterName || '').trim() || '—', step1.unitName || step1.clusterName || '')
+            : fieldHit('step1.unitName', cover.unitName || 'UNIT NAME', trackFieldHits)}
         </h1>
         <div className="cover-scheme-block">
           <p className="cover-scheme">{cover.underLine}</p>
@@ -443,16 +546,16 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <div className={`cover-meta${schemeUi?.id === 'PMEGP' ? ' pmegp-cover-meta' : ''}`}>
           <div>
             <span>{tf('District')}</span>
-            {fieldHit('step1.district', step1.district || '—', trackFieldHits)}
+            {editableValue('step1.district', step1.district || '—', step1.district)}
           </div>
           <div>
             <span>{tf('Location')}</span>
-            {fieldHit('step1.location', step1.location || '—', trackFieldHits)}
+            {editableValue('step1.location', step1.location || '—', step1.location)}
           </div>
-          {extras.entrepreneurName && (
+          {(extras.entrepreneurName || onEditField) && (
             <div>
               <span>{tf('Entrepreneur name')}</span>
-              {fieldHit('schemeExtras.entrepreneurName', extras.entrepreneurName, trackFieldHits)}
+              {editableValue('schemeExtras.entrepreneurName', extras.entrepreneurName || '—', extras.entrepreneurName)}
             </div>
           )}
         </div>

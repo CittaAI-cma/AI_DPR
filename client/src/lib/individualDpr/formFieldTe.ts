@@ -435,6 +435,7 @@ export const FORM_FIELD_TE: Record<string, string> = {
   Saving: 'భద్రపరుస్తోంది',
   'Fit page': 'పేజీని సరిపెట్టు',
   Preview: 'ప్రివ్యూ',
+  'Type here': 'ఇక్కడ టైప్ చేయండి',
   'Drag to resize': 'లాగి పరిమాణం మార్చు',
   'Fill & edit': 'నింపు మరియు మార్చు',
   Style: 'రూపం',

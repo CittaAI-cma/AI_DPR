@@ -25,6 +25,7 @@ import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
 import { missingIndividualRequired } from '@/lib/requiredStepFields';
 import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
+import { patchFromDocEdit } from '@/lib/individualDpr/liveDocEdit';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { hasUnder18Applicant } from '@/lib/privacy/under18';
 import { GuardianNotice } from '@/components/privacy/GuardianNotice';
@@ -57,6 +58,13 @@ export const IndividualDPRCreation: React.FC = () => {
     setVentureMatchAnswers,
     setSchemeExtras,
   } = useIndividualDPRStore();
+  const onEditField = useCallback((path: string, text: string) => {
+    const store = useIndividualDPRStore.getState();
+    const patch = patchFromDocEdit(store.data, path, text);
+    if (!patch) return;
+    if (patch.extras) store.setSchemeExtras(patch.extras);
+    if (patch.step != null && patch.stepData) store.setStepData(patch.step, patch.stepData);
+  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
@@ -908,6 +916,7 @@ export const IndividualDPRCreation: React.FC = () => {
             >
               <IndividualDPRDocumentView
                 trackFieldHits
+                onEditField={onEditField}
                 documentStyle={docStyle}
                 activeSectionId={hotSectionId}
                 dpr={{
@@ -1098,6 +1107,7 @@ export const IndividualDPRCreation: React.FC = () => {
                           const doc = (
                             <IndividualDPRDocumentView
                               trackFieldHits
+                              onEditField={onEditField}
                               dpr={{
                                 content: {
                                   english: {
