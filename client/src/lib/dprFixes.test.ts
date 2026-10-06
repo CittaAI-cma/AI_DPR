@@ -20,6 +20,7 @@ import {
   moveSection,
   pageEdgeMm,
   resolveDocumentStyle,
+  setImageWidth,
   shiftForPageEdge,
 } from './individualDpr/documentStyle.ts';
 
@@ -168,6 +169,18 @@ describe('report style', () => {
     assert.equal(contrastOk('#ffffff', '#ffffff'), false);
     assert.equal(contrastOk('#111827', '#ffffff'), true);
     assert.equal(contrastOk('#ffffff', '#1e3a5f'), true);
+  });
+
+  it('keeps a picture width and drops it when the picture is gone', () => {
+    const base = defaultStyleForScheme('PMFME');
+    const tiny = 'data:image/png;base64,aaaa';
+    const sized = setImageWidth({ ...base, images: { ...base.images, cover: tiny } }, 'cover', 40);
+    assert.equal(sized.imageWidths.cover, 40);
+    const kept = resolveDocumentStyle(sized, 'PMFME');
+    assert.equal(kept.imageWidths.cover, 40);
+    const cleared = resolveDocumentStyle({ ...sized, images: { ...sized.images, cover: '' } }, 'PMFME');
+    assert.equal(cleared.images.cover, '');
+    assert.equal(cleared.imageWidths.cover, 100);
   });
 
   it('keeps a block off the page edge and off the break', () => {

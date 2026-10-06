@@ -15,6 +15,7 @@ import {
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import {
   applySectionOrder,
+  imageWidthPct,
   pageEdgeMm,
   resolveDocumentStyle,
   styleCssVars,
@@ -58,6 +59,56 @@ export interface IndividualDPRDocumentViewProps {
   /** When set, this DPR wears the saved style and section order. */
   documentStyle?: DocumentStyle | null;
   activeSectionId?: string | null;
+  /** Drag the picture edge in the live report. Slot is cover, annexure, or a section id. */
+  onImageWidth?: (slot: string, pct: number) => void;
+}
+
+function SlotFigure({
+  src,
+  widthPct,
+  onWidth,
+}: {
+  src: string;
+  widthPct: number;
+  onWidth?: (pct: number) => void;
+}) {
+  const tf = useClusterFormText();
+  const onPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!onWidth) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const figure = event.currentTarget.parentElement;
+    const host = figure?.parentElement;
+    if (!figure || !host) return;
+    const startX = event.clientX;
+    const startW = figure.getBoundingClientRect().width;
+    const maxW = host.getBoundingClientRect().width || startW;
+    const move = (moveEvent: PointerEvent) => {
+      const nextPx = Math.min(maxW, Math.max(maxW * 0.2, startW + (moveEvent.clientX - startX)));
+      onWidth(Math.round((nextPx / maxW) * 100));
+    };
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  };
+
+  return (
+    <figure className="dpr-slot-figure" style={{ width: `${widthPct}%` }}>
+      <img src={src} alt="" />
+      {onWidth ? (
+        <button
+          type="button"
+          className="dpr-slot-resize"
+          aria-label={tf('Resize picture')}
+          title={tf('Resize picture')}
+          onPointerDown={onPointerDown}
+        />
+      ) : null}
+    </figure>
+  );
 }
 
 function fieldHit(
@@ -77,6 +128,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   onSectionClick,
   documentStyle,
   activeSectionId = null,
+  onImageWidth,
 }) => {
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
@@ -383,9 +435,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         {schemeUi?.id === 'PMEGP' ? <div className="pmegp-cover-rule" aria-hidden="true" /> : null}
       </header>
       {style?.images.cover ? (
-        <figure className="dpr-slot-figure">
-          <img src={style.images.cover} alt="" />
-        </figure>
+        <SlotFigure
+          src={style.images.cover}
+          widthPct={style ? imageWidthPct(style, 'cover') : 100}
+          onWidth={onImageWidth ? (pct) => onImageWidth('cover', pct) : undefined}
+        />
       ) : null}
 
       <section className="individual-toc">
@@ -435,9 +489,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                 </ul>
               )}
               {afterImage ? (
-                <figure className="dpr-slot-figure">
-                  <img src={afterImage} alt="" />
-                </figure>
+                <SlotFigure
+                  src={afterImage}
+                  widthPct={style ? imageWidthPct(style, def.id) : 100}
+                  onWidth={onImageWidth ? (pct) => onImageWidth(def.id, pct) : undefined}
+                />
               ) : null}
             </section>
           );
@@ -452,9 +508,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             </h2>
             {renderSectionFields(fields)}
             {afterImage ? (
-              <figure className="dpr-slot-figure">
-                <img src={afterImage} alt="" />
-              </figure>
+              <SlotFigure
+                src={afterImage}
+                widthPct={style ? imageWidthPct(style, def.id) : 100}
+                onWidth={onImageWidth ? (pct) => onImageWidth(def.id, pct) : undefined}
+              />
             ) : null}
           </section>
         );
@@ -466,9 +524,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             <span className="individual-sec-num">{steps.length + 1}</span>
             {tf('Annexure')}
           </h2>
-          <figure className="dpr-slot-figure">
-            <img src={style.images.annexure} alt="" />
-          </figure>
+          <SlotFigure
+            src={style.images.annexure}
+            widthPct={style ? imageWidthPct(style, 'annexure') : 100}
+            onWidth={onImageWidth ? (pct) => onImageWidth('annexure', pct) : undefined}
+          />
         </section>
       ) : null}
 

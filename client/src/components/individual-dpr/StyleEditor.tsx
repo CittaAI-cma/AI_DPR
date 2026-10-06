@@ -325,6 +325,12 @@ export function StyleEditor({
     </aside>
   );
 
+  const slotImage = slot === 'cover'
+    ? style.images.cover
+    : slot === 'annexure'
+      ? style.images.annexure
+      : style.images.after?.[slot.slice('after:'.length)];
+
   const stylePanel = (
     <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l">
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
@@ -631,22 +637,34 @@ export function StyleEditor({
             }}
           />
           {imageError ? <p className="text-xs font-medium text-red-700">{tf(imageError)}</p> : null}
-          <button
-            type="button"
-            className="text-xs text-red-700"
-            onClick={() => {
-              if (slot === 'cover') commit({ ...style, images: { ...style.images, cover: '' } });
-              else if (slot === 'annexure') commit({ ...style, images: { ...style.images, annexure: '' } });
-              else {
-                const id = slot.slice('after:'.length);
-                const after = { ...style.images.after };
-                delete after[id];
-                commit({ ...style, images: { ...style.images, after } });
-              }
-            }}
-          >
-            {tf('Remove picture')}
-          </button>
+          {slotImage ? (
+            <button
+              type="button"
+              className="text-xs text-red-700"
+              onClick={() => {
+                const widths = {
+                  cover: style.imageWidths?.cover ?? 100,
+                  annexure: style.imageWidths?.annexure ?? 100,
+                  after: { ...(style.imageWidths?.after || {}) },
+                };
+                if (slot === 'cover') {
+                  widths.cover = 100;
+                  commit({ ...style, images: { ...style.images, cover: '' }, imageWidths: widths });
+                } else if (slot === 'annexure') {
+                  widths.annexure = 100;
+                  commit({ ...style, images: { ...style.images, annexure: '' }, imageWidths: widths });
+                } else {
+                  const id = slot.slice('after:'.length);
+                  const after = { ...style.images.after };
+                  delete after[id];
+                  delete widths.after[id];
+                  commit({ ...style, images: { ...style.images, after }, imageWidths: widths });
+                }
+              }}
+            >
+              {tf('Remove picture')}
+            </button>
+          ) : null}
         </fieldset>
       </div>
     </aside>

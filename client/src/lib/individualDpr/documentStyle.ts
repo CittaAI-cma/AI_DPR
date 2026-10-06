@@ -55,6 +55,7 @@ export interface DocumentStyle {
   sectionOrder: string[];
   hiddenSectionIds: string[];
   images: { cover: string; annexure: string; after: Record<string, string> };
+  imageWidths: { cover: number; annexure: number; after: Record<string, number> };
 }
 
 export const PRESET_LABELS: Record<DocPresetId, string> = {
@@ -80,6 +81,16 @@ function emptyImages(): DocumentStyle['images'] {
   return { cover: '', annexure: '', after: {} };
 }
 
+function emptyWidths(): DocumentStyle['imageWidths'] {
+  return { cover: 100, annexure: 100, after: {} };
+}
+
+function clampWidth(value: unknown): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(100, Math.max(20, Math.round(n)));
+}
+
 export function presetStyle(id: DocPresetId): DocumentStyle {
   const shared = {
     pageSize: 'A4' as PageSize,
@@ -99,6 +110,7 @@ export function presetStyle(id: DocPresetId): DocumentStyle {
     sectionOrder: [] as string[],
     hiddenSectionIds: [] as string[],
     images: emptyImages(),
+    imageWidths: emptyWidths(),
   };
 
   if (id === 'bank') {
@@ -288,7 +300,47 @@ export function resolveDocumentStyle(saved: unknown, schemeCode?: string | null)
       annexure: safeImage(s.images?.annexure),
       after,
     },
+    imageWidths: readImageWidths(s.imageWidths, {
+      cover: Boolean(safeImage(s.images?.cover)),
+      annexure: Boolean(safeImage(s.images?.annexure)),
+      after,
+    }),
   };
+}
+
+function readImageWidths(
+  raw: DocumentStyle['imageWidths'] | undefined,
+  present: { cover: boolean; annexure: boolean; after: Record<string, string> }
+): DocumentStyle['imageWidths'] {
+  const after: Record<string, number> = {};
+  const afterRaw = raw?.after && typeof raw.after === 'object' ? raw.after : {};
+  for (const key of Object.keys(present.after)) {
+    after[key] = clampWidth(afterRaw[key]) ?? 100;
+  }
+  return {
+    cover: present.cover ? (clampWidth(raw?.cover) ?? 100) : 100,
+    annexure: present.annexure ? (clampWidth(raw?.annexure) ?? 100) : 100,
+    after,
+  };
+}
+
+export function imageWidthPct(style: DocumentStyle, slot: string): number {
+  if (slot === 'cover') return style.imageWidths?.cover || 100;
+  if (slot === 'annexure') return style.imageWidths?.annexure || 100;
+  return style.imageWidths?.after?.[slot] || 100;
+}
+
+export function setImageWidth(style: DocumentStyle, slot: string, pct: number): DocumentStyle {
+  const width = clampWidth(pct) ?? 100;
+  const widths: DocumentStyle['imageWidths'] = {
+    cover: style.imageWidths?.cover ?? 100,
+    annexure: style.imageWidths?.annexure ?? 100,
+    after: { ...(style.imageWidths?.after || {}) },
+  };
+  if (slot === 'cover') widths.cover = width;
+  else if (slot === 'annexure') widths.annexure = width;
+  else widths.after[slot] = width;
+  return { ...style, imageWidths: widths };
 }
 
 /** Keep section order and pictures when the person picks a new preset. */
@@ -299,6 +351,7 @@ export function applyPreset(current: DocumentStyle, id: DocPresetId): DocumentSt
     sectionOrder: current.sectionOrder,
     hiddenSectionIds: current.hiddenSectionIds,
     images: current.images,
+    imageWidths: current.imageWidths,
     logoDataUrl: current.logoDataUrl,
     agencyName: current.agencyName || next.agencyName,
     pageSize: current.pageSize,

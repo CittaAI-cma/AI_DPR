@@ -415,6 +415,7 @@ export const FORM_FIELD_TE: Record<string, string> = {
   After: 'తర్వాత',
   Annexure: 'అనుబంధం',
   'Remove picture': 'చిత్రాన్ని తీసివేయి',
+  'Resize picture': 'చిత్రం పరిమాణం మార్చు',
   Undo: 'వెనక్కి',
   Redo: 'మళ్లీ',
   Reset: 'మొదటి రూపానికి',

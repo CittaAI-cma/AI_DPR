@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -34,7 +34,7 @@ import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocum
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { isIndividualDprRecord, extractIndividualDocData, extractSchemeCode, getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle } from '@/lib/individualDpr/documentStyle';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setImageWidth } from '@/lib/individualDpr/documentStyle';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
@@ -60,6 +60,8 @@ export const DPRPreview: React.FC = () => {
   const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
   const [styling, setStyling] = useState(false);
   const [draftStyle, setDraftStyle] = useState<any>(null);
+  const draftStyleRef = useRef<any>(null);
+  draftStyleRef.current = draftStyle;
   const [hotSectionId, setHotSectionId] = useState<string | null>(null);
   const [styleSaving, setStyleSaving] = useState(false);
   const canSaveSchemeDefault = isSuperAdmin(useAuthStore((s) => s.user?.role));
@@ -986,6 +988,12 @@ export const DPRPreview: React.FC = () => {
                     viewLanguage={viewLanguage}
                     documentStyle={draftStyle}
                     activeSectionId={hotSectionId}
+                    onImageWidth={(slot, pct) => {
+                      if (!draftStyleRef.current) return;
+                      const next = setImageWidth(draftStyleRef.current, slot, pct);
+                      draftStyleRef.current = next;
+                      setDraftStyle(next);
+                    }}
                   />
                 </StyleEditor>
               ) : (

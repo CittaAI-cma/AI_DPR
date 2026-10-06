@@ -1202,14 +1202,37 @@
 }
 
 .dpr-slot-figure {
-  margin: 6pt 0 10pt;
+  position: relative;
+  margin: 8pt 0 12pt;
+  max-width: 100%;
 }
 
 .dpr-slot-figure img {
   display: block;
+  width: 100%;
   max-width: 100%;
   height: auto;
-  margin: 0 auto;
+}
+
+.dpr-slot-resize {
+  position: absolute;
+  top: 0;
+  right: -7px;
+  width: 14px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(15, 118, 110, 0.55);
+  cursor: ew-resize;
+}
+
+.dpr-slot-resize:hover {
+  background: #0f766e;
+}
+
+@media print {
+  .dpr-slot-resize { display: none !important; }
 }
 
 .dpr-style-footer {

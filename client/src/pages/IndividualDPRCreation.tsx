@@ -10,7 +10,7 @@ import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle } from '@/lib/individualDpr/documentStyle';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setImageWidth } from '@/lib/individualDpr/documentStyle';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
@@ -87,6 +87,8 @@ export const IndividualDPRCreation: React.FC = () => {
   const [previewHitCount, setPreviewHitCount] = useState(0);
   const [styling, setStyling] = useState(false);
   const [docStyle, setDocStyle] = useState<any>(null);
+  const docStyleRef = useRef<any>(null);
+  docStyleRef.current = docStyle;
   const [hotSectionId, setHotSectionId] = useState<string | null>(null);
   const [styleSaving, setStyleSaving] = useState(false);
   const [editNonce, setEditNonce] = useState(0);
@@ -381,6 +383,7 @@ export const IndividualDPRCreation: React.FC = () => {
   };
 
   const onStyleChange = (next: any) => {
+    docStyleRef.current = next;
     setDocStyle(next);
     const current = useIndividualDPRStore.getState().data.schemeExtras || {};
     setSchemeExtras({ ...current, documentStyle: next });
@@ -853,6 +856,10 @@ export const IndividualDPRCreation: React.FC = () => {
                   stepData: dprPayload,
                 }}
                 viewLanguage={viewLanguage}
+                onImageWidth={(slot, pct) => {
+                  if (!docStyleRef.current) return;
+                  onStyleChange(setImageWidth(docStyleRef.current, slot, pct));
+                }}
                 onSectionClick={(stepNumber: number) => {
                   if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
                   setEditStepN(stepNumber);
