@@ -10,7 +10,7 @@ import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setImageFrame } from '@/lib/individualDpr/documentStyle';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setPictureFrame } from '@/lib/individualDpr/documentStyle';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
@@ -910,7 +910,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 viewLanguage={viewLanguage}
                 onImageFrame={(slot, box) => {
                   if (!docStyleRef.current) return;
-                  onStyleChange(setImageFrame(docStyleRef.current, slot, box));
+                  onStyleChange(setPictureFrame(docStyleRef.current, slot, box));
                 }}
                 onSectionClick={(stepNumber: number) => {
                   if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);

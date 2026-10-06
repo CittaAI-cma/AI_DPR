@@ -17,6 +17,8 @@ import {
   applySectionOrder,
   contrastOk,
   defaultStyleForScheme,
+  insertPicture,
+  layoutOrder,
   moveSection,
   pageEdgeMm,
   resizeImageBox,
@@ -191,6 +193,19 @@ describe('report style', () => {
     assert.equal(corner.x, start.x);
     assert.equal(corner.y, start.y);
     assert.ok(corner.w < start.w && corner.h < start.h);
+    const steps = [{ id: 'a' }, { id: 'b' }];
+    const placed = insertPicture(base, steps, {
+      id: 'shop',
+      name: 'Shop front',
+      src: tiny,
+      hidden: false,
+      place: 'a',
+      frame: { w: 100, h: 0, x: 0, y: 0 },
+    });
+    assert.deepEqual(layoutOrder(steps, placed), ['a', 'pic:shop', 'b']);
+    const migrated = resolveDocumentStyle({ images: { cover: tiny } }, 'PMFME');
+    assert.equal(migrated.pictures[0].place, 'cover');
+    assert.equal(migrated.pictures[0].name, 'Cover picture');
   });
 
   it('keeps a block off the page edge and off the break', () => {

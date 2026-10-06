@@ -15,8 +15,9 @@ import {
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import {
   applySectionOrder,
-  imageFrameOf,
+  layoutOrder,
   pageEdgeMm,
+  pictureIdFromToken,
   resizeImageBox,
   resolveDocumentStyle,
   styleCssVars,
@@ -457,13 +458,6 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         </div>
         {schemeUi?.id === 'PMEGP' ? <div className="pmegp-cover-rule" aria-hidden="true" /> : null}
       </header>
-      {style?.images.cover ? (
-        <SlotFigure
-          src={style.images.cover}
-          frame={style ? imageFrameOf(style, 'cover') : { w: 100, h: 0, x: 0, y: 0 }}
-          onFrame={onImageFrame ? (box) => onImageFrame('cover', box) : undefined}
-        />
-      ) : null}
 
       <section className="individual-toc">
         <h2 className="individual-sec-title">
@@ -484,11 +478,25 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         </ol>
       </section>
 
-      {steps.map((def, index) => {
+      {(style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).map((token) => {
+        const picId = pictureIdFromToken(token);
+        if (picId) {
+          const picture = style?.pictures?.find((item) => item.id === picId);
+          if (!picture || picture.hidden) return null;
+          return (
+            <SlotFigure
+              key={picture.id}
+              src={picture.src}
+              frame={picture.frame}
+              onFrame={onImageFrame ? (box) => onImageFrame(picture.id, box) : undefined}
+            />
+          );
+        }
+        const def = catalogSteps.find((step) => step.id === token);
+        if (!def || style?.hiddenSectionIds.includes(def.id)) return null;
         const title = tf(sectionTitleFromStep(def));
-        const num = style ? index + 1 : def.n;
+        const num = style ? steps.findIndex((step) => step.id === def.id) + 1 : def.n;
         const hot = activeSectionId === def.id;
-        const afterImage = style?.images.after?.[def.id];
         if (def.id === 'uploads' || def.contentStep === 18) {
           return (
             <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
@@ -511,17 +519,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   })}
                 </ul>
               )}
-              {afterImage ? (
-                <SlotFigure
-                  src={afterImage}
-                  frame={style ? imageFrameOf(style, def.id) : { w: 100, h: 0, x: 0, y: 0 }}
-                  onFrame={onImageFrame ? (box) => onImageFrame(def.id, box) : undefined}
-                />
-              ) : null}
             </section>
           );
         }
-
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
         return (
           <section key={def.id} id={`individual-section-${def.n}`} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
@@ -530,30 +530,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               {title}
             </h2>
             {renderSectionFields(fields)}
-            {afterImage ? (
-              <SlotFigure
-                src={afterImage}
-                frame={style ? imageFrameOf(style, def.id) : { w: 100, h: 0, x: 0, y: 0 }}
-                onFrame={onImageFrame ? (box) => onImageFrame(def.id, box) : undefined}
-              />
-            ) : null}
           </section>
         );
       })}
-
-      {style?.images.annexure ? (
-        <section className="individual-sec">
-          <h2 className="individual-sec-title">
-            <span className="individual-sec-num">{steps.length + 1}</span>
-            {tf('Annexure')}
-          </h2>
-          <SlotFigure
-            src={style.images.annexure}
-            frame={style ? imageFrameOf(style, 'annexure') : { w: 100, h: 0, x: 0, y: 0 }}
-            onFrame={onImageFrame ? (box) => onImageFrame('annexure', box) : undefined}
-          />
-        </section>
-      ) : null}
 
       {style ? (
         <footer className="dpr-style-footer">

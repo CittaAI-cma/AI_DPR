@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Eye, EyeOff, GripVertical, ZoomIn, ZoomOut } from 'lucide-react';
+import { Eye, EyeOff, GripVertical, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -13,10 +13,12 @@ import {
   applyPreset,
   contrastOk,
   defaultStyleForScheme,
+  insertPicture,
+  layoutOrder,
   moveSection,
-  setImageFrame,
   pageEdgeMm,
   pageWidthMm,
+  pictureToken,
   styleProblems,
   type DocumentStyle,
   type DocPresetId,
@@ -85,6 +87,9 @@ export function StyleEditor({
   const fitWidthRef = useRef(true);
   const [slot, setSlot] = useState('cover');
   const [imageError, setImageError] = useState('');
+  const [pendingPictures, setPendingPictures] = useState([]);
+  const [pictureName, setPictureName] = useState('');
+  const [deletePictureId, setDeletePictureId] = useState('');
   const [wideTable, setWideTable] = useState(false);
   const [blockedColor, setBlockedColor] = useState('');
   const [paneWidths, setPaneWidths] = useState({ sections: 200, style: 240, edit: 300 });
@@ -231,7 +236,8 @@ export function StyleEditor({
 
   const onDrop = (targetId: string) => {
     if (!dragId) return;
-    commit({ ...style, sectionOrder: moveSection(style.sectionOrder, steps, dragId, targetId) });
+    const order = layoutOrder(steps, style);
+    commit({ ...style, sectionOrder: moveSection(order, steps, dragId, targetId) });
     setDragId(null);
     onActiveSection?.(null);
   };
@@ -243,12 +249,22 @@ export function StyleEditor({
     commit({ ...style, hiddenSectionIds: [...hidden] });
   };
 
-  const orderedIds = style.sectionOrder.length ? style.sectionOrder : steps.map((step) => step.id);
-  const rows = [...steps].sort((a, b) => {
-    const ai = orderedIds.indexOf(a.id);
-    const bi = orderedIds.indexOf(b.id);
-    return (ai < 0 ? 1000 : ai) - (bi < 0 ? 1000 : bi);
-  });
+  const orderedIds = layoutOrder(steps, style);
+  const pictureById = new Map((style.pictures || []).map((picture) => [picture.id, picture]));
+  const sidebarRows = orderedIds.reduce((acc, token) => {
+    if (token.startsWith('pic:')) {
+      const picture = pictureById.get(token.slice(4));
+      if (picture) acc.rows.push({ kind: 'picture', picture });
+      return acc;
+    }
+    const step = steps.find((item) => item.id === token);
+    if (!step) return acc;
+    const hidden = style.hiddenSectionIds.includes(step.id);
+    const num = hidden ? '–' : acc.next;
+    acc.rows.push({ kind: 'section', step, hidden, num });
+    if (!hidden) acc.next += 1;
+    return acc;
+  }, { rows: [], next: 1 }).rows;
 
   const sheet = (
     <PageSheet
@@ -268,19 +284,62 @@ export function StyleEditor({
         <button
           type="button"
           className="text-xs font-medium text-primary"
-          onClick={() => commit({ ...style, sectionOrder: steps.map((step) => step.id), hiddenSectionIds: [] })}
+          onClick={() => commit({
+            ...style,
+            hiddenSectionIds: [],
+            sectionOrder: layoutOrder(steps, { ...style, sectionOrder: steps.map((step) => step.id) }),
+          })}
         >
           {tf('Original order')}
         </button>
       </div>
       <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
-        {rows.reduce((acc, step) => {
-          const hidden = style.hiddenSectionIds.includes(step.id);
-          const num = hidden ? '–' : acc.next;
-          acc.rows.push({ step, hidden, num });
-          if (!hidden) acc.next += 1;
-          return acc;
-        }, { rows: [], next: 1 }).rows.map(({ step, hidden, num }) => {
+        {sidebarRows.map((row) => {
+          if (row.kind === 'picture') {
+            const { picture } = row;
+            const token = pictureToken(picture.id);
+            const hot = dragId === token;
+            return (
+              <li
+                key={token}
+                draggable
+                onDragStart={() => setDragId(token)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => onDrop(token)}
+                onDragEnd={() => setDragId(null)}
+                className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+                  hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
+                } ${picture.hidden ? 'opacity-45' : ''}`}
+              >
+                <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
+                <span className="min-w-0 flex-1 truncate text-left">{picture.name}</span>
+                <button
+                  type="button"
+                  className="rounded p-1 text-slate-500 hover:bg-white"
+                  title={picture.hidden ? tf('Show picture') : tf('Hide picture')}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => commit({
+                    ...style,
+                    pictures: style.pictures.map((item) => (
+                      item.id === picture.id ? { ...item, hidden: !item.hidden } : item
+                    )),
+                  })}
+                >
+                  {picture.hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  className="rounded p-1 text-red-700 hover:bg-white"
+                  title={tf('Delete picture')}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => setDeletePictureId(picture.id)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            );
+          }
+          const { step, hidden, num } = row;
           const hot = dragId === step.id || activeSectionId === step.id;
           return (
             <li
@@ -325,12 +384,6 @@ export function StyleEditor({
       </ol>
     </aside>
   );
-
-  const slotImage = slot === 'cover'
-    ? style.images.cover
-    : slot === 'annexure'
-      ? style.images.annexure
-      : style.images.after?.[slot.slice('after:'.length)];
 
   const stylePanel = (
     <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l">
@@ -607,7 +660,7 @@ export function StyleEditor({
 
         <fieldset className="space-y-2">
           <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tf('Pictures')}</legend>
-          <p className="text-xs text-slate-500">{tf('Cover, after a section, or the annexure. The picture sits in the flow of the page.')}</p>
+          <p className="text-xs text-slate-500">{tf('Choose where a new picture starts. Name it, then drag it in Sections.')}</p>
           <select className="w-full rounded-md border px-2 py-1.5 text-sm" value={slot} onChange={(event) => setSlot(event.target.value)}>
             <option value="cover">{tf('Cover')}</option>
             {steps.map((step) => (
@@ -618,42 +671,30 @@ export function StyleEditor({
           <input
             type="file"
             accept="image/*"
+            multiple
             className="block w-full text-xs"
             onChange={async (event) => {
-              const file = event.target.files?.[0];
+              const files = [...(event.target.files || [])];
               event.target.value = '';
-              if (!file) return;
-              try {
-                const url = await readImageFile(file);
-                if (slot === 'cover') commit({ ...style, images: { ...style.images, cover: url } });
-                else if (slot === 'annexure') commit({ ...style, images: { ...style.images, annexure: url } });
-                else {
-                  const id = slot.slice('after:'.length);
-                  commit({ ...style, images: { ...style.images, after: { ...style.images.after, [id]: url } } });
+              if (!files.length) return;
+              const place = slot === 'cover' || slot === 'annexure' ? slot : slot.slice('after:'.length);
+              const next = [];
+              for (const file of files) {
+                try {
+                  const src = await readImageFile(file);
+                  const suggested = file.name.replace(/\.[^.]+$/, '').slice(0, 80) || 'Picture';
+                  next.push({ src, suggested, place });
+                } catch (error) {
+                  setImageError(error?.message || 'Could not read that image.');
                 }
-                setImageError('');
-              } catch (error) {
-                setImageError(error?.message || 'Could not read that image.');
               }
+              if (!next.length) return;
+              setImageError('');
+              setPendingPictures(next);
+              setPictureName(next[0].suggested);
             }}
           />
           {imageError ? <p className="text-xs font-medium text-red-700">{tf(imageError)}</p> : null}
-          {slotImage ? (
-            <button
-              type="button"
-              className="text-xs text-red-700"
-              onClick={() => {
-                const images = { ...style.images, after: { ...style.images.after } };
-                const id = slot === 'cover' || slot === 'annexure' ? slot : slot.slice('after:'.length);
-                if (slot === 'cover') images.cover = '';
-                else if (slot === 'annexure') images.annexure = '';
-                else delete images.after[id];
-                commit(setImageFrame({ ...style, images }, id, { w: 100, h: 0, x: 0, y: 0 }));
-              }}
-            >
-              {tf('Remove picture')}
-            </button>
-          ) : null}
         </fieldset>
       </div>
     </aside>
@@ -782,6 +823,81 @@ export function StyleEditor({
           </div>
         ) : null}
       </div>
+      {pendingPictures[0] ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <form
+            className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const name = pictureName.trim().slice(0, 80);
+              const pending = pendingPictures[0];
+              if (!name || !pending) return;
+              const picture = {
+                id: `pic_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+                name,
+                src: pending.src,
+                hidden: false,
+                place: pending.place,
+                frame: { w: 100, h: 0, x: 0, y: 0 },
+              };
+              commit(insertPicture(style, steps, picture));
+              const rest = pendingPictures.slice(1);
+              setPendingPictures(rest);
+              setPictureName(rest[0]?.suggested || '');
+            }}
+          >
+            <p className="text-sm font-semibold">{tf('Name this picture')}</p>
+            <p className="mt-1 text-xs text-slate-500">{tf('This name is how you find it in Sections.')}</p>
+            <input
+              className="mt-3 w-full rounded-md border px-2 py-1.5 text-sm"
+              value={pictureName}
+              autoFocus
+              onChange={(event) => setPictureName(event.target.value)}
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const rest = pendingPictures.slice(1);
+                  setPendingPictures(rest);
+                  setPictureName(rest[0]?.suggested || '');
+                }}
+              >
+                {tf('Cancel')}
+              </Button>
+              <Button type="submit" size="sm" disabled={!pictureName.trim()}>{tf('Save')}</Button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+      {deletePictureId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl">
+            <p className="text-sm font-semibold">{tf('Delete this image?')}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {(style.pictures || []).find((picture) => picture.id === deletePictureId)?.name}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setDeletePictureId('')}>
+                {tf('Cancel')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  const pictures = (style.pictures || []).filter((picture) => picture.id !== deletePictureId);
+                  commit({ ...style, pictures, sectionOrder: layoutOrder(steps, { ...style, pictures }) });
+                  setDeletePictureId('');
+                }}
+              >
+                {tf('Delete')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -61,7 +61,21 @@ export interface DocumentStyle {
   images: { cover: string; annexure: string; after: Record<string, string> };
   imageWidths: { cover: number; annexure: number; after: Record<string, number> };
   imageFrames: { cover: ImageBox; annexure: ImageBox; after: Record<string, ImageBox> };
+  pictures: ReportPicture[];
 }
+
+/** A named picture in the section list. `place` is where it was first inserted. */
+export type ReportPicture = {
+  id: string;
+  name: string;
+  src: string;
+  hidden: boolean;
+  place: string;
+  frame: ImageBox;
+};
+
+export const pictureToken = (id: string) => `pic:${id}`;
+export const pictureIdFromToken = (token: string) => (token.startsWith('pic:') ? token.slice(4) : '');
 
 export const PRESET_LABELS: Record<DocPresetId, string> = {
   government: 'Government',
@@ -96,6 +110,10 @@ function emptyBox(): ImageBox {
 
 function emptyFrames(): DocumentStyle['imageFrames'] {
   return { cover: emptyBox(), annexure: emptyBox(), after: {} };
+}
+
+function emptyPictures(): ReportPicture[] {
+  return [];
 }
 
 function clampWidth(value: unknown): number | null {
@@ -197,6 +215,7 @@ export function presetStyle(id: DocPresetId): DocumentStyle {
     images: emptyImages(),
     imageWidths: emptyWidths(),
     imageFrames: emptyFrames(),
+    pictures: emptyPictures(),
   };
 
   if (id === 'bank') {
@@ -396,7 +415,59 @@ export function resolveDocumentStyle(saved: unknown, schemeCode?: string | null)
       annexure: Boolean(safeImage(s.images?.annexure)),
       after,
     }),
+    pictures: readPictures(s, {
+      cover: safeImage(s.images?.cover),
+      annexure: safeImage(s.images?.annexure),
+      after,
+    }, readImageFrames(s.imageFrames, s.imageWidths, {
+      cover: Boolean(safeImage(s.images?.cover)),
+      annexure: Boolean(safeImage(s.images?.annexure)),
+      after,
+    })),
   };
+}
+
+function cleanPicture(raw: unknown): ReportPicture | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const item = raw as Partial<ReportPicture>;
+  const src = safeImage(item.src);
+  const id = typeof item.id === 'string' ? item.id.slice(0, 40) : '';
+  if (!src || !id) return null;
+  const name = typeof item.name === 'string' && item.name.trim() ? item.name.trim().slice(0, 80) : 'Picture';
+  return {
+    id,
+    name,
+    src,
+    hidden: Boolean(item.hidden),
+    place: typeof item.place === 'string' ? item.place.slice(0, 80) : 'annexure',
+    frame: clampImageBox(item.frame),
+  };
+}
+
+function readPictures(
+  saved: Partial<DocumentStyle>,
+  images: DocumentStyle['images'],
+  frames: DocumentStyle['imageFrames']
+): ReportPicture[] {
+  if (Array.isArray(saved.pictures)) {
+    return saved.pictures.map(cleanPicture).filter((item): item is ReportPicture => Boolean(item));
+  }
+  const pictures: ReportPicture[] = [];
+  const add = (src: string, name: string, place: string, frame: ImageBox) => {
+    if (!src) return;
+    pictures.push({
+      id: `pic_${place}_${pictures.length}`.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 40),
+      name,
+      src,
+      hidden: false,
+      place,
+      frame,
+    });
+  };
+  add(images.cover, 'Cover picture', 'cover', frames.cover);
+  for (const [sectionId, src] of Object.entries(images.after)) add(src, 'Picture', sectionId, frames.after[sectionId] || emptyBox());
+  add(images.annexure, 'Annexure picture', 'annexure', frames.annexure);
+  return pictures;
 }
 
 function readImageWidths(
@@ -484,6 +555,7 @@ export function applyPreset(current: DocumentStyle, id: DocPresetId): DocumentSt
     images: current.images,
     imageWidths: current.imageWidths,
     imageFrames: current.imageFrames,
+    pictures: current.pictures,
     logoDataUrl: current.logoDataUrl,
     agencyName: current.agencyName || next.agencyName,
     pageSize: current.pageSize,
@@ -514,6 +586,45 @@ export function moveSection(order: string[], steps: { id: string }[], fromId: st
   const [item] = ids.splice(from, 1);
   ids.splice(to, 0, item);
   return ids;
+}
+
+/** Section ids and pic: tokens, with any new picture sitting at its saved place. */
+export function layoutOrder(steps: { id: string }[], style: Pick<DocumentStyle, 'sectionOrder' | 'pictures'>): string[] {
+  const ids = style.sectionOrder?.length ? [...style.sectionOrder] : steps.map((step) => step.id);
+  for (const step of steps) {
+    if (!ids.includes(step.id)) ids.push(step.id);
+  }
+  for (const picture of style.pictures || []) {
+    const token = pictureToken(picture.id);
+    if (ids.includes(token)) continue;
+    if (picture.place === 'cover') ids.unshift(token);
+    else if (picture.place && picture.place !== 'annexure' && ids.includes(picture.place)) {
+      ids.splice(ids.indexOf(picture.place) + 1, 0, token);
+    } else ids.push(token);
+  }
+  const known = new Set([
+    ...steps.map((step) => step.id),
+    ...(style.pictures || []).map((picture) => pictureToken(picture.id)),
+  ]);
+  return ids.filter((id) => known.has(id));
+}
+
+export function insertPicture(
+  style: DocumentStyle,
+  steps: { id: string }[],
+  picture: ReportPicture
+): DocumentStyle {
+  const pictures = [...(style.pictures || []), picture];
+  return { ...style, pictures, sectionOrder: layoutOrder(steps, { ...style, pictures }) };
+}
+
+export function setPictureFrame(style: DocumentStyle, pictureId: string, box: Partial<ImageBox>): DocumentStyle {
+  return {
+    ...style,
+    pictures: (style.pictures || []).map((picture) => (
+      picture.id === pictureId ? { ...picture, frame: clampImageBox(box) } : picture
+    )),
+  };
 }
 
 function channel(hex: string, index: number): number {
