@@ -1,5 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { Building2, Landmark, ChevronRight, Search, X } from 'lucide-react';
+import {
+  BadgePercent,
+  Banknote,
+  Building2,
+  ChevronRight,
+  Landmark,
+  Layers,
+  LayoutGrid,
+  MapPinned,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SCHEME_OPTIONS } from '@/lib/individualDpr/schemeFormConfig';
 import {
@@ -16,27 +30,56 @@ interface SchemePickerGridProps {
   onSelect: (schemeCode: string | null) => void;
 }
 
-const LEVELS: Array<{ id: SchemeLevel; label: string }> = [
-  { id: 'central', label: 'Central schemes' },
-  { id: 'state', label: 'Andhra Pradesh schemes' },
-  { id: 'bank', label: 'Bank term loan' },
+const LEVELS: Array<{ id: SchemeLevel; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: 'central', label: 'Central schemes', icon: Landmark },
+  { id: 'state', label: 'Andhra Pradesh schemes', icon: MapPinned },
+  { id: 'bank', label: 'Bank term loan', icon: Banknote },
 ];
 
-const KINDS: Array<{ id: SchemeKind; label: string }> = [
-  { id: 'subsidy', label: 'Subsidy' },
-  { id: 'loan', label: 'Loan' },
-  { id: 'guarantee', label: 'Guarantee' },
-  { id: 'other', label: 'Other support' },
+const KINDS: Array<{ id: SchemeKind; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: 'subsidy', label: 'Subsidy', icon: BadgePercent },
+  { id: 'loan', label: 'Loan', icon: Wallet },
+  { id: 'guarantee', label: 'Guarantee', icon: ShieldCheck },
+  { id: 'other', label: 'Other support', icon: Sparkles },
 ];
 
 function toggleValue<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-const chipClass = (on: boolean) =>
-  `h-10 rounded-full border px-3 text-sm ${
-    on ? 'border-primary bg-primary text-white' : 'border-input bg-background text-foreground'
-  }`;
+function FilterTile({
+  on,
+  label,
+  icon: Icon,
+  onClick,
+}: {
+  on: boolean;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={onClick}
+      className={`flex h-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+        on
+          ? 'border-primary bg-primary/10 text-primary shadow-sm'
+          : 'border-border bg-background text-foreground hover:border-primary/30 hover:bg-muted/50'
+      }`}
+    >
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+          on ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+        }`}
+      >
+        <Icon className="h-4 w-4" aria-hidden="true" />
+      </span>
+      <span className="text-sm font-medium leading-snug">{label}</span>
+    </button>
+  );
+}
 
 export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) => {
   const { t, i18n } = useTranslation();
@@ -102,8 +145,8 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
         </p>
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="relative w-full lg:max-w-md">
+      <div className="mb-5 space-y-4">
+        <div className="relative w-full max-w-xl">
           <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             value={query}
@@ -113,49 +156,58 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
             className="h-12 pl-10"
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tf('All levels')}>
-            <span className="text-xs font-medium text-muted-foreground">{tf('All levels')}</span>
+        <div className="rounded-2xl border border-border bg-card p-3 sm:p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" role="group" aria-label={tf('All levels')}>
+            <FilterTile
+              on={levels.length === 0}
+              label={tf('All levels')}
+              icon={LayoutGrid}
+              onClick={() => setLevels([])}
+            />
             {LEVELS.map((item) => (
-              <button
+              <FilterTile
                 key={item.id}
-                type="button"
-                aria-pressed={levels.includes(item.id)}
-                className={chipClass(levels.includes(item.id))}
+                on={levels.includes(item.id)}
+                label={tf(item.label)}
+                icon={item.icon}
                 onClick={() => setLevels((current) => toggleValue(current, item.id))}
-              >
-                {tf(item.label)}
-              </button>
+              />
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tf('All kinds')}>
-            <span className="text-xs font-medium text-muted-foreground">{tf('All kinds')}</span>
+          <div className="h-px bg-border" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" role="group" aria-label={tf('All kinds')}>
+            <FilterTile
+              on={kinds.length === 0}
+              label={tf('All kinds')}
+              icon={Layers}
+              onClick={() => setKinds([])}
+            />
             {KINDS.map((item) => (
-              <button
+              <FilterTile
                 key={item.id}
-                type="button"
-                aria-pressed={kinds.includes(item.id)}
-                className={chipClass(kinds.includes(item.id))}
+                on={kinds.includes(item.id)}
+                label={tf(item.label)}
+                icon={item.icon}
                 onClick={() => setKinds((current) => toggleValue(current, item.id))}
-              >
-                {tf(item.label)}
-              </button>
+              />
             ))}
           </div>
           {filtersActive && (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 w-fit"
-              onClick={() => {
-                setQuery('');
-                setLevels([]);
-                setKinds([]);
-              }}
-            >
-              <X className="h-4 w-4 mr-1" />
-              {tf('Clear')}
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10"
+                onClick={() => {
+                  setQuery('');
+                  setLevels([]);
+                  setKinds([]);
+                }}
+              >
+                <X className="h-4 w-4 mr-1" />
+                {tf('Clear')}
+              </Button>
+            </div>
           )}
         </div>
       </div>

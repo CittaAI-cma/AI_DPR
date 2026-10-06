@@ -793,7 +793,7 @@ export const AllDPRs: React.FC = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/dpr/view/${dpr._id}`)}
+                        onClick={() => navigate(`/dpr/view/${dpr._id}`, { state: { updatedAt: dpr.updatedAt } })}
                         className="border-2"
                       >
                         <Eye className="h-4 w-4 mr-2" />

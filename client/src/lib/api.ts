@@ -441,7 +441,7 @@ class APIClient {
 
   // DPR endpoints
   async generateDPR(projectId: string, language: string = 'bilingual', stepData?: any) {
-    return this.handleRequest(
+    const result = await this.handleRequest(
       async () => {
         const response = await this.client.post(`/dpr/generate/${projectId}`, { 
           language,
@@ -451,6 +451,18 @@ class APIClient {
       },
       () => MockDataService.generateDPR(projectId, language)
     );
+    this.invalidateDpr(result?.data?.dprId || result?.data?._id || result?.dprId || result?._id);
+    return result;
+  }
+
+  peekCachedDpr(dprId: string) {
+    return this.getCache(this.getCacheKey('GET', `/dpr/${dprId}`));
+  }
+
+  /** Drop the stored DPR and its quality result so the next View fetches again. */
+  invalidateDpr(dprId?: string) {
+    if (dprId) this.clearCache(`/dpr/${dprId}`);
+    this.clearCache('/dpr/user/list');
   }
 
   async getDPR(dprId: string) {
@@ -585,33 +597,39 @@ class APIClient {
   }
 
   async analyzeDPRQuality(dprId: string) {
+    const cacheKey = this.getCacheKey('GET', `/dpr/${dprId}/quality`);
     return this.handleRequest(
       async () => {
         const response = await this.client.get(`/dpr/${dprId}/quality`);
         return response.data;
       },
-      () => MockDataService.analyzeDPRQuality(dprId)
+      () => MockDataService.analyzeDPRQuality(dprId),
+      cacheKey,
+      this.CACHE_TTL.dpr
     );
   }
 
   async updateDPRContent(dprId: string, content: any, language: string) {
     const response = await this.client.put(`/dpr/${dprId}/content`, { content, language });
+    this.invalidateDpr(dprId);
     return response.data;
   }
 
   async submitDPR(dprId: string, submittedTo: string = 'admin') {
     const response = await this.client.post(`/dpr/${dprId}/submit`, { submittedTo });
+    this.invalidateDpr(dprId);
     return response.data;
   }
 
   async translateToTelugu(dprId: string) {
     const response = await this.client.post(`/dpr/${dprId}/translate/telugu`);
+    this.invalidateDpr(dprId);
     return response.data;
   }
 
   // Cluster DPR endpoints
   async generateClusterDPR(clusterData: any, language: 'english' | 'telugu' | 'bilingual' = 'bilingual') {
-    return this.handleRequest(
+    const result = await this.handleRequest(
       async () => {
         const response = await this.client.post('/dpr/cluster/generate', {
           clusterData,
@@ -636,6 +654,8 @@ class APIClient {
         });
       }
     );
+    this.invalidateDpr(result?.data?.dprId || result?.data?._id || result?.dprId);
+    return result;
   }
 
   async getClusterDPR(dprId: string) {
@@ -657,7 +677,7 @@ class APIClient {
   }
 
   async saveClusterDPRDraft(clusterData: any) {
-    return this.handleRequest(
+    const result = await this.handleRequest(
       async () => {
         const response = await this.client.post('/dpr/cluster/draft/save', {
           clusterData,
@@ -666,10 +686,12 @@ class APIClient {
       },
       () => Promise.resolve({ success: false, message: 'Failed to save draft' })
     );
+    this.invalidateDpr(result?.data?.dprId || result?.data?._id || clusterData?.dprId);
+    return result;
   }
 
   async saveClusterDPREnhancedContent(dprId: string, enhancedContent: Record<string, string>, language: string = 'english') {
-    return this.handleRequest(
+    const result = await this.handleRequest(
       async () => {
         const response = await this.client.post(`/dpr/cluster/${dprId}/enhanced-content`, {
           enhancedContent,
@@ -679,6 +701,8 @@ class APIClient {
       },
       () => Promise.resolve({ success: false, message: 'Failed to save enhanced content' })
     );
+    this.invalidateDpr(dprId);
+    return result;
   }
 
   async storeClusterDPRGeneratedSections(dprId: string, generatedSections: Record<string, string>, language: string = 'english') {

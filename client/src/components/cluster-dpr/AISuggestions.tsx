@@ -840,8 +840,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
   if (!aiAllowed) {
     return (
-      <div className="mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
-        <p className="text-xs text-muted-foreground">{t('privacy.aiOffWarning')}</p>
+      <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-lg">
+        <p className="text-xs font-medium text-red-700">{t('privacy.aiOffWarning')}</p>
       </div>
     );
   }

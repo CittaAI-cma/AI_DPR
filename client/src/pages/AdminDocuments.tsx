@@ -65,6 +65,7 @@ export const AdminDocuments: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [vectorStores, setVectorStores] = useState<VectorStore[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [storesLoading, setStoresLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -104,6 +105,8 @@ export const AdminDocuments: React.FC = () => {
       setVectorStores(response.data);
     } catch (error) {
       console.error('Failed to load vector stores');
+    } finally {
+      setStoresLoading(false);
     }
   };
 
@@ -269,7 +272,22 @@ export const AdminDocuments: React.FC = () => {
           </div> */}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vectorStores.map((store) => {
+            {storesLoading ? (
+              [0, 1, 2].map((item) => (
+                <Card key={item}>
+                  <CardHeader>
+                    <div className="h-5 w-40 animate-pulse rounded bg-muted" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                      <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                      <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : vectorStores.map((store) => {
               const mainVectorStoreId = import.meta.env.VITE_MAIN_VECTOR_STORE_ID;
               const isMainStore = store.openaiVectorStoreId === mainVectorStoreId;
               return (
@@ -332,7 +350,7 @@ export const AdminDocuments: React.FC = () => {
               );
             })}
 
-            {vectorStores.length === 0 && (
+            {!storesLoading && vectorStores.length === 0 && (
               <Card className="col-span-full">
                 <CardContent className="text-center py-8">
                   <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -511,9 +529,21 @@ export const AdminDocuments: React.FC = () => {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                <p className="text-muted-foreground mt-2">Loading documents...</p>
+              <div className="space-y-4" aria-busy="true" aria-live="polite">
+                {[0, 1, 2, 3].map((item) => (
+                  <div key={item} className="rounded-lg border p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+                      <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
+                    </div>
+                    <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                    <div className="flex gap-4">
+                      <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+                      <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+                      <div className="h-3 w-28 animate-pulse rounded bg-muted" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredDocuments.length === 0 ? (
               <div className="text-center py-8">

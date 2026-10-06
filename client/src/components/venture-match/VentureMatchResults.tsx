@@ -164,16 +164,16 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">{t(scheme.benefit)}</p>
                     {scheme.dprRoute === 'cluster' && (
-                      <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                      <p className="mt-2 text-xs font-medium text-red-700 bg-red-50 border border-red-300 rounded-md px-2 py-1.5">
                         {t('ventureMatch.clusterRedirectHint')}
                       </p>
                     )}
                     {scheme.code === 'AP_CMEP' && scheme.boosted && (
-                      <div className="mt-3 rounded-[10px] border border-amber-300 bg-amber-50 px-3 py-2">
-                        <p className="text-sm font-semibold text-amber-900">
+                      <div className="mt-3 rounded-[10px] border border-red-300 bg-red-50 px-3 py-2">
+                        <p className="text-sm font-semibold text-red-700">
                           {t('ventureMatch.cmepBoosterTitle')}
                         </p>
-                        <p className="text-xs text-amber-800 mt-1">
+                        <p className="text-xs text-red-700 mt-1">
                           {t('ventureMatch.cmepBoosterBody')}
                         </p>
                       </div>

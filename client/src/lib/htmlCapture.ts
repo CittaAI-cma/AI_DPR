@@ -16,7 +16,7 @@ export function captureElementAsStandaloneHTML(
   // Add a marker class so we can target print fixes
   clone.classList.add('pdf-capture-root');
   const isIndividual = clone.classList.contains('individual-dpr-document');
-  const pageMargin = options?.pageMargin || (isIndividual ? '16mm' : '0');
+  const pageMargin = options?.pageMargin || '0';
 
   // Collect CSS from all accessible stylesheets (Vite injected + Tailwind output included)
   let cssText = '';
@@ -33,13 +33,17 @@ export function captureElementAsStandaloneHTML(
     }
   }
 
-  // Individual docs need page margins so tables/cover are not clipped at A4 edges.
+  // Page inset is applied by Puppeteer (16mm for Latest DPR). @page margin stays 0 so it is not added twice.
+  // Wide bank sheets scroll on screen (min-width: 720px); on A4 they must shrink to the page.
   const printFixes = `
-    @page { size: A4; margin: ${pageMargin}; }
+    @page { size: A4; margin: ${isIndividual ? '0' : pageMargin}; }
     html, body { margin: 0; padding: 0; width: auto; max-width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .pdf-capture-root { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .pdf-capture-root table { table-layout: fixed !important; width: 100% !important; max-width: 100% !important; }
-    .pdf-capture-root th, .pdf-capture-root td { overflow-wrap: anywhere; word-break: break-word; }
+    .pdf-capture-root table { table-layout: fixed !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+    .pdf-capture-root th, .pdf-capture-root td { overflow-wrap: anywhere; word-break: break-word; min-width: 0 !important; }
+    .pdf-capture-root .cmep-fin-scroll { overflow: visible !important; }
+    .pdf-capture-root .cmep-fin-table { min-width: 0 !important; }
+    .pdf-capture-root .cmep-fin-year { white-space: normal !important; }
     .page-break { break-after: page; page-break-after: always; }
     .no-print { display: none !important; }
   `;

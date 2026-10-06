@@ -1,22 +1,21 @@
 // @ts-nocheck
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
-import { canAccessAdmin } from '@/lib/rbac';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { Button } from '@/components/ui/Button';
 import { Languages, LogOut, User, Menu, X, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { NotificationBell } from '@/components/layout/NotificationBell';
+import { SideMenu } from '@/components/layout/SideMenu';
 
 export const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
-  const location = useLocation();
   const handleLinkClick = useLinkHandler();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -32,22 +31,8 @@ export const Navbar: React.FC = () => {
     i18n.changeLanguage(newLang);
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
-
-  const navLinks = isAuthenticated ? [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: '📊' },
-    { path: '/dprs', label: t('nav.allDPRs'), icon: '📄' },
-    { path: '/projects', label: t('nav.projects'), icon: '📁' },
-    { path: '/chat', label: t('nav.chat'), icon: '💬' },
-    ...(canAccessAdmin(user?.role) ? [
-      { path: '/admin', label: t('nav.admin'), icon: '⚙️' },
-      { path: '/admin/documents', label: t('nav.documents'), icon: '📄' },
-    ] : []),
-  ] : [];
-
   return (
+    <>
     <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
@@ -65,26 +50,6 @@ export const Navbar: React.FC = () => {
               {t('nav.appName')}
             </span>
           </a>
-
-          {/* Desktop Navigation */}
-          {isAuthenticated && (
-            <div className="hidden md:flex items-center space-x-1">
-              {navLinks.map((link) => (
-                <a
-                  key={link.path}
-                  href={link.path}
-                  onClick={(e) => handleLinkClick(e, link.path)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(link.path)
-                      ? 'bg-primary text-white'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          )}
 
           <div className="flex items-center space-x-3">
             <Button
@@ -155,24 +120,7 @@ export const Navbar: React.FC = () => {
         {mobileMenuOpen && isAuthenticated && (
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-2">
-              {navLinks.map((link) => (
-                <a
-                  key={link.path}
-                  href={link.path}
-                  onClick={(e) => {
-                    handleLinkClick(e, link.path);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                    isActive(link.path)
-                      ? 'bg-primary text-white'
-                      : 'text-foreground hover:bg-primary/10'
-                  }`}
-                >
-                  {link.label}
-                </a>
-              ))}
-              <div className="pt-4 border-t border-border space-y-2">
+              <div className="space-y-2">
                 <button
                   type="button"
                   onClick={toggleLanguage}
@@ -217,5 +165,7 @@ export const Navbar: React.FC = () => {
         )}
       </div>
     </nav>
+    {isAuthenticated && <SideMenu />}
+    </>
   );
 };

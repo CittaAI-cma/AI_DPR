@@ -849,8 +849,8 @@ export class DPRController {
   }
 
   /**
-   * Download DPR as PDF generated from client-rendered HTML (exact match with preview)
-   * Intended mainly for Cluster DPRs where the React preview should match the downloaded PDF 1:1.
+   * Download DPR as PDF generated from client-rendered HTML (exact match with preview).
+   * Latest individual and cluster previews both send the on-screen document.
    */
   static async downloadPDFHtml(req: AuthRequest, res: Response): Promise<void> {
     try {
@@ -880,7 +880,11 @@ export class DPRController {
 
       let pdfBuffer: Buffer;
       try {
-        pdfBuffer = await DPRService.generatePDFFromHTML(html);
+        const isIndividual = html.includes('individual-dpr-document');
+        pdfBuffer = await DPRService.generatePDFFromHTML(
+          html,
+          isIndividual ? { margin: '16mm' } : undefined
+        );
       } catch (htmlError: any) {
         console.warn('⚠️ Exact HTML PDF failed, falling back to scheme/server PDF:', htmlError?.message);
         pdfBuffer = await DPRService.generatePDF(dprId, language === 'telugu' ? 'telugu' : 'english');
