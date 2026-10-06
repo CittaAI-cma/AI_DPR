@@ -80,6 +80,7 @@ export function StyleEditor({
   const future = useRef<DocumentStyle[]>([]);
   const [historyTick, setHistoryTick] = useState(0);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [dropHint, setDropHint] = useState(null);
   const [panel, setPanel] = useState(null);
   const [side, setSide] = useState(null);
   const [editStep, setEditStep] = useState(null);
@@ -240,13 +241,50 @@ export function StyleEditor({
     commit({ ...style, marginMm: { ...style.marginMm, [side]: value } });
   };
 
-  const onDrop = (targetId: string) => {
-    if (!dragId) return;
-    const order = layoutOrder(steps, style);
-    commit({ ...style, sectionOrder: moveSection(order, steps, dragId, targetId) });
+  const placeFromEvent = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+  };
+
+  const onRowDragOver = (id) => (event) => {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    if (!dragId || dragId === id) {
+      if (dropHint) setDropHint(null);
+      return;
+    }
+    const place = placeFromEvent(event);
+    setDropHint((current) => (current?.id === id && current.place === place ? current : { id, place }));
+  };
+
+  const clearDrag = () => {
     setDragId(null);
+    setDropHint(null);
     onActiveSection?.(null);
   };
+
+  const onDrop = (targetId, event) => {
+    event.preventDefault();
+    if (!dragId || dragId === targetId) {
+      clearDrag();
+      return;
+    }
+    const place = placeFromEvent(event);
+    const order = layoutOrder(steps, style);
+    commit({ ...style, sectionOrder: moveSection(order, steps, dragId, targetId, place) });
+    clearDrag();
+  };
+
+  const dropLine = (id, place) => (
+    dropHint?.id === id && dropHint.place === place ? (
+      <div
+        data-drop-line={place}
+        className={`pointer-events-none absolute left-1 right-1 z-10 h-1 rounded-full bg-teal-600 ${
+          place === 'before' ? '-top-1' : '-bottom-1'
+        }`}
+      />
+    ) : null
+  );
 
   const toggleHidden = (id: string) => {
     const hidden = new Set(style.hiddenSectionIds);
@@ -309,14 +347,19 @@ export function StyleEditor({
               <li
                 key={token}
                 draggable
-                onDragStart={() => setDragId(token)}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={() => onDrop(token)}
-                onDragEnd={() => setDragId(null)}
-                className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
-                  hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
+                onDragStart={(event) => {
+                  setDragId(token);
+                  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={onRowDragOver(token)}
+                onDrop={(event) => onDrop(token, event)}
+                onDragEnd={clearDrag}
+                className={`relative flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+                  dragId === token ? 'opacity-50' : hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
                 } ${picture.hidden ? 'opacity-45' : ''}`}
               >
+                {dropLine(token, 'before')}
+                {dropLine(token, 'after')}
                 <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
                 <span className="min-w-0 flex-1 truncate text-left">{picture.name}</span>
                 <button
@@ -351,20 +394,20 @@ export function StyleEditor({
             <li
               key={step.id}
               draggable
-              onDragStart={() => {
+              onDragStart={(event) => {
                 setDragId(step.id);
                 onActiveSection?.(step.id);
+                if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
               }}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => onDrop(step.id)}
-              onDragEnd={() => {
-                setDragId(null);
-                onActiveSection?.(null);
-              }}
-              className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
-                hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
+              onDragOver={onRowDragOver(step.id)}
+              onDrop={(event) => onDrop(step.id, event)}
+              onDragEnd={clearDrag}
+              className={`relative flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm ${
+                dragId === step.id ? 'opacity-50' : hot ? 'border-teal-600 bg-teal-50' : 'border-transparent bg-slate-50'
               } ${hidden ? 'opacity-45' : ''}`}
             >
+              {dropLine(step.id, 'before')}
+              {dropLine(step.id, 'after')}
               <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
               <span className="w-5 shrink-0 text-xs text-slate-500">{num}</span>
               <button

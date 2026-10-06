@@ -10,7 +10,7 @@ import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setPictureFrame } from '@/lib/individualDpr/documentStyle';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, selectionStepOrder, setPictureFrame } from '@/lib/individualDpr/documentStyle';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
@@ -75,8 +75,6 @@ export const IndividualDPRCreation: React.FC = () => {
   const currentStep = data.currentStep || 1;
   const schemeCode = data.matchedSchemeCode || null;
   const visibleSteps = getVisibleSteps(schemeCode);
-  const lastVisible = visibleSteps[visibleSteps.length - 1] || getSchemeStepCount(schemeCode);
-  const stepOrdinal = Math.max(1, visibleSteps.indexOf(currentStep) + 1);
   const schemeImpact = getSchemeImpact(schemeCode);
   const dprPayload = toIndividualPayload(data);
 
@@ -89,6 +87,9 @@ export const IndividualDPRCreation: React.FC = () => {
   const [previewHitCount, setPreviewHitCount] = useState(0);
   const [styling, setStyling] = useState(false);
   const [docStyle, setDocStyle] = useState<any>(null);
+  const selectionSteps = selectionStepOrder(getSchemeDocSteps(schemeCode), docStyle?.sectionOrder, visibleSteps);
+  const lastVisible = selectionSteps[selectionSteps.length - 1] || getSchemeStepCount(schemeCode);
+  const stepOrdinal = Math.max(1, selectionSteps.indexOf(currentStep) + 1);
   const docStyleRef = useRef<any>(null);
   docStyleRef.current = docStyle;
   const [hotSectionId, setHotSectionId] = useState<string | null>(null);
@@ -295,11 +296,11 @@ export const IndividualDPRCreation: React.FC = () => {
 
   const guardForward = (targetStep: number) => {
     if (isAdmin && devMode) return true;
-    const from = visibleSteps.indexOf(currentStep);
-    const to = visibleSteps.indexOf(targetStep);
+    const from = selectionSteps.indexOf(currentStep);
+    const to = selectionSteps.indexOf(targetStep);
     if (to <= from) return true;
     for (let i = from; i < to; i += 1) {
-      const step = visibleSteps[i];
+      const step = selectionSteps[i];
       const content = getContentStep(step, schemeCode);
       const missing = missingIndividualRequired(content, data[`step${content}`], schemeCode);
       if (missing.length) {
@@ -314,8 +315,8 @@ export const IndividualDPRCreation: React.FC = () => {
   const goAdjacent = async (dir: 1 | -1) => {
     if (isStepping) return;
     const advancing = dir === 1;
-    const idx = visibleSteps.indexOf(currentStep);
-    const target = visibleSteps[idx + dir];
+    const idx = selectionSteps.indexOf(currentStep);
+    const target = selectionSteps[idx + dir];
     if (advancing && target && !guardForward(target)) return;
     if (advancing) {
       setInvalidFields([]);
@@ -324,8 +325,8 @@ export const IndividualDPRCreation: React.FC = () => {
     if (advancing) setIsStepping(true);
     try {
       await saveToDatabase();
-      const idx = visibleSteps.indexOf(currentStep);
-      const next = visibleSteps[idx + dir];
+      const idx = selectionSteps.indexOf(currentStep);
+      const next = selectionSteps[idx + dir];
       if (next) {
         setCurrentStep(next);
         if (styling) {
@@ -683,7 +684,7 @@ export const IndividualDPRCreation: React.FC = () => {
         {setupPhase === 'form' && styling && docStyle && (
           <div className="shrink-0 border-b border-border bg-background px-3 py-2">
             <div className="flex items-center gap-2 overflow-x-auto">
-              {visibleSteps.map((step) => {
+              {selectionSteps.map((step) => {
                 const isCompleted = getStepCompletion(step);
                 const isCurrent = step === currentStep;
                 return (
@@ -724,7 +725,7 @@ export const IndividualDPRCreation: React.FC = () => {
         <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              {visibleSteps.map((step) => {
+              {selectionSteps.map((step) => {
                 const isCompleted = getStepCompletion(step);
                 const isCurrent = step === currentStep;
                 return (
@@ -848,7 +849,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => goAdjacent(-1)}
-                      disabled={step.n === visibleSteps[0] || isStepping}
+                      disabled={step.n === selectionSteps[0] || isStepping}
                       className="gap-2"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -989,7 +990,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === visibleSteps[0] || isStepping} className="gap-2">
+                  <Button variant="outline" onClick={() => goAdjacent(-1)} disabled={currentStep === selectionSteps[0] || isStepping} className="gap-2">
                     <ChevronLeft className="h-4 w-4" />
                     {t('common.previous')}
                   </Button>

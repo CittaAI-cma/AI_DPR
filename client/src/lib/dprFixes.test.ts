@@ -20,6 +20,7 @@ import {
   insertPicture,
   layoutOrder,
   moveSection,
+  selectionStepOrder,
   pageEdgeMm,
   resizeImageBox,
   resolveDocumentStyle,
@@ -166,6 +167,18 @@ describe('report style', () => {
     assert.deepEqual(order, ['c', 'a', 'b']);
     const visible = applySectionOrder(steps, { sectionOrder: order, hiddenSectionIds: ['a'] });
     assert.deepEqual(visible.map((step) => step.id), ['c', 'b']);
+  });
+
+  it('drops a section after the row under the pointer and reorders step selection', () => {
+    const steps = [
+      { id: 'a', n: 1 },
+      { id: 'b', n: 2 },
+      { id: 'c', n: 3 },
+    ];
+    const order = moveSection(['a', 'b', 'c'], steps, 'a', 'b', 'after');
+    assert.deepEqual(order, ['b', 'a', 'c']);
+    assert.deepEqual(selectionStepOrder(steps, order, [1, 2, 3]), [2, 1, 3]);
+    assert.deepEqual(selectionStepOrder(steps, ['pic:shop', 'c', 'a', 'b'], [1, 2, 3]), [3, 1, 2]);
   });
 
   it('rejects a color that would hide the text', () => {

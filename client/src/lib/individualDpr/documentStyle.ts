@@ -575,7 +575,13 @@ export function applySectionOrder<T extends { id: string }>(
   return [...visible].sort((a, b) => (rank.get(a.id) ?? 1000) - (rank.get(b.id) ?? 1000));
 }
 
-export function moveSection(order: string[], steps: { id: string }[], fromId: string, toId: string): string[] {
+export function moveSection(
+  order: string[],
+  steps: { id: string }[],
+  fromId: string,
+  toId: string,
+  place: 'before' | 'after' = 'before'
+): string[] {
   const ids = order.length ? [...order] : steps.map((step) => step.id);
   for (const step of steps) {
     if (!ids.includes(step.id)) ids.push(step.id);
@@ -584,8 +590,32 @@ export function moveSection(order: string[], steps: { id: string }[], fromId: st
   const to = ids.indexOf(toId);
   if (from < 0 || to < 0 || from === to) return ids;
   const [item] = ids.splice(from, 1);
-  ids.splice(to, 0, item);
+  let insertAt = ids.indexOf(toId);
+  if (place === 'after') insertAt += 1;
+  ids.splice(insertAt, 0, item);
   return ids;
+}
+
+/** Step-button order follows the section list. Picture tokens are skipped. */
+export function selectionStepOrder(
+  steps: { id: string; n: number }[],
+  sectionOrder: string[] | undefined,
+  visible: number[]
+): number[] {
+  if (!sectionOrder?.length) return visible;
+  const byId = new Map(steps.map((step) => [step.id, step.n]));
+  const ordered: number[] = [];
+  const seen = new Set<number>();
+  for (const id of sectionOrder) {
+    const n = byId.get(id);
+    if (n == null || !visible.includes(n) || seen.has(n)) continue;
+    seen.add(n);
+    ordered.push(n);
+  }
+  for (const n of visible) {
+    if (!seen.has(n)) ordered.push(n);
+  }
+  return ordered.length ? ordered : visible;
 }
 
 /** Section ids and pic: tokens, with any new picture sitting at its saved place. */
