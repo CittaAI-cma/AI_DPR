@@ -4253,7 +4253,15 @@ export class DPRService {
    */
   static async generatePDFFromHTML(
     html: string,
-    options?: { margin?: string }
+    options?: {
+      margin?: string;
+      marginTop?: string;
+      marginRight?: string;
+      marginBottom?: string;
+      marginLeft?: string;
+      format?: 'A4' | 'A3' | 'Letter' | 'Legal';
+      preferCssPageSize?: boolean;
+    }
   ): Promise<Buffer> {
     if (!html || typeof html !== 'string') {
       throw new Error('HTML must be a string');
@@ -4276,7 +4284,9 @@ export class DPRService {
         await page.setJavaScriptEnabled(false);
 
         // Set viewport for A4 (96 DPI)
-        await page.setViewport({ width: 794, height: 1123 });
+        const pageFormat = options?.format || 'A4';
+        const viewportWidth = pageFormat === 'A3' ? 1123 : pageFormat === 'Letter' || pageFormat === 'Legal' ? 816 : 794;
+        await page.setViewport({ width: viewportWidth, height: 1123 });
 
         console.log('🔄 Setting client-rendered HTML content...');
         try {
@@ -4304,11 +4314,16 @@ export class DPRService {
 
         console.log('🔄 Generating PDF...');
         const pdfBuffer = await page.pdf({
-          format: 'A4',
+          format: options?.format || 'A4',
           printBackground: true,
           displayHeaderFooter: false,
-          margin: { top: pageMargin, right: pageMargin, bottom: pageMargin, left: pageMargin },
-          preferCSSPageSize: !options?.margin,
+          margin: {
+            top: options?.marginTop || pageMargin,
+            right: options?.marginRight || pageMargin,
+            bottom: options?.marginBottom || pageMargin,
+            left: options?.marginLeft || pageMargin,
+          },
+          preferCSSPageSize: options?.preferCssPageSize ?? !options?.margin,
           timeout: 120000,
           scale: 1.0,
         });

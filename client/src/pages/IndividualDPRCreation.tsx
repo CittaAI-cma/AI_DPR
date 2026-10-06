@@ -8,6 +8,10 @@ import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maxim
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
+import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
+import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setPictureFrame } from '@/lib/individualDpr/documentStyle';
+import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
@@ -51,6 +55,7 @@ export const IndividualDPRCreation: React.FC = () => {
     loadDataFromProject,
     setMatchedSchemeCode,
     setVentureMatchAnswers,
+    setSchemeExtras,
   } = useIndividualDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
@@ -80,6 +85,15 @@ export const IndividualDPRCreation: React.FC = () => {
   const skipNextDiffRef = useRef(true);
   const [previewHitIndex, setPreviewHitIndex] = useState(0);
   const [previewHitCount, setPreviewHitCount] = useState(0);
+  const [styling, setStyling] = useState(false);
+  const [docStyle, setDocStyle] = useState<any>(null);
+  const docStyleRef = useRef<any>(null);
+  docStyleRef.current = docStyle;
+  const [hotSectionId, setHotSectionId] = useState<string | null>(null);
+  const [styleSaving, setStyleSaving] = useState(false);
+  const [editNonce, setEditNonce] = useState(0);
+  const [editStepN, setEditStepN] = useState<number | null>(null);
+  const styleBeforeEdit = useRef<any>(null);
   const previewHitsRef = useRef<HTMLElement[]>([]);
 
   const refreshHits = useCallback((paths: string[]) => {
@@ -195,6 +209,9 @@ export const IndividualDPRCreation: React.FC = () => {
             const pid = projectData._id || projectData.id;
             setDprIds(dprData?._id || dprData?.id || '', pid);
             setSetupPhase('form');
+            const loaded = useIndividualDPRStore.getState().data;
+            const first = getVisibleSteps(loaded.matchedSchemeCode)[0] || 1;
+            void openStyleEditor(first);
           } catch {
             resetData();
             setSetupPhase('pick');
@@ -309,7 +326,15 @@ export const IndividualDPRCreation: React.FC = () => {
       const next = visibleSteps[idx + dir];
       if (next) {
         setCurrentStep(next);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (styling) {
+          setEditStepN(next);
+          setEditNonce((n) => n + 1);
+          document.querySelectorAll('.fill-edit-scroll').forEach((node) => {
+            node.scrollTo({ top: 0 });
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     } finally {
       if (advancing) setIsStepping(false);
@@ -345,6 +370,65 @@ export const IndividualDPRCreation: React.FC = () => {
     if (success) toast.success(t('individualDpr.toasts.saveSuccess'));
     else if (!getUnitName(data.step1)) toast.error(t('individualDpr.toasts.needUnitName'));
     else toast.error(t('individualDpr.toasts.saveFailed'));
+  };
+
+  const openStyleEditor = async (step?: number) => {
+    const latest = useIndividualDPRStore.getState().data;
+    const code = latest.matchedSchemeCode || schemeCode;
+    const start = step || currentStep;
+    styleBeforeEdit.current = latest.schemeExtras?.documentStyle || null;
+    const saved = latest.schemeExtras?.documentStyle;
+    if (saved) {
+      setDocStyle(resolveDocumentStyle(saved, code));
+    } else {
+      try {
+        const res = code ? await api.getSchemeDocumentStyle(code) : null;
+        setDocStyle(resolveDocumentStyle(res?.data?.documentStyle, code));
+      } catch {
+        setDocStyle(defaultStyleForScheme(code));
+      }
+    }
+    setEditStepN(start);
+    setEditNonce((n) => n + 1);
+    setStyling(true);
+  };
+
+  const onStyleChange = (next: any) => {
+    docStyleRef.current = next;
+    setDocStyle(next);
+    const current = useIndividualDPRStore.getState().data.schemeExtras || {};
+    setSchemeExtras({ ...current, documentStyle: next });
+  };
+
+  const saveReportStyle = async () => {
+    const latest = useIndividualDPRStore.getState().data;
+    const extras = { ...(latest.schemeExtras || {}), documentStyle: docStyle };
+    setSchemeExtras(extras);
+    try {
+      setStyleSaving(true);
+      const response = await individualDprApi.saveDraft(toIndividualPayload({ ...latest, schemeExtras: extras }));
+      if (response?.success && response.data?.dprId && response.data?.projectId) {
+        setDprIds(response.data.dprId, response.data.projectId);
+      }
+      toast.success('Style saved on this DPR');
+    } catch {
+      toast.error('Could not save the style. Save the draft after the unit name is filled.');
+    } finally {
+      setStyleSaving(false);
+    }
+  };
+
+  const saveSchemeDefault = async () => {
+    if (!schemeCode || !docStyle) return;
+    try {
+      setStyleSaving(true);
+      await api.saveSchemeDocumentStyle(schemeCode, docStyle);
+      toast.success('The next DPR for this scheme starts from this look');
+    } catch {
+      toast.error('Could not save the scheme default');
+    } finally {
+      setStyleSaving(false);
+    }
   };
 
   const handleGenerateDPR = async () => {
@@ -407,9 +491,10 @@ export const IndividualDPRCreation: React.FC = () => {
   };
 
   const handleBriefNext = () => {
+    const step = visibleSteps[0] || 1;
     setSetupPhase('form');
-    setCurrentStep(visibleSteps[0] || 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentStep(step);
+    void openStyleEditor(step);
   };
 
   const handleSchemeDropdownChange = (code: string) => {
@@ -438,10 +523,12 @@ export const IndividualDPRCreation: React.FC = () => {
           });
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <Layout fullBleed={Boolean(styling && docStyle)}>
+      <div className={styling && docStyle ? 'flex min-h-0 flex-1 flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
+        <div className={styling && docStyle
+          ? 'shrink-0 border-b border-border bg-background px-4 pb-4 pt-2'
+          : 'sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}>
+          <div className={styling && docStyle ? '' : 'max-w-[1920px] mx-auto px-4 py-4 sm:px-6 lg:px-8'}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
                 <Button
@@ -453,6 +540,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       return;
                     }
                     if (setupPhase === 'form') {
+                      setStyling(false);
                       setSetupPhase('brief');
                       return;
                     }
@@ -581,8 +669,47 @@ export const IndividualDPRCreation: React.FC = () => {
           </div>
         )}
 
+        {setupPhase === 'form' && styling && docStyle && (
+          <div className="shrink-0 border-b border-border bg-background px-3 py-2">
+            <div className="flex items-center gap-2 overflow-x-auto">
+              {visibleSteps.map((step) => {
+                const isCompleted = getStepCompletion(step);
+                const isCurrent = step === currentStep;
+                return (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => {
+                      if (step !== currentStep && !guardForward(step)) return;
+                      setInvalidFields([]);
+                      setRequiredNotice('');
+                      setCurrentStep(step);
+                      setEditStepN(step);
+                      setEditNonce((n) => n + 1);
+                    }}
+                    className={`
+                      flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all
+                      ${isCurrent
+                        ? (schemeUi?.stepActiveClass || 'bg-primary text-primary-foreground shadow-sm')
+                        : isCompleted
+                        ? 'border border-success/20 bg-success/10 text-success hover:bg-success/20'
+                        : (schemeUi?.stepIdleClass || 'bg-muted/50 text-muted-foreground hover:bg-muted')}
+                    `}
+                  >
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${isCurrent ? 'bg-primary-foreground/20' : isCompleted ? 'bg-success' : 'bg-muted-foreground/20'}`}>
+                      {isCompleted && !isCurrent ? '✓' : step}
+                    </span>
+                    <span>{t('individualDpr.stepShort', { n: step })}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {setupPhase === 'form' && (
           <>
+        {!styling && (
         <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -619,7 +746,9 @@ export const IndividualDPRCreation: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
+        {!styling && (
         <div className={schemeUi?.bannerClass || 'bg-amber-50 border-b border-amber-200'}>
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
               {schemeUi ? (
@@ -672,8 +801,131 @@ export const IndividualDPRCreation: React.FC = () => {
               )}
             </div>
           </div>
+        )}
 
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className={styling && docStyle ? 'min-h-0 flex-1' : 'max-w-[1920px] mx-auto px-4 py-6 sm:px-6 lg:px-8'}>
+          {styling && docStyle ? (
+            <StyleEditor
+              style={docStyle}
+              schemeCode={schemeCode}
+              steps={getSchemeDocSteps(schemeCode).map((step) => ({
+                id: step.id,
+                title: sectionTitleFromStep(step),
+                n: step.n,
+              }))}
+              activeSectionId={hotSectionId}
+              onActiveSection={setHotSectionId}
+              onEditSection={(step) => {
+                if (step?.n && visibleSteps.includes(step.n)) setCurrentStep(step.n);
+              }}
+              renderEditor={(step) => (
+                <div className="space-y-4">
+                  {requiredNotice ? (
+                    <div role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                      {requiredNotice}
+                    </div>
+                  ) : null}
+                  <IndividualDPRForm
+                    currentStep={step.n}
+                    invalidFields={invalidFields}
+                    onNext={() => goAdjacent(1)}
+                    onPrevious={() => goAdjacent(-1)}
+                  />
+                  <div className="flex items-center justify-between gap-2 border-t pt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goAdjacent(-1)}
+                      disabled={step.n === visibleSteps[0] || isStepping}
+                      className="gap-2"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      {t('common.previous')}
+                    </Button>
+                    {step.n === lastVisible ? (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={handleGenerateDPR}
+                        isLoading={isGenerating}
+                        className="gap-2"
+                      >
+                        {t('individualDpr.generateDpr')}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={() => goAdjacent(1)}
+                        isLoading={isStepping}
+                        className="gap-2"
+                      >
+                        {t('common.next')}
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+              editNonce={editNonce}
+              editStepN={editStepN}
+              onChange={onStyleChange}
+              onSave={saveReportStyle}
+              onClose={() => {
+                const current = useIndividualDPRStore.getState().data.schemeExtras || {};
+                if (styleBeforeEdit.current) {
+                  setSchemeExtras({ ...current, documentStyle: styleBeforeEdit.current });
+                } else {
+                  const next = { ...current };
+                  delete next.documentStyle;
+                  setSchemeExtras(next);
+                }
+                setDocStyle(null);
+                setStyling(false);
+                setSetupPhase('brief');
+              }}
+              saving={styleSaving}
+              canSaveSchemeDefault={isAdmin}
+              onSaveSchemeDefault={saveSchemeDefault}
+              language={viewLanguage}
+              onLanguage={(lang) => i18n.changeLanguage(lang === 'telugu' ? 'te' : 'en')}
+              hasTelugu
+            >
+              <IndividualDPRDocumentView
+                trackFieldHits
+                documentStyle={docStyle}
+                activeSectionId={hotSectionId}
+                dpr={{
+                  content: { english: { clusterData: dprPayload } },
+                  metadata: {
+                    clusterData: dprPayload,
+                    isIndividualDPR: true,
+                    matchedSchemeCode: data.matchedSchemeCode || null,
+                  },
+                }}
+                project={project || {
+                  _id: data.projectId,
+                  id: data.projectId,
+                  projectName: getUnitName(data.step1),
+                  projectType: 'individual',
+                  stepData: dprPayload,
+                }}
+                viewLanguage={viewLanguage}
+                onImageFrame={(slot, box) => {
+                  if (!docStyleRef.current) return;
+                  onStyleChange(setPictureFrame(docStyleRef.current, slot, box));
+                }}
+                onSectionClick={(stepNumber: number) => {
+                  if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                  setEditStepN(stepNumber);
+                  setEditNonce((n) => n + 1);
+                }}
+              />
+            </StyleEditor>
+          ) : (
           <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {(previewMode === 'form' || previewMode === 'split') && (
               <div id="individual-dpr-form" className="space-y-6">
@@ -758,32 +1010,30 @@ export const IndividualDPRCreation: React.FC = () => {
             {(previewMode === 'preview' || previewMode === 'split') && (
               <div className="space-y-6">
                 <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
-                  <CardHeader className="flex-shrink-0 border-b border-border">
-                    <div className="flex items-center justify-between">
-                      <CardTitle>{t('individualDpr.livePreview')}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 border rounded-lg p-1">
-                          <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))} className="h-7 w-7 p-0">
-                            <ZoomOut className="h-4 w-4" />
-                          </Button>
-                          <span className="text-xs px-2 min-w-[3rem] text-center">{Math.round(previewZoom * 100)}%</span>
-                          <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.min(2, previewZoom + 0.1))} className="h-7 w-7 p-0">
-                            <ZoomIn className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(1)} className="h-7 w-7 p-0">
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
-                          className="gap-2"
-                        >
-                          <Maximize2 className="h-4 w-4" />
-                          {t('individualDpr.fullscreen')}
+                  <CardHeader className="flex-shrink-0 space-y-3 border-b border-border">
+                    <CardTitle>{t('individualDpr.livePreview')}</CardTitle>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1 rounded-lg border p-1">
+                        <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))} className="h-7 w-7 p-0">
+                          <ZoomOut className="h-4 w-4" />
+                        </Button>
+                        <span className="min-w-[3rem] px-2 text-center text-xs">{Math.round(previewZoom * 100)}%</span>
+                        <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.min(2, previewZoom + 0.1))} className="h-7 w-7 p-0">
+                          <ZoomIn className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(1)} className="h-7 w-7 p-0">
+                          <RotateCcw className="h-4 w-4" />
                         </Button>
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('dpr-preview-scroll')?.requestFullscreen?.()}
+                        className="h-9 shrink-0 gap-2 whitespace-nowrap px-3"
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                        {t('individualDpr.fullscreen')}
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 min-h-0 overflow-hidden p-0 bg-gray-100 relative flex flex-col">
@@ -833,39 +1083,61 @@ export const IndividualDPRCreation: React.FC = () => {
                         className="py-4"
                         style={{ zoom: previewZoom } as React.CSSProperties}
                       >
-                        <div
-                          id="dpr-preview"
-                          className="bg-white mx-auto shadow-lg"
-                          style={{ minHeight: '100%', width: '21cm', padding: '2rem' }}
-                        >
-                          <IndividualDPRDocumentView
-                            trackFieldHits
-                            dpr={{
-                              content: {
-                                english: {
-                                  clusterData: dprPayload,
+                        {(() => {
+                          const saved = data.schemeExtras?.documentStyle;
+                          const look = saved ? resolveDocumentStyle(saved, schemeCode) : null;
+                          const doc = (
+                            <IndividualDPRDocumentView
+                              trackFieldHits
+                              dpr={{
+                                content: {
+                                  english: {
+                                    clusterData: dprPayload,
+                                  },
                                 },
-                              },
-                              metadata: {
-                                clusterData: dprPayload,
-                                isIndividualDPR: true,
-                                matchedSchemeCode: data.matchedSchemeCode || null,
-                              },
-                            }}
-                            project={project || {
-                              _id: data.projectId,
-                              id: data.projectId,
-                              projectName: getUnitName(data.step1),
-                              projectType: 'individual',
-                              stepData: dprPayload,
-                            }}
-                            viewLanguage={viewLanguage}
-                            onSectionClick={(stepNumber: number) => {
-                              if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                          />
-                        </div>
+                                metadata: {
+                                  clusterData: dprPayload,
+                                  isIndividualDPR: true,
+                                  matchedSchemeCode: data.matchedSchemeCode || null,
+                                },
+                              }}
+                              project={project || {
+                                _id: data.projectId,
+                                id: data.projectId,
+                                projectName: getUnitName(data.step1),
+                                projectType: 'individual',
+                                stepData: dprPayload,
+                              }}
+                              viewLanguage={viewLanguage}
+                              onSectionClick={(stepNumber: number) => {
+                                if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                            />
+                          );
+                          if (!look) {
+                            return (
+                              <div
+                                id="dpr-preview"
+                                className="bg-white mx-auto shadow-lg"
+                                style={{ minHeight: '100%', width: '21cm', padding: '2rem' }}
+                              >
+                                {doc}
+                              </div>
+                            );
+                          }
+                          return (
+                            <PageSheet
+                              id="dpr-preview"
+                              className="bg-white mx-auto shadow-lg"
+                              pageSize={look.pageSize}
+                              edgeTopMm={pageEdgeMm(look.marginMm.top)}
+                              edgeBottomMm={pageEdgeMm(look.marginMm.bottom)}
+                            >
+                              {doc}
+                            </PageSheet>
+                          );
+                        })()}
                       </div>
                     </div>
                   </CardContent>
@@ -873,6 +1145,7 @@ export const IndividualDPRCreation: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
           </>
         )}

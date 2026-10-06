@@ -13,6 +13,19 @@ import {
   splitUnfilledFields,
   yearToIsoDate,
 } from './individualDpr/stepSuggestionCheck.ts';
+import {
+  applySectionOrder,
+  contrastOk,
+  defaultStyleForScheme,
+  insertPicture,
+  layoutOrder,
+  moveSection,
+  pageEdgeMm,
+  resizeImageBox,
+  resolveDocumentStyle,
+  setImageWidth,
+  shiftForPageEdge,
+} from './individualDpr/documentStyle.ts';
 
 describe('dpr download name', () => {
   it('uses scheme, project, short language, and DDMMYY', () => {
@@ -130,5 +143,79 @@ describe('step suggestion batch', () => {
     assert.equal(acceptByKind('date', '2026-02-31', emptyFacts), null);
     assert.equal(acceptByKind('date', '2026-04-01', emptyFacts), '2026-04-01');
     assert.equal(acceptByKind('prose', 'Too short.', emptyFacts), null);
+  });
+});
+
+describe('report style', () => {
+  it('starts PMEGP from its preset and other schemes from the government look', () => {
+    assert.equal(defaultStyleForScheme('PMEGP').preset, 'pmegp');
+    assert.equal(defaultStyleForScheme('AP_CMEP').preset, 'apCmep');
+    assert.equal(defaultStyleForScheme('PMFME').preset, 'government');
+  });
+
+  it('keeps a half-saved style on the preset', () => {
+    const style = resolveDocumentStyle({ colors: { header: '#111827' } }, 'PMEGP');
+    assert.equal(style.colors.header, '#111827');
+    assert.equal(style.colors.primary, defaultStyleForScheme('PMEGP').colors.primary);
+    assert.equal(style.watermark, 'Confidential — for lending appraisal');
+  });
+
+  it('moves a section with its place in the print order and can hide it', () => {
+    const steps = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    const order = moveSection([], steps, 'c', 'a');
+    assert.deepEqual(order, ['c', 'a', 'b']);
+    const visible = applySectionOrder(steps, { sectionOrder: order, hiddenSectionIds: ['a'] });
+    assert.deepEqual(visible.map((step) => step.id), ['c', 'b']);
+  });
+
+  it('rejects a color that would hide the text', () => {
+    assert.equal(contrastOk('#ffffff', '#ffffff'), false);
+    assert.equal(contrastOk('#111827', '#ffffff'), true);
+    assert.equal(contrastOk('#ffffff', '#1e3a5f'), true);
+  });
+
+  it('keeps a picture width and drops it when the picture is gone', () => {
+    const base = defaultStyleForScheme('PMFME');
+    const tiny = 'data:image/png;base64,aaaa';
+    const sized = setImageWidth({ ...base, images: { ...base.images, cover: tiny } }, 'cover', 40);
+    assert.equal(sized.imageWidths.cover, 40);
+    const kept = resolveDocumentStyle(sized, 'PMFME');
+    assert.equal(kept.imageWidths.cover, 40);
+    const cleared = resolveDocumentStyle({ ...sized, images: { ...sized.images, cover: '' } }, 'PMFME');
+    assert.equal(cleared.images.cover, '');
+    assert.equal(cleared.imageWidths.cover, 100);
+    const start = { w: 80, h: 40, x: 10, y: 6 };
+    const fromLeft = resizeImageBox(start, 'w', 10, 0);
+    assert.equal(fromLeft.x + fromLeft.w, start.x + start.w);
+    const fromTop = resizeImageBox(start, 'n', 0, 8);
+    assert.equal(fromTop.y + fromTop.h, start.y + start.h);
+    const corner = resizeImageBox(start, 'se', -10, -4);
+    assert.equal(corner.x, start.x);
+    assert.equal(corner.y, start.y);
+    assert.ok(corner.w < start.w && corner.h < start.h);
+    const steps = [{ id: 'a' }, { id: 'b' }];
+    const placed = insertPicture(base, steps, {
+      id: 'shop',
+      name: 'Shop front',
+      src: tiny,
+      hidden: false,
+      place: 'a',
+      frame: { w: 100, h: 0, x: 0, y: 0 },
+    });
+    assert.deepEqual(layoutOrder(steps, placed), ['a', 'pic:shop', 'b']);
+    const migrated = resolveDocumentStyle({ images: { cover: tiny } }, 'PMFME');
+    assert.equal(migrated.pictures[0].place, 'cover');
+    assert.equal(migrated.pictures[0].name, 'Cover picture');
+  });
+
+  it('keeps a block off the page edge and off the break', () => {
+    const page = 1000;
+    const edge = 80;
+    assert.equal(pageEdgeMm(8), 12);
+    assert.equal(pageEdgeMm(16), 16);
+    assert.equal(shiftForPageEdge(100, 40, page, edge, edge), 0);
+    assert.equal(shiftForPageEdge(20, 40, page, edge, edge), 60);
+    assert.equal(shiftForPageEdge(900, 150, page, edge, edge), 180);
+    assert.equal(shiftForPageEdge(400, 900, page, edge, edge), 0);
   });
 });

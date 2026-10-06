@@ -4,6 +4,7 @@ import { DPRController } from '../controllers/dpr.controller';
 import { ClusterDPRController } from '../controllers/clusterDPR.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { requireAiConsent } from '../middleware/aiConsent.middleware';
+import { SchemeStyleController } from '../controllers/schemeStyle.controller';
 
 const router = Router();
 
@@ -42,6 +43,9 @@ router.post('/upload', (req, res, next) => {
 }, requireAiConsent, DPRController.uploadDPR);
 
 router.get('/user/list', DPRController.getUserDPRs);
+
+router.get('/scheme-style/:schemeCode', SchemeStyleController.get);
+router.put('/scheme-style/:schemeCode', SchemeStyleController.save);
 
 router.post('/generate/:projectId', requireAiConsent, DPRController.generateDPR);
 router.get('/project/:projectId', DPRController.getProjectDPRs);

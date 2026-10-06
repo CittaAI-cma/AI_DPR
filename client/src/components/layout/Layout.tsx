@@ -5,11 +5,23 @@ import { useAuthStore } from '@/store/authStore';
 
 interface LayoutProps {
   children: React.ReactNode;
+  fullBleed?: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, fullBleed = false }) => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const railClear = isAuthenticated ? 'max-[1528px]:pl-[4.75rem]' : '';
+
+  if (fullBleed) {
+    return (
+      <div className="flex h-dvh flex-col overflow-hidden bg-background">
+        <Navbar />
+        <main className={`flex min-h-0 flex-1 flex-col overflow-hidden ${isAuthenticated ? 'pl-16' : ''}`}>
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

@@ -6,6 +6,7 @@ import { DPRTemplate } from '../models/DPRTemplate.model';
 import { DPRSession } from '../models/DPRSession.model';
 import { Document } from '../models/Document.model';
 import { DPRService } from '../services/dpr.service';
+import { pdfOptionsFromCapturedHtml } from '../lib/pdfPageOptions';
 import { QualityService } from '../services/quality.service';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { AuthRequest } from '../types';
@@ -880,10 +881,10 @@ export class DPRController {
 
       let pdfBuffer: Buffer;
       try {
-        const isIndividual = html.includes('individual-dpr-document');
+        const pdfOptions = pdfOptionsFromCapturedHtml(html);
         pdfBuffer = await DPRService.generatePDFFromHTML(
           html,
-          isIndividual ? { margin: '16mm' } : undefined
+          pdfOptions
         );
       } catch (htmlError: any) {
         console.warn('⚠️ Exact HTML PDF failed, falling back to scheme/server PDF:', htmlError?.message);
