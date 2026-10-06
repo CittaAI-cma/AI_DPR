@@ -323,7 +323,15 @@ export const IndividualDPRCreation: React.FC = () => {
       const next = visibleSteps[idx + dir];
       if (next) {
         setCurrentStep(next);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (styling) {
+          setEditStepN(next);
+          setEditNonce((n) => n + 1);
+          document.querySelectorAll('.fill-edit-scroll').forEach((node) => {
+            node.scrollTo({ top: 0 });
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     } finally {
       if (advancing) setIsStepping(false);
@@ -807,12 +815,56 @@ export const IndividualDPRCreation: React.FC = () => {
                 if (step?.n && visibleSteps.includes(step.n)) setCurrentStep(step.n);
               }}
               renderEditor={(step) => (
-                <IndividualDPRForm
-                  currentStep={step.n}
-                  invalidFields={invalidFields}
-                  onNext={() => {}}
-                  onPrevious={() => {}}
-                />
+                <div className="space-y-4">
+                  {requiredNotice ? (
+                    <div role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                      {requiredNotice}
+                    </div>
+                  ) : null}
+                  <IndividualDPRForm
+                    currentStep={step.n}
+                    invalidFields={invalidFields}
+                    onNext={() => goAdjacent(1)}
+                    onPrevious={() => goAdjacent(-1)}
+                  />
+                  <div className="flex items-center justify-between gap-2 border-t pt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goAdjacent(-1)}
+                      disabled={step.n === visibleSteps[0] || isStepping}
+                      className="gap-2"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      {t('common.previous')}
+                    </Button>
+                    {step.n === lastVisible ? (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={handleGenerateDPR}
+                        isLoading={isGenerating}
+                        className="gap-2"
+                      >
+                        {t('individualDpr.generateDpr')}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={() => goAdjacent(1)}
+                        isLoading={isStepping}
+                        className="gap-2"
+                      >
+                        {t('common.next')}
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               )}
               editNonce={editNonce}
               editStepN={editStepN}

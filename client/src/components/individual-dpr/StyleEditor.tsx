@@ -752,7 +752,7 @@ export function StyleEditor({
                 <p className="text-sm font-semibold">{tf('Fill & edit')}</p>
                 <p className="truncate text-xs text-slate-500">{tf((editStep || steps[0])?.title || '')}</p>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <div className="fill-edit-scroll min-h-0 flex-1 overflow-y-auto p-3">
                 {(editStep || steps[0]) ? renderEditor(editStep || steps[0]) : null}
               </div>
             </div>
@@ -776,7 +776,7 @@ export function StyleEditor({
                 {tf('Close')}
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            <div className="fill-edit-scroll min-h-0 flex-1 overflow-y-auto p-3">
               {renderEditor(editStep)}
             </div>
           </div>
