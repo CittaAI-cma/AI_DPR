@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ArrowLeft, Save, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
@@ -63,7 +63,6 @@ export const IndividualDPRCreation: React.FC = () => {
   const [requiredNotice, setRequiredNotice] = useState('');
   const [devMode, setDevMode] = useState(false);
   const isAdmin = isSuperAdmin(useAuthStore((s) => s.user?.role));
-  const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const [previewZoom, setPreviewZoom] = useState(0.6);
   const [project, setProject] = useState<any>(null);
   const isNewDraft = searchParams.get('new') === 'true';
@@ -598,7 +597,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     }}
                   />
                 )}
-                {setupPhase === 'form' && !styling && (
+                {setupPhase === 'form' && (
                   <>
                     <label className="flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground whitespace-nowrap">
@@ -622,15 +621,19 @@ export const IndividualDPRCreation: React.FC = () => {
                       {t('individualDpr.saveDraft')}
                     </Button>
                     <div className="flex items-center gap-1 border rounded-lg p-1">
-                      <Button variant={previewMode === 'form' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('form')}>
+                      <Button
+                        variant={!styling ? 'primary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setStyling(false)}
+                      >
                         {t('individualDpr.form')}
                       </Button>
-                      <Button variant={previewMode === 'split' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('split')}>
-                        {t('individualDpr.split')}
-                      </Button>
-                      <Button variant={previewMode === 'preview' ? 'primary' : 'ghost'} size="sm" onClick={() => setPreviewMode('preview')} className="gap-2">
-                        <Eye className="h-4 w-4" />
-                        {t('individualDpr.preview')}
+                      <Button
+                        variant={styling ? 'primary' : 'ghost'}
+                        size="sm"
+                        onClick={() => { void openStyleEditor(); }}
+                      >
+                        {t('individualDpr.customise', { defaultValue: 'Customise' })}
                       </Button>
                     </div>
                     <Button
@@ -934,8 +937,7 @@ export const IndividualDPRCreation: React.FC = () => {
               />
             </StyleEditor>
           ) : (
-          <div className={`grid gap-6 ${previewMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-            {(previewMode === 'form' || previewMode === 'split') && (
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
               <div id="individual-dpr-form" className="space-y-6">
                 {isLoadingData ? (
                   <Card>
@@ -1013,9 +1015,7 @@ export const IndividualDPRCreation: React.FC = () => {
                   )}
                 </div>
               </div>
-            )}
 
-            {(previewMode === 'preview' || previewMode === 'split') && (
               <div className="space-y-6">
                 <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
                   <CardHeader className="flex-shrink-0 space-y-3 border-b border-border">
@@ -1151,7 +1151,6 @@ export const IndividualDPRCreation: React.FC = () => {
                   </CardContent>
                 </Card>
               </div>
-            )}
           </div>
           )}
         </div>
