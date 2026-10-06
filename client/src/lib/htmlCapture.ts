@@ -51,7 +51,8 @@ export function captureElementAsStandaloneHTML(
     .individual-qa-block, .individual-particulars, .individual-cover, .individual-toc, .dpr-slot-figure { break-inside: avoid; page-break-inside: avoid; }
     .individual-sec { break-inside: auto; page-break-inside: auto; }
     .individual-sec-title { break-after: avoid; page-break-after: avoid; }
-    .dpr-slot-resize { display: none !important; }
+    .dpr-slot-handle { display: none !important; }
+    .dpr-slot-box.is-live { outline: none !important; }
     html, body { margin: 0; padding: 0; width: auto; max-width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .pdf-capture-root { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .pdf-capture-root table { table-layout: fixed !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; }

@@ -34,7 +34,7 @@ import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocum
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { isIndividualDprRecord, extractIndividualDocData, extractSchemeCode, getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setImageWidth } from '@/lib/individualDpr/documentStyle';
+import { defaultStyleForScheme, pageEdgeMm, resolveDocumentStyle, setImageFrame } from '@/lib/individualDpr/documentStyle';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
@@ -988,9 +988,9 @@ export const DPRPreview: React.FC = () => {
                     viewLanguage={viewLanguage}
                     documentStyle={draftStyle}
                     activeSectionId={hotSectionId}
-                    onImageWidth={(slot, pct) => {
+                    onImageFrame={(slot, box) => {
                       if (!draftStyleRef.current) return;
-                      const next = setImageWidth(draftStyleRef.current, slot, pct);
+                      const next = setImageFrame(draftStyleRef.current, slot, box);
                       draftStyleRef.current = next;
                       setDraftStyle(next);
                     }}

@@ -19,6 +19,7 @@ import {
   defaultStyleForScheme,
   moveSection,
   pageEdgeMm,
+  resizeImageBox,
   resolveDocumentStyle,
   setImageWidth,
   shiftForPageEdge,
@@ -181,6 +182,15 @@ describe('report style', () => {
     const cleared = resolveDocumentStyle({ ...sized, images: { ...sized.images, cover: '' } }, 'PMFME');
     assert.equal(cleared.images.cover, '');
     assert.equal(cleared.imageWidths.cover, 100);
+    const start = { w: 80, h: 40, x: 10, y: 6 };
+    const fromLeft = resizeImageBox(start, 'w', 10, 0);
+    assert.equal(fromLeft.x + fromLeft.w, start.x + start.w);
+    const fromTop = resizeImageBox(start, 'n', 0, 8);
+    assert.equal(fromTop.y + fromTop.h, start.y + start.h);
+    const corner = resizeImageBox(start, 'se', -10, -4);
+    assert.equal(corner.x, start.x);
+    assert.equal(corner.y, start.y);
+    assert.ok(corner.w < start.w && corner.h < start.h);
   });
 
   it('keeps a block off the page edge and off the break', () => {

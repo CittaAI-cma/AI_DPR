@@ -28,6 +28,10 @@ export interface TypeRole {
   weight: 400 | 600 | 700;
 }
 
+/** Picture box as percents of the column width. h 0 keeps the photo's own height. */
+export type ImageBox = { w: number; h: number; x: number; y: number };
+export type ImageHandle = 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se';
+
 export interface DocumentStyle {
   preset: DocPresetId;
   pageSize: PageSize;
@@ -56,6 +60,7 @@ export interface DocumentStyle {
   hiddenSectionIds: string[];
   images: { cover: string; annexure: string; after: Record<string, string> };
   imageWidths: { cover: number; annexure: number; after: Record<string, number> };
+  imageFrames: { cover: ImageBox; annexure: ImageBox; after: Record<string, ImageBox> };
 }
 
 export const PRESET_LABELS: Record<DocPresetId, string> = {
@@ -85,10 +90,90 @@ function emptyWidths(): DocumentStyle['imageWidths'] {
   return { cover: 100, annexure: 100, after: {} };
 }
 
+function emptyBox(): ImageBox {
+  return { w: 100, h: 0, x: 0, y: 0 };
+}
+
+function emptyFrames(): DocumentStyle['imageFrames'] {
+  return { cover: emptyBox(), annexure: emptyBox(), after: {} };
+}
+
 function clampWidth(value: unknown): number | null {
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
   return Math.min(100, Math.max(20, Math.round(n)));
+}
+
+export function clampImageBox(box: Partial<ImageBox> | null | undefined): ImageBox {
+  const w = clampWidth(box?.w) ?? 100;
+  const hRaw = Number(box?.h);
+  const h = !Number.isFinite(hRaw) || hRaw <= 0 ? 0 : Math.min(250, Math.max(8, Math.round(hRaw)));
+  let x = Math.round(Number(box?.x) || 0);
+  let y = Math.round(Number(box?.y) || 0);
+  if (x < 0) x = 0;
+  if (x + w > 100) x = Math.max(0, 100 - w);
+  if (y < 0) y = 0;
+  if (y > 120) y = 120;
+  return { w, h, x, y };
+}
+
+/** Word-style resize. dx and dy are percents of the column width. The opposite edge stays put. */
+export function resizeImageBox(start: ImageBox, handle: ImageHandle, dx: number, dy: number): ImageBox {
+  const h0 = start.h > 0 ? start.h : Math.max(8, start.w * 0.75);
+  const ratio = h0 / start.w;
+  let w = start.w;
+  let h = h0;
+  const west = handle === 'w' || handle === 'nw' || handle === 'sw';
+  const east = handle === 'e' || handle === 'ne' || handle === 'se';
+  const north = handle === 'n' || handle === 'nw' || handle === 'ne';
+  const south = handle === 's' || handle === 'sw' || handle === 'se';
+  const corner = handle.length === 2;
+
+  if (corner) {
+    const dw = east ? dx : -dx;
+    const dh = south ? dy : -dy;
+    const scale = Math.abs(dw) >= Math.abs(dh) ? (start.w + dw) / start.w : (h0 + dh) / h0;
+    w = start.w * scale;
+    h = h0 * scale;
+  } else if (east) w = start.w + dx;
+  else if (west) w = start.w - dx;
+  else if (south) h = h0 + dy;
+  else h = h0 - dy;
+
+  let x = start.x;
+  let y = start.y;
+  if (west) {
+    w = Math.min(Math.max(w, 20), start.x + start.w);
+    if (corner) h = w * ratio;
+    x = start.x + start.w - w;
+  } else if (east) {
+    w = Math.min(Math.max(w, 20), 100 - start.x);
+    if (corner) h = w * ratio;
+    x = start.x;
+  }
+  const bottom = start.y + h0;
+  if (north) {
+    h = Math.min(Math.max(h, 8), bottom);
+    if (corner) {
+      w = Math.min(Math.max(h / ratio, 20), west ? start.x + start.w : 100 - start.x);
+      h = w * ratio;
+      if (h > bottom) {
+        h = bottom;
+        w = h / ratio;
+      }
+      x = west ? start.x + start.w - w : start.x;
+    }
+    y = bottom - h;
+  } else if (south) {
+    h = Math.min(Math.max(h, 8), 250);
+    if (corner) {
+      w = Math.min(Math.max(h / ratio, 20), west ? start.x + start.w : 100 - start.x);
+      h = w * ratio;
+      x = west ? start.x + start.w - w : start.x;
+    }
+    y = start.y;
+  }
+  return clampImageBox({ w, h, x, y });
 }
 
 export function presetStyle(id: DocPresetId): DocumentStyle {
@@ -111,6 +196,7 @@ export function presetStyle(id: DocPresetId): DocumentStyle {
     hiddenSectionIds: [] as string[],
     images: emptyImages(),
     imageWidths: emptyWidths(),
+    imageFrames: emptyFrames(),
   };
 
   if (id === 'bank') {
@@ -305,6 +391,11 @@ export function resolveDocumentStyle(saved: unknown, schemeCode?: string | null)
       annexure: Boolean(safeImage(s.images?.annexure)),
       after,
     }),
+    imageFrames: readImageFrames(s.imageFrames, s.imageWidths, {
+      cover: Boolean(safeImage(s.images?.cover)),
+      annexure: Boolean(safeImage(s.images?.annexure)),
+      after,
+    }),
   };
 }
 
@@ -324,23 +415,63 @@ function readImageWidths(
   };
 }
 
-export function imageWidthPct(style: DocumentStyle, slot: string): number {
-  if (slot === 'cover') return style.imageWidths?.cover || 100;
-  if (slot === 'annexure') return style.imageWidths?.annexure || 100;
-  return style.imageWidths?.after?.[slot] || 100;
+function readImageFrames(
+  raw: DocumentStyle['imageFrames'] | undefined,
+  widths: DocumentStyle['imageWidths'] | undefined,
+  present: { cover: boolean; annexure: boolean; after: Record<string, string> }
+): DocumentStyle['imageFrames'] {
+  const after: Record<string, ImageBox> = {};
+  for (const key of Object.keys(present.after)) {
+    after[key] = clampImageBox({ ...(raw?.after?.[key] || {}), w: raw?.after?.[key]?.w ?? widths?.after?.[key] ?? 100 });
+  }
+  return {
+    cover: present.cover ? clampImageBox({ ...(raw?.cover || {}), w: raw?.cover?.w ?? widths?.cover ?? 100 }) : emptyBox(),
+    annexure: present.annexure ? clampImageBox({ ...(raw?.annexure || {}), w: raw?.annexure?.w ?? widths?.annexure ?? 100 }) : emptyBox(),
+    after,
+  };
 }
 
-export function setImageWidth(style: DocumentStyle, slot: string, pct: number): DocumentStyle {
-  const width = clampWidth(pct) ?? 100;
+export function imageFrameOf(style: DocumentStyle, slot: string): ImageBox {
+  if (slot === 'cover') return style.imageFrames?.cover || emptyBox();
+  if (slot === 'annexure') return style.imageFrames?.annexure || emptyBox();
+  return style.imageFrames?.after?.[slot] || { ...emptyBox(), w: style.imageWidths?.after?.[slot] || 100 };
+}
+
+export function imageWidthPct(style: DocumentStyle, slot: string): number {
+  return imageFrameOf(style, slot).w || style.imageWidths?.cover || 100;
+}
+
+function writeFrame(style: DocumentStyle, slot: string, box: ImageBox): DocumentStyle {
+  const frames: DocumentStyle['imageFrames'] = {
+    cover: style.imageFrames?.cover || emptyBox(),
+    annexure: style.imageFrames?.annexure || emptyBox(),
+    after: { ...(style.imageFrames?.after || {}) },
+  };
   const widths: DocumentStyle['imageWidths'] = {
     cover: style.imageWidths?.cover ?? 100,
     annexure: style.imageWidths?.annexure ?? 100,
     after: { ...(style.imageWidths?.after || {}) },
   };
-  if (slot === 'cover') widths.cover = width;
-  else if (slot === 'annexure') widths.annexure = width;
-  else widths.after[slot] = width;
-  return { ...style, imageWidths: widths };
+  if (slot === 'cover') {
+    frames.cover = box;
+    widths.cover = box.w;
+  } else if (slot === 'annexure') {
+    frames.annexure = box;
+    widths.annexure = box.w;
+  } else {
+    frames.after[slot] = box;
+    widths.after[slot] = box.w;
+  }
+  return { ...style, imageFrames: frames, imageWidths: widths };
+}
+
+export function setImageFrame(style: DocumentStyle, slot: string, box: Partial<ImageBox>): DocumentStyle {
+  return writeFrame(style, slot, clampImageBox(box));
+}
+
+export function setImageWidth(style: DocumentStyle, slot: string, pct: number): DocumentStyle {
+  const current = imageFrameOf(style, slot);
+  return writeFrame(style, slot, clampImageBox({ ...current, w: pct }));
 }
 
 /** Keep section order and pictures when the person picks a new preset. */
@@ -352,6 +483,7 @@ export function applyPreset(current: DocumentStyle, id: DocPresetId): DocumentSt
     hiddenSectionIds: current.hiddenSectionIds,
     images: current.images,
     imageWidths: current.imageWidths,
+    imageFrames: current.imageFrames,
     logoDataUrl: current.logoDataUrl,
     agencyName: current.agencyName || next.agencyName,
     pageSize: current.pageSize,

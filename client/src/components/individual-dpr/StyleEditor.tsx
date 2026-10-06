@@ -14,6 +14,7 @@ import {
   contrastOk,
   defaultStyleForScheme,
   moveSection,
+  setImageFrame,
   pageEdgeMm,
   pageWidthMm,
   styleProblems,
@@ -642,24 +643,12 @@ export function StyleEditor({
               type="button"
               className="text-xs text-red-700"
               onClick={() => {
-                const widths = {
-                  cover: style.imageWidths?.cover ?? 100,
-                  annexure: style.imageWidths?.annexure ?? 100,
-                  after: { ...(style.imageWidths?.after || {}) },
-                };
-                if (slot === 'cover') {
-                  widths.cover = 100;
-                  commit({ ...style, images: { ...style.images, cover: '' }, imageWidths: widths });
-                } else if (slot === 'annexure') {
-                  widths.annexure = 100;
-                  commit({ ...style, images: { ...style.images, annexure: '' }, imageWidths: widths });
-                } else {
-                  const id = slot.slice('after:'.length);
-                  const after = { ...style.images.after };
-                  delete after[id];
-                  delete widths.after[id];
-                  commit({ ...style, images: { ...style.images, after }, imageWidths: widths });
-                }
+                const images = { ...style.images, after: { ...style.images.after } };
+                const id = slot === 'cover' || slot === 'annexure' ? slot : slot.slice('after:'.length);
+                if (slot === 'cover') images.cover = '';
+                else if (slot === 'annexure') images.annexure = '';
+                else delete images.after[id];
+                commit(setImageFrame({ ...style, images }, id, { w: 100, h: 0, x: 0, y: 0 }));
               }}
             >
               {tf('Remove picture')}
