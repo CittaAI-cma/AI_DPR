@@ -446,6 +446,8 @@ export const FORM_FIELD_TE: Record<string, string> = {
   'Delete section': 'విభాగం తొలగించు',
   'That image is too large.': 'ఆ చిత్రం చాలా పెద్దది.',
   'Drag to resize': 'లాగి పరిమాణం మార్చు',
+  Collapse: 'మూసివేయి',
+  Expand: 'తెరువు',
   'Fill & edit': 'నింపు మరియు మార్చు',
   Style: 'రూపం',
   English: 'ఇంగ్లీష్',

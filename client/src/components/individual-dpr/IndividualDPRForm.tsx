@@ -450,7 +450,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               type="button"
               variant="outline"
               size="sm"
-              className="gap-1.5"
+              className="shrink-0 gap-1.5 whitespace-nowrap"
               onClick={() => {
                 const nature = String(stepData.natureOfBusiness || '').trim();
                 const products = String(stepData.majorProducts || '').trim();
@@ -557,7 +557,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="shrink-0 gap-1.5 whitespace-nowrap"
                 disabled={matchingSkill}
                 onClick={async () => {
                   const text = String(stepData.natureOfBusiness || '').trim();

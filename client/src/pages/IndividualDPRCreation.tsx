@@ -851,14 +851,14 @@ export const IndividualDPRCreation: React.FC = () => {
                     onNext={() => goAdjacent(1)}
                     onPrevious={() => goAdjacent(-1)}
                   />
-                  <div className="flex items-center justify-between gap-2 border-t pt-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => goAdjacent(-1)}
                       disabled={step.n === selectionSteps[0] || isStepping}
-                      className="gap-2"
+                      className="shrink-0 gap-2"
                     >
                       <ChevronLeft className="h-4 w-4" />
                       {t('common.previous')}
@@ -870,7 +870,7 @@ export const IndividualDPRCreation: React.FC = () => {
                         size="sm"
                         onClick={handleGenerateDPR}
                         isLoading={isGenerating}
-                        className="gap-2"
+                        className="shrink-0 gap-2"
                       >
                         {t('individualDpr.generateDpr')}
                       </Button>
@@ -881,7 +881,7 @@ export const IndividualDPRCreation: React.FC = () => {
                         size="sm"
                         onClick={() => goAdjacent(1)}
                         isLoading={isStepping}
-                        className="gap-2"
+                        className="shrink-0 gap-2"
                       >
                         {t('common.next')}
                         <ChevronRight className="h-4 w-4" />

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronDown, Eye, EyeOff, GripVertical, ImagePlus, Maximize2, Plus, Type, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, ChevronRight, Eye, EyeOff, GripVertical, ImagePlus, List, Maximize2, Palette, Plus, Type, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -34,6 +34,21 @@ import {
 
 const PAGE_SIZES: PageSize[] = ['A4', 'A3', 'Letter', 'Legal'];
 const ROLE_KEYS = ['cover', 'sectionTitle', 'body', 'table', 'caption'] as const;
+
+function useFineHover() {
+  const [fine, setFine] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const apply = () => setFine(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+  return fine;
+}
 
 const ROLE_LABELS: Record<(typeof ROLE_KEYS)[number], string> = {
   cover: 'Cover',
@@ -105,7 +120,23 @@ export function StyleEditor({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropHint, setDropHint] = useState(null);
   const [panel, setPanel] = useState(null);
-  const [side, setSide] = useState(null);
+  const [sideTab, setSideTab] = useState('sections');
+  const [sideHover, setSideHover] = useState(false);
+  const [sidePinned, setSidePinned] = useState(false);
+  const fineHover = useFineHover();
+  const sideOpen = sideHover || sidePinned;
+
+  useEffect(() => {
+    if (!sideOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSidePinned(false);
+        setSideHover(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sideOpen]);
   const [openGroups, setOpenGroups] = useState({});
   const toggleGroup = (id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
   const [editStep, setEditStep] = useState(null);
@@ -123,17 +154,20 @@ export function StyleEditor({
   const [deletePictureId, setDeletePictureId] = useState('');
   const [wideTable, setWideTable] = useState(false);
   const [blockedColor, setBlockedColor] = useState('');
-  const [paneWidths, setPaneWidths] = useState({ edit: 300 });
+  const EDIT_MIN = 480;
+  const editFloor = useRef(EDIT_MIN);
+  const editPaneRef = useRef(null);
+  const [paneWidths, setPaneWidths] = useState({ edit: EDIT_MIN });
   const centerRef = useRef<HTMLDivElement>(null);
   const clampPane = (value, min, max) => Math.min(max, Math.max(min, value));
 
   const startPaneResize = (key) => (event) => {
     event.preventDefault();
     const startX = event.clientX;
-    const startEdit = paneWidths.edit;
+    const startEdit = Math.max(paneWidths.edit, editFloor.current);
     const move = (moveEvent) => {
       const dx = moveEvent.clientX - startX;
-      if (key === 'edit') setPaneWidths({ edit: clampPane(startEdit - dx, 240, 720) });
+      if (key === 'edit') setPaneWidths({ edit: clampPane(startEdit - dx, editFloor.current, 720) });
     };
     const stop = () => {
       window.removeEventListener('pointermove', move);
@@ -168,6 +202,11 @@ export function StyleEditor({
   };
 
   useLayoutEffect(() => {
+    const width = editPaneRef.current?.getBoundingClientRect().width;
+    if (width && width > editFloor.current) editFloor.current = Math.round(width);
+  }, []);
+
+  useLayoutEffect(() => {
     fitWidthRef.current = fitWidth;
     const box = centerRef.current;
     if (!box) return;
@@ -175,7 +214,7 @@ export function StyleEditor({
     const observer = new ResizeObserver(() => applyFit());
     observer.observe(box);
     return () => observer.disconnect();
-  }, [style.pageSize, fitWidth, panel, side]);
+  }, [style.pageSize, fitWidth, panel, sideOpen]);
 
   const scrollLiveToSection = (step) => {
     const id = step?.id;
@@ -986,35 +1025,8 @@ export function StyleEditor({
       </div>
       <div className="relative min-h-0 flex-1">
         <div className="flex h-full min-h-0">
-          <div className="flex w-12 shrink-0 flex-col border-r bg-white">
-            {[
-              ['sections', 'Sections'],
-              ['style', 'Style'],
-            ].map(([id, label]) => {
-              const open = side === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={open}
-                  onClick={() => setSide(open ? null : id)}
-                  className={`flex min-h-0 flex-1 items-center justify-center border-b px-1 text-xs font-semibold tracking-wide ${
-                    open ? 'bg-teal-800 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'
-                  }`}
-                  style={{ writingMode: 'vertical-lr' }}
-                >
-                  {tf(label)}
-                </button>
-              );
-            })}
-          </div>
-          {side === 'sections' || side === 'style' ? (
-            <div className="flex h-full w-80 max-w-[42%] shrink-0 flex-col overflow-hidden border-r bg-white">
-              {side === 'sections' ? sectionsPanel : stylePanel}
-            </div>
-          ) : null}
           <div className="relative flex h-full min-h-0 min-w-0 flex-1">
-            <div className="flex h-full min-h-0 min-w-[280px] flex-1 flex-col">
+            <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
             <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
               <div className="flex items-center gap-1">
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
@@ -1053,7 +1065,16 @@ export function StyleEditor({
             </div>
           {renderEditor ? paneHandle('edit') : null}
           {renderEditor ? (
-            <div style={{ width: paneWidths.edit }} className="hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-l bg-white pt-3 lg:flex">
+            <div
+              ref={editPaneRef}
+              style={{
+                width: Math.max(paneWidths.edit, editFloor.current),
+                minWidth: editFloor.current,
+                maxWidth: 720,
+                flex: `0 0 ${Math.max(paneWidths.edit, editFloor.current)}px`,
+              }}
+              className="hidden h-full min-h-0 flex-col overflow-hidden border-l bg-white pt-3 lg:flex"
+            >
               <div className="border-b px-3 py-2">
                 <p className="text-sm font-semibold">{tf('Fill & edit')}</p>
                 <p className="truncate text-xs text-slate-500">{tf((editStep || steps[0])?.title || '')}</p>
@@ -1063,6 +1084,111 @@ export function StyleEditor({
               </div>
             </div>
           ) : null}
+          </div>
+          {sidePinned ? (
+            <button
+              type="button"
+              aria-label={tf('Close')}
+              className="absolute inset-0 z-30 bg-black/20"
+              onClick={() => setSidePinned(false)}
+            />
+          ) : null}
+          <div className="relative z-40 h-full w-16 shrink-0">
+            <div
+              className="absolute inset-y-0 right-0 flex justify-end overflow-hidden border-l bg-white shadow-lg transition-[width] duration-200 ease-out"
+              style={{
+                width: sideOpen ? `calc(4rem + ${Math.max(paneWidths.edit, editFloor.current)}px)` : '4rem',
+                minWidth: sideOpen ? `calc(4rem + ${Math.max(paneWidths.edit, editFloor.current)}px)` : '4rem',
+                maxWidth: sideOpen ? `calc(4rem + ${Math.max(paneWidths.edit, editFloor.current)}px)` : '4rem',
+              }}
+              onMouseEnter={() => {
+                if (fineHover) setSideHover(true);
+              }}
+              onMouseLeave={() => {
+                if (fineHover) {
+                  setSideHover(false);
+                  setSidePinned(false);
+                }
+              }}
+              onFocus={() => setSideHover(true)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setSideHover(false);
+              }}
+            >
+              <div
+                className="flex h-full min-h-0 shrink-0"
+                style={{ width: `calc(4rem + ${Math.max(paneWidths.edit, editFloor.current)}px)` }}
+              >
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="flex shrink-0 border-b" role="tablist">
+                    {[
+                      ['sections', 'Sections'],
+                      ['style', 'Style'],
+                    ].map(([id, label]) => {
+                      const selected = sideTab === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          role="tab"
+                          aria-selected={selected}
+                          onClick={() => setSideTab(id)}
+                          className={`flex-1 px-2 py-2.5 text-sm font-semibold ${
+                            selected ? 'border-b-2 border-teal-800 text-teal-900' : 'text-slate-500 hover:bg-slate-50'
+                          }`}
+                        >
+                          {tf(label)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    {sideTab === 'sections' ? sectionsPanel : stylePanel}
+                  </div>
+                </div>
+                <div className="flex h-full w-16 shrink-0 flex-col border-l bg-white">
+                  <button
+                    type="button"
+                    title={tf('Sections')}
+                    aria-label={tf('Sections')}
+                    aria-pressed={sideTab === 'sections'}
+                    onClick={() => {
+                      setSideTab('sections');
+                      if (!fineHover) setSidePinned(true);
+                    }}
+                    className={`flex h-11 w-16 items-center justify-center ${
+                      sideTab === 'sections' ? 'text-teal-900' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <List className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    title={tf('Style')}
+                    aria-label={tf('Style')}
+                    aria-pressed={sideTab === 'style'}
+                    onClick={() => {
+                      setSideTab('style');
+                      if (!fineHover) setSidePinned(true);
+                    }}
+                    className={`flex h-11 w-16 items-center justify-center ${
+                      sideTab === 'style' ? 'text-teal-900' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Palette className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    className="mb-2 mt-auto flex h-11 w-16 items-center justify-center text-slate-600 hover:bg-slate-50"
+                    aria-expanded={sideOpen}
+                    aria-label={sideOpen ? tf('Collapse') : tf('Expand')}
+                    onClick={() => setSidePinned((pinned) => !pinned)}
+                  >
+                    <ChevronRight className={`h-5 w-5 transition-transform ${sideOpen ? '' : 'rotate-180'}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         {panel === 'edit' && editStep && renderEditor ? (
