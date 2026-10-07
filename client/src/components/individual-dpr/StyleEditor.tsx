@@ -676,7 +676,7 @@ export function StyleEditor({
   const stylePanel = (
     <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l">
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
-        <StyleGroup title={tf('Presets')} open={!!openGroups.presets} onToggle={() => toggleGroup('presets')}>
+        <StyleGroup title={tf('Templates')} open={!!openGroups.presets} onToggle={() => toggleGroup('presets')}>
           <div className="flex flex-wrap gap-1.5">
             {PRESET_IDS.map((id) => (
               <button

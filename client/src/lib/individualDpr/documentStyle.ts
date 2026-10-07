@@ -89,12 +89,12 @@ export const pictureToken = (id: string) => `pic:${id}`;
 export const pictureIdFromToken = (token: string) => (token.startsWith('pic:') ? token.slice(4) : '');
 
 export const PRESET_LABELS: Record<DocPresetId, string> = {
-  government: 'Government',
-  bank: 'Bank appraisal',
-  pmegp: 'PMEGP',
-  apCmep: 'AP CMEP',
-  formal: 'Formal',
-  minimal: 'Minimal',
+  government: 'Gazette',
+  bank: 'Ledger',
+  pmegp: 'Ribbon',
+  apCmep: 'Docket',
+  formal: 'Manuscript',
+  minimal: 'Quiet',
 };
 
 const DEFAULT_WATERMARK = 'Confidential — for lending appraisal';
