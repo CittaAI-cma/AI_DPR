@@ -553,3 +553,6 @@ html.a11y-hc .pattern-lattice, html.a11y-hc .pattern-dots { background-image: no
   height: 2.5rem;
   border-radius: 10px;
 }
+.fill-edit-scroll button {
+  flex-shrink: 0;
+}

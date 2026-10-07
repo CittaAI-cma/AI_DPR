@@ -631,6 +631,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       }${style?.tableStriped ? ' dpr-striped' : ''}${style?.wideTablesLandscape ? ' dpr-wide-landscape' : ''}`}
       style={style ? styleCssVars(style) : undefined}
       data-dpr-styled={style ? '1' : undefined}
+      data-template={style?.preset}
       data-page-size={style?.pageSize}
       data-page-edge-top={style ? String(pageEdgeMm(style.marginMm.top)) : undefined}
       data-page-edge-bottom={style ? String(pageEdgeMm(style.marginMm.bottom)) : undefined}

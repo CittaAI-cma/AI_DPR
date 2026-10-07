@@ -1269,6 +1269,285 @@
   color: var(--dpr-header, #111827);
 }
 
+/* Template outlines. Wording stays; only the frame around it changes. */
+.individual-dpr-document.dpr-styled[data-template='government'] .individual-cover {
+  text-align: center;
+  border: 2px solid var(--dpr-border, #1e3a5f);
+  border-bottom-width: 6px;
+  padding: 10pt 12pt 12pt;
+}
+.individual-dpr-document.dpr-styled[data-template='government'] .individual-sec-title {
+  border-bottom: 3px double var(--dpr-border, #1e3a5f);
+}
+.individual-dpr-document.dpr-styled[data-template='government'] .individual-sec-num {
+  border-radius: 0;
+  border: 2px solid var(--dpr-border, #1e3a5f);
+}
+.individual-dpr-document.dpr-styled[data-template='government'] .individual-particulars,
+.individual-dpr-document.dpr-styled[data-template='government'] .individual-toc-list,
+.individual-dpr-document.dpr-styled[data-template='government'] .individual-qa-block {
+  border: 2px solid var(--dpr-border, #1e3a5f);
+}
+.individual-dpr-document.dpr-styled[data-template='government'] .individual-particulars th {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-cover {
+  text-align: left;
+  border-left: 4px solid var(--dpr-primary, #0f172a);
+  padding-left: 12pt;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-sec-title {
+  border-bottom: none;
+  background: var(--dpr-header, #0f172a);
+  color: #fff;
+  padding: 4pt 8pt;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-sec-num {
+  background: transparent !important;
+  color: #fff;
+  border: 1px solid #fff;
+  border-radius: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-particulars th,
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-particulars td {
+  border: none !important;
+  border-bottom: 1px solid var(--dpr-border, #0f172a) !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-particulars th {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 8pt !important;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-particulars td.part {
+  border-right: 1px solid var(--dpr-border, #0f172a) !important;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-qa-block {
+  border: none;
+  border-left: 3px solid var(--dpr-table, #0f766e);
+  background: transparent;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-qa-q {
+  background: transparent;
+  border-bottom: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 8.5pt;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-toc-list {
+  border: none;
+}
+.individual-dpr-document.dpr-styled[data-template='bank'] .individual-toc-list li {
+  border-bottom: 1px solid var(--dpr-border, #0f172a);
+}
+
+.individual-dpr-document.dpr-styled[data-template='pmegp'] .individual-sec-title {
+  background: color-mix(in srgb, var(--dpr-primary, #115e59) 12%, white);
+  border-bottom: none;
+  border-left: 8px solid var(--dpr-primary, #115e59);
+  padding: 6pt 8pt;
+}
+.individual-dpr-document.dpr-styled[data-template='pmegp'] .individual-sec-num {
+  border-radius: 999px;
+}
+.individual-dpr-document.dpr-styled[data-template='pmegp'] .individual-particulars td.part {
+  background: color-mix(in srgb, var(--dpr-primary, #115e59) 10%, white);
+  border-left: 4px solid var(--dpr-primary, #115e59) !important;
+}
+.individual-dpr-document.dpr-styled[data-template='pmegp'] .individual-qa-q {
+  background: var(--dpr-primary, #115e59);
+  color: #fff;
+  border-bottom: none;
+}
+.individual-dpr-document.dpr-styled[data-template='pmegp'] .individual-toc-list {
+  border: none;
+}
+.individual-dpr-document.dpr-styled[data-template='pmegp'] .individual-toc-list li {
+  border: none;
+  border-left: 4px solid var(--dpr-primary, #115e59);
+  margin-bottom: 4pt;
+  background: color-mix(in srgb, var(--dpr-primary, #115e59) 8%, white);
+}
+
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-cover {
+  border: 1px solid var(--dpr-border, #3730a3);
+  box-shadow: 6px 6px 0 color-mix(in srgb, var(--dpr-primary, #3730a3) 25%, white);
+  padding: 10pt 12pt;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-sec {
+  border: 1px solid color-mix(in srgb, var(--dpr-primary, #3730a3) 35%, white);
+  border-radius: 8pt;
+  padding: 8pt 10pt 10pt;
+  margin-bottom: 12pt;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-sec-title {
+  border-bottom: none;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-sec-num {
+  border-radius: 999px;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) {
+  border: none;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) thead,
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) thead tr {
+  display: flex;
+  gap: 12pt;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part),
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) tbody {
+  display: block;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) tbody {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6pt;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) tr {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--dpr-primary, #3730a3) 30%, white);
+  border-radius: 6pt;
+  overflow: hidden;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) td {
+  border: none !important;
+  display: block;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-particulars:has(td.part) td.part {
+  width: auto;
+  font-size: 8pt;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--dpr-primary, #3730a3) 10%, white);
+  padding-bottom: 2pt;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-toc-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6pt;
+  border: none;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-toc-list li {
+  border: 1px solid color-mix(in srgb, var(--dpr-primary, #3730a3) 30%, white);
+  border-radius: 6pt;
+}
+.individual-dpr-document.dpr-styled[data-template='apCmep'] .individual-qa-block {
+  border-radius: 6pt;
+  border-color: color-mix(in srgb, var(--dpr-primary, #3730a3) 35%, white);
+}
+
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-cover {
+  text-align: center;
+  padding-top: 8pt;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .cover-kicker {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-sec-title {
+  border-bottom: 3px double var(--dpr-border, #1c1917);
+  padding-bottom: 2pt;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-sec-num {
+  background: transparent !important;
+  color: var(--dpr-header, #1c1917);
+  border: none;
+  min-width: 1.2em;
+  height: auto;
+  padding: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-particulars th,
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-particulars td {
+  border: none !important;
+  border-bottom: 1px solid var(--dpr-border, #1c1917) !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-particulars thead th {
+  border-bottom-width: 2px !important;
+  font-variant: small-caps;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-qa-block {
+  border: none;
+  background: transparent;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-qa-q {
+  background: transparent;
+  border-bottom: 1px solid var(--dpr-border, #1c1917);
+  font-style: italic;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-qa-a {
+  padding-left: 14pt;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-toc-list {
+  border: none;
+}
+.individual-dpr-document.dpr-styled[data-template='formal'] .individual-toc-list li {
+  border-bottom: 1px dotted var(--dpr-border, #1c1917);
+}
+
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-cover {
+  text-align: left;
+  padding: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-sec-title {
+  border-bottom: none;
+  font-weight: 600;
+  padding-bottom: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-sec-num {
+  background: transparent !important;
+  color: #6b7280;
+  border: none;
+  font-weight: 500;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-particulars th,
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-particulars td {
+  border: none !important;
+  background: transparent !important;
+  color: inherit !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-particulars th {
+  color: #6b7280 !important;
+  font-weight: 500;
+  font-size: 8pt !important;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-particulars td.part {
+  color: #6b7280;
+  font-weight: 500;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-qa-block,
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-toc-list,
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-doc-list {
+  border: none;
+  background: transparent;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-qa-q {
+  background: transparent;
+  border-bottom: none;
+  color: #6b7280;
+  font-weight: 500;
+  padding-left: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-qa-a {
+  padding-left: 0;
+  padding-top: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .individual-toc-list li {
+  border-bottom: none;
+  padding-left: 0;
+}
+.individual-dpr-document.dpr-styled[data-template='minimal'] .dpr-style-footer {
+  border-top: none;
+}
+
 @media print {
   .dpr-inline-edit {
     background: none !important;
