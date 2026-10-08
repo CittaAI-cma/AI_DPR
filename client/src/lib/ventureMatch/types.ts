@@ -169,6 +169,8 @@ export interface SchemeMatch {
   /** True only for AP_CMEP when domicile is AP and a booster promoter tag is present. */
   boosted?: boolean;
   dprRoute?: SchemeDprRoute;
+  /** How many of this scheme's checks the person's answers pass, are still open (unanswered), and the total. */
+  fit?: { passed: number; open: number; total: number };
 }
 
 export interface SchemeExclusion {

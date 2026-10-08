@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { VentureMatchCombos } from './VentureMatchCombos';
 import { analyzeCombinations } from '@/lib/ventureMatch/combos';
 import { briefLangFromI18n, getSchemeBrief, loc } from '@/lib/individualDpr/schemeBriefs';
+import { FACT_LABEL, keyFactsFor } from '@/lib/ventureMatch/schemeKeyFacts';
 
 interface VentureMatchResultsProps {
   result: EvaluateResult;
@@ -88,6 +89,7 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [showExcluded, setShowExcluded] = useState(false);
+  const [panelExpanded, setPanelExpanded] = useState(false);
   const inPlan = new Set(
     analyzeCombinations(result.matches).core.map((item) => item.scheme.code)
   );
@@ -147,7 +149,7 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                   className="vm-rise vm-lift border-2 border-primary/15"
                 >
                   <CardContent className="pt-5 pb-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className="flex flex-col gap-4">
                       <div className="flex min-w-0 flex-1 items-start gap-3">
                         <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                           {scheme.dprRoute === 'cluster' ? (
@@ -166,9 +168,28 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                               </span>
                             )}
                           </p>
-                          <p className="mt-1 line-clamp-3 text-sm text-foreground/80">
-                            {loc(getSchemeBrief(scheme.code).intro, briefLang)}
-                          </p>
+                          {keyFactsFor(scheme.code).length > 0 ? (
+                            <ul className="mt-2 space-y-1.5 text-sm text-foreground/85">
+                              {keyFactsFor(scheme.code).map((fact) => (
+                                <li key={fact.kind + fact.text.en} className="flex gap-2">
+                                  <span
+                                    className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="min-w-0">
+                                    <span className="font-semibold text-foreground">
+                                      {briefLang === 'te' ? FACT_LABEL[fact.kind].te : FACT_LABEL[fact.kind].en}:
+                                    </span>{' '}
+                                    {briefLang === 'te' ? fact.text.te : fact.text.en}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="mt-1 line-clamp-3 text-sm text-foreground/80">
+                              {loc(getSchemeBrief(scheme.code).intro, briefLang)}
+                            </p>
+                          )}
                           <p className="mt-2 text-sm text-muted-foreground">{t(scheme.benefit)}</p>
                           {scheme.dprRoute === 'cluster' && (
                             <p className="mt-2 text-xs font-medium text-red-700 bg-red-50 border border-red-300 rounded-md px-2 py-1.5">
@@ -190,7 +211,7 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                           )}
                         </div>
                       </div>
-                      <div className="shrink-0 sm:self-center">
+                      <div className="flex justify-end">
                         <CreateButton
                           scheme={scheme}
                           onCreateDprForScheme={onCreateDprForScheme}
@@ -238,8 +259,19 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
           )}
         </div>
         {result.matches.length > 0 && (
-          <div style={{ ['--vm-delay' as any]: '250ms' }} className="vm-rise min-w-0 lg:sticky lg:top-40 lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto">
-            <VentureMatchCombos matches={result.matches} />
+          <div
+            style={{ ['--vm-delay' as any]: '250ms' }}
+            className={cn(
+              'vm-rise min-w-0',
+              !panelExpanded && 'lg:sticky lg:top-40 lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto'
+            )}
+          >
+            <VentureMatchCombos
+              onExpandedChange={setPanelExpanded}
+              matches={result.matches}
+              disableCreate={disableCreate}
+              onCreate={onCreateDprForScheme}
+            />
           </div>
         )}
       </div>

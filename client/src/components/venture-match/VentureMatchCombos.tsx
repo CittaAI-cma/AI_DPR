@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, ArrowRight, Check, Info, ListOrdered, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Check, Info, ListOrdered, Maximize2, Minimize2, Sparkles, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
+import { VentureMatchCompare } from '@/components/venture-match/VentureMatchCompare';
 import { cn } from '@/lib/utils';
 import type { SchemeMatch } from '@/lib/ventureMatch/types';
 import {
@@ -46,6 +47,8 @@ const TEXT = {
     te: 'ఇది కేవలం మార్గదర్శనం. అర్హత, ఆమోదం, సబ్సిడీ మొత్తం లేదా సమయం గురించి హామీ ఇవ్వదు. ప్రచురిత పథక మార్గదర్శకాలు మరియు సాధారణ బ్యాంక్ పద్ధతి ఆధారంగా; “DIC / బ్యాంక్‌తో నిర్ధారించండి” అని ఉన్నవి పథక పత్రాల్లో రాసి లేని సాధారణ పద్ధతులు. రేట్లు, నియమాలు మారుతాయి, నిర్ణయం పథక అధికారి లేదా మీ బ్యాంక్‌దే.',
   },
   noPlan: { en: 'No combinations to compare yet.', te: 'పోల్చడానికి కలయికలు లేవు.' },
+  expand: { en: 'Expand', te: 'విస్తరించు' },
+  shrink: { en: 'Close', te: 'మూసివేయి' },
 } satisfies Record<string, Loc>;
 
 const pick = (loc: Loc, lang: Lang) => (lang === 'te' ? loc.te : loc.en) || loc.en;
@@ -60,7 +63,37 @@ function ConfirmTag({ relation, lang }: { relation: Relation; lang: Lang }) {
   );
 }
 
-export const VentureMatchCombos: React.FC<{ matches: SchemeMatch[] }> = ({ matches }) => {
+export const VentureMatchCombos: React.FC<{
+  matches: SchemeMatch[];
+  disableCreate?: boolean;
+  onCreate?: (code: string) => void;
+  tab?: 'suggested' | 'compare';
+  onTab?: (tab: 'suggested' | 'compare') => void;
+  /** Tells the page when the block is enlarged, so it can drop its own sticky positioning (a sticky parent would trap the overlay under the page header). */
+  onExpandedChange?: (expanded: boolean) => void;
+}> = ({ matches, disableCreate, onCreate, tab: tabProp, onTab, onExpandedChange }) => {
+  const [localTab, setLocalTab] = useState<'suggested' | 'compare'>('suggested');
+  const tab = tabProp ?? localTab;
+  const setTab = (next: 'suggested' | 'compare') => (onTab ? onTab(next) : setLocalTab(next));
+  // Expanded view: the same block, enlarged over the page. It is the same element (only its classes change),
+  // so a comparison in progress is kept when you expand or shrink it.
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    onExpandedChange?.(expanded);
+  }, [expanded]);
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setExpanded(false);
+    };
+    window.addEventListener('keydown', onKey);
+    const previous = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.documentElement.style.overflow = previous;
+    };
+  }, [expanded]);
   const { t, i18n } = useTranslation();
   const lang: Lang = i18n.language?.startsWith('te') ? 'te' : 'en';
   const analysis = useMemo(() => analyzeCombinations(matches), [matches]);
@@ -126,8 +159,65 @@ export const VentureMatchCombos: React.FC<{ matches: SchemeMatch[] }> = ({ match
   };
 
   return (
-    <Card className="border-2 border-primary/30 bg-primary/5">
-      <CardContent className="space-y-5 pb-5 pt-5">
+    <div
+      className={expanded ? 'motion-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-3 sm:p-8' : undefined}
+      role={expanded ? 'dialog' : undefined}
+      aria-modal={expanded ? true : undefined}
+      onClick={expanded ? () => setExpanded(false) : undefined}
+    >
+    <Card
+      className={cn(
+        'border-2 border-primary/30 bg-primary/5',
+        expanded && 'max-h-full w-full max-w-6xl overflow-y-auto bg-background shadow-2xl'
+      )}
+      onClick={expanded ? (event: React.MouseEvent) => event.stopPropagation() : undefined}
+    >
+      <CardContent className={cn('space-y-5 pb-5 pt-5', expanded && 'sm:px-8')}>
+        <div className="flex items-center gap-2">
+        <div role="tablist" className="flex flex-1 gap-1 rounded-lg border border-border bg-background p-1">
+          {(
+            [
+              ['suggested', { en: 'Suggested', te: 'సూచించినవి' }],
+              ['compare', { en: 'Compare', te: 'పోల్చండి' }],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={cn(
+                'flex-1 rounded-md px-3 py-2 text-sm font-semibold transition-colors',
+                tab === id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+            >
+              {pick(label, lang)}
+            </button>
+          ))}
+        </div>
+          <button
+            type="button"
+            onClick={() => setExpanded((open) => !open)}
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            aria-label={pick(expanded ? TEXT.shrink : TEXT.expand, lang)}
+            title={pick(expanded ? TEXT.shrink : TEXT.expand, lang)}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <span className="hidden sm:inline">{pick(expanded ? TEXT.shrink : TEXT.expand, lang)}</span>
+          </button>
+        </div>
+
+        {tab === 'compare' ? (
+          <VentureMatchCompare
+            matches={matches}
+            lang={lang}
+            disableCreate={disableCreate}
+            onCreate={(code) => onCreate?.(code)}
+            expanded={expanded}
+          />
+        ) : (
+          <div className={expanded ? 'space-y-5 lg:columns-2 lg:gap-8 lg:space-y-0 [&>*]:mb-5 [&>*]:break-inside-avoid' : 'space-y-5'}>
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -224,7 +314,10 @@ export const VentureMatchCombos: React.FC<{ matches: SchemeMatch[] }> = ({ match
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           {pick(TEXT.disclaimer, lang)}
         </p>
+          </div>
+        )}
       </CardContent>
     </Card>
+    </div>
   );
 };
