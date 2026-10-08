@@ -8,6 +8,7 @@ import {
   ExternalLink,
   HelpCircle,
   FolderPlus,
+  Info,
   Sparkles,
   X,
 } from 'lucide-react';
@@ -23,6 +24,41 @@ interface VentureMatchResultsProps {
   onOpenClusterDpr?: () => void;
   onRestart: () => void;
   disableCreate?: boolean;
+}
+
+const OTHER_SCHEME_CODES = new Set([
+  'PMEGP',
+  'PMFME',
+  'VISHWAKARMA',
+  'PMEGP_2ND',
+  'AP_EDP',
+  'AP_FPP',
+  'AP_TECH_UPGRADE',
+  'AP_PARKS',
+]);
+
+function OtherSchemesNote({ code }: { code: string }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  if (!OTHER_SCHEME_CODES.has(code)) return null;
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"
+        aria-expanded={open}
+        aria-label={t('ventureMatch.otherSchemesLabel')}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <Info className="h-3.5 w-3.5" />
+      </button>
+      {open ? (
+        <span className="absolute left-0 top-7 z-20 w-72 rounded-lg border border-red-200 bg-white p-3 text-left text-xs font-normal leading-5 text-foreground shadow-lg">
+          {t(`ventureMatch.otherSchemes.${code}`)}
+        </span>
+      ) : null}
+    </span>
+  );
 }
 
 const STATUS_ICON: Record<CriterionStatus, React.ElementType> = {
@@ -159,8 +195,9 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                     )}
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">
-                      {t(`ventureMatch.schemes.${scheme.code}.name`, { defaultValue: scheme.name })}
+                    <p className="flex items-center gap-2 font-semibold text-foreground">
+                      <span>{t(`ventureMatch.schemes.${scheme.code}.name`, { defaultValue: scheme.name })}</span>
+                      <OtherSchemesNote code={scheme.code} />
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">{t(scheme.benefit)}</p>
                     {scheme.dprRoute === 'cluster' && (

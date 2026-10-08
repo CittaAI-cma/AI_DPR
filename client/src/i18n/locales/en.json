@@ -755,6 +755,17 @@
     "stepExclusionBecauseMany": "{{name}} is not matching because: {{reason}}.",
     "cmepBoosterTitle": "CMEP Special Booster Match",
     "cmepBoosterBody": "As a Woman / Transgender / Ex-Serviceman / Specially-Abled promoter, you qualify for enhanced back-ended subsidy support under AP CMEP.",
+    "otherSchemesLabel": "Other schemes",
+    "otherSchemes": {
+      "PMEGP": "A new PMEGP project is closed if this unit already received a government subsidy under PMRY, REGP, PMEGP, CMEGP, or any other central or state scheme. Only one person in the family (self, spouse, and unmarried children) can take it. A second loan is separate, and only if the first PMEGP, REGP, or MUDRA loan was repaid on time.",
+      "PMFME": "You can apply even after a loan under another subsidy-linked scheme, and you can use other schemes at the same time, as long as the same benefit is not paid twice. Only one person in the family (self, spouse, and children) can take this assistance.",
+      "VISHWAKARMA": "Do not apply if you took a similar central or state self-employment loan in the past 5 years. A PMEGP recipient cannot apply. MUDRA or PM SVANidhi borrowers can apply only after that loan is fully repaid. One family member only. Government employees and their families are not eligible.",
+      "PMEGP_2ND": "This is only for a unit that already received PMEGP, REGP, or MUDRA. The first loan must have been repaid on time, and the unit should have been in profit for about three years. An unpaid first loan does not qualify.",
+      "AP_EDP": "New-unit capital subsidy and expansion technology-upgradation support cannot both be claimed on the same fixed capital. Incentives under this policy together stay within 75% of that investment. Do not claim the same capital subsidy again under the Food Processing Policy.",
+      "AP_FPP": "The similar capital incentives under the Industrial Development Policy or MSME-EDP cannot be claimed as well. The same capital item cannot be subsidised twice, including with PMFME.",
+      "AP_TECH_UPGRADE": "This cannot be stacked with the new-unit EDP capital subsidy on the same fixed capital. Incentives claimed together under MSME-EDP 4.0 stay within 75% of that investment.",
+      "AP_PARKS": "The 75% land-cost rebate for SC/ST micro and small units in APIIC parks is for a new unit and can be taken only once on that land. Combined incentives under the MSME policy stay within 75% of fixed capital investment."
+    },
     "help": {
       "open": "Need help choosing?",
       "close": "Close help",
