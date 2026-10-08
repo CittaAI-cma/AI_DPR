@@ -3,6 +3,8 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, Eye, EyeOff, GripVertical, ImagePlus, List, Maximize2, Palette, Plus, Type, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
+import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
+import { templateSpecimenDpr, templateSpecimenStyle } from '@/lib/individualDpr/templateSpecimen';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
   FONT_CHOICES,
@@ -121,22 +123,26 @@ export function StyleEditor({
   const [dropHint, setDropHint] = useState(null);
   const [panel, setPanel] = useState(null);
   const [sideTab, setSideTab] = useState('sections');
+  const [templatePreview, setTemplatePreview] = useState(null);
   const [sideHover, setSideHover] = useState(false);
   const [sidePinned, setSidePinned] = useState(false);
   const fineHover = useFineHover();
   const sideOpen = sideHover || sidePinned;
 
   useEffect(() => {
-    if (!sideOpen) return;
+    if (!sideOpen && !templatePreview) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSidePinned(false);
-        setSideHover(false);
+      if (event.key !== 'Escape') return;
+      if (templatePreview) {
+        setTemplatePreview(null);
+        return;
       }
+      setSidePinned(false);
+      setSideHover(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [sideOpen]);
+  }, [sideOpen, templatePreview]);
   const [openGroups, setOpenGroups] = useState({});
   const toggleGroup = (id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
   const [editStep, setEditStep] = useState(null);
@@ -682,7 +688,7 @@ export function StyleEditor({
               <button
                 key={id}
                 type="button"
-                onClick={() => commit(applyPreset(style, id as DocPresetId))}
+                onClick={() => setTemplatePreview(id)}
                 className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
                   style.preset === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white'
                 }`}
@@ -1277,6 +1283,42 @@ export function StyleEditor({
                 {tf('Delete')}
               </Button>
             </div>
+          </div>
+        </div>
+      ) : null}
+      {templatePreview ? (
+        <div className="fixed inset-0 z-[80] flex flex-col bg-slate-900/50" role="dialog" aria-modal="true" aria-label={tf(PRESET_LABELS[templatePreview])}>
+          <div className="flex shrink-0 items-center justify-between gap-3 bg-white px-4 py-3 shadow">
+            <p className="min-w-0 truncate text-sm font-semibold">{tf(PRESET_LABELS[templatePreview])}</p>
+            <div className="flex shrink-0 gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setTemplatePreview(null)}>
+                {tf('Cancel')}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  commit(applyPreset(style, templatePreview));
+                  setTemplatePreview(null);
+                }}
+              >
+                {tf('Use this theme')}
+              </Button>
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-auto p-6">
+            <PageSheet
+              pageSize="A4"
+              edgeTopMm={pageEdgeMm(16)}
+              edgeBottomMm={pageEdgeMm(16)}
+              className="mx-auto shadow-lg"
+            >
+              <IndividualDPRDocumentView
+                dpr={templateSpecimenDpr(schemeCode)}
+                documentStyle={templateSpecimenStyle(style, templatePreview, schemeCode)}
+              />
+            </PageSheet>
           </div>
         </div>
       ) : null}

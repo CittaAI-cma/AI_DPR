@@ -367,6 +367,8 @@ export const FORM_FIELD_TE: Record<string, string> = {
   Docket: 'డాకెట్',
   Manuscript: 'లిఖితం',
   Quiet: 'నిశ్శబ్దం',
+  'Use this theme': 'ఈ నమూనాను వాడండి',
+  Cancel: 'రద్దు',
   Government: 'ప్రభుత్వం',
   'Bank appraisal': 'బ్యాంకు మదింపు',
   PMEGP: 'PMEGP',
