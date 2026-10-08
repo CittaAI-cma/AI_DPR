@@ -11,6 +11,13 @@
     <meta name="description" content="MSME AI DPR Generation Tool - Create bankable Detailed Project Reports with AI" />
     <title>MSME AI DPR Generation Tool</title>
   </head>
+  <script>
+    // Apply the saved dark theme before the page paints, so there is no white flash.
+    try {
+      var mode = (JSON.parse(localStorage.getItem('theme-mode') || '{}').state || {}).mode;
+      if (mode === 'dark') document.documentElement.classList.add('dark');
+    } catch (e) {}
+  </script>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

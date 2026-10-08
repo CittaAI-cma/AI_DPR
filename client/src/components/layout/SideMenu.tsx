@@ -5,6 +5,11 @@ import { useLinkHandler } from '@/lib/linkUtils';
 import { ChevronRight, FileText, Files, FolderKanban, LayoutDashboard, MessageSquare, Settings } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { canAccessAdmin } from '@/lib/rbac';
+import { DevModeToggle } from '@/components/ui/DevModeToggle';
+import { useDevModeStore } from '@/store/devModeStore';
+
+/** Dev mode only means something while building a DPR, so the switch shows on those pages. */
+const DEV_MODE_PATHS = ['/individual-dpr/create', '/cluster-dpr/create'];
 
 const COLLAPSED = 'w-16';
 const EXPANDED = 'w-64';
@@ -37,6 +42,9 @@ export const SideMenu: React.FC = () => {
   const open = hover || pinned;
 
   const { user } = useAuthStore();
+  const devMode = useDevModeStore((s) => s.on);
+  const setDevMode = useDevModeStore((s) => s.setOn);
+  const showDevMode = DEV_MODE_PATHS.includes(location.pathname.replace(/\/$/, ''));
   const links = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { path: '/dprs', label: t('nav.allDPRs'), icon: FileText },
@@ -143,9 +151,14 @@ export const SideMenu: React.FC = () => {
             );
           })}
         </ul>
+        {showDevMode && (
+          <div className="mt-auto border-t border-border p-2">
+            <DevModeToggle on={devMode} onChange={setDevMode} expanded={open} />
+          </div>
+        )}
         <button
           type="button"
-          className="mb-2 mt-auto flex h-11 w-12 items-center justify-center text-muted-foreground hover:text-foreground"
+          className={`mb-2 ${showDevMode ? '' : 'mt-auto'} flex h-11 w-12 items-center justify-center text-muted-foreground hover:text-foreground`}
           aria-expanded={open}
           aria-label={open ? 'Collapse menu' : 'Expand menu'}
           onClick={() => setPinned((value) => !value)}

@@ -408,6 +408,9 @@ export const Chat: React.FC = () => {
                 variant="ghost"
                   size="sm"
                   onClick={clearMessages}
+                  data-confirm-title="Clear this conversation?"
+                  data-confirm-body="All messages in this chat will be removed. This cannot be undone."
+                  data-confirm-label="Clear chat"
                   disabled={messages.length === 0}
                 className="text-xs h-8"
                 >
@@ -473,7 +476,7 @@ export const Chat: React.FC = () => {
                   </p>
                 </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-2xl">
+              <div className="motion-stagger grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-2xl">
                     {exampleQuestions.map((question, index) => (
                   <button
                         key={index}

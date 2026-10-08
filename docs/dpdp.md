@@ -172,6 +172,8 @@ Rows still store time, userId, role, action, optional targetType/targetId, IP. *
 
 | Env | Default | Meaning |
 |-----|---------|---------|
+> A blank value (for example `RETENTION_IDLE_DAYS=` in `.env`) counts as not set and uses the default. Only an explicit `0` means “right now”; never leave these keys blank-but-present expecting a default on older builds, where a blank read as 0.
+
 | `RETENTION_IDLE_DAYS` | 365 (12 months) | Delete after last **edit** of that DPR (`updatedAt`). Draft **and** submitted. |
 | `RETENTION_WARNING_DAYS` | **15** | Warn this many days **before** that delete |
 | `AUDIT_RETENTION_DAYS` | **730** (24 months) | Delete **that** audit row 24 months after it was written |

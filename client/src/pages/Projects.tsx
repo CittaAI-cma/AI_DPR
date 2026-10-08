@@ -51,8 +51,6 @@ export const Projects: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('projects.areYouSureDelete'))) return;
-
     try {
       await api.deleteProject(id);
       deleteProject(id);
@@ -161,7 +159,7 @@ export const Projects: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
               <Card 
                 key={project._id} 
@@ -238,6 +236,8 @@ export const Projects: React.FC = () => {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(project._id)}
+                      data-confirm-title={t('confirmDelete.projectTitle', { defaultValue: 'Delete this project?' })}
+                      data-confirm-body={t('confirmDelete.projectBody', { name: project.projectName, defaultValue: '“{{name}}” and its reports will be removed. This cannot be undone.' })}
                       className="border-2"
                     >
                       <Trash2 className="h-4 w-4" />

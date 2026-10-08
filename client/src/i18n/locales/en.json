@@ -1,4 +1,17 @@
 {
+  "theme": {
+    "label": "Colour theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "confirmDelete": {
+    "title": "Delete this item?",
+    "body": "It will be removed. This cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "projectTitle": "Delete this project?",
+    "projectBody": "“{{name}}” and its reports will be removed. This cannot be undone."
+  },
   "common": {
     "welcome": "Welcome",
     "login": "Login",
@@ -22,6 +35,26 @@
     "sample": "Sample"
   },
   "nav": {
+    "backTo": "Back to {{name}}",
+    "pages": {
+      "dashboard": "Dashboard",
+      "schemeFinder": "Scheme Finder",
+      "newProject": "New Project",
+      "project": "Project",
+      "projects": "Projects",
+      "dprBuilder": "DPR Builder",
+      "dprView": "DPR",
+      "dprGeneration": "DPR Generation",
+      "allDprs": "All DPRs",
+      "clusterDpr": "Cluster DPR",
+      "createDpr": "Create DPR",
+      "chat": "Chat",
+      "profile": "Profile",
+      "accountPrivacy": "Privacy settings",
+      "adminDocuments": "Documents",
+      "admin": "Admin",
+      "home": "Home"
+    },
     "home": "Home",
     "dashboard": "Dashboard",
     "projects": "Projects",
@@ -203,7 +236,8 @@
     "createNewProject": "Create New Project",
     "viewSchemes": "View Schemes",
     "chatWithAI": "Chat with AI Assistant",
-    "yourDPRs": "Your DPRs",
+    "yourDPRs": "My Detailed Project Reports",
+    "showingLatest": "Showing your latest {{count}} of {{total}} reports",
     "manageDPRs": "Manage and track your Detailed Project Reports",
     "viewAllDPRs": "View All DPRs",
     "viewProjects": "View Projects",
@@ -228,6 +262,15 @@
     "createFirstDPR": "Create your first Detailed Project Report to get started with AI-powered business planning",
     "createYourFirstDPR": "Create Your First DPR",
     "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete this report?",
+    "deleteBody": "“{{name}}” will be removed permanently, with its answers. This cannot be undone.",
+    "deleteConfirm": "Delete report",
+    "deleteCancel": "Keep it",
+    "deleting": "Deleting…",
+    "deleted": "Report deleted",
+    "deleteFailed": "Could not delete the report. Try again.",
     "accessFrequentlyUsed": "Access frequently used features",
     "aiGuidedBuilder": "AI-Guided Builder",
     "getInstantHelp": "Get instant help",
@@ -738,12 +781,17 @@
     }
   },
   "ventureMatch": {
+    "noGuarantee": "This is guidance only. Scheme Finder does not guarantee or assure eligibility, approval, subsidy amount or timelines. The scheme authority or your bank takes the final decision.",
+    "inBestPlan": "In your suggested plan",
+    "knowMoreCreate": "Know more & create",
+    "backToDashboard": "Back to Dashboard",
     "title": "Scheme Finder",
     "progress": "Question {{current}} of {{total}}",
     "remaining": "{{count}} schemes still possible",
     "selectAll": "Select all that apply, then tap Next.",
-    "resultsTitle": "Schemes that fit your answers",
-    "resultsSubtitle": "{{count}} schemes match what you told us.",
+    "ownerPickOne": "SC, ST, BC and General category man go together: pick only one of them. Woman, disability, transgender and ex-serviceman can be added to any choice.",
+    "resultsTitle": "Schemes that may suit your answers",
+    "resultsSubtitle": "{{count}} schemes may match what you told us.",
     "noMatches": "No schemes match these answers.",
     "notEligible": "{{count}} schemes do not match",
     "createDpr": "Create DPR",
@@ -754,7 +802,7 @@
     "stepExclusionBecause": "{{name}} is not matching because {{reason}}.",
     "stepExclusionBecauseMany": "{{name}} is not matching because: {{reason}}.",
     "cmepBoosterTitle": "CMEP Special Booster Match",
-    "cmepBoosterBody": "As a Woman / Transgender / Ex-Serviceman / Specially-Abled promoter, you qualify for enhanced back-ended subsidy support under AP CMEP.",
+    "cmepBoosterBody": "As a Woman / Transgender / Ex-Serviceman / Specially-Abled promoter, you may be eligible for enhanced back-ended subsidy support under AP CMEP, subject to the scheme rules and the approving authority.",
     "help": {
       "open": "Need help choosing?",
       "close": "Close help",
@@ -948,10 +996,10 @@
     "ownershipHint": {
       "title": "Think about putting the business in your wife’s or mother’s name",
       "body": "You said the main owner is a general category man. If your wife or mother owns 51% or more, you may get extra help:",
-      "subsidy": "Subsidy: AP EDP 4.0 / CMEP support can rise for women and special-category local entrepreneurs (building and machine cost).",
-      "debt": "Loan: A woman-owned unit can still use the remaining loan schemes, including PMEGP special category.",
-      "guarantee": "Guarantee: Bank guarantee cover can go up to 90%, with a lower yearly fee.",
-      "ecosystem": "Extra support: Free quality certificate (ZED) and a women’s quota in the RAMP TEAM online selling programme."
+      "subsidy": "Subsidy: AP EDP 4.0 / CMEP support may rise for women and special-category local entrepreneurs (building and machine cost).",
+      "debt": "Loan: A woman-owned unit may still be able to use the remaining loan schemes, including PMEGP special category.",
+      "guarantee": "Guarantee: Bank guarantee cover may go up to 90%, with a lower yearly fee.",
+      "ecosystem": "Extra support: Quality certification (ZED) support and a women’s quota in the RAMP TEAM online selling programme may be available."
     },
     "schemes": {
       "SVANIDHI": {
@@ -1343,6 +1391,7 @@
     "clusterRedirectHint": "This is a multi-unit / CFC cluster scheme. Use Cluster DPR, not the individual 18-step form."
   },
   "clusterDpr": {
+    "editTitle": "Edit Cluster DPR",
     "title": "Cluster DPR Creation",
     "stepOf": "Step {{current}} of {{total}}",
     "stepShort": "Step {{n}}",
@@ -1390,6 +1439,7 @@
     }
   },
   "individualDpr": {
+    "editTitle": "Edit DPR",
     "title": "Create DPR",
     "stepOf": "Step {{current}} of {{total}}",
     "stepShort": "Step {{n}}",

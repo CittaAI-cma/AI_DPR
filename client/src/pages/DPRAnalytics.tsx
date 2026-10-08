@@ -139,7 +139,7 @@ export const DPRAnalytics: React.FC = () => {
         </div>
 
         {/* Quality Scores */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -267,7 +267,7 @@ export const DPRAnalytics: React.FC = () => {
               <CardTitle>Sector Benchmark Comparison</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Project Cost vs Benchmark</p>
                   <p className={`text-2xl font-bold ${

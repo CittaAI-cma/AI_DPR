@@ -1,5 +1,8 @@
 // @ts-nocheck
 import React from 'react';
+import { RouteTracker } from '@/lib/navHistory';
+import { ConfirmProvider } from '@/components/ui/ConfirmProvider';
+import { ThemeApplier } from '@/components/layout/ThemeToggle';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -32,6 +35,7 @@ function App() {
         v7_relativeSplatPath: true,
       }}
     >
+      <ConfirmProvider>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -66,6 +70,8 @@ function App() {
           },
         }}
       />
+      <RouteTracker />
+      <ThemeApplier />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -227,6 +233,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      </ConfirmProvider>
     </Router>
   );
 }

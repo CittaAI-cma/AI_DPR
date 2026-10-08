@@ -138,7 +138,6 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
     try {
       await api.deleteUserAdmin(userId);
       toast.success('User deleted successfully');
@@ -234,7 +233,6 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleDeletePolicy = async (policyId: string) => {
-    if (!confirm('Are you sure you want to delete this policy?')) return;
     try {
       await api.deletePolicy(policyId);
       toast.success('Policy deleted successfully');
@@ -334,7 +332,7 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <>
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <Card>
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between">
@@ -382,7 +380,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="motion-stagger grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Projects by Sector</CardTitle>
@@ -500,6 +498,8 @@ export const AdminDashboard: React.FC = () => {
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteUser(user._id)}
+                            data-confirm-title="Delete this user?"
+                            data-confirm-body={`${user.name} (${user.email}) will be removed. This cannot be undone.`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -591,7 +591,7 @@ export const AdminDashboard: React.FC = () => {
             ) : (
               <Card>
                 <CardContent className="pt-6">
-                  <div className="space-y-4">
+                  <div className="motion-stagger space-y-4">
                     {filteredDPRs.map((dpr) => (
                       <div
                         key={dpr._id}
@@ -854,6 +854,8 @@ export const AdminDashboard: React.FC = () => {
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeletePolicy(policy._id)}
+                            data-confirm-title="Delete this policy?"
+                            data-confirm-body={`“${policy.title}” will be removed. This cannot be undone.`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -869,7 +871,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Enhanced Policy Modal */}
         {showPolicyModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="motion-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
               <CardHeader className="flex-shrink-0 border-b">
                 <div className="flex items-center justify-between">

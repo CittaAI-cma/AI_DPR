@@ -16,7 +16,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullBleed = false }) =
     return (
       <div className="flex h-dvh flex-col overflow-hidden bg-background">
         <Navbar />
-        <main className={`flex min-h-0 flex-1 flex-col overflow-hidden ${isAuthenticated ? 'pl-16' : ''}`}>
+        <main className={`motion-page flex min-h-0 flex-1 flex-col overflow-hidden ${isAuthenticated ? 'pl-16' : ''}`}>
           {children}
         </main>
       </div>
@@ -26,7 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullBleed = false }) =
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <main className={`container mx-auto px-4 py-8 max-w-7xl animate-fadeIn flex-1 ${railClear}`}>
+      <main className={`container mx-auto px-4 py-8 max-w-7xl motion-page flex-1 ${railClear}`}>
         {children}
       </main>
       <footer className={`border-t py-4 text-center text-xs text-muted-foreground ${railClear}`}>

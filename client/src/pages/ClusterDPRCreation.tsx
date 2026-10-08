@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { useBackTarget } from '@/lib/navHistory';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
@@ -12,7 +13,7 @@ import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
-import { DevModeToggle } from '@/components/ui/DevModeToggle';
+import { useDevModeStore } from '@/store/devModeStore';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { missingClusterRequired } from '@/lib/requiredStepFields';
 import { useAuthStore } from '@/store/authStore';
@@ -22,13 +23,19 @@ export const ClusterDPRCreation: React.FC = () => {
   const { t, i18n } = useTranslation();
   const tf = useClusterFormText();
   const navigate = useNavigate();
+  const back = useBackTarget({ path: '/dashboard' });
   const params = useParams();
   const [searchParams] = useSearchParams();
   const { data, setCurrentStep, setGeneratedDPR, resetData, setDprIds, loadDataFromProject, setStepData } = useClusterDPRStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStepping, setIsStepping] = useState(false);
   const [requiredNotice, setRequiredNotice] = useState('');
-  const [devMode, setDevMode] = useState(false);
+  const devMode = useDevModeStore((s) => s.on);
+  const setDevMode = useDevModeStore((s) => s.setOn);
+  useEffect(() => {
+    setDevMode(false);
+    return () => setDevMode(false);
+  }, [setDevMode]);
   const isAdmin = isSuperAdmin(useAuthStore((s) => s.user?.role));
   const [previewMode, setPreviewMode] = useState<'split' | 'form' | 'preview'>('split');
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
@@ -564,14 +571,18 @@ export const ClusterDPRCreation: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={back.go}
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  {t('common.back')}
+                  {back.label}
                 </Button>
                 <div>
-                  <h1 className="text-2xl font-bold">{t('clusterDpr.title')}</h1>
+                  <h1 className="text-2xl font-bold">
+                    {params.projectId || searchParams.get('projectId')
+                      ? t('clusterDpr.editTitle', { defaultValue: 'Edit Cluster DPR' })
+                      : t('clusterDpr.title')}
+                  </h1>
                   <p className="text-sm text-muted-foreground">
                     {t('clusterDpr.stepOf', { current: currentStep, total: totalSteps })}
                   </p>
@@ -580,13 +591,6 @@ export const ClusterDPRCreation: React.FC = () => {
               
               <div className="flex items-center gap-2 flex-wrap justify-end">
                 <LanguageToggle />
-                <DevModeToggle
-                  on={devMode}
-                  onChange={(next) => {
-                    setDevMode(next);
-                    if (next) setRequiredNotice('');
-                  }}
-                />
                 <Button
                   variant="outline"
                   size="sm"

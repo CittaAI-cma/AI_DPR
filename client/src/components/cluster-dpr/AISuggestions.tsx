@@ -872,7 +872,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
       regenTarget &&
       createPortal(
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6"
+          className="motion-overlay fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="regen-suggestion-title"

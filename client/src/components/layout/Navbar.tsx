@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
@@ -61,6 +62,8 @@ export const Navbar: React.FC = () => {
               <Languages className="h-4 w-4" />
               <span className="font-medium">{i18n.language.startsWith('te') ? 'English' : 'తెలుగు'}</span>
             </Button>
+
+            <ThemeToggle />
 
             {isAuthenticated && <NotificationBell />}
 

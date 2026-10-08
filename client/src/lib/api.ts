@@ -1068,6 +1068,13 @@ class APIClient {
     );
   }
 
+  async deleteDPR(dprId: string) {
+    this.clearCache('/dpr');
+    this.clearCache('/projects');
+    const response = await this.client.delete(`/dpr/${dprId}`);
+    return response.data;
+  }
+
   async uploadDPR(file: File) {
     const formData = new FormData();
     formData.append('file', file);

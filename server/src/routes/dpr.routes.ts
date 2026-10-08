@@ -102,6 +102,7 @@ router.post('/cluster/documents/upload', (req, res, next) => {
 router.post('/cluster/annexures/update', ClusterDPRController.updateAnnexureDocument);
 
 router.get('/:dprId', DPRController.getDPR);
+router.delete('/:dprId', DPRController.deleteDPR);
 router.get('/:dprId/download/pdf', DPRController.downloadPDF);
 router.post('/:dprId/download/pdf', DPRController.downloadPDF);
 router.post('/:dprId/download/pdf/html', DPRController.downloadPDFHtml);
