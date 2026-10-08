@@ -36,7 +36,7 @@ export function PageSheet({
     <div
       ref={ref}
       id={id}
-      className={className}
+      className={`theme-light${className ? ` ${className}` : ''}`}
       style={{
         width: `${pageWidthMm(pageSize)}mm`,
         minHeight: `${pageHeightMm(pageSize)}mm`,

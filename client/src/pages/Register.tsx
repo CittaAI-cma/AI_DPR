@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
@@ -121,6 +122,9 @@ export const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 py-12">
+      <div className="fixed right-4 top-4 z-50">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-lg">
         {/* Logo and Header */}
         <div className="text-center mb-8">

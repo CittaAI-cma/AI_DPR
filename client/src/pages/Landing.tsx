@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import React, { useEffect, useState } from 'react';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { buttonVariants } from '@/components/ui/Button';
@@ -146,6 +147,7 @@ export const Landing: React.FC = () => {
               </span>
             </a>
             <div className="flex items-center gap-1.5 max-[349px]:w-full min-[400px]:gap-2 sm:gap-3">
+              <ThemeToggle />
               <a
                 href="/login"
                 onClick={(e) => handleLinkClick(e, '/login')}
@@ -216,7 +218,9 @@ export const Landing: React.FC = () => {
 
           {/* Curved image carousel (full-bleed) */}
           <div className="mt-4 pb-6 md:pb-8">
-            <HeroCarousel />
+            <div className="theme-light">
+              <HeroCarousel />
+            </div>
           </div>
         </section>
 
@@ -264,7 +268,9 @@ export const Landing: React.FC = () => {
                 <span className="sm:block">{c.how.sub[1]}</span>
               </p>
             </div>
-            <HowItWorksShowcase steps={steps} />
+            <div className="theme-light">
+              <HowItWorksShowcase steps={steps} />
+            </div>
           </div>
         </section>
 

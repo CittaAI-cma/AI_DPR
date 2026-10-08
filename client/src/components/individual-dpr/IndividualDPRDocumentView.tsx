@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
@@ -8,6 +8,7 @@ import {
   getIndividualDocFields,
   getIndividualUploads,
   getSchemeDocSteps,
+  isLeanUnitScheme,
   readDocField,
   sectionTitleFromStep,
   type IndividualDocField,
@@ -53,6 +54,10 @@ const NARRATIVE_FIELDS = new Set([
   'impactNote',
 ]);
 import { isKycUploaded } from '@/lib/privacy/kycField';
+import { toast } from 'react-hot-toast';
+import { toDateInputValue } from '@/lib/dprAiFieldNormalize';
+import { isReasonableIsoDate } from '@/lib/individualDpr/isoDate';
+import { getDocCellInput, getDocFieldInput, type DocFieldInput } from '@/lib/individualDpr/docFieldInput';
 
 export interface IndividualDPRDocumentViewProps {
   dpr: any;
@@ -60,6 +65,8 @@ export interface IndividualDPRDocumentViewProps {
   viewLanguage?: 'english' | 'telugu';
   trackFieldHits?: boolean;
   onSectionClick?: (localStep: number) => void;
+  /** The user put the cursor in a field of this section (step number and section id). */
+  onSectionFocus?: (localStep: number, sectionId: string) => void;
   /** When set, this DPR wears the saved style and section order. */
   documentStyle?: DocumentStyle | null;
   activeSectionId?: string | null;
@@ -69,6 +76,8 @@ export interface IndividualDPRDocumentViewProps {
   onEditField?: (path: string, text: string) => void;
   /** Type a text block that was inserted into a section. */
   onEditBlock?: (sectionId: string, blockId: string, text: string) => void;
+  /** Live editing view: list every section and field, filled or not. Preview and PDF leave this off. */
+  showEmpty?: boolean;
 }
 
 const IMAGE_HANDLES: ImageHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -202,17 +211,151 @@ function EditableDocText({
   );
 }
 
+/**
+ * Picking from a dropdown or date box inside the zoomed live report can make the browser scroll the
+ * page to a wrong spot (it re-focuses the control and the update re-flows the page). Put the report back
+ * where it was for a moment after the change.
+ */
+function holdScroll(from: HTMLElement | null) {
+  const box = from?.closest('[data-dpr-scroll]') as HTMLElement | null;
+  if (!box) return;
+  const top = box.scrollTop;
+  const left = box.scrollLeft;
+  const restore = () => {
+    if (box.scrollTop !== top) box.scrollTop = top;
+    if (box.scrollLeft !== left) box.scrollLeft = left;
+  };
+  requestAnimationFrame(() => {
+    restore();
+    requestAnimationFrame(restore);
+  });
+  [60, 150, 300].forEach((ms) => window.setTimeout(restore, ms));
+}
+
+function DocControl({
+  path,
+  display,
+  raw,
+  input,
+  placeholder,
+  onEdit,
+  multiline,
+  track,
+  tf,
+  rangeCheck,
+}: {
+  path: string;
+  display: string;
+  raw: unknown;
+  input: DocFieldInput;
+  placeholder: string;
+  onEdit: (path: string, text: string) => void;
+  multiline?: boolean;
+  track?: boolean;
+  tf: (text: string) => string;
+  rangeCheck?: (next: string) => string | null;
+}) {
+  const value = raw == null ? '' : String(raw);
+  const [draft, setDraft] = useState(value);
+  const typing = useRef(false);
+  useEffect(() => {
+    if (!typing.current) setDraft(value);
+  }, [value]);
+
+  if (input.kind === 'select') {
+    return (
+      <select
+        className="dpr-inline-select"
+        data-dpr-field={track ? path : undefined}
+        value={value}
+        disabled={input.disabled}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+        onChange={(event) => {
+          holdScroll(event.currentTarget);
+          onEdit(path, event.target.value);
+        }}
+      >
+        <option value="">{tf(input.blank)}</option>
+        {input.options.map((option) => (
+          <option key={option.value} value={option.value}>{tf(option.label)}</option>
+        ))}
+      </select>
+    );
+  }
+  if (input.kind === 'number') {
+    return (
+      <input
+        type="number"
+        inputMode="decimal"
+        step="any"
+        className="dpr-inline-input"
+        data-dpr-field={track ? path : undefined}
+        value={draft}
+        placeholder={placeholder}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+        onFocus={() => { typing.current = true; }}
+        onBlur={() => { typing.current = false; setDraft(value); }}
+        onChange={(event) => {
+          holdScroll(event.currentTarget);
+          setDraft(event.target.value);
+          onEdit(path, event.target.value);
+        }}
+      />
+    );
+  }
+  if (input.kind === 'date') {
+    return (
+      <input
+        type="date"
+        className="dpr-inline-input"
+        data-dpr-field={track ? path : undefined}
+        value={toDateInputValue(raw)}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+        onChange={(event) => {
+          const next = event.target.value;
+          if (next && !isReasonableIsoDate(next)) {
+            toast.error(tf('Enter a valid date between 1990 and 2100'));
+            return;
+          }
+          const problem = next && rangeCheck ? rangeCheck(next) : null;
+          if (problem) {
+            toast.error(tf(problem));
+            return;
+          }
+          holdScroll(event.currentTarget);
+          onEdit(path, next);
+        }}
+      />
+    );
+  }
+  return (
+    <EditableDocText
+      path={path}
+      display={display}
+      placeholder={placeholder}
+      onEdit={onEdit}
+      multiline={multiline || input.kind === 'textarea'}
+      track={track}
+    />
+  );
+}
+
 export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps> = ({
   dpr,
   project,
   viewLanguage = 'english',
   trackFieldHits = false,
   onSectionClick,
+  onSectionFocus,
   documentStyle,
   activeSectionId = null,
   onImageFrame,
   onEditField,
   onEditBlock,
+  showEmpty = false,
 }) => {
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
@@ -233,6 +376,14 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const uploadStore = data.step18 || data.uploads || {};
 
   const typeHere = tf('Type here');
+  const focusIn = (n: number, id: string) => onSectionFocus
+    ? (event: React.FocusEvent<HTMLElement>) => {
+        if ((event.target as HTMLElement).matches?.('input, select, textarea, [contenteditable="true"]')) {
+          onSectionFocus(n, id);
+        }
+      }
+    : undefined;
+  const coverDef = catalogSteps.find((step) => step.contentStep === 1);
   const renderBlocks = (sectionId: string) => {
     const blocks = style?.sectionBlocks?.[sectionId] || [];
     if (!blocks.length) return null;
@@ -264,16 +415,35 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       );
     });
   };
+  const lean = isLeanUnitScheme(schemeCode);
+  const fieldName = (path: string) => (path.match(/([A-Za-z0-9_]+)(?:\[\d+\])?$/)?.[1] || path);
+  const dateOrder = (path: string) => (next: string): string | null => {
+    const name = fieldName(path);
+    const stepData = data[path.split('.')[0]] || {};
+    if (name === 'commitmentDate') {
+      const start = toDateInputValue(stepData.yearOfEstablishment);
+      return start && next < start ? 'Commitment Date must be on or after Start Date' : null;
+    }
+    if (name === 'yearOfEstablishment' && lean) {
+      const commit = toDateInputValue(stepData.commitmentDate);
+      return commit && next > commit ? 'Commitment Date must be on or after Start Date' : null;
+    }
+    return null;
+  };
   const editableValue = (path: string, display: string, raw: unknown, multiline = false) => {
     if (onEditField && isPlainValue(raw)) {
       return (
-        <EditableDocText
+        <DocControl
           path={path}
           display={display}
+          raw={raw}
+          input={getDocFieldInput(fieldName(path), { path, schemeCode, lean, data, current: raw })}
           placeholder={typeHere}
           onEdit={onEditField}
           multiline={multiline}
           track={trackFieldHits}
+          tf={tf}
+          rangeCheck={dateOrder(path)}
         />
       );
     }
@@ -287,7 +457,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       let particulars: IndividualDocField[] = [];
       const flushParticulars = () => {
         if (!particulars.length) return;
-        const rows = particulars.filter((field) => formatDocValue(readDocField(field, data)) !== '—');
+        const rows = showEmpty ? particulars : particulars.filter((field) => formatDocValue(readDocField(field, data)) !== '—');
         particulars = [];
         if (!rows.length) return;
         blocks.push(
@@ -333,7 +503,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         keepAll = false
       ) => {
         const paired = body.map((row, index) => ({ row, paths: cellPaths?.[index] }));
-        const kept = keepAll ? paired : paired.filter(({ row }) => isEnteredDocRow(row, skipIndexes));
+        const kept = keepAll || showEmpty ? paired : paired.filter(({ row }) => isEnteredDocRow(row, skipIndexes));
+        if (!kept.length && showEmpty) kept.push({ row: headers.map(() => ''), paths: cellPaths?.[0] });
         if (!kept.length) return null;
         return (
         <table key={key} className="individual-particulars">
@@ -348,7 +519,16 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                 return (
                   <td key={cellIndex}>
                     {cellPath && onEditField ? (
-                      <EditableDocText path={cellPath} display={cell || '—'} placeholder={typeHere} onEdit={onEditField} track={trackFieldHits} />
+                      <DocControl
+                        path={cellPath}
+                        display={cell || '—'}
+                        raw={cell}
+                        input={getDocCellInput(fieldName(cellPath), cell)}
+                        placeholder={typeHere}
+                        onEdit={onEditField}
+                        track={trackFieldHits}
+                        tf={tf}
+                      />
                     ) : (cell || '—')}
                   </td>
                 );
@@ -392,7 +572,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         if (field.name === 'yearProjections' && schemeCode === 'AP_CMEP') {
           flushParticulars();
           const columns = normalizeCmepProjections(raw);
-          if (!cmepProjectionsHaveFigures(columns)) continue;
+          if (!cmepProjectionsHaveFigures(columns) && !showEmpty) continue;
           const amount = (value: number) => (Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100));
           blocks.push(dataTable(
             field.path,
@@ -419,7 +599,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             derived.averageDscr,
           ].some((value) => Number(value) !== 0)
             || derived.depreciation.some((asset) => asset.years.some((year) => year.additions !== 0 || year.depreciation !== 0));
-          if (!derivedEntered) continue;
+          if (!derivedEntered && !showEmpty) continue;
           blocks.push(
             <table key="cmep-repay" className="individual-particulars">
               <caption className="individual-qa-q">{tf('Repayment, break-even and DSCR')}</caption>
@@ -439,7 +619,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                   ['Break-even sales (₹ Lakhs)', amount(derived.breakEvenSales)],
                   ['Break-even capacity (%)', amount(derived.breakEvenCapacity)],
                   ['Average DSCR', amount(derived.averageDscr)],
-                ].filter(([, value]) => isEnteredDocText(value)).map(([label, value]) => (
+                ].filter(([, value]) => showEmpty || isEnteredDocText(value)).map(([label, value]) => (
                   <tr key={label}>
                     <td className="part">{tf(label)}</td>
                     <td>{value}</td>
@@ -506,7 +686,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         }
         if (field.name === 'promoters') {
           flushParticulars();
-          const promoters = (Array.isArray(raw) ? normalizePromoters(raw) : []).filter((row) => isEnteredDocRow([
+          const promoters = (Array.isArray(raw) ? normalizePromoters(raw) : []).filter((row) => showEmpty || isEnteredDocRow([
             row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone,
           ]));
           blocks.push(dataTable(field.path, field.label, ['Name', 'Relation', 'Age', 'Education', 'Experience (years)', 'Phone'], promoters.map((row) => [row.name, row.relationName, row.age, row.education, row.experienceYears, row.phone]), editPaths(field.path, ['name', 'relationName', 'age', 'education', 'experienceYears', 'phone'], promoters.length)));
@@ -514,7 +694,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         }
         if (field.name === 'machineryItems') {
           flushParticulars();
-          const items = normalizeMachineryItems(raw).filter((row) => isEnteredDocRow([
+          const items = normalizeMachineryItems(raw).filter((row) => showEmpty || isEnteredDocRow([
             row.description,
             row.condition,
             row.supplier,
@@ -548,7 +728,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           continue;
         }
         const text = formatDocValue(raw);
-        if (text === '—') continue;
+        if (text === '—' && !showEmpty) continue;
         if (NARRATIVE_FIELDS.has(field.name) || text.length > 160) {
           flushParticulars();
           blocks.push(prose(field, text));
@@ -603,6 +783,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   };
   const sectionHasAnswers = (def: (typeof catalogSteps)[number]) => {
     if (style?.hiddenSectionIds.includes(def.id)) return false;
+    if (showEmpty) return true;
     if (def.id === 'uploads' || def.contentStep === 18) {
       return uploads.some((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label])) || blockVisible(def.id);
     }
@@ -651,7 +832,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           {style.agencyName ? <span>{style.agencyName}</span> : null}
         </div>
       ) : null}
-      <header className="individual-cover">
+      <header className="individual-cover" onFocusCapture={coverDef ? focusIn(coverDef.n, coverDef.id) : undefined}>
         {schemeUi?.id === 'PMEGP' ? (
           <>
             <div className="pmegp-flag-band" aria-hidden="true" />
@@ -669,10 +850,10 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <p className="cover-kicker">{schemeUi ? tf(schemeUi.coverKicker) : 'DETAILED PROJECT REPORT'}</p>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
-        {unitTitle ? (
+        {unitTitle || showEmpty ? (
           <h1 className="cover-unit">
             {onEditField
-              ? editableValue('step1.unitName', unitTitle, step1.unitName || step1.clusterName || '')
+              ? editableValue('step1.unitName', unitTitle || '—', step1.unitName || step1.clusterName || '')
               : fieldHit('step1.unitName', unitTitle, trackFieldHits)}
           </h1>
         ) : null}
@@ -680,24 +861,24 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           <p className="cover-scheme">{cover.underLine}</p>
           {schemeUi ? <p className="cover-tagline">{tf(schemeUi.tagline)}</p> : null}
         </div>
-        {(step1.district || step1.location || extras.entrepreneurName) ? (
+        {(showEmpty || step1.district || step1.location || extras.entrepreneurName) ? (
           <div className={`cover-meta${schemeUi?.id === 'PMEGP' ? ' pmegp-cover-meta' : ''}`}>
-            {step1.district ? (
+            {showEmpty || step1.district ? (
               <div>
                 <span>{tf('District')}</span>
-                {editableValue('step1.district', step1.district, step1.district)}
+                {editableValue('step1.district', step1.district || '—', step1.district)}
               </div>
             ) : null}
-            {step1.location ? (
+            {showEmpty || step1.location ? (
               <div>
                 <span>{tf('Location')}</span>
-                {editableValue('step1.location', step1.location, step1.location)}
+                {editableValue('step1.location', step1.location || '—', step1.location)}
               </div>
             ) : null}
-            {extras.entrepreneurName ? (
+            {showEmpty || extras.entrepreneurName ? (
               <div>
                 <span>{tf('Entrepreneur name')}</span>
-                {editableValue('schemeExtras.entrepreneurName', extras.entrepreneurName, extras.entrepreneurName)}
+                {editableValue('schemeExtras.entrepreneurName', extras.entrepreneurName || '—', extras.entrepreneurName)}
               </div>
             ) : null}
           </div>
@@ -760,9 +941,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         const num = reportEntries.findIndex((entry) => entry.id === def.id) + 1;
         const hot = activeSectionId === def.id;
         if (def.id === 'uploads' || def.contentStep === 18) {
-          const uploaded = uploads.filter((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label]));
+          const uploaded = showEmpty
+            ? uploads
+            : uploads.filter((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label]));
           return (
-            <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+            <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
               <h2 className="individual-sec-title">
                 <span className="individual-sec-num">{num}</span>
                 {title}
@@ -770,9 +953,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               {uploaded.length ? (
                 <ul className="individual-doc-list">
                   {uploaded.map((u) => (
-                    <li key={u.id} className="is-uploaded">
+                    <li key={u.id} className={isKycUploaded(uploadStore[u.id] || uploadStore[u.label]) ? 'is-uploaded' : undefined}>
                       <span className="doc-label">{tf(u.label)}</span>
-                      <span className="doc-status">{tf('Uploaded')}</span>
+                      <span className="doc-status">{isKycUploaded(uploadStore[u.id] || uploadStore[u.label]) ? tf('Uploaded') : tf('Not uploaded')}</span>
                     </li>
                   ))}
                 </ul>
@@ -783,7 +966,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         }
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
         return (
-          <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+          <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
             <h2 className="individual-sec-title">
               <span className="individual-sec-num">{num}</span>
               {title}

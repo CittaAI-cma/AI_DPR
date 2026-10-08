@@ -146,10 +146,6 @@ export const AdminDocuments: React.FC = () => {
   };
 
   const handleDeleteDocument = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-      return;
-    }
-
     try {
       await api.deleteDocument(documentId);
       toast.success('Document deleted successfully');
@@ -184,10 +180,6 @@ export const AdminDocuments: React.FC = () => {
     const mainVectorStoreId = import.meta.env.VITE_MAIN_VECTOR_STORE_ID;
     if (vectorStore.openaiVectorStoreId === mainVectorStoreId) {
       toast.error('Cannot delete the main MSME Knowledge Base vector store');
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete vector store "${vectorStore.name}"? This will also remove all associated documents.`)) {
       return;
     }
 
@@ -308,6 +300,8 @@ export const AdminDocuments: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteVectorStore(store)}
+                          data-confirm-title="Delete this vector store?"
+                          data-confirm-body={`“${store.name}” and all its documents will be removed. This cannot be undone.`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -359,7 +353,7 @@ export const AdminDocuments: React.FC = () => {
                     The system will automatically connect to the main MSME Knowledge Base.
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Vector Store ID: <code className="bg-gray-100 px-2 py-1 rounded">{import.meta.env.VITE_MAIN_VECTOR_STORE_ID}</code>
+                    Vector Store ID: <code className="bg-gray-100 px-2 py-1 rounded break-all">{import.meta.env.VITE_MAIN_VECTOR_STORE_ID}</code>
                   </p>
                 </CardContent>
               </Card>
@@ -603,6 +597,8 @@ export const AdminDocuments: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteDocument(document._id)}
+                          data-confirm-title="Delete this document?"
+                          data-confirm-body={`“${document.originalName}” will be removed. This cannot be undone.`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

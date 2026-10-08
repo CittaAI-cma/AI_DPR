@@ -5,6 +5,8 @@ import { dprDownloadName } from './dprExportName.ts';
 import { patchFromDocEdit } from './individualDpr/liveDocEdit.ts';
 import { cardMatchesFilters, schemeKind, schemeLevel } from './schemePickerFilters.ts';
 import { isReasonableIsoDate } from './individualDpr/isoDate.ts';
+import { sanitizeOwnerTags, toggleOwner } from './ventureMatch/ownerSelection.ts';
+import { analyzeCombinations, relationBetween } from './ventureMatch/combos.ts';
 import { groundCostSuggestion } from './individualDpr/costSuggestionGuard.ts';
 import {
   acceptByKind,
@@ -282,5 +284,82 @@ describe('report style', () => {
     assert.equal(shiftForPageEdge(20, 40, page, edge, edge), 60);
     assert.equal(shiftForPageEdge(900, 150, page, edge, edge), 180);
     assert.equal(shiftForPageEdge(400, 900, page, edge, edge), 0);
+  });
+});
+
+describe('live report dropdowns and numbers', () => {
+  it('clears the town when a new district does not contain it', () => {
+    const moved = patchFromDocEdit({ step1: { district: 'Guntur', location: 'Tenali' } }, 'step1.district', 'Kakinada');
+    assert.equal(moved?.stepData?.district, 'Kakinada');
+    assert.equal(moved?.stepData?.location, '');
+  });
+
+  it('stores typed numbers as numbers and leaves dates as text', () => {
+    const year = patchFromDocEdit({ step4: {} }, 'step4.yearOfEstablishment', '2019');
+    assert.equal(year?.stepData?.yearOfEstablishment, 2019);
+    const date = patchFromDocEdit({ step4: {} }, 'step4.yearOfEstablishment', '2024-05-01');
+    assert.equal(date?.stepData?.yearOfEstablishment, '2024-05-01');
+  });
+});
+
+describe('owner selection groups', () => {
+  it('lets only one of SC, ST, BC and General category man be chosen', () => {
+    let tags = toggleOwner([], 'sc');
+    tags = toggleOwner(tags, 'bc');
+    assert.deepEqual(tags, ['bc']);
+    tags = toggleOwner(tags, 'generalMale');
+    assert.deepEqual(tags, ['generalMale']);
+    assert.deepEqual(toggleOwner(tags, 'generalMale'), []);
+  });
+
+  it('combines woman, disability, transgender and ex-serviceman with a group choice', () => {
+    let tags = toggleOwner([], 'sc');
+    tags = toggleOwner(tags, 'female');
+    tags = toggleOwner(tags, 'pwd');
+    tags = toggleOwner(tags, 'exServiceman');
+    assert.deepEqual(new Set(tags), new Set(['sc', 'female', 'pwd', 'exServiceman']));
+    tags = toggleOwner(tags, 'st');
+    assert.deepEqual(new Set(tags), new Set(['st', 'female', 'pwd', 'exServiceman']));
+  });
+
+  it('keeps not decided, no 51% and not sure on their own', () => {
+    assert.deepEqual(toggleOwner(['sc', 'female'], 'notSure'), ['notSure']);
+    assert.deepEqual(toggleOwner(['notSure'], 'female'), ['female']);
+    assert.deepEqual(sanitizeOwnerTags(['sc', 'st', 'pwd']), ['sc', 'pwd']);
+    assert.deepEqual(sanitizeOwnerTags(['female', 'noMajority']), ['noMajority']);
+  });
+});
+
+describe('scheme combinations', () => {
+  const pick = (...codes: string[]) => codes.map((code) => ({ code, name: code, kind: 'subsidy' as const, benefit: '' }));
+
+  it('rules out the AP incentives that cannot share one investment and keeps the food one for food units', () => {
+    const result = analyzeCombinations(pick('AP_EDP', 'AP_FPP', 'AP_TECH_UPGRADE'));
+    assert.deepEqual(result.core.map((item) => item.scheme.code), ['AP_FPP']);
+    assert.deepEqual(new Set(result.leftOut.map((item) => item.scheme.code)), new Set(['AP_EDP', 'AP_TECH_UPGRADE']));
+    assert.equal(relationBetween('AP_EDP', 'AP_TECH_UPGRADE')?.type, 'exclusive');
+    assert.equal(relationBetween('AP_EDP', 'AP_TECH_UPGRADE')?.source, 'guideline');
+  });
+
+  it('keeps PMEGP away from other subsidies and puts the 2nd loan after the first', () => {
+    assert.equal(relationBetween('PMEGP', 'PMFME')?.type, 'exclusive');
+    assert.equal(relationBetween('PMEGP', 'MUDRA')?.type, 'exclusive');
+    const seq = relationBetween('PMEGP', 'PMEGP_2ND');
+    assert.equal(seq?.type, 'sequence');
+    assert.equal(seq?.first, 'PMEGP');
+  });
+
+  it('adds a guarantee on top of a subsidy but not on a loan that is already guaranteed', () => {
+    assert.equal(relationBetween('CGTMSE', 'PMEGP')?.type, 'stack');
+    assert.equal(relationBetween('CGTMSE', 'MUDRA')?.type, 'overlap');
+    const plan = analyzeCombinations(pick('PMEGP', 'CGTMSE', 'ZED', 'MUDRA'));
+    assert.deepEqual(plan.core.map((item) => item.scheme.code), ['PMEGP']);
+    assert.deepEqual(new Set(plan.addOns.map((item) => item.scheme.code)), new Set(['CGTMSE', 'ZED']));
+  });
+
+  it('bars PM Vishwakarma for people who took PMEGP, MUDRA or SVANidhi', () => {
+    ['PMEGP', 'MUDRA', 'SVANIDHI'].forEach((code) =>
+      assert.equal(relationBetween('VISHWAKARMA', code)?.type, 'exclusive')
+    );
   });
 });

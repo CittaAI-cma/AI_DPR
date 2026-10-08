@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { useBackTarget } from '@/lib/navHistory';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +8,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
+import { dprEditPath } from '@/lib/dprActions';
 import {
   ArrowLeft,
   Download,
@@ -44,6 +46,7 @@ export const DPRPreview: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { dprId } = useParams();
   const navigate = useNavigate();
+  const back = useBackTarget({ path: '/dashboard' });
   const location = useLocation();
   const [dpr, setDpr] = useState<any>(null);
   const [project, setProject] = useState<any>(null);
@@ -229,6 +232,23 @@ export const DPRPreview: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  /** Edit this DPR: back into the Create DPR page that built it (styling lives there under Customise). */
+  const openEditView = () => {
+    const record = extractIndividualDocData(dpr, project);
+    const scheme = extractSchemeCode(dpr, project, record);
+    const owner = (project && project._id ? project : dpr?.projectId) || {};
+    navigate(
+      dprEditPath({
+        _id: dprId || dpr?._id,
+        schemeCode: scheme,
+        projectId: {
+          _id: owner._id || (typeof dpr?.projectId === 'string' ? dpr.projectId : undefined),
+          projectType: owner.projectType || (isClusterDPR ? 'cluster' : isIndividualDPR ? 'individual' : undefined),
+        },
+      }),
+    );
   };
 
   const openStyleEditor = async () => {
@@ -544,9 +564,9 @@ export const DPRPreview: React.FC = () => {
   return (
     <Layout>
       <div className={`${isClusterDPR ? 'w-full max-w-none' : 'max-w-6xl mx-auto'} space-y-6 pb-8`}>
-        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-4">
+        <Button variant="ghost" onClick={back.go} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          {t('dpr.preview.backToDashboard')}
+          {back.label}
         </Button>
 
         {/* Header Section - Only show for non-cluster DPRs */}
@@ -919,9 +939,10 @@ export const DPRPreview: React.FC = () => {
               <div className="flex items-center justify-between">
                 <CardTitle>DPR Preview</CardTitle>
                 <div className="flex items-center gap-2">
-                  {isIndividualDPR && !styling ? (
-                    <Button variant="outline" size="sm" onClick={openStyleEditor}>
-                      Style this report
+                  {!styling ? (
+                    <Button variant="outline" size="sm" onClick={openEditView}>
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Edit this DPR
                     </Button>
                   ) : null}
                   {!styling ? (

@@ -18,12 +18,14 @@ import {
   Sparkles,
   BarChart3,
   Eye,
+  Pencil,
+  Trash2,
+  Loader2,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import { useDprActions } from '@/lib/dprActions';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { canCreateDpr, ROLE_META, toAppRole } from '@/lib/rbac';
 
@@ -35,6 +37,8 @@ interface DPR {
   qualityScore?: number;
   generatedAt?: Date;
   createdAt?: Date;
+  updatedAt?: Date;
+  schemeCode?: string | null;
 }
 
 export const Dashboard: React.FC = () => {
@@ -53,8 +57,7 @@ export const Dashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(cachedDPRs.length === 0);
   const [insights, setInsights] = useState<any>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const LATEST_COUNT = 5;
 
   useEffect(() => {
     loadData();
@@ -174,6 +177,12 @@ export const Dashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const { edit: editDpr, askDelete, deleteDialog } = useDprActions((dprId: string) => {
+    const remaining = dprs.filter((item: DPR) => item._id !== dprId);
+    setDPRs(remaining);
+    processDPRsData(remaining);
+  });
 
   const processDPRsData = (dprsData: DPR[]) => {
     setDprs(dprsData);
@@ -333,7 +342,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card className="hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -494,12 +503,12 @@ export const Dashboard: React.FC = () => {
         {/* Recent DPRs */}
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>{t('dashboard.yourDPRs')}</CardTitle>
                 <CardDescription>{t('dashboard.manageDPRs')}</CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => navigate('/dprs')}>
                   {t('dashboard.viewAllDPRs')}
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -538,13 +547,11 @@ export const Dashboard: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="space-y-3">
+                <div className="motion-stagger space-y-3">
                   {(() => {
-                    // Calculate pagination
-                    const totalPages = Math.ceil(dprs.length / itemsPerPage);
-                    const startIndex = (currentPage - 1) * itemsPerPage;
-                    const endIndex = startIndex + itemsPerPage;
-                    const paginatedDPRs = dprs.slice(startIndex, endIndex);
+                    // Only the latest few; the rest are under "View all DPRs".
+                    const stamp = (d: DPR) => new Date(d.updatedAt || d.createdAt || d.generatedAt || 0).getTime();
+                    const paginatedDPRs = [...dprs].sort((a, b) => stamp(b) - stamp(a)).slice(0, LATEST_COUNT);
                     
                     return paginatedDPRs.map((dpr: DPR) => (
                   <div
@@ -582,95 +589,60 @@ export const Dashboard: React.FC = () => {
                           </p>
                         </div>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/dpr/view/${dpr._id}`, { state: { updatedAt: dpr.updatedAt } });
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        {t('dashboard.view')}
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/dpr/view/${dpr._id}`, { state: { updatedAt: dpr.updatedAt } });
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          {t('dashboard.view')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            editDpr(dpr);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          {t('dashboard.edit')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          data-no-auto-confirm
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            askDelete(dpr);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {t('dashboard.delete')}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                     ));
                   })()}
                 </div>
                 
-                {/* Pagination Controls */}
-                {(() => {
-                  const totalPages = Math.ceil(dprs.length / itemsPerPage);
-                  if (totalPages <= 1) return null;
-                  
-                  return (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
-                      <div className="text-sm text-muted-foreground">
-                        Showing <span className="font-semibold text-foreground">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-semibold text-foreground">{Math.min(currentPage * itemsPerPage, dprs.length)}</span> of <span className="font-semibold text-foreground">{dprs.length}</span> DPRs
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                          disabled={currentPage === 1}
-                          className="flex items-center gap-1.5 border-2 hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          <span className="hidden sm:inline">Previous</span>
-                        </Button>
-                        
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter(page => {
-                              // Show first page, last page, current page, and pages around current
-                              return page === 1 || 
-                                     page === totalPages || 
-                                     (page >= currentPage - 1 && page <= currentPage + 1);
-                            })
-                            .map((page, index, array) => {
-                              // Add ellipsis if there's a gap
-                              const showEllipsisBefore = index > 0 && array[index - 1] !== page - 1;
-                              const isActive = currentPage === page;
-                              
-                              return (
-                                <React.Fragment key={page}>
-                                  {showEllipsisBefore && (
-                                    <span className="px-2 py-1 text-muted-foreground font-medium">...</span>
-                                  )}
-                                  <Button
-                                    variant={isActive ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`min-w-[44px] h-9 font-semibold transition-all ${
-                                      isActive 
-                                        ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90 border-2 border-primary scale-105" 
-                                        : "border-2 hover:border-primary/50 hover:bg-primary/5 hover:scale-105"
-                                    }`}
-                                  >
-                                    {page}
-                                  </Button>
-                                </React.Fragment>
-                              );
-                            })}
-                        </div>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                          disabled={currentPage === totalPages}
-                          className="flex items-center gap-1.5 border-2 hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        >
-                          <span className="hidden sm:inline">Next</span>
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })()}
+                {dprs.length > LATEST_COUNT && (
+                  <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-border pt-4 sm:flex-row">
+                    <p className="text-sm text-muted-foreground">
+                      {t('dashboard.showingLatest', { count: LATEST_COUNT, total: dprs.length, defaultValue: 'Showing your latest {{count}} of {{total}} reports' })}
+                    </p>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/dprs')}>
+                      {t('dashboard.viewAllDPRs')}
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                )}
               </>
             )}
           </CardContent>
@@ -683,7 +655,7 @@ export const Dashboard: React.FC = () => {
             <CardDescription>{t('dashboard.accessFrequentlyUsed')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Button
                 variant="primary"
                 onClick={() => navigate('/individual-dpr/create?new=true')}
@@ -732,6 +704,7 @@ export const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      {deleteDialog}
     </Layout>
   );
 };

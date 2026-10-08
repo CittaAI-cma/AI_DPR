@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { useBackTarget } from '@/lib/navHistory';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +18,7 @@ export const DPRGeneration: React.FC = () => {
   const { t } = useTranslation();
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const back = useBackTarget({ path: '/projects' });
   const [project, setProject] = useState<any>(null);
   const [dpr, setDpr] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -151,9 +153,9 @@ export const DPRGeneration: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-6">
-        <Button variant="ghost" onClick={() => navigate('/projects')}>
+        <Button variant="ghost" onClick={back.go}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          {t('common.back')}
+          {back.label}
         </Button>
 
         <Card>
