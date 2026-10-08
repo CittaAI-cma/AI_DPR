@@ -353,7 +353,7 @@ export const AdminDocuments: React.FC = () => {
                     The system will automatically connect to the main MSME Knowledge Base.
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Vector Store ID: <code className="bg-gray-100 px-2 py-1 rounded">{import.meta.env.VITE_MAIN_VECTOR_STORE_ID}</code>
+                    Vector Store ID: <code className="bg-gray-100 px-2 py-1 rounded break-all">{import.meta.env.VITE_MAIN_VECTOR_STORE_ID}</code>
                   </p>
                 </CardContent>
               </Card>

@@ -237,6 +237,8 @@
     "viewSchemes": "View Schemes",
     "chatWithAI": "Chat with AI Assistant",
     "yourDPRs": "My Detailed Project Reports",
+    "dprs": "DPRs",
+    "drafts": "drafts",
     "showingLatest": "Showing your latest {{count}} of {{total}} reports",
     "manageDPRs": "Manage and track your Detailed Project Reports",
     "viewAllDPRs": "View All DPRs",

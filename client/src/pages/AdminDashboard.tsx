@@ -301,14 +301,14 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Navigation Tabs */}
         <div className="border-b border-border">
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto" role="tablist">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-3 font-medium border-b-2 transition-all ${
+                  className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-3 font-medium border-b-2 transition-all sm:px-6 ${
                     activeTab === tab.id
                       ? 'border-primary text-primary bg-primary/5'
                       : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'

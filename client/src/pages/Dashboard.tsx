@@ -503,12 +503,12 @@ export const Dashboard: React.FC = () => {
         {/* Recent DPRs */}
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>{t('dashboard.yourDPRs')}</CardTitle>
                 <CardDescription>{t('dashboard.manageDPRs')}</CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => navigate('/dprs')}>
                   {t('dashboard.viewAllDPRs')}
                   <ArrowRight className="h-4 w-4 ml-2" />

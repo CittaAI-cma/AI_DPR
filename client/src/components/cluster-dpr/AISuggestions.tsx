@@ -1166,9 +1166,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
     return (
       <div className="mb-4 p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <Sparkles className="h-5 w-5 shrink-0 text-primary" />
             <div>
               <p className="text-sm font-semibold text-gray-900">{tf('Get AI Suggestions')}</p>
               <p className="text-xs text-muted-foreground">

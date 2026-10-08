@@ -576,7 +576,7 @@ export const IndividualDPRCreation: React.FC = () => {
       <div className={styling && docStyle ? 'flex min-h-0 flex-1 flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
         <div className={styling && docStyle
           ? 'shrink-0 border-b border-border bg-background px-4 pb-4 pt-2'
-          : 'sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}>
+          : 'sm:sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}>
           <div className={styling && docStyle ? '' : 'max-w-[1920px] mx-auto px-4 py-4 sm:px-6 lg:px-8'}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
@@ -712,7 +712,7 @@ export const IndividualDPRCreation: React.FC = () => {
         {setupPhase === 'form' && (
           <>
         {!styling && (
-        <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
+        <div className="sm:sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
               {selectionSteps.map((step) => {

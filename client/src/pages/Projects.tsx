@@ -69,9 +69,9 @@ export const Projects: React.FC = () => {
     <Layout>
       <div className="space-y-8 pb-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
               {isAdmin ? t('projects.allProjects') : t('projects.title')}
             </h1>
             <p className="text-muted-foreground text-lg">
@@ -81,7 +81,7 @@ export const Projects: React.FC = () => {
               }
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button 
               variant="outline" 
               onClick={() => navigate('/venture-match')}

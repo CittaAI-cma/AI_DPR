@@ -223,7 +223,7 @@ export const VentureMatch: React.FC = () => {
           </div>
           {!done && question && (
             <div className="mt-3">
-              <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 text-sm text-muted-foreground">
                 <span>{t('ventureMatch.progress', { current: step + 1, total: visible.length })}</span>
                 <span>{t('ventureMatch.remaining', { count: remaining })}</span>
               </div>

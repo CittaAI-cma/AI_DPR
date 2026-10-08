@@ -564,10 +564,10 @@ export const ClusterDPRCreation: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="sm:sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-4">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -589,7 +589,7 @@ export const ClusterDPRCreation: React.FC = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 flex-wrap justify-end">
+              <div className="flex max-w-full items-center gap-2 flex-wrap justify-end">
                 <LanguageToggle />
                 <Button
                   variant="outline"
@@ -645,7 +645,7 @@ export const ClusterDPRCreation: React.FC = () => {
         </div>
 
         {/* Step Progress Indicator */}
-        <div className="sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
+        <div className="sm:sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
               {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {

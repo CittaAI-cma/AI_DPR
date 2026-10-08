@@ -31,7 +31,25 @@ function useFineHover() {
   return fine;
 }
 
-/** Icon rail under the header. Hover (or tap) expands it over the page. */
+/** The main places, shared by the side rail (tablet / desktop) and the phone menu. */
+export function useAppNavLinks() {
+  const { t } = useTranslation();
+  const { user } = useAuthStore();
+  return [
+    { path: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { path: '/dprs', label: t('nav.allDPRs'), icon: FileText },
+    { path: '/projects', label: t('nav.projects'), icon: FolderKanban },
+    { path: '/chat', label: t('nav.chat'), icon: MessageSquare },
+    ...(canAccessAdmin(user?.role)
+      ? [
+          { path: '/admin', label: t('nav.admin'), icon: Settings },
+          { path: '/admin/documents', label: t('nav.documents'), icon: Files },
+        ]
+      : []),
+  ];
+}
+
+/** Icon rail under the header on tablet and desktop. Phones use the menu in the top bar instead. Hover (or tap) expands it over the page. */
 export const SideMenu: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -45,18 +63,7 @@ export const SideMenu: React.FC = () => {
   const devMode = useDevModeStore((s) => s.on);
   const setDevMode = useDevModeStore((s) => s.setOn);
   const showDevMode = DEV_MODE_PATHS.includes(location.pathname.replace(/\/$/, ''));
-  const links = [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { path: '/dprs', label: t('nav.allDPRs'), icon: FileText },
-    { path: '/projects', label: t('nav.projects'), icon: FolderKanban },
-    { path: '/chat', label: t('nav.chat'), icon: MessageSquare },
-    ...(canAccessAdmin(user?.role)
-      ? [
-          { path: '/admin', label: t('nav.admin'), icon: Settings },
-          { path: '/admin/documents', label: t('nav.documents'), icon: Files },
-        ]
-      : []),
-  ];
+  const links = useAppNavLinks();
 
   useEffect(() => {
     setPinned(false);
@@ -113,7 +120,7 @@ export const SideMenu: React.FC = () => {
             setHover(false);
           }
         }}
-        className={`fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col overflow-hidden border-r border-border bg-background/95 shadow-lg backdrop-blur transition-[width] duration-200 ease-out ${
+        className={`max-md:hidden fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col overflow-hidden border-r border-border bg-background/95 shadow-lg backdrop-blur transition-[width] duration-200 ease-out ${
           open ? EXPANDED : COLLAPSED
         }`}
       >

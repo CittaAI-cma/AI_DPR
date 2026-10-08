@@ -486,7 +486,7 @@ export const AllDPRs: React.FC = () => {
               }
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               ref={fileInputRef}
               type="file"

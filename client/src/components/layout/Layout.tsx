@@ -10,13 +10,13 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, fullBleed = false }) => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const railClear = isAuthenticated ? 'max-[1528px]:pl-[4.75rem]' : '';
+  const railClear = isAuthenticated ? 'md:max-[1528px]:pl-[4.75rem]' : '';
 
   if (fullBleed) {
     return (
       <div className="flex h-dvh flex-col overflow-hidden bg-background">
         <Navbar />
-        <main className={`motion-page flex min-h-0 flex-1 flex-col overflow-hidden ${isAuthenticated ? 'pl-16' : ''}`}>
+        <main className={`motion-page flex min-h-0 flex-1 flex-col overflow-hidden ${isAuthenticated ? 'md:pl-16' : ''}`}>
           {children}
         </main>
       </div>
