@@ -113,6 +113,7 @@ export function StyleEditor({
   const [panel, setPanel] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(0.8);
+  const [templatePreview, setTemplatePreview] = useState(null);
   const previewBoxRef = useRef<HTMLDivElement>(null);
   const [openGroups, setOpenGroups] = useState({});
   const toggleGroup = (id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
