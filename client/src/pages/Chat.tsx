@@ -370,8 +370,8 @@ export const Chat: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden max-[1528px]:pl-[4.75rem]">
-      <div className="max-[1528px]:-ml-[4.75rem] max-[1528px]:w-[calc(100%+4.75rem)]">
+    <div className="flex flex-col h-screen bg-background overflow-hidden md:max-[1528px]:pl-[4.75rem]">
+      <div className="md:max-[1528px]:-ml-[4.75rem] md:max-[1528px]:w-[calc(100%+4.75rem)]">
         <Navbar />
       </div>
       {/* Header */}
@@ -408,6 +408,9 @@ export const Chat: React.FC = () => {
                 variant="ghost"
                   size="sm"
                   onClick={clearMessages}
+                  data-confirm-title="Clear this conversation?"
+                  data-confirm-body="All messages in this chat will be removed. This cannot be undone."
+                  data-confirm-label="Clear chat"
                   disabled={messages.length === 0}
                 className="text-xs h-8"
                 >
@@ -473,7 +476,7 @@ export const Chat: React.FC = () => {
                   </p>
                 </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-2xl">
+              <div className="motion-stagger grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-2xl">
                     {exampleQuestions.map((question, index) => (
                   <button
                         key={index}

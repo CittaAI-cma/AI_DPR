@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "test": "node --experimental-strip-types --test src/lib/dprFixes.test.ts src/lib/production.ui.test.ts",
-    "test:screens": "playwright test"
+    "test:screens": "playwright test",
+    "audit:responsive": "node scripts/responsive-audit.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

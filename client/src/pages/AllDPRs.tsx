@@ -10,11 +10,14 @@ import { Input } from '@/components/ui/Input';
 import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
 import { useDPRStore } from '@/store/dprStore';
+import { useDprActions } from '@/lib/dprActions';
 import { 
   FileText, 
   Search,
   Download,
   Eye,
+  Pencil,
+  Trash2,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -53,6 +56,16 @@ export const AllDPRs: React.FC = () => {
   const isAdmin = isSuperAdmin(user?.role);
   const { dprs: cachedDPRs, setDPRs, isStale } = useDPRStore();
   const [dprs, setDprs] = useState<DPR[]>(cachedDPRs);
+  const { edit: editDpr, askDelete, deleteDialog } = useDprActions((dprId: string) => {
+    setDprs((current: DPR[]) => {
+      const remaining = current.filter((item) => item._id !== dprId);
+      setDPRs(remaining);
+      return remaining;
+    });
+  });
+  // Staff see everyone's DPRs here; only the owner can edit or delete one.
+  const ownsDpr = (dpr: DPR) =>
+    !isAdmin || !dpr.projectId?.userId || String(dpr.projectId.userId) === String(user?.userId);
   const [filteredDprs, setFilteredDprs] = useState<DPR[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -473,7 +486,7 @@ export const AllDPRs: React.FC = () => {
               }
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               ref={fileInputRef}
               type="file"
@@ -713,7 +726,7 @@ export const AllDPRs: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="motion-stagger space-y-4">
             {filteredDprs.map((dpr) => (
               <Card
                 key={dpr._id}
@@ -799,6 +812,29 @@ export const AllDPRs: React.FC = () => {
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </Button>
+                      {ownsDpr(dpr) && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => editDpr(dpr)}
+                            className="border-2"
+                          >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => askDelete(dpr)}
+                            data-no-auto-confirm
+                            className="border-2 border-destructive text-destructive hover:bg-destructive hover:text-white"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -838,6 +874,7 @@ export const AllDPRs: React.FC = () => {
           </div>
         )}
       </div>
+      {deleteDialog}
     </Layout>
   );
 };

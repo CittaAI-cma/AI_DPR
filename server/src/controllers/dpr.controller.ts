@@ -1338,6 +1338,7 @@ export class DPRController {
         return [{
           _id: dpr._id,
           projectId: {
+            _id: project._id,
             projectName: project.projectName || 'Unknown Project',
             industrySector: project.industrySector || 'Unknown',
             subSector: project.subSector || '',
@@ -1368,6 +1369,59 @@ export class DPRController {
         message: 'Failed to get user DPRs',
         error: error.message,
       });
+    }
+  }
+
+  /**
+   * Delete one of the signed-in user's DPRs. When it was the last DPR of a project that exists only for
+   * the individual / cluster DPR flow, that project goes with it so no empty draft is left behind.
+   */
+  static async deleteDPR(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+
+      const { dprId } = req.params;
+      const dpr = await DPRVersion.findById(dprId).select('_id projectId');
+      if (!dpr) {
+        res.status(404).json({ success: false, message: 'DPR not found' });
+        return;
+      }
+
+      const { Project } = await import('../models/Project.model');
+      const project = await Project.findById(dpr.projectId).select('_id userId projectType');
+      if (!project || project.userId?.toString() !== userId.toString()) {
+        res.status(403).json({ success: false, message: 'You can only delete your own DPRs' });
+        return;
+      }
+
+      const { ClusterSection } = await import('../models/ClusterSection.model');
+      await ClusterSection.deleteMany({ dprId: String(dpr._id) });
+      await DPRVersion.findByIdAndDelete(dpr._id);
+
+      let projectDeleted = false;
+      const remaining = await DPRVersion.countDocuments({ projectId: String(project._id) });
+      if (remaining === 0 && (project.projectType === 'individual' || project.projectType === 'cluster')) {
+        await Project.findByIdAndDelete(project._id);
+        projectDeleted = true;
+      }
+
+      await AuditService.log({
+        action: 'dpr_delete',
+        userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
+
+      res.status(200).json({ success: true, message: 'DPR deleted', data: { projectDeleted } });
+    } catch (error: any) {
+      console.error('Delete DPR error:', error);
+      res.status(500).json({ success: false, message: 'Failed to delete DPR', error: error.message });
     }
   }
 

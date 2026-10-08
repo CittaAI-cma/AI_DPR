@@ -51,8 +51,6 @@ export const Projects: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('projects.areYouSureDelete'))) return;
-
     try {
       await api.deleteProject(id);
       deleteProject(id);
@@ -71,9 +69,9 @@ export const Projects: React.FC = () => {
     <Layout>
       <div className="space-y-8 pb-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
               {isAdmin ? t('projects.allProjects') : t('projects.title')}
             </h1>
             <p className="text-muted-foreground text-lg">
@@ -83,7 +81,7 @@ export const Projects: React.FC = () => {
               }
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button 
               variant="outline" 
               onClick={() => navigate('/venture-match')}
@@ -161,7 +159,7 @@ export const Projects: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
               <Card 
                 key={project._id} 
@@ -238,6 +236,8 @@ export const Projects: React.FC = () => {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(project._id)}
+                      data-confirm-title={t('confirmDelete.projectTitle', { defaultValue: 'Delete this project?' })}
+                      data-confirm-body={t('confirmDelete.projectBody', { name: project.projectName, defaultValue: '“{{name}}” and its reports will be removed. This cannot be undone.' })}
                       className="border-2"
                     >
                       <Trash2 className="h-4 w-4" />

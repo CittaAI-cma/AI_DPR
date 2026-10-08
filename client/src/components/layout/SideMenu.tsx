@@ -5,6 +5,11 @@ import { useLinkHandler } from '@/lib/linkUtils';
 import { ChevronRight, FileText, Files, FolderKanban, LayoutDashboard, MessageSquare, Settings } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { canAccessAdmin } from '@/lib/rbac';
+import { DevModeToggle } from '@/components/ui/DevModeToggle';
+import { useDevModeStore } from '@/store/devModeStore';
+
+/** Dev mode only means something while building a DPR, so the switch shows on those pages. */
+const DEV_MODE_PATHS = ['/individual-dpr/create', '/cluster-dpr/create'];
 
 const COLLAPSED = 'w-16';
 const EXPANDED = 'w-64';
@@ -26,18 +31,11 @@ function useFineHover() {
   return fine;
 }
 
-/** Icon rail under the header. Hover (or tap) expands it over the page. */
-export const SideMenu: React.FC = () => {
+/** The main places, shared by the side rail (tablet / desktop) and the phone menu. */
+export function useAppNavLinks() {
   const { t } = useTranslation();
-  const location = useLocation();
-  const handleLinkClick = useLinkHandler();
-  const fineHover = useFineHover();
-  const [hover, setHover] = useState(false);
-  const [pinned, setPinned] = useState(false);
-  const open = hover || pinned;
-
   const { user } = useAuthStore();
-  const links = [
+  return [
     { path: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { path: '/dprs', label: t('nav.allDPRs'), icon: FileText },
     { path: '/projects', label: t('nav.projects'), icon: FolderKanban },
@@ -49,6 +47,23 @@ export const SideMenu: React.FC = () => {
         ]
       : []),
   ];
+}
+
+/** Icon rail under the header on tablet and desktop. Phones use the menu in the top bar instead. Hover (or tap) expands it over the page. */
+export const SideMenu: React.FC = () => {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const handleLinkClick = useLinkHandler();
+  const fineHover = useFineHover();
+  const [hover, setHover] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const open = hover || pinned;
+
+  const { user } = useAuthStore();
+  const devMode = useDevModeStore((s) => s.on);
+  const setDevMode = useDevModeStore((s) => s.setOn);
+  const showDevMode = DEV_MODE_PATHS.includes(location.pathname.replace(/\/$/, ''));
+  const links = useAppNavLinks();
 
   useEffect(() => {
     setPinned(false);
@@ -105,7 +120,7 @@ export const SideMenu: React.FC = () => {
             setHover(false);
           }
         }}
-        className={`fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col overflow-hidden border-r border-border bg-background/95 shadow-lg backdrop-blur transition-[width] duration-200 ease-out ${
+        className={`max-md:hidden fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col overflow-hidden border-r border-border bg-background/95 shadow-lg backdrop-blur transition-[width] duration-200 ease-out ${
           open ? EXPANDED : COLLAPSED
         }`}
       >
@@ -143,9 +158,14 @@ export const SideMenu: React.FC = () => {
             );
           })}
         </ul>
+        {showDevMode && (
+          <div className="mt-auto border-t border-border p-2">
+            <DevModeToggle on={devMode} onChange={setDevMode} expanded={open} />
+          </div>
+        )}
         <button
           type="button"
-          className="mb-2 mt-auto flex h-11 w-12 items-center justify-center text-muted-foreground hover:text-foreground"
+          className={`mb-2 ${showDevMode ? '' : 'mt-auto'} flex h-11 w-12 items-center justify-center text-muted-foreground hover:text-foreground`}
           aria-expanded={open}
           aria-label={open ? 'Collapse menu' : 'Expand menu'}
           onClick={() => setPinned((value) => !value)}

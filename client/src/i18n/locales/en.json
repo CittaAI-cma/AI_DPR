@@ -1,4 +1,17 @@
 {
+  "theme": {
+    "label": "Colour theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "confirmDelete": {
+    "title": "Delete this item?",
+    "body": "It will be removed. This cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "projectTitle": "Delete this project?",
+    "projectBody": "“{{name}}” and its reports will be removed. This cannot be undone."
+  },
   "common": {
     "welcome": "Welcome",
     "login": "Login",
@@ -22,6 +35,26 @@
     "sample": "Sample"
   },
   "nav": {
+    "backTo": "Back to {{name}}",
+    "pages": {
+      "dashboard": "Dashboard",
+      "schemeFinder": "Scheme Finder",
+      "newProject": "New Project",
+      "project": "Project",
+      "projects": "Projects",
+      "dprBuilder": "DPR Builder",
+      "dprView": "DPR",
+      "dprGeneration": "DPR Generation",
+      "allDprs": "All DPRs",
+      "clusterDpr": "Cluster DPR",
+      "createDpr": "Create DPR",
+      "chat": "Chat",
+      "profile": "Profile",
+      "accountPrivacy": "Privacy settings",
+      "adminDocuments": "Documents",
+      "admin": "Admin",
+      "home": "Home"
+    },
     "home": "Home",
     "dashboard": "Dashboard",
     "projects": "Projects",
@@ -203,7 +236,10 @@
     "createNewProject": "Create New Project",
     "viewSchemes": "View Schemes",
     "chatWithAI": "Chat with AI Assistant",
-    "yourDPRs": "Your DPRs",
+    "yourDPRs": "My Detailed Project Reports",
+    "dprs": "DPRs",
+    "drafts": "drafts",
+    "showingLatest": "Showing your latest {{count}} of {{total}} reports",
     "manageDPRs": "Manage and track your Detailed Project Reports",
     "viewAllDPRs": "View All DPRs",
     "viewProjects": "View Projects",
@@ -228,6 +264,15 @@
     "createFirstDPR": "Create your first Detailed Project Report to get started with AI-powered business planning",
     "createYourFirstDPR": "Create Your First DPR",
     "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete this report?",
+    "deleteBody": "“{{name}}” will be removed permanently, with its answers. This cannot be undone.",
+    "deleteConfirm": "Delete report",
+    "deleteCancel": "Keep it",
+    "deleting": "Deleting…",
+    "deleted": "Report deleted",
+    "deleteFailed": "Could not delete the report. Try again.",
     "accessFrequentlyUsed": "Access frequently used features",
     "aiGuidedBuilder": "AI-Guided Builder",
     "getInstantHelp": "Get instant help",
@@ -738,12 +783,17 @@
     }
   },
   "ventureMatch": {
+    "noGuarantee": "This is guidance only. Scheme Finder does not guarantee or assure eligibility, approval, subsidy amount or timelines. The scheme authority or your bank takes the final decision. Amounts and rules on the cards are indicative and change, so confirm them with the agency or your bank.",
+    "inBestPlan": "In your suggested plan",
+    "knowMoreCreate": "Know more & create",
+    "backToDashboard": "Back to Dashboard",
     "title": "Scheme Finder",
     "progress": "Question {{current}} of {{total}}",
     "remaining": "{{count}} schemes still possible",
     "selectAll": "Select all that apply, then tap Next.",
-    "resultsTitle": "Schemes that fit your answers",
-    "resultsSubtitle": "{{count}} schemes match what you told us.",
+    "ownerPickOne": "SC, ST, BC and General category man go together: pick only one of them. Woman, disability, transgender and ex-serviceman can be added to any choice.",
+    "resultsTitle": "Schemes that may suit your answers",
+    "resultsSubtitle": "{{count}} schemes may match what you told us.",
     "noMatches": "No schemes match these answers.",
     "notEligible": "{{count}} schemes do not match",
     "createDpr": "Create DPR",
@@ -754,18 +804,7 @@
     "stepExclusionBecause": "{{name}} is not matching because {{reason}}.",
     "stepExclusionBecauseMany": "{{name}} is not matching because: {{reason}}.",
     "cmepBoosterTitle": "CMEP Special Booster Match",
-    "cmepBoosterBody": "As a Woman / Transgender / Ex-Serviceman / Specially-Abled promoter, you qualify for enhanced back-ended subsidy support under AP CMEP.",
-    "otherSchemesLabel": "Other schemes",
-    "otherSchemes": {
-      "PMEGP": "A new PMEGP project is closed if this unit already received a government subsidy under PMRY, REGP, PMEGP, CMEGP, or any other central or state scheme. Only one person in the family (self, spouse, and unmarried children) can take it. A second loan is separate, and only if the first PMEGP, REGP, or MUDRA loan was repaid on time.",
-      "PMFME": "You can apply even after a loan under another subsidy-linked scheme, and you can use other schemes at the same time, as long as the same benefit is not paid twice. Only one person in the family (self, spouse, and children) can take this assistance.",
-      "VISHWAKARMA": "Do not apply if you took a similar central or state self-employment loan in the past 5 years. A PMEGP recipient cannot apply. MUDRA or PM SVANidhi borrowers can apply only after that loan is fully repaid. One family member only. Government employees and their families are not eligible.",
-      "PMEGP_2ND": "This is only for a unit that already received PMEGP, REGP, or MUDRA. The first loan must have been repaid on time, and the unit should have been in profit for about three years. An unpaid first loan does not qualify.",
-      "AP_EDP": "New-unit capital subsidy and expansion technology-upgradation support cannot both be claimed on the same fixed capital. Incentives under this policy together stay within 75% of that investment. Do not claim the same capital subsidy again under the Food Processing Policy.",
-      "AP_FPP": "The similar capital incentives under the Industrial Development Policy or MSME-EDP cannot be claimed as well. The same capital item cannot be subsidised twice, including with PMFME.",
-      "AP_TECH_UPGRADE": "This cannot be stacked with the new-unit EDP capital subsidy on the same fixed capital. Incentives claimed together under MSME-EDP 4.0 stay within 75% of that investment.",
-      "AP_PARKS": "The 75% land-cost rebate for SC/ST micro and small units in APIIC parks is for a new unit and can be taken only once on that land. Combined incentives under the MSME policy stay within 75% of fixed capital investment."
-    },
+    "cmepBoosterBody": "As a Woman / Transgender / Ex-Serviceman / Specially-Abled promoter, you may be eligible for enhanced back-ended subsidy support under AP CMEP, subject to the scheme rules and the approving authority.",
     "help": {
       "open": "Need help choosing?",
       "close": "Close help",
@@ -959,10 +998,10 @@
     "ownershipHint": {
       "title": "Think about putting the business in your wife’s or mother’s name",
       "body": "You said the main owner is a general category man. If your wife or mother owns 51% or more, you may get extra help:",
-      "subsidy": "Subsidy: AP EDP 4.0 / CMEP support can rise for women and special-category local entrepreneurs (building and machine cost).",
-      "debt": "Loan: A woman-owned unit can still use the remaining loan schemes, including PMEGP special category.",
-      "guarantee": "Guarantee: Bank guarantee cover can go up to 90%, with a lower yearly fee.",
-      "ecosystem": "Extra support: Free quality certificate (ZED) and a women’s quota in the RAMP TEAM online selling programme."
+      "subsidy": "Subsidy: AP EDP 4.0 / CMEP support may rise for women and special-category local entrepreneurs (building and machine cost).",
+      "debt": "Loan: A woman-owned unit may still be able to use the remaining loan schemes, including PMEGP special category.",
+      "guarantee": "Guarantee: Bank guarantee cover may go up to 90%, with a lower yearly fee.",
+      "ecosystem": "Extra support: Quality certification (ZED) support and a women’s quota in the RAMP TEAM online selling programme may be available."
     },
     "schemes": {
       "SVANIDHI": {
@@ -1354,6 +1393,7 @@
     "clusterRedirectHint": "This is a multi-unit / CFC cluster scheme. Use Cluster DPR, not the individual 18-step form."
   },
   "clusterDpr": {
+    "editTitle": "Edit Cluster DPR",
     "title": "Cluster DPR Creation",
     "stepOf": "Step {{current}} of {{total}}",
     "stepShort": "Step {{n}}",
@@ -1401,6 +1441,7 @@
     }
   },
   "individualDpr": {
+    "editTitle": "Edit DPR",
     "title": "Create DPR",
     "stepOf": "Step {{current}} of {{total}}",
     "stepShort": "Step {{n}}",

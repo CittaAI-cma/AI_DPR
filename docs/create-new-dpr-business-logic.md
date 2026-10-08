@@ -42,6 +42,18 @@ Changing the scheme dropdown mid-flow updates `matchedSchemeCode`, visible steps
 
 ## 3. Entry & lifecycle
 
+### Editing an existing DPR
+
+The **Edit** and **Delete** buttons on the dashboard cards and on the DPR management (All DPRs) cards behave the same (shared code in `lib/dprActions.tsx`); on DPR management, staff see them only on their own DPRs. Back from the edit page returns to the screen it was opened from (**Back to Dashboard** or **Back to All DPRs**). On a DPR’s view page (`/dpr/view/:id`) the **Edit this DPR** button (it replaced “Style this report”) does the same, and styling is done in the Create DPR page under **Customise / Style**; Back from there returns to the DPR view. The dashboard’s **Edit** button opens the Create DPR page on that report (`/individual-dpr/create?projectId=…&dprId=…`, plus `&scheme=CODE`; cluster reports open `/cluster-dpr/create` the same way). When `projectId` is in the URL the page title reads **Edit DPR** (**Edit Cluster DPR** for clusters) instead of the create title. The dashboard lists only the latest 5 reports (newest first by last update) with a “View all DPRs” button for the rest.
+
+### Dev mode (super admin only)
+
+The **Dev mode** switch lives in the left side tool bar, not in the page header. It shows only for a super admin and only on the Create DPR pages (individual and cluster), as a flask icon that expands to a labelled switch when the bar opens. While it is on, the required-field checks are skipped so steps can be stepped through quickly. State is shared through `store/devModeStore.ts`, starts off each time the page opens, and turns off again when the page is left.
+
+### Back button
+
+Back is named and routed from where the person came (`lib/navHistory.tsx`, `useBackTarget`): arriving from Scheme Finder shows **Back to Scheme Finder**, from the dashboard **Back to Dashboard**, and so on; a page opened directly falls back to the dashboard. On the scheme-picker step the button uses that label. When the page was opened on a scheme brief (`?new=true&scheme=CODE`, e.g. Scheme Finder → Know more & create), Back on the brief returns straight to that screen instead of the scheme list. When the person picked the scheme in the picker, Back on the brief is **All Schemes**. On the form it is **Previous**, except when the page was opened straight onto a saved report (Edit from the dashboard, or a resumed draft with `projectId` in the URL): then Back leaves the page and is named after the screen the person came from (**Back to Dashboard**), and it returns there.
+
 ### New draft
 
 `/individual-dpr/create?new=true` (± `&scheme=CODE`)
@@ -147,6 +159,12 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 
 `IndividualDPRDocumentView` (not `ClusterDPRDocumentView`) is the only document for this flow. Cover + TOC + **one Q&A section per catalog step**. Fields come from `individualDocModel.ts` (asked questions only). No cluster / SPV / CFC / enterprise-count chapters. Cluster DPR stays on `/cluster-dpr/create`.
 
+**Filled vs empty content.** The live document inside the customise view (`StyleEditor`) renders with `showEmpty`: every visible section, field, table (one blank row when there are no rows), upload (marked “Not uploaded”) and cover line is listed, whether or not the user has answered it, so it can be edited in place. The final preview (`/dpr/view/:id`, plain preview) and the generated PDF leave `showEmpty` off and show only answered content; sections with no answers are dropped from the body and the table of contents. Sections the user hid stay hidden in both.
+
+**Editing in the live report.** Each field in the live document uses the same kind of control as its question on the form (`lib/individualDpr/docFieldInput.ts`): dropdowns for select questions (District and its dependent Location list, scheme-specific option lists such as premises, category, yes/no), number boxes for numeric questions and table cells, date pickers for dates (same 1990–2100 and Start ≤ Commitment checks as the form), and free text for the rest. Changing District clears a Location that is not in the new district. Edits write to the same store fields as the form (`liveDocEdit.ts`), so the form and the live report stay in step. A field whose scheme-specific list is not in `docFieldInput.ts` falls back to free text.
+
+**Preview button.** The **Preview** button above the live report opens the *final* document in a full-screen, read-only view: no `showEmpty`, no editing controls, only answered content, with the saved style, section order and hidden sections applied, plus zoom / fit-page and **Close preview** (Esc also closes). It matches what the PDF prints; the editable live report stays behind it.
+
 ---
 
 ## 5. Scheme overlay (`matchedSchemeCode`)
@@ -228,6 +246,10 @@ If scheme is `PMEGP` or `PMEGP_2ND` and project cost (lakhs) exceeds:
 ---
 
 ## 6. Scheme pick → brief → form
+
+### Suggestions on the scheme cards
+
+On the scheme picker (`SchemePickerGrid`), if the person has **finished** Scheme Finder, the cards carry tags from their own answers (`lib/ventureMatch/savedSuggestion.ts`): **Suggested for you** on the lead schemes of the Scheme Finder plan (`analyzeCombinations(...).core`), and **May also suit you** on other schemes that still matched. A note above the cards says the tags come from their Scheme Finder answers, are suggestions only, and links to **Change my answers**. If Scheme Finder was never finished (nothing saved, or stopped part-way), or nothing matched, the cards show no tags and no note. The answers are read from the browser’s saved Scheme Finder progress for the signed-in user (`venture-match-progress:<userId>`); they are not stored on the server, so another browser or device shows no tags until Scheme Finder is run there. Copy avoids “best” / “guaranteed” wording (see the no-guarantee rule in `venture-match-business-logic.md`).
 
 - **Form header:** scheme **dropdown** (`SCHEME_OPTIONS`) switches `matchedSchemeCode` without leaving the form; selected scheme name is shown under the page title.  
 - Yellow scheme-impact bar shows from **step 1** onward (scheme name + how steps/uploads change).

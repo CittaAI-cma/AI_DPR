@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { useBackTarget } from '@/lib/navHistory';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +15,7 @@ import { ArrowLeft } from 'lucide-react';
 export const ProjectForm: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const back = useBackTarget({ path: '/projects' });
   const { id } = useParams();
   const { addProject, updateProject } = useProjectStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -91,9 +93,9 @@ export const ProjectForm: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6 pb-8">
-        <Button variant="ghost" onClick={() => navigate('/projects')} className="mb-4">
+        <Button variant="ghost" onClick={back.go} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          {t('common.back')}
+          {back.label}
         </Button>
 
         {/* Header */}

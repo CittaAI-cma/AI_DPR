@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { useBackTarget } from '@/lib/navHistory';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -81,6 +82,7 @@ interface StepData {
 export const AIGuidedDPRBuilder: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const back = useBackTarget({ path: '/dashboard' });
   const { projectId } = useParams();
   
   const STEPS = [
@@ -1481,9 +1483,9 @@ Return ready-to-use content that can be directly filled into form fields. The us
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-6 pb-8">
-        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-4">
+        <Button variant="ghost" onClick={back.go} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          {t('dprBuilder.backToDashboard')}
+          {back.label}
         </Button>
 
         {/* Header Section */}
