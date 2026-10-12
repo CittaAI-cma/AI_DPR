@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { defaultGuideChoices, styleFromGuide } from './individualDpr/reportGuide.ts';
+import { defaultGuideChoices, guideFocusSpot, guideSpotFallbacks, styleFromGuide } from './individualDpr/reportGuide.ts';
 import { presetStyle } from './individualDpr/documentStyle.ts';
 
 describe('report setup guide', () => {
@@ -81,5 +81,28 @@ describe('report setup guide', () => {
     assert.equal(style.preset, 'formal');
     assert.equal(style.body.family, 'Times New Roman');
     assert.equal(style.tableStriped, true);
+  });
+
+  it('points each guide click at the first place that choice shows', () => {
+    assert.equal(guideFocusSpot({ look: 'bank' }), 'cover');
+    assert.equal(guideFocusSpot({ font: 'Arial' }), 'cover');
+    assert.equal(guideFocusSpot({ pageSize: 'A3' }), 'page');
+    assert.equal(guideFocusSpot({ wideTablesLandscape: true }), 'money');
+    assert.equal(guideFocusSpot({ align: 'left' }), 'body');
+    assert.equal(guideFocusSpot({ colors: 'navy' }), 'header');
+    assert.equal(guideFocusSpot({ tableStriped: false }), 'table');
+    assert.equal(guideFocusSpot({ logoAlign: 'center' }), 'header');
+    assert.equal(guideFocusSpot({ agencyName: 'DIC' }), 'header');
+    assert.equal(guideFocusSpot({ pageNumberStyle: 'plain' }), 'page-number');
+    assert.equal(guideFocusSpot({ watermarkOn: true }), 'watermark');
+    assert.equal(guideFocusSpot({ watermarkOn: false }), 'page');
+  });
+
+  it('falls back once when the first spot is not on the page', () => {
+    assert.deepEqual(guideSpotFallbacks('header'), ['header', 'cover']);
+    assert.deepEqual(guideSpotFallbacks('money'), ['money', 'table']);
+    assert.deepEqual(guideSpotFallbacks('table'), ['table', 'money']);
+    assert.deepEqual(guideSpotFallbacks('watermark'), ['watermark', 'page']);
+    assert.deepEqual(guideSpotFallbacks('cover'), ['cover']);
   });
 });

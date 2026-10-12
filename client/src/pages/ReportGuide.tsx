@@ -1,19 +1,27 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
+import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
+import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useBackTarget } from '@/lib/navHistory';
-import { presetStyle } from '@/lib/individualDpr/documentStyle';
+import { pageEdgeMm, presetStyle } from '@/lib/individualDpr/documentStyle';
+import { highlightHit, scrollHitIntoPreview } from '@/lib/individualDpr/previewFieldHits';
 import {
   GUIDE_ALIGNS,
   GUIDE_COLOR_SETS,
   GUIDE_FONTS,
   GUIDE_LOOKS,
   GUIDE_PAGES,
+  GUIDE_STEP_SPOTS,
   defaultGuideChoices,
+  guideFocusSpot,
+  guideSpotFallbacks,
+  styleFromGuide,
 } from '@/lib/individualDpr/reportGuide';
+import { templateSpecimenDpr } from '@/lib/individualDpr/templateSpecimen';
 import { useReportGuideStore } from '@/store/reportGuideStore';
 
 const FONT_KEYS = {
@@ -66,7 +74,43 @@ export function ReportGuide() {
   const setPending = useReportGuideStore((s) => s.setPending);
   const [step, setStep] = useState(0);
   const [choices, setChoices] = useState(defaultGuideChoices);
-  const patch = (partial) => setChoices((current) => ({ ...current, ...partial }));
+  const previewRef = useRef(null);
+  const focusSpot = useRef('cover');
+  const [focusTick, setFocusTick] = useState(0);
+  const showSpot = (spot) => {
+    focusSpot.current = spot;
+    setFocusTick((n) => n + 1);
+  };
+  const patch = (partial) => {
+    setChoices((current) => ({ ...current, ...partial }));
+    showSpot(guideFocusSpot(partial));
+  };
+  const specimen = useMemo(() => templateSpecimenDpr(null), []);
+  const liveStyle = useMemo(() => styleFromGuide(choices, null), [choices]);
+
+  useEffect(() => {
+    showSpot(GUIDE_STEP_SPOTS[step] || 'cover');
+  }, [step]);
+
+  useEffect(() => {
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => {
+        const root = previewRef.current;
+        if (!root) return;
+        const target = guideSpotFallbacks(focusSpot.current)
+          .map((name) => root.querySelector(`[data-style-spot="${name}"]`))
+          .find(Boolean);
+        if (!target) return;
+        scrollHitIntoPreview(root, target);
+        highlightHit(target);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      if (inner) cancelAnimationFrame(inner);
+    };
+  }, [focusTick, choices]);
 
   const steps = [
     {
@@ -251,14 +295,15 @@ export function ReportGuide() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-7xl">
         <button type="button" onClick={back.go} className="text-sm font-medium text-primary hover:underline">
           {back.label}
         </button>
         <h1 className="mt-3 text-3xl font-bold">{t('reportGuide.title')}</h1>
         <p className="mt-2 text-muted-foreground">{t('reportGuide.intro')}</p>
 
-        <div className="mt-6 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+        <div className="order-2 rounded-2xl border bg-white p-5 shadow-sm sm:p-6 lg:order-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
             {t('reportGuide.stepOf', { current: step + 1, total: steps.length })}
           </p>
@@ -283,6 +328,28 @@ export function ReportGuide() {
             </div>
           </div>
           {step === 0 ? <p className="mt-2 text-right text-xs text-slate-500">{t('reportGuide.skipHint')}</p> : null}
+        </div>
+
+        <div className="order-1 lg:sticky lg:top-4 lg:order-2">
+          <p className="text-sm font-semibold text-slate-900">{t('reportGuide.sample')}</p>
+          <p className="mt-1 text-xs text-slate-500">{t('reportGuide.sampleHint')}</p>
+          {step === 0 ? <p className="mt-1 text-xs text-slate-500">{t('reportGuide.lookAlso')}</p> : null}
+          <div
+            ref={previewRef}
+            className="sticky top-16 mt-3 max-h-[42vh] overflow-auto rounded-xl border border-slate-200 bg-slate-100 p-3 lg:static lg:max-h-[calc(100dvh-9rem)]"
+          >
+            <div style={{ zoom: 0.55 }}>
+              <PageSheet
+                pageSize={liveStyle.pageSize}
+                edgeTopMm={pageEdgeMm(liveStyle.marginMm.top)}
+                edgeBottomMm={pageEdgeMm(liveStyle.marginMm.bottom)}
+                className="shadow-lg"
+              >
+                <IndividualDPRDocumentView dpr={specimen} documentStyle={liveStyle} markStyleSpots />
+              </PageSheet>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </Layout>

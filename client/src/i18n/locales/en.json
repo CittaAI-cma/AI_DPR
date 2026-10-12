@@ -1454,6 +1454,9 @@
     "skipHint": "Skip these choices. The report uses the usual look for the scheme you pick.",
     "later": "You can still change any of this later, next to the form.",
     "photosLater": "Photos and the order of sections can be changed after you start, on the same page as the form.",
+    "sample": "Sample report",
+    "sampleHint": "An example report. It updates as you choose. Your own answers come after you start.",
+    "lookAlso": "A look also changes the tables and the watermark. This shows the title first.",
     "steps": {
       "look": {
         "title": "How should the report look?",

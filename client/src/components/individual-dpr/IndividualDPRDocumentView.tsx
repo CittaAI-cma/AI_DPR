@@ -78,6 +78,8 @@ export interface IndividualDPRDocumentViewProps {
   onEditBlock?: (sectionId: string, blockId: string, text: string) => void;
   /** Live editing view: list every section and field, filled or not. Preview and PDF leave this off. */
   showEmpty?: boolean;
+  /** Mark the first cover, paragraph, table, header, and watermark for the setup guide preview. */
+  markStyleSpots?: boolean;
 }
 
 const IMAGE_HANDLES: ImageHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -356,6 +358,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   onEditField,
   onEditBlock,
   showEmpty = false,
+  markStyleSpots = false,
 }) => {
   const tf = useClusterFormText();
   const data = extractIndividualDocData(dpr, project);
@@ -450,6 +453,13 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     return fieldHit(path, display === '—' ? '—' : tf(display), trackFieldHits);
   };
 
+  const styleSpots = { body: false, table: false, money: false };
+  const claimSpot = (kind: 'body' | 'table' | 'money') => {
+    if (!markStyleSpots || styleSpots[kind]) return undefined;
+    styleSpots[kind] = true;
+    return kind;
+  };
+
   const renderSectionFields = (fields: IndividualDocField[]) => {
     if (!fields.length) return null;
 
@@ -461,7 +471,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         particulars = [];
         if (!rows.length) return;
         blocks.push(
-          <table key={rows.map((field) => field.path).join('|')} className="individual-particulars">
+          <table key={rows.map((field) => field.path).join('|')} className="individual-particulars" data-style-spot={claimSpot('table')}>
             <thead>
               <tr>
                 <th>{tf('Particular')}</th>
@@ -486,7 +496,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         );
       };
       const prose = (field: IndividualDocField, text: string) => (
-        <article key={field.path} className="individual-qa-block">
+        <article key={field.path} className="individual-qa-block" data-style-spot={claimSpot('body')}>
           <h3 className="individual-qa-q">{tf(field.label)}</h3>
           <div className={`individual-qa-a${text === '—' ? ' is-empty' : ''}`}>
             {editableValue(field.path, text, readDocField(field, data), true)}
@@ -506,8 +516,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         const kept = keepAll || showEmpty ? paired : paired.filter(({ row }) => isEnteredDocRow(row, skipIndexes));
         if (!kept.length && showEmpty) kept.push({ row: headers.map(() => ''), paths: cellPaths?.[0] });
         if (!kept.length) return null;
+        const money = /yearProjection|machinery|costPhasing|means|finance|sales/i.test(key);
         return (
-        <table key={key} className="individual-particulars">
+        <table key={key} className="individual-particulars" data-style-spot={money ? claimSpot('money') : claimSpot('table')}>
           <caption className="individual-qa-q">{tf(title)}</caption>
           <thead>
             <tr>{headers.map((header) => <th key={header}>{tf(header)}</th>)}</tr>
@@ -819,14 +830,16 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       data-wide-landscape={style?.wideTablesLandscape ? '1' : undefined}
       data-page-numbers={style?.pageNumberStyle}
     >
+      {markStyleSpots ? <div data-style-spot="page" className="h-1" aria-hidden /> : null}
       {style?.watermark ? (
-        <div className="dpr-watermark" aria-hidden="true">
+        <div className="dpr-watermark" aria-hidden="true" data-style-spot={markStyleSpots ? 'watermark' : undefined}>
           {style.watermark}
         </div>
       ) : null}
       {style && (style.agencyName || style.logoDataUrl || style.headerLine) ? (
         <div
           className={`dpr-style-header is-${style.logoAlign}${style.headerLine ? ' has-line' : ''}`}
+          data-style-spot={markStyleSpots ? 'header' : undefined}
         >
           {style.logoDataUrl ? <img src={style.logoDataUrl} alt="" className="dpr-style-logo" /> : null}
           {style.agencyName ? <span>{style.agencyName}</span> : null}
@@ -851,7 +864,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         <p className="cover-on">{tf('On')}</p>
         <p className="cover-action">{tf(cover.actionLine)}</p>
         {unitTitle || showEmpty ? (
-          <h1 className="cover-unit">
+          <h1 className="cover-unit" data-style-spot={markStyleSpots ? 'cover' : undefined}>
             {onEditField
               ? editableValue('step1.unitName', unitTitle || '—', step1.unitName || step1.clusterName || '')
               : fieldHit('step1.unitName', unitTitle, trackFieldHits)}
@@ -980,7 +993,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       {style ? (
         <footer className="dpr-style-footer">
           <span>{style.agencyName}</span>
-          <span>{pageNumber}</span>
+          <span data-style-spot={markStyleSpots ? 'page-number' : undefined}>{pageNumber}</span>
         </footer>
       ) : null}
 

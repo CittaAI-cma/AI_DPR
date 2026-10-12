@@ -103,3 +103,29 @@ export function styleFromGuide(
   if (choices.colors !== 'preset') next = { ...next, colors: { ...COLOR_VALUES[choices.colors] } };
   return next;
 }
+
+/** First place in the sample report that a guide click changes. */
+export function guideFocusSpot(change: Partial<ReportGuideChoices>): string {
+  if ('watermarkOn' in change) return change.watermarkOn ? 'watermark' : 'page';
+  if ('pageNumberStyle' in change) return 'page-number';
+  if ('logoAlign' in change || 'agencyName' in change) return 'header';
+  if ('tableStriped' in change) return 'table';
+  if ('colors' in change) return 'header';
+  if ('align' in change) return 'body';
+  if ('font' in change || 'look' in change) return 'cover';
+  if ('wideTablesLandscape' in change) return 'money';
+  if ('pageSize' in change) return 'page';
+  return 'cover';
+}
+
+/** Spot to show when a step opens, before a click on that step. */
+export const GUIDE_STEP_SPOTS = ['cover', 'page', 'cover', 'header', 'header'] as const;
+
+/** If the first spot is missing, try the next. Never walk every match. */
+export function guideSpotFallbacks(spot: string): string[] {
+  if (spot === 'header') return ['header', 'cover'];
+  if (spot === 'money') return ['money', 'table'];
+  if (spot === 'watermark') return ['watermark', 'page'];
+  if (spot === 'table') return ['table', 'money'];
+  return [spot];
+}
