@@ -812,8 +812,6 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     return [{ id: def.id, title: sectionTitleFromStep(def), custom: false as const, n: def.n }];
   });
 
-  const pageNumber =
-    style?.pageNumberStyle === 'of' ? tf('Page 1 of …') : '1';
   const unitTitle = String(step1.unitName || step1.clusterName || '').trim();
 
   return (
@@ -829,6 +827,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       data-page-edge-bottom={style ? String(pageEdgeMm(style.marginMm.bottom)) : undefined}
       data-wide-landscape={style?.wideTablesLandscape ? '1' : undefined}
       data-page-numbers={style?.pageNumberStyle}
+      data-page-of-label={style ? tf('Page {n} of {total}') : undefined}
+      data-page-print-before={style?.pageNumberStyle === 'of' ? tf('Page ') : undefined}
+      data-page-print-mid={style?.pageNumberStyle === 'of' ? tf(' of ') : undefined}
     >
       {markStyleSpots ? <div data-style-spot="page" className="h-1" aria-hidden /> : null}
       {style?.watermark ? (
@@ -990,10 +991,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         );
       })}
 
-      {style ? (
+      {style?.agencyName ? (
         <footer className="dpr-style-footer">
           <span>{style.agencyName}</span>
-          <span data-style-spot={markStyleSpots ? 'page-number' : undefined}>{pageNumber}</span>
         </footer>
       ) : null}
 

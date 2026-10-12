@@ -165,6 +165,8 @@ Configured in `client/src/lib/individualDpr/schemeStepCatalog.ts`. UI shows cons
 
 **Preview button.** The **Preview** button above the live report opens the *final* document in a full-screen, read-only view: no `showEmpty`, no editing controls, only answered content, with the saved style, section order and hidden sections applied, plus zoom / fit-page and **Close preview** (Esc also closes). It matches what the PDF prints; the editable live report stays behind it.
 
+**Page numbers.** The guide sample, the style preview, and the live report each draw a number at the bottom of every sheet: 1, 2, 3, or “Page 2 of 8” when that style is chosen. The total is the number of sheets on screen. The printed PDF counts the same way with the print page counter.
+
 ---
 
 ## 5. Scheme overlay (`matchedSchemeCode`)

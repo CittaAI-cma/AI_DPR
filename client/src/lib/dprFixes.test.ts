@@ -27,6 +27,8 @@ import {
   layoutOrder,
   moveSection,
   selectionStepOrder,
+  formatPageNumber,
+  pageCountForHeight,
   pageEdgeMm,
   resizeImageBox,
   resolveDocumentStyle,
@@ -361,5 +363,21 @@ describe('scheme combinations', () => {
     ['PMEGP', 'MUDRA', 'SVANIDHI'].forEach((code) =>
       assert.equal(relationBetween('VISHWAKARMA', code)?.type, 'exclusive')
     );
+  });
+});
+
+describe('sheet page numbers', () => {
+  it('counts one sheet per page and does not add a blank for a sliver', () => {
+    assert.equal(pageCountForHeight(297, 297), 1);
+    assert.equal(pageCountForHeight(300, 297), 1);
+    assert.equal(pageCountForHeight(400, 297), 2);
+    assert.equal(pageCountForHeight(594, 297), 2);
+    assert.equal(pageCountForHeight(0, 297), 1);
+  });
+
+  it('writes the page and the total, or just the page', () => {
+    assert.equal(formatPageNumber('plain', 2, 8), '2');
+    assert.equal(formatPageNumber('of', 2, 8), 'Page 2 of 8');
+    assert.equal(formatPageNumber('of', 1, 3, 'పేజీ {n} / {total}'), 'పేజీ 1 / 3');
   });
 });

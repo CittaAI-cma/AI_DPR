@@ -1269,6 +1269,40 @@
   color: var(--dpr-header, #111827);
 }
 
+.dpr-page-number {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  font-size: 9pt;
+  line-height: 1;
+  pointer-events: none;
+}
+
+@media print {
+  .dpr-page-number { display: none !important; }
+  .individual-dpr-document.dpr-styled[data-page-numbers='plain']::after,
+  .individual-dpr-document.dpr-styled[data-page-numbers='of']::after {
+    position: fixed;
+    bottom: 8mm;
+    right: 16mm;
+    z-index: 4;
+    font-size: 9pt;
+    line-height: 1;
+    color: var(--dpr-header, #111827);
+  }
+  .individual-dpr-document.dpr-styled[data-page-numbers='plain']::after {
+    content: counter(page);
+  }
+  .individual-dpr-document.dpr-styled[data-page-numbers='of']::after {
+    content: attr(data-page-print-before) counter(page) attr(data-page-print-mid) counter(pages);
+  }
+}
+
 /* Template outlines. Wording stays; only the frame around it changes. */
 .individual-dpr-document.dpr-styled[data-template='government'] .individual-cover {
   text-align: center;

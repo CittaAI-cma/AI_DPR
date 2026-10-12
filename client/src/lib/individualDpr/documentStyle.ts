@@ -831,6 +831,25 @@ export function pageHeightMm(size: PageSize): number {
   return 297;
 }
 
+/** How many sheets a fitted report occupies. A sliver under one page does not add a blank sheet. */
+export function pageCountForHeight(sheetHeightPx: number, pageHeightPx: number): number {
+  if (!(pageHeightPx > 0) || !(sheetHeightPx > 0)) return 1;
+  return Math.max(1, Math.ceil(sheetHeightPx / pageHeightPx - 0.02));
+}
+
+/** `plain` is the number. `of` fills {n} and {total} in the pattern. */
+export function formatPageNumber(
+  style: string,
+  n: number,
+  total: number,
+  ofPattern = 'Page {n} of {total}'
+): string {
+  if (style === 'of') {
+    return ofPattern.replaceAll('{n}', String(n)).replaceAll('{total}', String(total));
+  }
+  return String(n);
+}
+
 export function pageBreakBackground(size: PageSize): string {
   const h = pageHeightMm(size);
   return `repeating-linear-gradient(to bottom, #ffffff 0, #ffffff calc(${h}mm - 1px), #94a3b8 calc(${h}mm - 1px), #94a3b8 ${h}mm)`;
