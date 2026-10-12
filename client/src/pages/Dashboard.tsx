@@ -22,6 +22,7 @@ import {
   Trash2,
   Loader2,
   ArrowRight,
+  Wand2,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -321,14 +322,24 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             {canCreateDpr(user?.role) && (
-              <Button
-                variant="primary"
-                onClick={() => navigate('/individual-dpr/create?new=true')}
-                className="gap-2 whitespace-nowrap"
-              >
-                <FileText className="h-4 w-4" />
-                Create DPR
-              </Button>
+              <>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/individual-dpr/create?new=true')}
+                  className="gap-2 whitespace-nowrap"
+                >
+                  <FileText className="h-4 w-4" />
+                  Create DPR
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/individual-dpr/guide')}
+                  className="gap-2 whitespace-nowrap border-2"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {t('reportGuide.open')}
+                </Button>
+              </>
             )}
             <Button
               variant="outline"
@@ -536,14 +547,24 @@ export const Dashboard: React.FC = () => {
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {t('dashboard.createFirstDPR')}
                 </p>
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate('/individual-dpr/create?new=true')}
-                  size="lg"
-                >
-                  <FileText className="h-5 w-5 mr-2" />
-                  Create DPR
-                </Button>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate('/individual-dpr/create?new=true')}
+                    size="lg"
+                  >
+                    <FileText className="h-5 w-5 mr-2" />
+                    Create DPR
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/individual-dpr/guide')}
+                    size="lg"
+                  >
+                    <Wand2 className="h-5 w-5 mr-2" />
+                    {t('reportGuide.open')}
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
@@ -666,6 +687,17 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <span className="font-semibold">Create DPR</span>
                 <span className="text-sm opacity-90">Individual / scheme-aware</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/individual-dpr/guide')}
+                className="h-28 flex-col gap-3 border-2 hover:border-primary hover:bg-primary/5"
+              >
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wand2 className="h-6 w-6 text-primary" />
+                </div>
+                <span className="font-semibold">{t('reportGuide.open')}</span>
+                <span className="text-sm text-muted-foreground">{t('reportGuide.openHint')}</span>
               </Button>
               <Button
                 variant="outline"

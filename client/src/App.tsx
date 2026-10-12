@@ -22,6 +22,7 @@ import { AdminDocuments } from './pages/AdminDocuments';
 import { Profile } from './pages/Profile';
 import { ClusterDPRCreation } from './pages/ClusterDPRCreation';
 import { IndividualDPRCreation } from './pages/IndividualDPRCreation';
+import { ReportGuide } from './pages/ReportGuide';
 import { VentureMatch } from './pages/VentureMatch';
 import { Privacy } from './pages/Privacy';
 import { AccountPrivacy } from './pages/AccountPrivacy';
@@ -164,6 +165,15 @@ function App() {
           element={
             <ProtectedRoute>
               <ClusterDPRCreation />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/individual-dpr/guide"
+          element={
+            <ProtectedRoute>
+              <ReportGuide />
             </ProtectedRoute>
           }
         />

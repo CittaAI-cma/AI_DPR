@@ -12,6 +12,8 @@ import { IndividualDPRDocumentView } from '@/components/individual-dpr/Individua
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
 import { defaultStyleForScheme, pageEdgeMm, parseBlockFrameSlot, resolveDocumentStyle, selectionStepOrder, setBlockFrame, setBlockText, setPictureFrame } from '@/lib/individualDpr/documentStyle';
+import { styleFromGuide } from '@/lib/individualDpr/reportGuide';
+import { useReportGuideStore } from '@/store/reportGuideStore';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
@@ -210,6 +212,9 @@ export const IndividualDPRCreation: React.FC = () => {
 
           const scheme = schemeFromUrl || null;
           setMatchedSchemeCode(scheme);
+          if (searchParams.get('guide') !== '1') {
+            useReportGuideStore.getState().setPending(null);
+          }
 
           setCurrentStep(1);
           // Scheme Finder with a code → brief; otherwise show cards first
@@ -523,10 +528,28 @@ export const IndividualDPRCreation: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBriefNext = () => {
+  const handleBriefNext = async () => {
     const step = visibleSteps[0] || 1;
     setSetupPhase('form');
     setCurrentStep(step);
+    const guide = searchParams.get('guide') === '1'
+      ? useReportGuideStore.getState().takePending()
+      : null;
+    if (guide) {
+      const code = useIndividualDPRStore.getState().data.matchedSchemeCode || schemeCode;
+      let savedSchemeStyle = null;
+      if (guide.look === 'match' && code) {
+        try {
+          const res = await api.getSchemeDocumentStyle(code);
+          if (res?.data?.documentStyle) savedSchemeStyle = resolveDocumentStyle(res.data.documentStyle, code);
+        } catch {
+          /* the built-in scheme look is enough */
+        }
+      }
+      const style = styleFromGuide(guide, code, savedSchemeStyle);
+      const current = useIndividualDPRStore.getState().data.schemeExtras || {};
+      setSchemeExtras({ ...current, documentStyle: style });
+    }
     void openStyleEditor(step);
   };
 

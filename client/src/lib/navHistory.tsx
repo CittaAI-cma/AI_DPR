@@ -21,6 +21,7 @@ const PAGES: Array<[RegExp, string, string]> = [
   [/^\/dpr\/[^/]+$/, 'dprGeneration', 'DPR Generation'],
   [/^\/dprs$/, 'allDprs', 'All DPRs'],
   [/^\/cluster-dpr\/create$/, 'clusterDpr', 'Cluster DPR'],
+  [/^\/individual-dpr\/guide$/, 'reportGuide', 'Report setup'],
   [/^\/individual-dpr\/create$/, 'createDpr', 'Create DPR'],
   [/^\/chat$/, 'chat', 'Chat'],
   [/^\/profile$/, 'profile', 'Profile'],

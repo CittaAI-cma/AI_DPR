@@ -48,6 +48,7 @@
       "allDprs": "All DPRs",
       "clusterDpr": "Cluster DPR",
       "createDpr": "Create DPR",
+      "reportGuide": "Report setup",
       "chat": "Chat",
       "profile": "Profile",
       "accountPrivacy": "Privacy settings",
@@ -1438,6 +1439,113 @@
       "16": "Step 16: Project Implementation Schedule",
       "17": "Step 17: Expected Impact",
       "18": "Step 18: Annexures & Document Uploads"
+    }
+  },
+  "reportGuide": {
+    "open": "Start with a guide",
+    "openHint": "Choose how the report looks, then fill it in",
+    "title": "Set up your report",
+    "intro": "Five short choices. One option is already selected on each step, so you can keep going.",
+    "stepOf": "Step {{current}} of {{total}}",
+    "next": "Next",
+    "back": "Back",
+    "start": "Start the report",
+    "skip": "Start with the usual report",
+    "skipHint": "Skip these choices. The report uses the usual look for the scheme you pick.",
+    "later": "You can still change any of this later, next to the form.",
+    "photosLater": "Photos and the order of sections can be changed after you start, on the same page as the form.",
+    "steps": {
+      "look": {
+        "title": "How should the report look?",
+        "hint": "This is the overall style. You can change colours and type on the next steps."
+      },
+      "paper": {
+        "title": "What paper should it use?",
+        "hint": "Most bank reports use a regular page."
+      },
+      "type": {
+        "title": "How should the words look?",
+        "hint": "One font is used for the whole report."
+      },
+      "colors": {
+        "title": "What colours should it use?",
+        "hint": "Pick a ready-made set. Shaded rows make tables easier to follow."
+      },
+      "page": {
+        "title": "What goes on every page?",
+        "hint": "Logo, office name, page numbers, and a faint watermark."
+      }
+    },
+    "look": {
+      "match": "Match the scheme",
+      "matchHint": "The usual look for the scheme you choose next.",
+      "government": "Gazette",
+      "governmentHint": "A formal government report.",
+      "bank": "Ledger",
+      "bankHint": "A bank appraisal, with even edges.",
+      "pmegp": "Ribbon",
+      "pmegpHint": "The PMEGP report look.",
+      "apCmep": "Docket",
+      "apCmepHint": "The Andhra Pradesh CMEP look.",
+      "formal": "Manuscript",
+      "formalHint": "A quiet, traditional report.",
+      "minimal": "Quiet",
+      "minimalHint": "Very little decoration."
+    },
+    "paper": {
+      "A4": "Regular page",
+      "A4Hint": "The usual size for a bank report.",
+      "A3": "Large sheet",
+      "A3Hint": "More room for wide tables.",
+      "Letter": "Letter",
+      "LetterHint": "The size often used outside India.",
+      "Legal": "Long page",
+      "LegalHint": "A taller page.",
+      "wide": "Turn wide money tables on their side",
+      "wideHint": "Only those tables. The rest of the report stays upright."
+    },
+    "type": {
+      "preset": "Same as the look",
+      "presetHint": "Keep the font that belongs to the style you chose.",
+      "times": "Classic",
+      "timesHint": "Times New Roman.",
+      "arial": "Clear",
+      "arialHint": "Arial.",
+      "calibri": "Office",
+      "calibriHint": "Calibri.",
+      "helvetica": "Simple",
+      "helveticaHint": "Helvetica.",
+      "telugu": "Telugu",
+      "teluguHint": "Noto Sans Telugu, so Telugu text stays clear.",
+      "alignPreset": "Same alignment as the look",
+      "alignLeft": "Easier to read",
+      "alignLeftHint": "Words line up on the left.",
+      "alignJustify": "Even edges",
+      "alignJustifyHint": "Both edges of the paragraph line up."
+    },
+    "colors": {
+      "preset": "Same as the look",
+      "navy": "Navy",
+      "ink": "Ink",
+      "teal": "Teal",
+      "indigo": "Indigo",
+      "stone": "Stone",
+      "grey": "Grey",
+      "striped": "Shade every other table row"
+    },
+    "chrome": {
+      "logo": "Where should a logo sit?",
+      "left": "Left",
+      "center": "Centre",
+      "right": "Right",
+      "agency": "Office name",
+      "agencyHint": "Leave this blank if you do not want a name on each page.",
+      "agencyPlaceholder": "Optional",
+      "numbers": "Page numbers",
+      "plain": "Just the number",
+      "of": "Page 3 of 12",
+      "watermark": "Show a faint watermark",
+      "watermarkHint": "It reads “Confidential — for lending appraisal”."
     }
   },
   "individualDpr": {

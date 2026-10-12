@@ -11,7 +11,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Plus, Search, Trash2, Edit, FileText, Building2, Sparkles, ArrowRight, Users } from 'lucide-react';
+import { Plus, Search, Trash2, Edit, FileText, Building2, Sparkles, ArrowRight, Users, Wand2 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 export const Projects: React.FC = () => {
@@ -97,6 +97,14 @@ export const Projects: React.FC = () => {
             >
               <FileText className="h-4 w-4 mr-2" />
               Create DPR
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/individual-dpr/guide')}
+              className="border-2"
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              {t('reportGuide.open')}
             </Button>
             <Button 
               onClick={() => navigate('/projects/create')}
@@ -212,7 +220,7 @@ export const Projects: React.FC = () => {
                   <p className="text-xs text-muted-foreground">
                     {t('projects.created')} {formatDate(project.createdAt)}
                   </p>
-                  <div className="flex gap-2 pt-2 border-t">
+                  <div className="flex flex-wrap gap-2 pt-2 border-t">
                     <Button
                       variant="outline"
                       size="sm"
@@ -231,6 +239,16 @@ export const Projects: React.FC = () => {
                     >
                       <FileText className="h-4 w-4 mr-1" />
                       DPR
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-2"
+                      onClick={() => navigate('/individual-dpr/guide')}
+                      title={t('reportGuide.open')}
+                    >
+                      <Wand2 className="h-4 w-4 mr-1" />
+                      {t('reportGuide.open')}
                     </Button>
                     <Button
                       variant="destructive"

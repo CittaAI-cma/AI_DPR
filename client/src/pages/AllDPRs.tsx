@@ -27,6 +27,7 @@ import {
   Upload,
   Loader2,
   XCircle,
+  Wand2,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -528,6 +529,14 @@ export const AllDPRs: React.FC = () => {
               <FileText className="h-4 w-4 mr-2" />
               Create DPR
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/individual-dpr/guide')}
+              className="border-2"
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              {t('reportGuide.open')}
+            </Button>
           </div>
         </div>
 
@@ -708,10 +717,16 @@ export const AllDPRs: React.FC = () => {
                     : 'Create your first Detailed Project Report to get started'}
                 </p>
                 {!filtersActive && (
-                  <Button onClick={() => navigate('/individual-dpr/create?new=true')} size="lg">
-                    <FileText className="h-5 w-5 mr-2" />
-                    Create DPR
-                  </Button>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button onClick={() => navigate('/individual-dpr/create?new=true')} size="lg">
+                      <FileText className="h-5 w-5 mr-2" />
+                      Create DPR
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate('/individual-dpr/guide')} size="lg">
+                      <Wand2 className="h-5 w-5 mr-2" />
+                      {t('reportGuide.open')}
+                    </Button>
+                  </div>
                 )}
                 {filtersActive && (
                   <Button
