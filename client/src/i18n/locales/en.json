@@ -1481,7 +1481,7 @@
     },
     "look": {
       "match": "Match the scheme",
-      "matchHint": "The usual look for the scheme you choose next.",
+      "matchHint": "Default is Gazette. This becomes the scheme's usual look after you choose the scheme.",
       "government": "Gazette",
       "governmentHint": "A formal government report.",
       "bank": "Ledger",
