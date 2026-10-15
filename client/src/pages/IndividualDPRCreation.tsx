@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { ReviewDialog, StepChecks } from '@/components/individual-dpr/DataChecks';
+import { dismissalKey, openFindings, runDataChecks, type Finding } from '@/lib/individualDpr/dataChecks';
 import { StepIntro } from '@/components/ui/FieldPrompt';
 import { ResumeDrafts } from '@/components/individual-dpr/ResumeDrafts';
 import { draftSignature, hasDraftContent } from '@/lib/individualDpr/draftState';
@@ -12,7 +14,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ArrowLeft, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
+import { ClipboardCheck, ArrowLeft, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
@@ -124,6 +126,24 @@ export const IndividualDPRCreation: React.FC = () => {
   const [docStyle, setDocStyle] = useState<any>(null);
   const selectionSteps = selectionStepOrder(getSchemeDocSteps(schemeCode), docStyle?.sectionOrder, visibleSteps);
   const lastVisible = selectionSteps[selectionSteps.length - 1] || getSchemeStepCount(schemeCode);
+  // Automated checks: missing, unclear, mismatched or unusual answers (advisory, never block on their own).
+  const contentOf = (step: number) => getContentStep(step, schemeCode);
+  const visibleContent = new Set(selectionSteps.map(contentOf));
+  const dismissedChecks: string[] = data.schemeExtras?.dismissedChecks || [];
+  const stepFindings = openFindings(runDataChecks(data), dismissedChecks).filter((f) => f.step === contentOf(currentStep));
+  const allFindings = openFindings(runDataChecks(data, { final: true }), dismissedChecks).filter((f) => visibleContent.has(f.step));
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const dismissFinding = (finding: Finding) =>
+    setSchemeExtras({ ...(data.schemeExtras || {}), dismissedChecks: [...dismissedChecks, dismissalKey(finding)] });
+  const goToFinding = (finding: Finding) => {
+    const local = selectionSteps.find((step) => contentOf(step) === finding.step);
+    setReviewOpen(false);
+    if (!local) return;
+    setInvalidFields(finding.field ? [finding.field] : []);
+    setCurrentStep(local);
+    setEditStepN(local);
+    setEditNonce((n) => n + 1);
+  };
   // Section-by-section progress: live from what is on screen, and "saved" from the last saved copy.
   const sectionDefs = getSchemeDocSteps(schemeCode);
   // Progress reads the answers as typed (the store), not the outgoing payload, which adds defaults such as the unit name.
@@ -600,7 +620,11 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   };
 
-  const handleGenerateDPR = async () => {
+  const handleGenerateDPR = async (bypassReview = false) => {
+    if (!bypassReview && allFindings.length) {
+      setReviewOpen(true);
+      return;
+    }
     setIsGenerating(true);
     try {
       if (!data.step1 || !getUnitName(data.step1)) {
@@ -734,6 +758,22 @@ export const IndividualDPRCreation: React.FC = () => {
 
   return (
     <Layout fullBleed={Boolean(styling && docStyle)}>
+      {reviewOpen ? (
+        <ReviewDialog
+          findings={allFindings}
+          stepTitle={(step) => {
+            const local = selectionSteps.find((st) => contentOf(st) === step);
+            return local ? getStepTitle(local, data.matchedSchemeCode) : `Step ${step}`;
+          }}
+          onClose={() => setReviewOpen(false)}
+          onGo={goToFinding}
+          onDismiss={dismissFinding}
+          onGenerate={() => {
+            setReviewOpen(false);
+            void handleGenerateDPR(true);
+          }}
+        />
+      ) : null}
       <div className={styling && docStyle ? 'flex min-h-0 flex-1 flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
         <div className={styling && docStyle
           ? 'shrink-0 border-b border-border bg-background px-4 pb-4 pt-2'
@@ -826,10 +866,15 @@ export const IndividualDPRCreation: React.FC = () => {
                       <Save className="h-4 w-4" />
                       {t('individualDpr.saveDraft')}
                     </Button>
+                    <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)} className="gap-2" title={tf('Looks for missing, unclear or unusual answers across the whole form.')}>
+                      <ClipboardCheck className="h-4 w-4" />
+                      {tf('Check my answers')}
+                      {allFindings.length ? <span className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">{allFindings.length}</span> : null}
+                    </Button>
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={handleGenerateDPR}
+                      onClick={() => void handleGenerateDPR()}
                       isLoading={isGenerating}
                       className="gap-2"
                       title={tf('Creates the final DPR from your answers. Available on the last step.')}
@@ -1009,6 +1054,7 @@ export const IndividualDPRCreation: React.FC = () => {
                           )}
                         </p>
                       ) : null}
+                      <StepChecks findings={stepFindings} onDismiss={dismissFinding} />
                       <IndividualDPRForm
                         key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`}
                         currentStep={currentStep}
@@ -1031,7 +1077,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     {currentStep === lastVisible ? (
                       <Button
                         variant="primary"
-                        onClick={handleGenerateDPR}
+                        onClick={() => void handleGenerateDPR()}
                         isLoading={isGenerating}
                         className="gap-2"
                       >
@@ -1191,6 +1237,7 @@ export const IndividualDPRCreation: React.FC = () => {
                           )}
                         </p>
                       ) : null}
+                      <StepChecks findings={stepFindings} onDismiss={dismissFinding} />
                       <IndividualDPRForm
                         key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`}
                         currentStep={currentStep}
@@ -1210,7 +1257,7 @@ export const IndividualDPRCreation: React.FC = () => {
                   {currentStep === lastVisible ? (
                     <Button
                       variant="primary"
-                      onClick={handleGenerateDPR}
+                      onClick={() => void handleGenerateDPR()}
                       isLoading={isGenerating}
                       className="gap-2"
                     >

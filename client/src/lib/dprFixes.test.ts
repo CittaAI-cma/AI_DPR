@@ -606,3 +606,47 @@ describe('cross-section context reuse', () => {
     assert.equal(deriveProfile({ step1: { district: 'Guntur', location: 'Tenali' } }).address, 'Tenali, Guntur');
   });
 });
+
+import { dismissalKey, openFindings, runDataChecks } from './individualDpr/dataChecks.ts';
+
+describe('automated data checks', () => {
+  const ids = (data: any, final = false) => runDataChecks(data, { final }).map((f) => f.id);
+  it('stays quiet about steps that have not been started', () => {
+    assert.deepEqual(ids({ step1: { unitName: 'A' } }), []);
+  });
+  it('flags missing answers at the end', () => {
+    const found = ids({ step1: { unitName: 'A' } }, true);
+    for (const id of ['cost.zero', 'sales.zero', 'what.missing']) assert.ok(found.includes(id), id);
+  });
+  it('flags funding that does not match the project cost', () => {
+    const found = runDataChecks({ step12: { machinery: 10 }, step13: { bankLoan: 7, spvContribution: 1 } });
+    const f = found.find((x) => x.id === 'mof.mismatch');
+    assert.ok(f);
+    assert.equal(f!.vars!.c, '2');
+    assert.ok(!ids({ step12: { machinery: 10 }, step13: { bankLoan: 9, spvContribution: 1 } }).includes('mof.mismatch'));
+  });
+  it('flags rupees typed instead of lakhs', () => {
+    assert.ok(ids({ step12: { machinery: 250000 } }).includes('unit.rupees'));
+    assert.ok(!ids({ step12: { machinery: 2.5 } }).includes('unit.rupees'));
+  });
+  it('flags unusual loan terms, shares and capacity', () => {
+    const found = ids({ step12: { machinery: 100 }, step13: { interestRate: 40, loanTenureMonths: 6, spvContribution: 2, governmentGrant: 60, bankLoan: 38, moratoriumMonths: 8 }, step14: { capacityUtilisation: 140 } });
+    for (const id of ['loan.rate', 'loan.tenure', 'mof.own.low', 'mof.grant.high', 'loan.moratorium', 'util.over']) assert.ok(found.includes(id), id);
+  });
+  it('flags placeholder, short and copied text', () => {
+    const found = ids({ step1: { natureOfBusiness: 'na', majorProducts: 'x' }, step2: { sectorDescription: 'We make pickles and sell them to local shops every day.' }, schemeExtras: { executiveSummary: 'We make pickles and sell them to local shops every day.' } });
+    assert.ok(found.includes('text.placeholder.natureOfBusiness'));
+    assert.ok(found.includes('text.short.majorProducts'));
+    assert.ok(found.includes('text.repeat.executiveSummary'));
+  });
+  it('flags costs above sales', () => {
+    assert.ok(ids({ step14: { annualSalesRealization: 10, rawMaterialCost: 8, wages: 5 } }).includes('sales.loss'));
+  });
+  it('lets a dismissed finding go until its value changes', () => {
+    const data = { step13: { interestRate: 40 } };
+    const first = runDataChecks(data).find((f) => f.id === 'loan.rate')!;
+    assert.equal(openFindings(runDataChecks(data), [dismissalKey(first)]).filter((f) => f.id === 'loan.rate').length, 0);
+    const changed = runDataChecks({ step13: { interestRate: 45 } });
+    assert.equal(openFindings(changed, [dismissalKey(first)]).filter((f) => f.id === 'loan.rate').length, 1);
+  });
+});

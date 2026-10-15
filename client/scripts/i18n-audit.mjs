@@ -84,13 +84,14 @@ const plainFiles = [];
 const promptsDir = path.join(src, 'lib/plainLanguage');
 for (const f of ['glossary.ts', 'units.ts']) plainFiles.push(path.join(promptsDir, f));
 plainFiles.push(path.join(src, 'data/fieldDescriptions.ts'));
+plainFiles.push(path.join(src, 'lib/individualDpr/dataChecks.ts'));
 for (const f of fs.readdirSync(path.join(promptsDir, 'prompts'))) if (/\.ts$/.test(f)) plainFiles.push(path.join(promptsDir, 'prompts', f));
 for (const file of plainFiles) {
   const sf = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
   const visit = (n) => {
     if (ts.isPropertyAssignment(n) && ts.isStringLiteralLike(n.initializer)) {
       const name = keyText(n.name);
-      const inPromptEntry = ['ask', 'help', 'example', 'means', 'hint'].includes(name);
+      const inPromptEntry = ['ask', 'help', 'example', 'means', 'hint', 'message'].includes(name);
       const inDescriptions = n.parent && ts.isObjectLiteralExpression(n.parent) && n.parent.parent && ts.isPropertyAssignment(n.parent.parent) && file.endsWith('fieldDescriptions.ts');
       const inIntros = n.parent && ts.isObjectLiteralExpression(n.parent) && n.parent.parent && ts.isVariableDeclaration(n.parent.parent) && n.parent.parent.name.getText() === 'STEP_INTROS';
       if ((inPromptEntry || inIntros || inDescriptions) && !dictEntries.has(n.initializer.text)) {
