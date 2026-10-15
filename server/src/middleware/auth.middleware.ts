@@ -32,10 +32,12 @@ export const authenticate = (
 
     req.user = decoded;
     next();
-  } catch (error) {
-    res.status(401).json({ 
-      success: false, 
-      message: 'Invalid or expired token' 
+  } catch (error: any) {
+    const expired = error?.name === 'TokenExpiredError';
+    res.status(401).json({
+      success: false,
+      code: expired ? 'TOKEN_EXPIRED' : 'TOKEN_INVALID',
+      message: expired ? 'Session expired' : 'Invalid token',
     });
   }
 };

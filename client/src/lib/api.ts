@@ -3,6 +3,8 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
 import { MockDataService } from './mockData';
 import { OfflineDetector } from './offlineDetector';
+import { useAuthStore } from '@/store/authStore';
+import { useSessionClock } from './sessionClock';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false;
@@ -73,6 +75,8 @@ class APIClient {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
+      // The refresh cookie is httpOnly and only sent to /api/auth.
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -100,6 +104,18 @@ class APIClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
+        // An expired access token: renew it quietly and repeat the request once.
+        const original: any = error.config;
+        const authCall = /\/auth\/(login|register|refresh|logout)/.test(original?.url || '');
+        if (error.response?.status === 401 && original && !original._retried && !authCall && localStorage.getItem('token')) {
+          original._retried = true;
+          const fresh = await this.refreshSession();
+          if (fresh) {
+            original.headers = { ...original.headers, Authorization: `Bearer ${fresh}` };
+            return this.client(original);
+          }
+        }
+
         // Check if it's a network error and we should use mock data
         const isNetworkError = OfflineDetector.isNetworkError(error) || !OfflineDetector.getStatus();
         
@@ -245,6 +261,39 @@ class APIClient {
       },
       () => MockDataService.register(data)
     );
+  }
+
+  private refreshing: Promise<string | null> | null = null;
+
+  /**
+   * Swap the refresh cookie for a new 15 minute token. One call at a time, shared by everyone waiting.
+   * Returns the new token, or null when the session has ended (then the re-sign-in screen opens).
+   */
+  refreshSession(): Promise<string | null> {
+    if (this.refreshing) return this.refreshing;
+    // Once the session has ended only signing in again can start a new one.
+    if (useSessionClock.getState().phase === 'expired') return Promise.resolve(null);
+    this.refreshing = (async () => {
+      try {
+        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+        const data = response.data?.data;
+        if (!data?.token) throw new Error('No token');
+        const { token, expiresInSeconds, ...user } = data;
+        localStorage.setItem('token', token);
+        useAuthStore.setState((state: any) => ({ token, user: state.user ? { ...state.user, ...user } : state.user }));
+        useSessionClock.getState().setToken(token);
+        return token as string;
+      } catch (error: any) {
+        const code = error?.response?.data?.code;
+        if (error?.response?.status === 401) {
+          useSessionClock.getState().markExpired(code === 'SESSION_IDLE' ? 'idle' : 'expired');
+        }
+        return null;
+      } finally {
+        this.refreshing = null;
+      }
+    })();
+    return this.refreshing;
   }
 
   async login(email: string, password: string) {

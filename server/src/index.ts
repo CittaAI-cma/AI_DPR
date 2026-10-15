@@ -72,6 +72,8 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  // Session refreshes happen about once a minute while someone is working; they must never be throttled.
+  skip: (req) => req.path === '/auth/refresh',
 });
 app.use('/api', limiter);
 

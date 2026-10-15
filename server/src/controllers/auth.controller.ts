@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { startSession, refreshSession, endSession } from '../lib/session';
 import { Request, Response } from 'express';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../models/User.model';
@@ -10,18 +11,6 @@ import {
   UNDER_18_CODE,
 } from '../lib/privacyNotice';
 import { ageFromDob } from '../lib/under18';
-
-function signToken(user: { _id: unknown; email: string; role: string }) {
-  return jwt.sign(
-    {
-      userId: user._id.toString(),
-      email: user.email,
-      role: user.role,
-    },
-    getJwtSecret(),
-    { expiresIn: '7d' } as SignOptions
-  );
-}
 
 function publicUser(user: any) {
   const noticeVersion = user.privacy?.noticeVersion || null;
@@ -193,7 +182,7 @@ export class AuthController {
         });
       }
 
-      const token = signToken(user);
+      const token = await startSession(user, req, res);
 
       res.status(201).json({
         success: true,
@@ -249,7 +238,7 @@ export class AuthController {
         req,
       });
 
-      const token = signToken(user);
+      const token = await startSession(user, req, res);
 
       res.status(200).json({
         success: true,
@@ -269,17 +258,43 @@ export class AuthController {
     }
   }
 
+  /** New 15 minute access token for a session that has been used within the last 15 minutes. */
+  static async refresh(req: Request, res: Response): Promise<void> {
+    try {
+      const outcome = await refreshSession(req, res);
+      if (!outcome.ok) {
+        res.status(401).json({
+          success: false,
+          code: outcome.code,
+          message: outcome.code === 'SESSION_IDLE' ? 'Signed out after 15 minutes without activity' : 'Please sign in again',
+        });
+        return;
+      }
+      res.status(200).json({
+        success: true,
+        data: { ...publicUser(outcome.user), token: outcome.token, expiresInSeconds: outcome.expiresInSeconds },
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: 'Could not refresh the session' });
+    }
+  }
+
   static async logout(req: Request, res: Response): Promise<void> {
     try {
-      const authReq = req as any;
-      await AuditService.log({
-        action: 'logout',
-        userId: authReq.user?.userId,
-        role: authReq.user?.role,
-        req,
-      });
+      // No bearer needed: an expired token must still be able to sign out.
+      let userId: string | undefined;
+      let role: string | undefined;
+      const header = req.headers.authorization;
+      if (header?.startsWith('Bearer ')) {
+        const decoded: any = jwt.verify(header.substring(7), getJwtSecret(), { ignoreExpiration: true });
+        userId = decoded?.userId;
+        role = decoded?.role;
+      }
+      await endSession(req, res);
+      await AuditService.log({ action: 'logout', userId, role, req });
       res.status(200).json({ success: true, message: 'Logged out' });
     } catch (error: any) {
+      await endSession(req, res).catch(() => undefined);
       res.status(200).json({ success: true, message: 'Logged out' });
     }
   }

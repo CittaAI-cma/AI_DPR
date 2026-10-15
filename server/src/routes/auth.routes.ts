@@ -32,7 +32,8 @@ router.post(
   AuthController.login
 );
 
-router.post('/logout', authenticate, AuthController.logout);
+router.post('/refresh', AuthController.refresh);
+router.post('/logout', AuthController.logout);
 router.post('/consent', authenticate, AuthController.acceptConsent);
 router.get('/profile', authenticate, AuthController.getProfile);
 router.put('/profile', authenticate, AuthController.updateProfile);

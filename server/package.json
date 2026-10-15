@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .ts",
     "test": "node --experimental-strip-types --import ./register-tests.mjs --test src/production.backend.test.ts",
     "test:rbac": "node --experimental-strip-types --test --test-concurrency=1 src/rbac.live.test.ts",
+    "test:session": "node --experimental-strip-types --test --test-concurrency=1 src/session.live.test.ts",
     "test:api": "node --experimental-strip-types --test --test-concurrency=1 src/api.live.test.ts",
     "test:pdf": "node --experimental-strip-types --import ./register-tests.mjs --test --test-concurrency=1 src/pdf.smoke.test.ts"
   },

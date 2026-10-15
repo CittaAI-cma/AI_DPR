@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { RouteTracker } from '@/lib/navHistory';
+import { SessionManager } from '@/components/session/SessionManager';
 import { ConfirmProvider } from '@/components/ui/ConfirmProvider';
 import { ThemeApplier } from '@/components/layout/ThemeToggle';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -73,6 +74,7 @@ function App() {
         }}
       />
       <RouteTracker />
+      <SessionManager />
       <ThemeApplier />
       <Routes>
         <Route path="/" element={<Landing />} />

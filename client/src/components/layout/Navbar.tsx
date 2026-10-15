@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { SessionTimer } from '@/components/session/SessionTimer';
 import { flushPendingDraft } from '@/lib/draftFlush';
 import { useConfirm } from '@/components/ui/ConfirmProvider';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -88,6 +89,7 @@ export const Navbar: React.FC = () => {
 
             <ThemeToggle />
 
+            {isAuthenticated && <SessionTimer />}
             {isAuthenticated && <NotificationBell />}
 
             {isAuthenticated ? (
