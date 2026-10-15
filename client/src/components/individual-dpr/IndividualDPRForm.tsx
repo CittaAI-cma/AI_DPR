@@ -1,5 +1,8 @@
 // @ts-nocheck
 import { FieldPrompt } from '@/components/ui/FieldPrompt';
+import { AssetListEditor, BusinessKindPicker } from '@/components/individual-dpr/AssetItems';
+import { businessKind, kindLabel, scaleOf } from '@/lib/individualDpr/businessKind';
+import { projectCost as draftProjectCost } from '@/lib/individualDpr/dataChecks';
 import { FinanceCalcStrip } from '@/components/individual-dpr/FinanceCalculators';
 import { ReusedNote, ScheduleParties } from '@/components/individual-dpr/ScheduleParties';
 import React from 'react';
@@ -353,6 +356,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
   const applyCalc = (step: number, patch: Record<string, number>) => {
     setStepData(step, { ...(getStepData(step) || {}), ...patch });
   };
+
+  const kind = businessKind(data);
+  const scale = scaleOf(data, draftProjectCost(data));
+  const setKind = (next: string) => setSchemeExtras({ ...(data.schemeExtras || {}), businessKind: next });
 
   const handleInputChange = (field: string, value: any) => {
     if (extraFieldNames.includes(field) || ['craft', 'currentTools', 'newTools', 'covOrLor', 'upiQr', 'fssai', 'apiicPark'].includes(field)) {
@@ -3637,7 +3644,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           />
         </div>
         <div>
-          {renderLabel('manufacturingProcess', 'Manufacturing Process')}
+          {renderLabel('manufacturingProcess', kindLabel('Manufacturing Process', kind))}
           <ExpandableTextarea
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={stepData.manufacturingProcess || ''}
@@ -3943,13 +3950,26 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </>
         )}
-        {isLeanUnit && !isApCmep && (
+        {!isApCmep && <BusinessKindPicker data={data} onChange={setKind} />}
+        {!isApCmep && kind === 'manufacturing' && (isLeanUnit || scale !== 'tiny') && (
           <CmepMachineryEditor
             value={stepData.machineryItems}
             onChange={(next) => {
               const latest = getStepData(contentStep) || {};
               const patch: Record<string, unknown> = { machineryItems: next };
               if (next.some((row) => row.description || row.unitCost)) patch.machinery = machineryTotalLakhs(next, false);
+              setStepData(contentStep, { ...latest, ...patch });
+            }}
+          />
+        )}
+        {!isApCmep && kind !== 'manufacturing' && (
+          <AssetListEditor
+            value={stepData.assetItems}
+            collapsedWhenEmpty={scale === 'tiny'}
+            onChange={(items, total) => {
+              const latest = getStepData(contentStep) || {};
+              const patch: Record<string, unknown> = { assetItems: items };
+              if (items.some((row) => row.item || row.unitCost)) patch.machinery = total;
               setStepData(contentStep, { ...latest, ...patch });
             }}
           />
@@ -3985,7 +4005,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           )}
           {!isLeanUnit && (
           <div>
-            {renderLabel('machinery', 'Plant & machinery (₹ Lakhs)')}
+            {renderLabel('machinery', kindLabel('Plant & machinery (₹ Lakhs)', kind))}
             <Input
               type="number"
               value={stepData.machinery === '' || stepData.machinery == null ? '' : toFiniteNumber(stepData.machinery)}
@@ -4428,7 +4448,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
         )}
         <div className="form-field-grid">
           <div>
-            {renderLabel('rawMaterialCost', 'Raw Material Cost (₹ Lakhs)')}
+            {renderLabel('rawMaterialCost', kindLabel('Raw Material Cost (₹ Lakhs)', kind))}
             <Input
               type="number"
               value={
@@ -4504,7 +4524,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
           <div>
-            {renderLabel('annualProductionVolume', 'Annual Production Volume')}
+            {renderLabel('annualProductionVolume', kindLabel('Annual Production Volume', kind))}
             <Input
               type="number"
               value={

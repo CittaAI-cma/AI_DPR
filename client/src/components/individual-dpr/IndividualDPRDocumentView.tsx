@@ -1,3 +1,4 @@
+import { businessKind, normalizeAssetItems } from '@/lib/individualDpr/businessKind';
 import { ScheduleDocParties } from '@/components/individual-dpr/ScheduleParties';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
@@ -376,6 +377,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     viewLanguage === 'telugu' ? 'te' : 'en'
   );
   const budget = data.ventureMatchAnswers?.budget;
+  const kind = businessKind(data);
   const uploads = getIndividualUploads(schemeCode, data);
   const uploadStore = data.step18 || data.uploads || {};
 
@@ -730,6 +732,12 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           }), editPaths(field.path, machineKeys, items.length)));
           continue;
         }
+        if (field.name === 'assetItems') {
+          flushParticulars();
+          const assets = normalizeAssetItems(raw).filter((row) => showEmpty || isEnteredDocRow([row.item, row.quantity > 1 ? row.quantity : '', row.unitCost]));
+          blocks.push(dataTable(field.path, field.label, ['Asset', 'Type', 'Qty', 'Unit cost (₹ Lakhs)'], assets.map((row) => [row.item, row.category, String(row.quantity || ''), String(row.unitCost || '')])));
+          continue;
+        }
         if (field.name === 'costPhasing') {
           flushParticulars();
           const phasing = normalizeCostPhasing(raw, data.step12);
@@ -787,6 +795,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         row.gst, row.transport, row.installation, row.lifeYears, row.annualMaintenance,
       ]));
     }
+    if (field.name === 'assetItems') {
+      return normalizeAssetItems(raw).some((row) => isEnteredDocRow([row.item, row.quantity > 1 ? row.quantity : '', row.unitCost]));
+    }
     if (field.name === 'costPhasing') {
       const phasing = normalizeCostPhasing(raw, data.step12);
       return CMEP_COST_HEADS.some((head) => isEnteredDocRow([phasing[head.key]?.incurred, phasing[head.key]?.proposed]));
@@ -799,7 +810,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     if (def.id === 'uploads' || def.contentStep === 18) {
       return uploads.some((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label])) || blockVisible(def.id);
     }
-    return getIndividualDocFields(def.contentStep, schemeCode, budget).some(fieldHasAnswers) || blockVisible(def.id);
+    return getIndividualDocFields(def.contentStep, schemeCode, budget, kind).some(fieldHasAnswers) || blockVisible(def.id);
   };
   const reportEntries = (style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).flatMap((token) => {
     if (pictureIdFromToken(token)) return [];
@@ -979,7 +990,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             </section>
           );
         }
-        const fields = getIndividualDocFields(def.contentStep, schemeCode, budget);
+        const fields = getIndividualDocFields(def.contentStep, schemeCode, budget, kind);
         return (
           <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
             <h2 className="individual-sec-title">

@@ -376,3 +376,13 @@ Details are entered once and carried forward (`client/src/lib/individualDpr/cont
 - **Copied into later fields:** step 11 applicant / firm name starts as the unit name (for proprietor packs, the entrepreneur name); step 11 correspondence address starts as "town, district" from step 1. A copied field keeps following its source until the person types something different, after that it is theirs and is never touched. Copies are remembered in `schemeExtras.autoFilled`, and the form says where a field was filled from.
 - **Shown on the schedules:** the project cost (content step 12) and means of finance / bank loan (content step 13) sections show promoter / applicant, unit, address and GSTIN, in the form (read-only card) and as a table in the live document, preview and export. They are read from steps 1 and 11 and never stored separately, so editing step 11 updates every schedule.
 - Never copied: GSTIN, PAN, Udyam number and mobile (typed once, validated, step 11). Only firm PANs are stored.
+
+## Fields that depend on the kind of business and its size
+
+`client/src/lib/individualDpr/businessKind.ts` decides what the cost step and the document show:
+
+- **Kind of business.** Chosen by the person in the "What kind of business is this?" box on the project cost step; otherwise from the Scheme Finder activity (mfg, food, craft, mixed, crop → manufacturing; service, knowledge → service; trade, vending → trading); otherwise a guess from the words in "Nature of Business"; otherwise manufacturing. The choice is saved in `schemeExtras.businessKind`.
+- **Manufacturing:** the plant and machinery table (`step12.machineryItems`, total feeds machinery). The CMEP scheme keeps its own detailed tables.
+- **Service and trading:** an assets list instead (`step12.assetItems`: asset, type, qty, unit cost; the total feeds the equipment line). Labels change too: Equipment & assets, Materials & supplies, Annual service volume, How the service is delivered (traders: cost of goods for resale, annual sales volume, how you buy and sell).
+- **Size.** From the project cost once entered (under ₹5 lakh tiny, under ₹50 lakh small, under ₹2 crore medium, above that large), otherwise from the Scheme Finder budget. For tiny projects without a lean scheme pack the list is optional (collapsed, or hidden for manufacturing vanilla DPRs). Schemes that already hid heavy capex tables (`hideComplexCapex`) are unchanged.
+- The live DPR, preview and export follow the same choice (Assets list or Machinery list table, matching labels).

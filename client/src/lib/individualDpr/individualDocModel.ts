@@ -12,6 +12,7 @@ import {
 } from '@/lib/individualDpr/schemeFormConfig';
 import { getSchemeSteps, type SchemeStepDef } from '@/lib/individualDpr/schemeStepCatalog';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
+import { kindLabel, type BusinessKind } from '@/lib/individualDpr/businessKind';
 import { SVANIDHI_PROOF_OPTIONS, SVANIDHI_TRANCHE_OPTIONS, SVANIDHI_VENDING_OPTIONS } from '@/lib/individualDpr/svanidhiQuestions';
 import { VISHWAKARMA_TRAINING_OPTIONS, VISHWAKARMA_TRANCHE_OPTIONS, VISHWAKARMA_WORKPLACE_OPTIONS, VISHWAKARMA_YES_NO_OPTIONS } from '@/lib/individualDpr/vishwakarmaQuestions';
 import { PMEGP_AGENCY_OPTIONS, PMEGP_AREA_OPTIONS, PMEGP_CATEGORY_OPTIONS, PMEGP_EDUCATION_OPTIONS } from '@/lib/individualDpr/pmegpQuestions';
@@ -310,7 +311,29 @@ export function isLeanUnitScheme(code?: string | null): boolean {
 }
 
 /** Fields asked on a content-step bucket for this scheme. */
+/** Fields for a section, adjusted for the kind of business: machinery tables for manufacturing, an asset list otherwise. */
 export function getIndividualDocFields(
+  contentStep: number,
+  schemeCode?: string | null,
+  budget?: Budget,
+  kind: BusinessKind = 'manufacturing'
+): IndividualDocField[] {
+  const base = getIndividualDocFieldsBase(contentStep, schemeCode, budget);
+  if (contentStep !== 12 && kind === 'manufacturing') return base;
+  const cmep = schemeCode === 'AP_CMEP';
+  const out: IndividualDocField[] = [];
+  for (const field of base) {
+    if (kind !== 'manufacturing' && field.name === 'machineryItems' && !cmep) continue;
+    out.push(kind === 'manufacturing' ? field : { ...field, label: kindLabel(field.label, kind) });
+    if (contentStep === 12 && field.name === 'machinery' && !cmep) {
+      if (kind === 'manufacturing' && !base.some((f) => f.name === 'machineryItems')) out.push(stepField('machineryItems', 'Machinery list', 12));
+      if (kind !== 'manufacturing') out.push(stepField('assetItems', 'Assets list', 12));
+    }
+  }
+  return out;
+}
+
+function getIndividualDocFieldsBase(
   contentStep: number,
   schemeCode?: string | null,
   budget?: Budget

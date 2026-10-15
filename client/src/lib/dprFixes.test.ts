@@ -678,3 +678,38 @@ describe('finance calculators', () => {
     assert.equal(fundingSplit(100, 70, 50).overfunded, true);
   });
 });
+
+import { assetTotalLakhs, businessKind, detectKind, kindLabel, normalizeAssetItems, scaleOf } from './individualDpr/businessKind.ts';
+
+describe('business kind and scale', () => {
+  it('uses the scheme-finder activity, then the words written, and lets the person override', () => {
+    assert.equal(businessKind({ ventureMatchAnswers: { activity: 'mfg' } }), 'manufacturing');
+    assert.equal(businessKind({ ventureMatchAnswers: { activity: 'service' } }), 'service');
+    assert.equal(businessKind({ ventureMatchAnswers: { activity: 'vending' } }), 'trading');
+    assert.equal(detectKind({ step1: { natureOfBusiness: 'Beauty parlour and bridal makeup' } }).kind, 'service');
+    assert.equal(detectKind({ step1: { natureOfBusiness: 'Kirana shop selling groceries' } }).kind, 'trading');
+    assert.equal(detectKind({ step1: { natureOfBusiness: 'Making mango pickle' } }).kind, 'manufacturing');
+    assert.equal(detectKind({}).source, 'default');
+    assert.equal(businessKind({ ventureMatchAnswers: { activity: 'mfg' }, schemeExtras: { businessKind: 'service' } }), 'service');
+  });
+  it('sizes by project cost when known, else by budget', () => {
+    assert.equal(scaleOf({}, 3), 'tiny');
+    assert.equal(scaleOf({}, 40), 'small');
+    assert.equal(scaleOf({}, 120), 'medium');
+    assert.equal(scaleOf({ ventureMatchAnswers: { budget: '2to5L' } }), 'tiny');
+    assert.equal(scaleOf({ ventureMatchAnswers: { budget: '1to10Cr' } }), 'large');
+    assert.equal(scaleOf({}), 'unknown');
+  });
+  it('renames machinery and production wording for services and traders only', () => {
+    assert.equal(kindLabel('Plant & machinery (₹ Lakhs)', 'manufacturing'), 'Plant & machinery (₹ Lakhs)');
+    assert.equal(kindLabel('Plant & machinery (₹ Lakhs)', 'service'), 'Equipment & assets (₹ Lakhs)');
+    assert.equal(kindLabel('Raw Material Cost (₹ Lakhs)', 'trading'), 'Cost of goods bought for resale (₹ Lakhs)');
+    assert.equal(kindLabel('Land', 'service'), 'Land');
+  });
+  it('totals an asset list', () => {
+    const items = normalizeAssetItems([{ item: 'Chair', category: 'Furniture & fixtures', quantity: 4, unitCost: 0.05 }, { item: 'Laptop', quantity: 1, unitCost: 0.45, category: 'nonsense' }, { item: '' }]);
+    assert.equal(items[1].category, 'Equipment & tools');
+    assert.equal(assetTotalLakhs(items), 0.65);
+    assert.deepEqual(normalizeAssetItems(null), []);
+  });
+});
