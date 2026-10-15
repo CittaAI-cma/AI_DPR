@@ -188,6 +188,10 @@ Rows still store time, userId, role, action, optional targetType/targetId, IP. *
 
 ---
 
+### Sign-out clears the session
+
+`logout` in `authStore` calls `clearUserSession()` (`client/src/lib/sessionReset.ts`): the draft on screen, cached DPR / project lists, the chat and cached API answers are dropped, so nothing from one person’s session shows for the next on the same browser. Automatic draft saves count as edits for the 12-month retention clock (a save updates the DPR’s last-edit time).
+
 ## 5. Key files
 
 | Area | Path |

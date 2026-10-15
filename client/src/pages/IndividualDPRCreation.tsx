@@ -1,4 +1,10 @@
 // @ts-nocheck
+import { ResumeDrafts } from '@/components/individual-dpr/ResumeDrafts';
+import { draftSignature, hasDraftContent } from '@/lib/individualDpr/draftState';
+import { registerDraftFlusher } from '@/lib/draftFlush';
+import { useDraftAutosave } from '@/lib/useDraftAutosave';
+import { AuthoringStepper } from '@/components/individual-dpr/AuthoringStepper';
+import { computeSections, overallProgress, sectionsUnsaved } from '@/lib/individualDpr/authoringProgress';
 import { useBackTarget } from '@/lib/navHistory';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -116,6 +122,27 @@ export const IndividualDPRCreation: React.FC = () => {
   const [docStyle, setDocStyle] = useState<any>(null);
   const selectionSteps = selectionStepOrder(getSchemeDocSteps(schemeCode), docStyle?.sectionOrder, visibleSteps);
   const lastVisible = selectionSteps[selectionSteps.length - 1] || getSchemeStepCount(schemeCode);
+  // Section-by-section progress: live from what is on screen, and "saved" from the last saved copy.
+  const sectionDefs = getSchemeDocSteps(schemeCode);
+  // Progress reads the answers as typed (the store), not the outgoing payload, which adds defaults such as the unit name.
+  const sections = computeSections(data, schemeCode, sectionDefs, selectionSteps);
+  const overall = overallProgress(sections);
+  const [savedPayload, setSavedPayload] = useState<any>(null);
+  const savedSections = savedPayload ? computeSections(savedPayload, schemeCode, sectionDefs, selectionSteps) : null;
+  const savedPercent = savedSections ? overallProgress(savedSections).percent : 0;
+  const unsavedSections = sectionsUnsaved(sections, savedSections);
+  // Anything typed since the last save (whole draft, not just the answers the stepper counts).
+  const draftIsDirty = savedPayload
+    ? draftSignature(data) !== draftSignature(savedPayload)
+    : hasDraftContent(data);
+  const dirtyRef = useRef(false);
+  dirtyRef.current = draftIsDirty;
+  // A report opened from the server starts out saved.
+  useEffect(() => {
+    if (!isLoadingData && data.projectId && savedPayload === null) setSavedPayload(JSON.parse(JSON.stringify(data)));
+  }, [isLoadingData, data.projectId]);
+
+
   const stepOrdinal = Math.max(1, selectionSteps.indexOf(currentStep) + 1);
   const docStyleRef = useRef<any>(null);
   docStyleRef.current = docStyle;
@@ -199,8 +226,12 @@ export const IndividualDPRCreation: React.FC = () => {
         const dprIdFromUrl = params.dprId || searchParams.get('dprId');
         const isNew = searchParams.get('new') === 'true';
         const schemeFromUrl = searchParams.get('scheme');
+        setSavedPayload(null);
+        setLastSavedAt(null);
+        setSaveStatus('idle');
 
         if (isNew) {
+          enteredAtForm.current = false;
           resetData();
           setDprIds('', '');
           setProject(null);
@@ -225,6 +256,8 @@ export const IndividualDPRCreation: React.FC = () => {
 
         setIsLoadingData(true);
         if (projectIdFromUrl) {
+          // Opened onto a saved report (Resume, Edit): Back leaves the page rather than stepping inside it.
+          enteredAtForm.current = true;
           try {
             const projectResponse = await api.getProject(projectIdFromUrl);
             const projectData = projectResponse.data || projectResponse;
@@ -243,8 +276,14 @@ export const IndividualDPRCreation: React.FC = () => {
             setDprIds(dprData?._id || dprData?.id || '', pid);
             setSetupPhase('form');
             const loaded = useIndividualDPRStore.getState().data;
-            const first = getVisibleSteps(loaded.matchedSchemeCode)[0] || 1;
-            void openStyleEditor(first);
+            const visible = getVisibleSteps(loaded.matchedSchemeCode);
+            const first = visible[0] || 1;
+            // Resume where the person left off (a legacy step number is mapped to this scheme's numbering).
+            const saved = Number(loaded.currentStep) || first;
+            const mapped = visible.includes(saved) ? saved : contentToLocal(loaded.matchedSchemeCode, saved);
+            const start = mapped && visible.includes(mapped) ? mapped : first;
+            setCurrentStep(start);
+            void openStyleEditor(start);
           } catch {
             resetData();
             setSetupPhase('pick');
@@ -258,7 +297,10 @@ export const IndividualDPRCreation: React.FC = () => {
       }
     };
     load();
-  }, []);
+    // Runs again when the address points at a different report (for example Resume on the scheme picker,
+    // which stays on this same page). The save that follows a first draft only rewrites the address bar
+    // without going through the router, so it does not trigger this.
+  }, [params.projectId, params.dprId, searchParams.get('projectId'), searchParams.get('dprId'), searchParams.get('new')]);
 
   useEffect(() => {
     // Remap legacy content-step numbers (e.g. 12) to scheme-local consecutive steps (e.g. PMEGP step 8)
@@ -268,41 +310,102 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   }, [schemeCode]);
 
-  const saveToDatabase = useCallback(async () => {
-    try {
-      if (hasUnder18Applicant(data)) {
-        toast.error(t('privacy.guardianMessage'));
-        return false;
-      }
-      const hasAnyData = Object.keys(data).some((key) => {
-        if (key.startsWith('step')) {
-          const stepData = data[key];
-          return stepData && typeof stepData === 'object' && Object.keys(stepData).length > 0;
-        }
-        return false;
-      });
-      if (hasAnyData || data.projectId) {
-        const response = await individualDprApi.saveDraft(dprPayload);
-        if (response.success && response.data) {
-          if (response.data.dprId && response.data.projectId) {
-            setDprIds(response.data.dprId, response.data.projectId);
-            const schemeQ = data.matchedSchemeCode ? `&scheme=${data.matchedSchemeCode}` : '';
-            window.history.replaceState(
-              {},
-              '',
-              `/individual-dpr/create?projectId=${response.data.projectId}&dprId=${response.data.dprId}${schemeQ}`
-            );
+  // Saving: one at a time. A manual save, an automatic one and the save on moving between steps never overlap,
+  // so a draft cannot be created twice, and each save sends the newest answers (read fresh from the store).
+  const saveChain = useRef<Promise<boolean>>(Promise.resolve(true));
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const autosaveWarned = useRef(false);
+
+  const saveToDatabase = useCallback(
+    (options?: { silent?: boolean }): Promise<boolean> => {
+      const silent = Boolean(options?.silent);
+      const run = async (): Promise<boolean> => {
+        const fresh = useIndividualDPRStore.getState().data;
+        try {
+          if (hasUnder18Applicant(fresh)) {
+            if (!silent) toast.error(t('privacy.guardianMessage'));
+            return false;
           }
-          return true;
+          if (silent && !getUnitName(fresh.step1)) return false;
+          if (!hasDraftContent(fresh) && !fresh.projectId) return false;
+          setSaveStatus('saving');
+          const response = await individualDprApi.saveDraft(toIndividualPayload(fresh));
+          if (response.success && response.data) {
+            setSavedPayload(JSON.parse(JSON.stringify(fresh)));
+            setLastSavedAt(new Date());
+            setSaveStatus('idle');
+            autosaveWarned.current = false;
+            if (response.data.dprId && response.data.projectId) {
+              setDprIds(response.data.dprId, response.data.projectId);
+              const schemeQ = fresh.matchedSchemeCode ? `&scheme=${fresh.matchedSchemeCode}` : '';
+              const url = `/individual-dpr/create?projectId=${response.data.projectId}&dprId=${response.data.dprId}${schemeQ}`;
+              // Keep the router's own history entry (replacing it with `{}` would break going back).
+              if (`${window.location.pathname}${window.location.search}` !== url) {
+                window.history.replaceState(window.history.state, '', url);
+              }
+            }
+            return true;
+          }
+          setSaveStatus('error');
+          return false;
+        } catch (error) {
+          console.error('Error saving draft:', error);
+          setSaveStatus('error');
+          if (!silent) toast.error(t('individualDpr.toasts.saveFailedDb'));
+          else if (!autosaveWarned.current) {
+            autosaveWarned.current = true;
+            toast.error(tf('Could not auto-save. We will keep trying every 30 seconds.'));
+          }
+          return false;
         }
-      }
-      return false;
-    } catch (error) {
-      console.error('Error saving draft:', error);
-      toast.error(t('individualDpr.toasts.saveFailedDb'));
-      return false;
-    }
-  }, [dprPayload, data, setDprIds, t]);
+      };
+      const next = saveChain.current.then(run, run);
+      saveChain.current = next.catch(() => false);
+      return next;
+    },
+    [setDprIds, t]
+  );
+
+  // Automatic draft saving every 30 seconds while the form is open and something has changed. It stays quiet
+  // (no toasts) and waits until there is a unit name, which the server needs to create the draft.
+  useDraftAutosave({
+    enabled: setupPhase === 'form' && !isLoadingData,
+    intervalMs: 30_000,
+    shouldSave: () => {
+      const latest = useIndividualDPRStore.getState().data;
+      return dirtyRef.current && !!getUnitName(latest.step1) && !hasUnder18Applicant(latest);
+    },
+    save: () => saveToDatabase({ silent: true }),
+  });
+
+  // Last chance to keep changes: before signing out (the top bar asks us), when the tab is hidden, when
+  // leaving this page, and a browser warning if the tab is closed with changes that are not saved yet.
+  useEffect(() => {
+    const flush = async () => {
+      const latest = useIndividualDPRStore.getState().data;
+      if (!dirtyRef.current) return { dirty: false, ok: true };
+      if (!getUnitName(latest.step1) || hasUnder18Applicant(latest)) return { dirty: true, ok: false };
+      return { dirty: true, ok: await saveToDatabase({ silent: true }) };
+    };
+    const unregister = registerDraftFlusher(flush);
+    const onHide = () => {
+      if (document.visibilityState === 'hidden' && dirtyRef.current) void flush();
+    };
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!dirtyRef.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      unregister();
+      if (dirtyRef.current) void flush();
+    };
+  }, [saveToDatabase]);
 
   const warnRequired = (missing: { key: string; label: string }[]) => {
     const keys = missing.map((field) => field.key);
@@ -713,7 +816,12 @@ export const IndividualDPRCreation: React.FC = () => {
                 <p className="text-sm text-muted-foreground">{t('individualDpr.loading')}</p>
               </div>
             ) : (
-              <SchemePickerGrid onSelect={handlePickScheme} />
+              <>
+                <div className="mx-auto max-w-6xl">
+                  <ResumeDrafts />
+                </div>
+                <SchemePickerGrid onSelect={handlePickScheme} />
+              </>
             )}
           </div>
         )}
@@ -737,38 +845,29 @@ export const IndividualDPRCreation: React.FC = () => {
         {!styling && (
         <div className="sm:sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              {selectionSteps.map((step) => {
-                const isCompleted = getStepCompletion(step);
-                const isCurrent = step === currentStep;
-                return (
-                  <button
-                    key={step}
-                    onClick={() => {
-                      if (step === currentStep) return;
-                      if (!guardForward(step)) return;
-                      setInvalidFields([]);
-                      setRequiredNotice('');
-                      setCurrentStep(step);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className={`
-                      flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                      ${isCurrent
-                        ? (schemeUi?.stepActiveClass || 'bg-primary text-primary-foreground shadow-sm')
-                        : isCompleted
-                        ? 'bg-success/10 text-success border border-success/20 hover:bg-success/20'
-                        : (schemeUi?.stepIdleClass || 'bg-muted/50 text-muted-foreground hover:bg-muted')}
-                    `}
-                  >
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent ? 'bg-primary-foreground/20' : isCompleted ? 'bg-success' : 'bg-muted-foreground/20'}`}>
-                      {isCompleted && !isCurrent ? '✓' : step}
-                    </span>
-                    <span className="hidden sm:inline">{t('individualDpr.stepShort', { n: step })}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <AuthoringStepper
+              variant="full"
+              sections={sections}
+              overall={overall}
+              savedPercent={savedPercent}
+              unsaved={unsavedSections}
+              dirty={draftIsDirty}
+              saveStatus={saveStatus}
+              lastSavedAt={lastSavedAt}
+              currentStep={currentStep}
+              onSelect={(step) => {
+                if (step === currentStep) return;
+                if (!guardForward(step)) return;
+                setInvalidFields([]);
+                setRequiredNotice('');
+                setCurrentStep(step);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              activeClass={schemeUi?.stepActiveClass}
+              idleClass={schemeUi?.stepIdleClass}
+              stepLabel={(step) => t('individualDpr.stepShort', { n: step })}
+              lang={viewLanguage === 'telugu' ? 'te' : 'en'}
+            />
           </div>
         </div>
         )}
@@ -918,39 +1017,29 @@ export const IndividualDPRCreation: React.FC = () => {
               editNonce={editNonce}
               editStepN={editStepN}
               stepsBar={(
-            <div className="flex items-center gap-2 overflow-x-auto py-0.5">
-              {selectionSteps.map((step) => {
-                const isCompleted = getStepCompletion(step);
-                const isCurrent = step === currentStep;
-                return (
-                  <button
-                    key={step}
-                    type="button"
-                    onClick={() => {
-                      if (step !== currentStep && !guardForward(step)) return;
-                      setInvalidFields([]);
-                      setRequiredNotice('');
-                      setCurrentStep(step);
-                      setEditStepN(step);
-                      setEditNonce((n) => n + 1);
-                    }}
-                    className={`
-                      flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all
-                      ${isCurrent
-                        ? (schemeUi?.stepActiveClass || 'bg-primary text-primary-foreground shadow-sm')
-                        : isCompleted
-                        ? 'border border-success/20 bg-success/10 text-success hover:bg-success/20'
-                        : (schemeUi?.stepIdleClass || 'bg-muted/50 text-muted-foreground hover:bg-muted')}
-                    `}
-                  >
-                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${isCurrent ? 'bg-primary-foreground/20' : isCompleted ? 'bg-success' : 'bg-muted-foreground/20'}`}>
-                      {isCompleted && !isCurrent ? '✓' : step}
-                    </span>
-                    <span>{t('individualDpr.stepShort', { n: step })}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <AuthoringStepper
+              variant="compact"
+              sections={sections}
+              overall={overall}
+              savedPercent={savedPercent}
+              unsaved={unsavedSections}
+              dirty={draftIsDirty}
+              saveStatus={saveStatus}
+              lastSavedAt={lastSavedAt}
+              currentStep={currentStep}
+              onSelect={(step) => {
+                if (step !== currentStep && !guardForward(step)) return;
+                setInvalidFields([]);
+                setRequiredNotice('');
+                setCurrentStep(step);
+                setEditStepN(step);
+                setEditNonce((n) => n + 1);
+              }}
+              activeClass={schemeUi?.stepActiveClass}
+              idleClass={schemeUi?.stepIdleClass}
+              stepLabel={(step) => t('individualDpr.stepShort', { n: step })}
+              lang={viewLanguage === 'telugu' ? 'te' : 'en'}
+            />
               )}
               finalPreview={
                 <IndividualDPRDocumentView

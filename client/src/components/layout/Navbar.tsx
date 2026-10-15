@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { flushPendingDraft } from '@/lib/draftFlush';
+import { useConfirm } from '@/components/ui/ConfirmProvider';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -23,10 +25,22 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navLinks = useAppNavLinks();
+  const confirmAction = useConfirm();
   const devMode = useDevModeStore((s) => s.on);
   const setDevMode = useDevModeStore((s) => s.setOn);
 
   const handleLogout = async () => {
+    // Save an open draft first so signing out never loses typing. If it cannot be saved, ask.
+    const flushed = await flushPendingDraft();
+    if (flushed.dirty && !flushed.ok) {
+      const leave = await confirmAction({
+        title: 'Your latest changes could not be saved',
+        body: 'If you log out now, what you typed since the last save will be lost.',
+        confirmLabel: 'Log out anyway',
+        cancelLabel: 'Stay and retry',
+      });
+      if (!leave) return;
+    }
     await api.logout();
     logout();
     navigate('/login');

@@ -258,6 +258,11 @@ class APIClient {
     );
   }
 
+  /** Drop every cached response (cached lists belong to the person who just signed out). */
+  resetSession(): void {
+    this.clearCache();
+  }
+
   async logout() {
     try {
       await this.client.post('/auth/logout');

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { create } from 'zustand';
+import { clearUserSession } from '@/lib/sessionReset';
 import { persist } from 'zustand/middleware';
 
 interface User {
@@ -47,6 +48,8 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem('token');
         set({ user: null, token: null, isAuthenticated: false });
+        // Nothing from this session may be visible to the next person who signs in on this browser.
+        clearUserSession();
       },
       updateUser: (userData) => 
         set((state) => ({

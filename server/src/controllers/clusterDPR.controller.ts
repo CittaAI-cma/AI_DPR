@@ -761,7 +761,8 @@ export class ClusterDPRController {
           userId,
           projectName: unitName,
           industrySector: clusterData.step2?.sectorType || (isIndividual ? 'Individual unit' : 'Cluster Development'),
-          location: clusterData.step1?.location || '',
+          // A draft may be saved before the town is chosen; "Unknown" is the placeholder the lists already hide.
+          location: clusterData.step1?.location || 'Unknown',
           district: clusterData.step1?.district || '',
           projectType,
           totalCost: totalCost || 0,
@@ -773,7 +774,11 @@ export class ClusterDPRController {
         console.log('✅ Created new cluster project for draft:', project._id);
       } else {
         // Update existing project
-        project.stepData = clusterData;
+        // Project has `strict: false` and no declared stepData path, so a plain assignment is silently not saved.
+        project.set('stepData', clusterData);
+        project.markModified('stepData');
+        if (clusterData.step1?.location) project.location = clusterData.step1.location;
+        if (clusterData.step1?.district) project.district = clusterData.step1.district;
         project.totalCost = totalCost || project.totalCost || 0;
         project.ownContribution = ownContribution || project.ownContribution || 0;
         project.loanAmount = loanAmount || project.loanAmount || 0;
@@ -829,6 +834,10 @@ export class ClusterDPRController {
         dprVersion.content.telugu.isIndividualDPR = isIndividual;
         dprVersion.content.telugu.matchedSchemeCode = clusterData.matchedSchemeCode || null;
         dprVersion.content.telugu.clusterData = clusterData;
+        // content.english / content.telugu are Mixed: changing them in place is not noticed unless marked,
+        // which left every save after the first one unsaved.
+        dprVersion.markModified('content.english');
+        dprVersion.markModified('content.telugu');
         await dprVersion.save();
         console.log('✅ Updated DPRVersion record:', dprVersion._id);
       }

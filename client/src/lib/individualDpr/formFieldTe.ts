@@ -427,7 +427,6 @@ export const FORM_FIELD_TE: Record<string, string> = {
   'Delete picture': 'చిత్రం తొలగించు',
   'Delete this image?': 'ఈ చిత్రాన్ని తొలగించాలా?',
   'Delete': 'తొలగించు',
-  'Cancel': 'రద్దు',
   'Save': 'సేవ్',
   'Resize picture': 'చిత్రం పరిమాణం మార్చు',
   Undo: 'వెనక్కి',

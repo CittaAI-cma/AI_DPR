@@ -7,6 +7,10 @@ import { cardMatchesFilters, schemeKind, schemeLevel } from './schemePickerFilte
 import { isReasonableIsoDate } from './individualDpr/isoDate.ts';
 import { sanitizeOwnerTags, toggleOwner } from './ventureMatch/ownerSelection.ts';
 import { analyzeCombinations, relationBetween } from './ventureMatch/combos.ts';
+import { draftSignature, hasDraftContent } from './individualDpr/draftState.ts';
+import { toIndividualPayload } from './individualDpr/toIndividualPayload.ts';
+import { useIndividualDPRStore } from '../store/individualDPRStore.ts';
+import { hasAnswer, nextMilestone, overallProgress, sectionsUnsaved, type SectionProgress } from './individualDpr/authoringMath.ts';
 import { groundCostSuggestion } from './individualDpr/costSuggestionGuard.ts';
 import {
   acceptByKind,
@@ -379,5 +383,99 @@ describe('sheet page numbers', () => {
     assert.equal(formatPageNumber('plain', 2, 8), '2');
     assert.equal(formatPageNumber('of', 2, 8), 'Page 2 of 8');
     assert.equal(formatPageNumber('of', 1, 3, 'పేజీ {n} / {total}'), 'పేజీ 1 / 3');
+  });
+});
+
+describe('authoring progress', () => {
+  const section = (step: number, answered: number, total: number, requiredMissing = 0, signature = ''): SectionProgress => ({
+    step,
+    contentStep: step,
+    title: `Step ${step}`,
+    answered,
+    total,
+    percent: total === 0 ? 100 : Math.round((answered / total) * 100),
+    status: answered === total ? 'complete' : answered === 0 ? 'empty' : requiredMissing === 0 ? 'ready' : 'partial',
+    requiredMissing,
+    signature,
+  });
+
+  it('counts only real answers', () => {
+    assert.equal(hasAnswer(''), false);
+    assert.equal(hasAnswer('0'), false);
+    assert.equal(hasAnswer(0), false);
+    assert.equal(hasAnswer('Sri Lakshmi Foods'), true);
+    assert.equal(hasAnswer([{ year: 1, sales: '' }, { year: 2, sales: 0 }]), false);
+    assert.equal(hasAnswer([{ year: 1, sales: '' }, { year: 2, sales: 12 }]), true);
+  });
+
+  it('averages the sections and reports the next milestone', () => {
+    const sections = [section(1, 2, 2), section(2, 1, 2, 1), section(3, 0, 4, 2), section(4, 0, 0)];
+    const overall = overallProgress(sections);
+    assert.equal(overall.percent, 50);
+    assert.equal(overall.sectionsComplete, 2);
+    assert.equal(overall.requiredMissing, 3);
+    assert.equal(overall.readyToGenerate, false);
+    assert.equal(nextMilestone(50)?.at, 75);
+    assert.equal(nextMilestone(24)?.at, 25);
+    assert.equal(nextMilestone(100), null);
+  });
+
+  it('flags sections whose answers differ from the saved copy', () => {
+    const live = [section(1, 1, 2, 0, 'a'), section(2, 1, 2, 0, 'b'), section(3, 0, 2, 0, 'c')];
+    const saved = [section(1, 1, 2, 0, 'a'), section(2, 0, 2, 0, 'x'), section(3, 0, 2, 0, 'c')];
+    assert.deepEqual([...sectionsUnsaved(live, saved)], [2]);
+    assert.deepEqual([...sectionsUnsaved(live, null)].sort(), [1, 2]);
+  });
+});
+
+describe('draft saving and restoring', () => {
+  const longText = `${'పరిశ్రమ వివరణ '.repeat(4000)}END`;
+  const saved = () => ({
+    step1: { unitName: 'శ్రీ లక్ష్మి ఫుడ్స్', district: 'Guntur', location: 'Tenali', natureOfBusiness: longText, majorProducts: 'Chips' },
+    step4: { productMix: [{ name: 'Chips', sharePercent: 60, sellingPrice: 12.5 }, { name: 'Namkeen', sharePercent: 40, sellingPrice: 9 }] },
+    step12: { land: 0, building: 4.25, machinery: 7.5, workingCapitalMargin: 2.125 },
+    schemeExtras: { entrepreneurName: 'Lakshmi', pmegpCategory: 'special', documentStyle: { preset: 'govt', sectionOrder: ['a', 'b'] } },
+    matchedSchemeCode: 'PMEGP',
+    currentStep: 7,
+  });
+
+  it('restores a saved draft exactly: long text, Telugu, tables, decimals, style, and the step reached', () => {
+    const store = useIndividualDPRStore;
+    // What the server returns is what was sent, after a JSON round trip.
+    const fromServer = JSON.parse(JSON.stringify(toIndividualPayload(saved())));
+    store.getState().loadDataFromProject({ _id: 'p1', stepData: fromServer }, { _id: 'd1' });
+    const now: any = store.getState().data;
+    const original = saved();
+    assert.equal(now.step1.natureOfBusiness, longText);
+    assert.equal(now.step1.unitName, original.step1.unitName);
+    assert.deepEqual(now.step4.productMix, original.step4.productMix);
+    assert.deepEqual(now.step12, original.step12);
+    assert.deepEqual(now.schemeExtras, original.schemeExtras);
+    assert.equal(now.matchedSchemeCode, 'PMEGP');
+    assert.equal(now.currentStep, 7);
+    assert.equal(now.projectId, 'p1');
+    assert.equal(now.dprId, 'd1');
+  });
+
+  it('does not carry another draft or person’s leftovers into a restored one', () => {
+    const store = useIndividualDPRStore;
+    store.getState().setStepData(3, { geography: 'LEFTOVER FROM ANOTHER SESSION' });
+    store.getState().setSchemeExtras({ entrepreneurName: 'Someone else' });
+    store.getState().loadDataFromProject({ _id: 'p2', stepData: { step1: { unitName: 'Fresh unit' } } }, null);
+    const now: any = store.getState().data;
+    assert.equal(now.step3, undefined);
+    assert.deepEqual(now.schemeExtras, {});
+    assert.equal(now.step1.unitName, 'Fresh unit');
+    assert.equal(now.currentStep, 1);
+  });
+
+  it('tells a real change from moving between steps', () => {
+    const a: any = { step1: { unitName: 'A' }, currentStep: 1, lastSaved: new Date(1) };
+    const b: any = { step1: { unitName: 'A' }, currentStep: 5, lastSaved: new Date(2) };
+    const c: any = { step1: { unitName: 'A!' }, currentStep: 5 };
+    assert.equal(draftSignature(a), draftSignature(b));
+    assert.notEqual(draftSignature(a), draftSignature(c));
+    assert.equal(hasDraftContent({ step1: {} }), false);
+    assert.equal(hasDraftContent({ step1: { unitName: 'A' } }), true);
   });
 });

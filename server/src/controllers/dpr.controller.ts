@@ -584,7 +584,8 @@ export class DPRController {
           steps: stepKeys,
           totalKeys: Object.keys(stepData).length,
         });
-        project.stepData = stepData;
+        project.set('stepData', stepData);
+        project.markModified('stepData');
         await project.save();
         console.log('✅ Project updated with stepData from request');
       } else {
