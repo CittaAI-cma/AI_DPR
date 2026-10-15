@@ -11,6 +11,7 @@ import { connectDatabase } from './config/database';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler.middleware';
 import { getJwtSecret } from './lib/jwtSecret';
+import { requireHttps, hstsOptions, createTlsServer, databaseTransportWarning } from './lib/transportSecurity';
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +31,12 @@ if (process.env.NODE_ENV === 'production') {
     console.error('❌ ERROR:', error.message);
     process.exit(1);
   }
+  try {
+    require('./lib/fieldCrypto').assertFieldEncryptionConfigured();
+  } catch (error: any) {
+    console.error('❌ ERROR:', error.message);
+    process.exit(1);
+  }
   if (!(process.env.KYC_ENCRYPTION_KEY || '').trim()) {
     console.error('❌ ERROR: KYC_ENCRYPTION_KEY is required in production.');
     process.exit(1);
@@ -41,7 +48,10 @@ const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
+app.use(requireHttps);
 app.use(helmet({
+  hsts: hstsOptions,
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
     directives: {
@@ -114,7 +124,13 @@ const startServer = async () => {
     });
 
     // Start listening
-    app.listen(PORT, () => {
+    const dbWarning = databaseTransportWarning(process.env.MONGODB_URI);
+    if (dbWarning) console.warn(`⚠️  ${dbWarning}`);
+    const tlsServer = createTlsServer(app);
+    if (!tlsServer && process.env.NODE_ENV === 'production') {
+      console.warn('⚠️  No TLS_CERT_FILE/TLS_KEY_FILE: TLS 1.3 must be enforced by the proxy in front of this server.');
+    }
+    (tlsServer || app).listen(PORT, () => {
       console.log(`\n🚀 Server is running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
       console.log(`💚 Health check at http://localhost:${PORT}/api/health\n`);
@@ -132,6 +148,8 @@ const startServer = async () => {
         })
         .catch((err) => console.error('[retention] job failed:', err.message));
     };
+    const { runEscalation } = await import('./services/supportEscalation.service');
+    setInterval(() => runEscalation().catch((err) => console.error('[support] escalation failed:', err.message)), 60_000);
     setTimeout(runRetention, 20_000);
     setInterval(runRetention, 6 * 60 * 60 * 1000);
   } catch (error) {

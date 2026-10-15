@@ -10,13 +10,17 @@ export class APMSMEController {
    */
   static async getSchemes(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const schemes = await APMSMEService.getAvailableSchemes();
+      const result = await APMSMEService.getAvailableSchemesWithMeta();
+      const schemes = result.data;
 
       res.status(200).json({
         success: true,
         data: {
           schemes,
           total: schemes.length,
+          source: result.source,
+          stale: result.stale,
+          fetchedAt: result.fetchedAt,
         },
       });
     } catch (error: any) {

@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { integrationStatus } from '../lib/integrations/readThrough';
 import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
@@ -49,6 +50,7 @@ router.get('/audit', AdminController.getAudit);
 router.get('/audit/csv', AdminController.exportAuditCsv);
 router.get('/audit/verify', AdminController.verifyAudit);
 router.get('/ai/status', (_req, res) => res.json({ success: true, data: gatewayConfig() }));
+router.get('/integrations/status', (_req, res) => res.json({ success: true, data: integrationStatus() }));
 router.post('/retention/run', AdminController.runRetention);
 
 export default router;

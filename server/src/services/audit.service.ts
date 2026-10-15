@@ -10,6 +10,7 @@ export type AuditAction =
   | 'consent_withdrawn'
   | 'notice_accepted'
   | 'ai_call'
+  | 'support_ticket'
   | 'dpr_create'
   | 'dpr_change'
   | 'dpr_download'
@@ -40,7 +41,8 @@ export type AuditAction =
   | 'dpr_decision'
   | 'audit_export'
   | 'audit_verify'
-  | 'ai_call';
+  | 'ai_call'
+  | 'support_ticket';
 
 function clientIp(req?: Request): string | undefined {
   if (!req) return undefined;
