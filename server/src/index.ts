@@ -133,7 +133,8 @@ const startServer = async () => {
 
     // Seed initial schemes (optional)
     await seedSchemes();
-    await seedRbacUsers();
+    // Test accounts with a published password: never created in production unless explicitly asked for.
+    if (process.env.NODE_ENV !== 'production' || process.env.SEED_TEST_USERS === 'true') await seedRbacUsers();
 
     // Pre-warm RAG assistant cache (eliminates 5-10s overhead on first request)
     const { preWarmAssistantCache } = await import('./services/openai.service');
