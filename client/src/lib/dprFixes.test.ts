@@ -286,6 +286,7 @@ describe('report style', () => {
     const edge = 80;
     assert.equal(pageEdgeMm(8), 12);
     assert.equal(pageEdgeMm(16), 16);
+    assert.equal(pageEdgeMm(20), 20);
     assert.equal(shiftForPageEdge(100, 40, page, edge, edge), 0);
     assert.equal(shiftForPageEdge(20, 40, page, edge, edge), 60);
     assert.equal(shiftForPageEdge(900, 150, page, edge, edge), 180);

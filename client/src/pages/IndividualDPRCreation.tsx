@@ -41,7 +41,6 @@ import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeSt
 import { patchFromDocEdit } from '@/lib/individualDpr/liveDocEdit';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
 import { hasUnder18Applicant } from '@/lib/privacy/under18';
-import { GuardianNotice } from '@/components/privacy/GuardianNotice';
 import { SchemeBriefPanel } from '@/components/individual-dpr/SchemeBriefPanel';
 import { SchemePickerGrid } from '@/components/individual-dpr/SchemePickerGrid';
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
@@ -102,6 +101,18 @@ export const IndividualDPRCreation: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(!isNewDraft);
   const isEditing = Boolean(params.projectId || searchParams.get('projectId'));
   // Opened straight onto a saved report (Edit from the dashboard, a resumed draft): Back leaves the page.
+  // The under-18 notice appears as a notification (once each time it starts to apply), not as a banner that pushes the form down.
+  const under18Applicant = hasUnder18Applicant(data);
+  const under18Shown = useRef(false);
+  useEffect(() => {
+    if (under18Applicant && !under18Shown.current) {
+      under18Shown.current = true;
+      toast.error(t('privacy.guardianMessage'), { id: 'under18-applicant', duration: 9000 });
+    } else if (!under18Applicant) {
+      under18Shown.current = false;
+    }
+  }, [under18Applicant, t]);
+
   const enteredAtForm = useRef(Boolean(params.projectId || searchParams.get('projectId')));
   const enteredAtBrief = useRef(isNewDraft && Boolean(searchParams.get('scheme')));
   const [setupPhase, setSetupPhase] = useState<SetupPhase>(
@@ -853,7 +864,6 @@ export const IndividualDPRCreation: React.FC = () => {
                     </p>
                   ) : null}
                   <p className="text-sm text-muted-foreground">{headerSubtitle}</p>
-                  {hasUnder18Applicant(data) && <GuardianNotice className="mt-3" />}
                 </div>
               </div>
 

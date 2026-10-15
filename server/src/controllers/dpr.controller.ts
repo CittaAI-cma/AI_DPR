@@ -10,6 +10,7 @@ import { DPRSession } from '../models/DPRSession.model';
 import { Document } from '../models/Document.model';
 import { DPRService } from '../services/dpr.service';
 import { pdfOptionsFromCapturedHtml } from '../lib/pdfPageOptions';
+import { stampAiDisclaimer } from '../lib/aiDisclaimer';
 import { QualityService } from '../services/quality.service';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { AuthRequest } from '../types';
@@ -793,11 +794,12 @@ export class DPRController {
         console.log(`📝 Received enhanced paragraphs for ${Object.keys(enhancedParagraphs).length} sections`);
       }
 
-      const pdfBuffer = await DPRService.generatePDF(
+      let pdfBuffer = await DPRService.generatePDF(
         dprId,
         language as 'english' | 'telugu',
         enhancedParagraphs
       );
+      if (Buffer.isBuffer(pdfBuffer)) pdfBuffer = await stampAiDisclaimer(pdfBuffer);
 
       // Validate PDF buffer
       if (!pdfBuffer || !Buffer.isBuffer(pdfBuffer)) {
@@ -895,6 +897,8 @@ export class DPRController {
         pdfBuffer = await DPRService.generatePDF(dprId, language === 'telugu' ? 'telugu' : 'english');
       }
 
+      if (Buffer.isBuffer(pdfBuffer) && pdfBuffer.length >= 4) pdfBuffer = await stampAiDisclaimer(pdfBuffer);
+
       // Validate PDF header (PDF files start with %PDF)
       if (!pdfBuffer || !Buffer.isBuffer(pdfBuffer) || pdfBuffer.length < 4) {
         throw new Error('Invalid PDF buffer received');
@@ -987,10 +991,11 @@ export class DPRController {
       const { sessionId } = req.params;
       const language: string = 'english'; // Exported documents are English only, whatever the request asks for.
 
-      const pdfBuffer = await DPRService.generatePDFFromSession(
+      let pdfBuffer = await DPRService.generatePDFFromSession(
         sessionId,
         language as 'english' | 'telugu'
       );
+      if (Buffer.isBuffer(pdfBuffer)) pdfBuffer = await stampAiDisclaimer(pdfBuffer);
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(

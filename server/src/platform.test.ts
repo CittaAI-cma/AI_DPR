@@ -175,3 +175,34 @@ describe('support response targets and escalation matrix', () => {
     assert.deepEqual(escalationFor({ priority: 'P1', tier: 'L2', createdAt: created, firstResponseAt: at(1), now: at(30) }), { tier: 'L2', breached: false });
   });
 });
+
+describe('AI disclaimer on downloads', () => {
+  it('is stamped on every page of a PDF, portrait and landscape, without losing pages', async () => {
+    const { PDFDocument, PDFName, PDFRawStream, decodePDFRawStream } = await import('pdf-lib');
+    const { stampAiDisclaimer, AI_DISCLAIMER_TEXT } = await import('./lib/aiDisclaimer.ts');
+    const src = await PDFDocument.create();
+    src.addPage([595, 842]);
+    src.addPage([842, 595]);
+    src.addPage([595, 842]);
+    const out = await stampAiDisclaimer(Buffer.from(await src.save()));
+    const doc = await PDFDocument.load(out);
+    assert.equal(doc.getPageCount(), 3);
+    for (const page of doc.getPages()) {
+      const contents: any = page.node.Contents();
+      const streams = contents.asArray ? contents.asArray() : [contents];
+      let text = '';
+      for (const ref of streams) {
+        const stream: any = doc.context.lookup(ref);
+        text += Buffer.from(decodePDFRawStream(stream as any).decode()).toString('latin1');
+      }
+      // pdf-lib writes text as hex strings
+      const shown = [...text.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)].map((m) => Buffer.from(m[1], 'hex').toString('latin1')).join('\n');
+      assert.ok(shown.includes(AI_DISCLAIMER_TEXT), 'disclaimer missing');
+    }
+  });
+  it('hands back the original bytes when the input is not a PDF', async () => {
+    const { stampAiDisclaimer } = await import('./lib/aiDisclaimer.ts');
+    const junk = Buffer.from('not a pdf');
+    assert.equal(await stampAiDisclaimer(junk), junk);
+  });
+});

@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef } from 'react';
 import { pageBreakBackground, pageHeightMm, pageWidthMm, type PageSize } from '@/lib/individualDpr/documentStyle';
-import { fitSheetToPages, mmToLayoutPx, stampSheetPageNumbers } from '@/lib/individualDpr/pageFit';
+import { fitSheetToPages, mmToLayoutPx, stampSheetDisclaimers, stampSheetPageNumbers } from '@/lib/individualDpr/pageFit';
 
 export function PageSheet({
   pageSize,
@@ -32,6 +32,7 @@ export function PageSheet({
       edgeBottomPx
     );
     stampSheetPageNumbers(sheet, pageHeightPx, edgeBottomPx);
+    stampSheetDisclaimers(sheet, pageHeightPx);
   });
 
   return (

@@ -1,3 +1,4 @@
+import { AI_DISCLAIMER_TEXT, AI_FOOTER_MM } from '@/lib/aiDisclaimer';
 import { formatPageNumber, pageCountForHeight, shiftForPageEdge } from '@/lib/individualDpr/documentStyle';
 
 const BLOCKS = [
@@ -114,19 +115,43 @@ export function stampSheetPageNumbers(sheet: HTMLElement, pageHeightPx: number, 
   const computed = getComputedStyle(doc);
   const color = computed.getPropertyValue('--dpr-header').trim();
   const font = computed.getPropertyValue('--dpr-body-font').trim();
-  const band = Math.max(edgeBottomPx, 1);
+  // Page numbers sit above the disclaimer block at the foot of the page.
+  const band = Math.max(edgeBottomPx - mmToLayoutPx(sheet, AI_FOOTER_MM), 1);
 
   for (let i = 0; i < total; i += 1) {
     const el = document.createElement('div');
     el.className = 'dpr-page-number';
     el.textContent = formatPageNumber(mode, i + 1, total, pattern);
     if (i === 0) el.setAttribute('data-style-spot', 'page-number');
-    el.style.top = `${(i + 1) * pageHeightPx - band}px`;
+    el.style.top = `${(i + 1) * pageHeightPx - band - mmToLayoutPx(sheet, AI_FOOTER_MM)}px`;
     el.style.height = `${band}px`;
     el.style.paddingRight = computed.paddingRight;
     el.style.paddingLeft = computed.paddingLeft;
     if (color) el.style.color = color;
     if (font) el.style.fontFamily = font;
+    doc.appendChild(el);
+  }
+}
+
+/** A thin line and the AI disclaimer at the foot of every page. Not printed: downloads get the same footer from the server. */
+export function stampSheetDisclaimers(sheet: HTMLElement, pageHeightPx: number): void {
+  const doc = sheet.querySelector<HTMLElement>('.individual-dpr-document');
+  doc?.querySelectorAll('.dpr-ai-footer').forEach((node) => node.remove());
+  if (!doc || !(pageHeightPx > 0)) return;
+  const total = pageCountForHeight(sheet.offsetHeight, pageHeightPx);
+  const height = mmToLayoutPx(sheet, AI_FOOTER_MM);
+  const computed = getComputedStyle(doc);
+  for (let i = 0; i < total; i += 1) {
+    const el = document.createElement('div');
+    el.className = 'dpr-ai-footer';
+    el.setAttribute('data-ai-footer', '1');
+    el.style.top = `${(i + 1) * pageHeightPx - height}px`;
+    el.style.height = `${height}px`;
+    el.style.paddingLeft = computed.paddingLeft;
+    el.style.paddingRight = computed.paddingRight;
+    const body = document.createElement('span');
+    body.textContent = AI_DISCLAIMER_TEXT;
+    el.append(body);
     doc.appendChild(el);
   }
 }

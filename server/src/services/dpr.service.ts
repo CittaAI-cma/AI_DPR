@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { aiDisclaimerDocxFooters } from '../lib/aiDisclaimer';
 import { lockDownPage } from '../lib/security/pdfPage';
 import { sanitizeHtmlDocument } from '../lib/security/sanitizeHtmlDoc';
 import { IProject } from '../types';
@@ -5318,6 +5319,7 @@ export class DPRService {
     const doc = new Document({
       sections: [
         {
+          footers: aiDisclaimerDocxFooters(),
           children: allSections,
         },
       ],
