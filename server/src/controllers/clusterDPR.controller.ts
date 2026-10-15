@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { basicMissing, financeBlockers } from '../lib/financeGuard';
 import { contentDisposition, fileResponseHeaders } from '../lib/security/http';
 import { extensionForMime, safeFileName } from '../lib/security/uploadGuard';
 import { staffMayViewProject, staffMayViewUserFiles } from '../lib/staffScope';
@@ -101,6 +102,23 @@ export class ClusterDPRController {
           message: 'At least basic cluster details (Step 1) are required',
         });
         return;
+      }
+
+      // An individual DPR is only generated when its required answers are in and the money side holds together.
+      const generatingIndividual = Boolean(clusterData.isIndividualDPR || clusterData.metadata?.isIndividualDPR);
+      if (generatingIndividual && req.user?.role !== 'admin') {
+        const missing = basicMissing(clusterData);
+        const blockers = financeBlockers(clusterData);
+        if (missing.length || blockers.length) {
+          res.status(422).json({
+            success: false,
+            code: 'DPR_NOT_READY',
+            message: 'The DPR cannot be generated yet. Fix the items listed and try again.',
+            missing,
+            blockers,
+          });
+          return;
+        }
       }
 
       console.log(`📝 Generating Cluster DPR for user ${userId}...`);

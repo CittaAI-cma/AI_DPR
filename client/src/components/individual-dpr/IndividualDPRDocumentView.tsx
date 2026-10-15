@@ -1,3 +1,4 @@
+import { FinanceDocSummary } from '@/components/individual-dpr/FinanceModel';
 import { businessKind, normalizeAssetItems } from '@/lib/individualDpr/businessKind';
 import { ScheduleDocParties } from '@/components/individual-dpr/ScheduleParties';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -998,6 +999,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               {title}
             </h2>
             {def.contentStep === 12 || def.contentStep === 13 ? <ScheduleDocParties data={data} showEmpty={showEmpty} /> : null}
+            {def.contentStep === 15 ? <FinanceDocSummary data={data} showEmpty={showEmpty} /> : null}
             {renderSectionFields(fields)}
             {renderBlocks(def.id)}
           </section>

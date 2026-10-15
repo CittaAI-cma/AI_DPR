@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { financeBlockers } from '../lib/financeGuard';
 import { extensionForMime, safeFileName } from '../lib/security/uploadGuard';
 import { staffMayViewProject } from '../lib/staffScope';
 import { Request, Response } from 'express';
@@ -1252,6 +1253,17 @@ export class DPRController {
           message: 'Access denied: This DPR does not belong to you',
         });
         return;
+      }
+
+      // An individual DPR is submitted only when its money side holds together.
+      const stored: any = dpr.content?.english?.clusterData || (project as any).stepData || null;
+      const isIndividual = Boolean(stored?.isIndividualDPR || dpr.content?.english?.isIndividualDPR || dpr.content?.english?.metadata?.isIndividualDPR);
+      if (isIndividual && req.user?.role !== 'admin') {
+        const blockers = financeBlockers(stored);
+        if (blockers.length) {
+          res.status(422).json({ success: false, code: 'DPR_NOT_READY', message: 'The DPR cannot be submitted yet. Fix the items listed and try again.', blockers });
+          return;
+        }
       }
 
       // Update DPR status

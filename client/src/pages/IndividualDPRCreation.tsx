@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { ReviewDialog, StepChecks } from '@/components/individual-dpr/DataChecks';
-import { dismissalKey, openFindings, runDataChecks, type Finding } from '@/lib/individualDpr/dataChecks';
+import { dismissalKey, openFindings, runDataChecks, KIND_ORDER, type Finding } from '@/lib/individualDpr/dataChecks';
+import { auditSubmission, financeWarnings } from '@/lib/individualDpr/submissionAudit';
 import { StepIntro } from '@/components/ui/FieldPrompt';
 import { ResumeDrafts } from '@/components/individual-dpr/ResumeDrafts';
 import { draftSignature, hasDraftContent } from '@/lib/individualDpr/draftState';
@@ -131,7 +132,14 @@ export const IndividualDPRCreation: React.FC = () => {
   const visibleContent = new Set(selectionSteps.map(contentOf));
   const dismissedChecks: string[] = data.schemeExtras?.dismissedChecks || [];
   const stepFindings = openFindings(runDataChecks(data), dismissedChecks).filter((f) => f.step === contentOf(currentStep));
-  const allFindings = openFindings(runDataChecks(data, { final: true }), dismissedChecks).filter((f) => visibleContent.has(f.step));
+  // Hard stops first (required fields, funding rules), then the advisory notes. A blocker replaces the advisory note of the same kind.
+  const blockers = auditSubmission(data, [...visibleContent], (step, stepData) => missingIndividualRequired(step, stepData, schemeCode)).filter((f) => visibleContent.has(f.step));
+  const blockerIds = new Set(blockers.map((f) => f.id));
+  const advisory = openFindings([...runDataChecks(data, { final: true }), ...financeWarnings(data)], dismissedChecks).filter(
+    (f) => visibleContent.has(f.step) && !blockerIds.has(f.id)
+  );
+  const allFindings = [...blockers, ...advisory].sort((x, y) => KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind) || x.step - y.step);
+  const canBypassBlocks = isAdmin && devMode;
   const [reviewOpen, setReviewOpen] = useState(false);
   const dismissFinding = (finding: Finding) =>
     setSchemeExtras({ ...(data.schemeExtras || {}), dismissedChecks: [...dismissedChecks, dismissalKey(finding)] });
@@ -143,6 +151,14 @@ export const IndividualDPRCreation: React.FC = () => {
     setCurrentStep(local);
     setEditStepN(local);
     setEditNonce((n) => n + 1);
+    // Bring the field into view once its step has rendered.
+    if (finding.field) {
+      window.setTimeout(() => {
+        const el = document.querySelector(`[data-required-field="${finding.field}"]`) as HTMLElement | null;
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el?.focus?.();
+      }, 250);
+    }
   };
   // Section-by-section progress: live from what is on screen, and "saved" from the last saved copy.
   const sectionDefs = getSchemeDocSteps(schemeCode);
@@ -621,6 +637,11 @@ export const IndividualDPRCreation: React.FC = () => {
   };
 
   const handleGenerateDPR = async (bypassReview = false) => {
+    if (blockers.length && !canBypassBlocks) {
+      setReviewOpen(true);
+      toast.error(tf('The DPR cannot be generated yet. Fix the items marked "Must fix first".'));
+      return;
+    }
     if (!bypassReview && allFindings.length) {
       setReviewOpen(true);
       return;

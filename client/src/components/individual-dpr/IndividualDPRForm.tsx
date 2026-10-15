@@ -3,6 +3,7 @@ import { FieldPrompt } from '@/components/ui/FieldPrompt';
 import { AssetListEditor, BusinessKindPicker } from '@/components/individual-dpr/AssetItems';
 import { businessKind, kindLabel, scaleOf } from '@/lib/individualDpr/businessKind';
 import { projectCost as draftProjectCost } from '@/lib/individualDpr/dataChecks';
+import { FinanceModelPanel } from '@/components/individual-dpr/FinanceModel';
 import { FinanceCalcStrip } from '@/components/individual-dpr/FinanceCalculators';
 import { ReusedNote, ScheduleParties } from '@/components/individual-dpr/ScheduleParties';
 import React from 'react';
@@ -4155,6 +4156,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                     : 'Promoter contribution / equity (₹ Lakhs)'
             )}
             <Input
+              data-required-field="spvContribution"
               type="number"
               value={
                 stepData.spvContribution === '' || stepData.spvContribution == null
@@ -4191,6 +4193,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                                   : 'Government Grant (₹ Lakhs)'
             )}
             <Input
+              data-required-field="governmentGrant"
               type="number"
               value={
                 stepData.governmentGrant === '' || stepData.governmentGrant == null
@@ -4219,6 +4222,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                           : 'Bank Loan (₹ Lakhs)'
             )}
             <Input
+              data-required-field="bankLoan"
               type="number"
               value={
                 stepData.bankLoan === '' || stepData.bankLoan == null
@@ -4619,6 +4623,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     return (
       <div className="space-y-6">
         <FinanceCalcStrip contentStep={15} data={data} onApply={applyCalc} />
+        <FinanceModelPanel data={data} onAssumptions={(next) => setSchemeExtras({ ...(data.schemeExtras || {}), financeAssumptions: next })} />
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}

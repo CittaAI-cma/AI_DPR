@@ -5,7 +5,7 @@
  */
 type AnyData = Record<string, any>;
 
-export type CheckKind = 'missing' | 'mismatch' | 'unclear' | 'unusual';
+export type CheckKind = 'blocking' | 'missing' | 'mismatch' | 'unclear' | 'unusual';
 
 export type Finding = {
   id: string;
@@ -18,9 +18,11 @@ export type Finding = {
   vars?: Record<string, string>;
   /** Changes when the answer changes, so a dismissed finding comes back if the value is edited. */
   signature: string;
+  /** A blocking finding stops the DPR from being generated or submitted and cannot be dismissed. */
+  blocking?: boolean;
 };
 
-export const KIND_ORDER: CheckKind[] = ['missing', 'mismatch', 'unclear', 'unusual'];
+export const KIND_ORDER: CheckKind[] = ['blocking', 'missing', 'mismatch', 'unclear', 'unusual'];
 
 const num = (value: unknown): number => {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;

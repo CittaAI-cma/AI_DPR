@@ -5,6 +5,7 @@ import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { dismissalKey, KIND_ORDER, type CheckKind, type Finding } from '@/lib/individualDpr/dataChecks';
 
 const KIND_STYLE: Record<CheckKind, { label: string; badge: string }> = {
+  blocking: { label: 'Must fix first', badge: 'bg-red-600 text-white' },
   missing: { label: 'Missing', badge: 'bg-red-100 text-red-800' },
   mismatch: { label: 'Does not add up', badge: 'bg-orange-100 text-orange-900' },
   unclear: { label: 'Unclear', badge: 'bg-amber-100 text-amber-900' },
@@ -34,9 +35,11 @@ const FindingRow: React.FC<{ finding: Finding; onDismiss: (f: Finding) => void; 
             {tf('Go to answer')}
           </Button>
         ) : null}
-        <Button variant="ghost" size="sm" onClick={() => onDismiss(finding)} title={tf('Hide this note. It comes back if you change the answer.')}>
-          {tf('This is correct')}
-        </Button>
+        {finding.blocking ? null : (
+          <Button variant="ghost" size="sm" onClick={() => onDismiss(finding)} title={tf('Hide this note. It comes back if you change the answer.')}>
+            {tf('This is correct')}
+          </Button>
+        )}
       </div>
     </li>
   );
@@ -79,9 +82,11 @@ export const ReviewDialog: React.FC<{
           <div>
             <h2 id="review-title" className="text-lg font-semibold">{tf('Check my answers')}</h2>
             <p className="text-sm text-muted-foreground">
-              {findings.length
-                ? tf('These are only suggestions. Fix what is wrong, or mark an answer as correct.')
-                : tf('Nothing looks missing or unusual.')}
+              {findings.some((f) => f.blocking)
+                ? tf('Items marked "Must fix first" stop the DPR from being generated. The rest are suggestions.')
+                : findings.length
+                  ? tf('These are only suggestions. Fix what is wrong, or mark an answer as correct.')
+                  : tf('Nothing looks missing or unusual.')}
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label={tf('Close')}>
@@ -113,7 +118,7 @@ export const ReviewDialog: React.FC<{
         </div>
         <div className="flex justify-end gap-2 border-t p-4">
           <Button variant="outline" onClick={onClose}>{tf('Keep editing')}</Button>
-          {onGenerate ? (
+          {onGenerate && !findings.some((f) => f.blocking) ? (
             <Button variant="primary" onClick={onGenerate}>{tf(findings.length ? 'Generate anyway' : 'Generate DPR')}</Button>
           ) : null}
         </div>
