@@ -10,6 +10,7 @@ import aiRoutes from './ai.routes';
 import apmsmeRoutes from './apmsme.routes';
 import documentRoutes from './document.routes';
 import privacyRoutes from './privacy.routes';
+import reviewerRoutes from './reviewer.routes';
 
 const router = Router();
 
@@ -33,6 +34,7 @@ router.use('/ai', aiRoutes);
 router.use('/apmsme', apmsmeRoutes);
 router.use('/documents', documentRoutes);
 router.use('/privacy', privacyRoutes);
+router.use('/reviewer', reviewerRoutes);
 
 export default router;
 

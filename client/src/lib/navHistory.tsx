@@ -27,6 +27,7 @@ const PAGES: Array<[RegExp, string, string]> = [
   [/^\/profile$/, 'profile', 'Profile'],
   [/^\/account\/privacy$/, 'accountPrivacy', 'Privacy settings'],
   [/^\/admin\/documents$/, 'adminDocuments', 'Documents'],
+  [/^\/reviewer$/, 'review', 'District review'],
   [/^\/admin$/, 'admin', 'Admin'],
   [/^\/$/, 'home', 'Home'],
 ];

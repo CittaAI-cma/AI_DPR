@@ -19,6 +19,7 @@ import { DPRPreview } from './pages/DPRPreview';
 import { AllDPRs } from './pages/AllDPRs';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminDocuments } from './pages/AdminDocuments';
+import { DistrictReview } from './pages/DistrictReview';
 import { Profile } from './pages/Profile';
 import { ClusterDPRCreation } from './pages/ClusterDPRCreation';
 import { IndividualDPRCreation } from './pages/IndividualDPRCreation';
@@ -237,6 +238,15 @@ function App() {
           element={
             <ProtectedRoute requiredRole="super_admin">
               <AdminDocuments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/reviewer"
+          element={
+            <ProtectedRoute allowedRoles={['govt_official', 'super_admin']}>
+              <DistrictReview />
             </ProtectedRoute>
           }
         />

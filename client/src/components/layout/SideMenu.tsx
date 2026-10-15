@@ -3,9 +3,9 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useLinkHandler } from '@/lib/linkUtils';
-import { ChevronRight, FileText, Files, FolderKanban, LayoutDashboard, MessageSquare, Settings } from 'lucide-react';
+import { ChevronRight, ClipboardCheck, FileText, Files, FolderKanban, LayoutDashboard, MessageSquare, Settings } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { canAccessAdmin } from '@/lib/rbac';
+import { canAccessAdmin, canReview } from '@/lib/rbac';
 import { DevModeToggle } from '@/components/ui/DevModeToggle';
 import { useDevModeStore } from '@/store/devModeStore';
 
@@ -41,6 +41,7 @@ export function useAppNavLinks() {
     { path: '/dprs', label: t('nav.allDPRs'), icon: FileText },
     { path: '/projects', label: t('nav.projects'), icon: FolderKanban },
     { path: '/chat', label: t('nav.chat'), icon: MessageSquare },
+    ...(canReview(user?.role) ? [{ path: '/reviewer', label: t('nav.review'), icon: ClipboardCheck }] : []),
     ...(canAccessAdmin(user?.role)
       ? [
           { path: '/admin', label: t('nav.admin'), icon: Settings },

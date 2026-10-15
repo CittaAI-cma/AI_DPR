@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { staffMayViewProject } from '../lib/staffScope';
 import { Request, Response } from 'express';
 import { OpenAIService } from '../services/openai.service';
 import { DprBuilderAssistService } from '../services/dprBuilderAssist.service';
@@ -735,7 +736,7 @@ export class DPRController {
 
       // Check if project belongs to the current user
       const isOwner = project.userId?.toString() === userId.toString();
-      const isStaff = req.user?.role === 'admin' || req.user?.role === 'officer';
+      const isStaff = !isOwner && (await staffMayViewProject(userId, project));
       if (!isOwner && !isStaff) {
         res.status(403).json({
           success: false,

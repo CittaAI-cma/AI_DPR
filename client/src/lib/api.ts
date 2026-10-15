@@ -1448,6 +1448,21 @@ class APIClient {
   }
 
   // Admin user management endpoints
+  async getReviewSummary() {
+    const response = await this.client.get('/reviewer/summary');
+    return response.data;
+  }
+
+  async getReviewQueue(params: { status?: string; district?: string } = {}) {
+    const response = await this.client.get('/reviewer/dprs', { params });
+    return response.data;
+  }
+
+  async reviewDPR(dprId: string, decision: 'approve' | 'reject', remarks?: string) {
+    const response = await this.client.post(`/reviewer/dprs/${dprId}/review`, { decision, remarks });
+    return response.data;
+  }
+
   async updateUserAdmin(userId: string, data: any) {
     const response = await this.client.put(`/admin/users/${userId}`, data);
     return response.data;

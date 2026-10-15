@@ -11,12 +11,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import { Sparkles, ArrowRight, CheckCircle, Building2 } from 'lucide-react';
-import { RolePicker } from '@/components/auth/RolePicker';
 import { ConsentFields, ConsentValues } from '@/components/privacy/ConsentFields';
 import { GuardianNotice } from '@/components/privacy/GuardianNotice';
 import { ageFromDob } from '@/lib/privacy/under18';
 import { PRIVACY_NOTICE_VERSION, UNDER_18_CODE } from '@/lib/privacy/constants';
-import { toBackendRole, type AppRole } from '@/lib/rbac';
 
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 export const Register: React.FC = () => {
@@ -36,7 +34,6 @@ export const Register: React.FC = () => {
     location: '',
     udyamNumber: '',
     dateOfBirth: '',
-    role: 'consultant' as AppRole,
   });
   const [consent, setConsent] = useState<ConsentValues>({
     accountConsent: false,
@@ -103,7 +100,6 @@ export const Register: React.FC = () => {
     try {
       const response = await api.register({
         ...formData,
-        role: toBackendRole(formData.role),
         accountConsent: consent.accountConsent,
         aiAssist: consent.aiAssist,
         analytics: consent.analytics,
@@ -151,16 +147,9 @@ export const Register: React.FC = () => {
             <CardDescription className="text-center">
               {t('auth.fillDetails')}
             </CardDescription>
-            <p className="text-center text-xs text-muted-foreground mt-2">
-              {t('auth.chooseRole')}
-            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <RolePicker
-                value={formData.role}
-                onChange={(role) => setFormData({ ...formData, role })}
-              />
               <div className="grid md:grid-cols-2 gap-4">
                 <Input
                   label={t('auth.name')}

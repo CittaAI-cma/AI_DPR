@@ -36,6 +36,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { formatDate, downloadBlob } from '@/lib/utils';
 import { APP_ROLES, ROLE_META, toAppRole, toBackendRole, type AppRole } from '@/lib/rbac';
 import { RoleBadge } from '@/components/auth/RolePicker';
+import { AP_DISTRICTS } from '@/lib/individualDpr/apDistricts';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -53,6 +54,7 @@ export const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [reviewerPrompt, setReviewerPrompt] = useState<{ userId: string; name: string; district: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<any>(null);
@@ -149,16 +151,32 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateUserRole = async (userId: string, role: AppRole) => {
+  const handleUpdateUserRole = async (userId: string, role: AppRole, district?: string) => {
+    const backendRole = toBackendRole(role);
+    const target = users.find((u) => u._id === userId);
+    // A District Reviewer must be tied to a district, so ask for it before saving.
+    if (backendRole === 'officer' && !district) {
+      setReviewerPrompt({ userId, name: target?.name || '', district: target?.reviewDistrict || '' });
+      return;
+    }
     setUpdatingUserId(userId);
-    setUsers((prev) =>
-      prev.map((u) => (u._id === userId ? { ...u, role: toBackendRole(role) } : u))
-    );
     try {
-      await api.updateUserAdmin(userId, { role: toBackendRole(role) });
+      const response = await api.updateUserAdmin(userId, {
+        role: backendRole,
+        ...(backendRole === 'officer' ? { reviewDistrict: district } : {}),
+      });
+      const saved = response?.data?.user;
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId
+            ? { ...u, role: backendRole, reviewDistrict: backendRole === 'officer' ? saved?.reviewDistrict ?? district : undefined }
+            : u
+        )
+      );
+      setReviewerPrompt(null);
       toast.success(t('rbac.roleUpdated'));
-    } catch (error: any) {
-      toast.success(t('rbac.roleUpdated'));
+    } catch {
+      // the API client shows the server's message; the list keeps the old role
     } finally {
       setUpdatingUserId(null);
     }
@@ -467,6 +485,11 @@ export const AdminDashboard: React.FC = () => {
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                           <div className="flex gap-2 mt-2 items-center flex-wrap">
                             <RoleBadge role={user.role} />
+                            {user.role === 'officer' && user.reviewDistrict && (
+                              <span className="text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-800">
+                                {tf(user.reviewDistrict)}
+                              </span>
+                            )}
                             {user.location && (
                               <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">
                                 {user.location}
@@ -868,6 +891,40 @@ export const AdminDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             )}
+          </div>
+        )}
+
+        {reviewerPrompt && (
+          <div className="motion-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+            <Card className="w-full max-w-md">
+              <CardContent className="space-y-4 p-6">
+                <h2 className="text-lg font-semibold">{tf('Assign a district')}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {reviewerPrompt.name} {tf('will only see DPRs from this district.')}
+                </p>
+                <select
+                  value={reviewerPrompt.district}
+                  onChange={(e) => setReviewerPrompt({ ...reviewerPrompt, district: e.target.value })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  aria-label={tf('District')}
+                >
+                  <option value="">{tf('Select a district')}</option>
+                  {AP_DISTRICTS.map((name) => (
+                    <option key={name} value={name}>{tf(name)}</option>
+                  ))}
+                </select>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setReviewerPrompt(null)}>{tf('Cancel')}</Button>
+                  <Button
+                    variant="primary"
+                    disabled={!reviewerPrompt.district || updatingUserId === reviewerPrompt.userId}
+                    onClick={() => handleUpdateUserRole(reviewerPrompt.userId, 'govt_official', reviewerPrompt.district)}
+                  >
+                    {tf('Make District Reviewer')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 

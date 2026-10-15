@@ -11,6 +11,7 @@ import { MLService } from '../services/ml.service';
 import { AuditEvent } from '../models/AuditEvent.model';
 import { AuditService } from '../services/audit.service';
 import { eraseAccount } from '../services/accountErase.service';
+import { isRole, ROLES } from '../lib/rbac';
 
 export class AdminController {
   /**
@@ -449,7 +450,7 @@ export class AdminController {
   static async updateUser(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { name, email, role, location, phoneNumber, udyamNumber } = req.body;
+      const { name, email, role, location, phoneNumber, udyamNumber, reviewDistrict } = req.body;
 
       // Prevent admin from changing their own role
       if (id === req.user?.userId && role && role !== req.user?.role) {
@@ -460,13 +461,51 @@ export class AdminController {
         return;
       }
 
+      if (role !== undefined && !isRole(role)) {
+        res.status(400).json({
+          success: false,
+          message: `Role must be one of: ${ROLES.join(', ')}`,
+        });
+        return;
+      }
+
+      const existing: any = await User.findById(id).select('role reviewDistrict');
+      if (!existing) {
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
+      }
+      const nextRole = role ?? existing.role;
+      const nextDistrict =
+        reviewDistrict !== undefined ? String(reviewDistrict || '').trim() : existing.reviewDistrict || '';
+      if (nextRole === 'officer' && !nextDistrict) {
+        res.status(400).json({
+          success: false,
+          message: 'A District Reviewer must be assigned a district',
+        });
+        return;
+      }
+
       const updateData: any = {};
       if (name) updateData.name = name;
       if (email) updateData.email = email;
       if (role) updateData.role = role;
+      // Only reviewers carry a district; clear it for every other role.
+      if (nextRole === 'officer') updateData.reviewDistrict = nextDistrict;
+      else if (existing.reviewDistrict) updateData.reviewDistrict = null;
       if (location !== undefined) updateData.location = location;
       if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
       if (udyamNumber !== undefined) updateData.udyamNumber = udyamNumber;
+
+      if (role && role !== existing.role) {
+        await AuditService.log({
+          action: 'role_change',
+          userId: req.user?.userId,
+          role: req.user?.role,
+          targetType: 'user',
+          targetId: `${id}:${existing.role}->${role}`,
+          req,
+        });
+      }
 
       const user = await User.findByIdAndUpdate(id, updateData, { new: true }).select('-passwordHash');
 

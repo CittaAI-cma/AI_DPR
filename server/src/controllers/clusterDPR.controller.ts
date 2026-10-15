@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { staffMayViewProject, staffMayViewUserFiles } from '../lib/staffScope';
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 import { ClusterDPRService } from '../services/clusterDPR.service';
@@ -175,7 +176,12 @@ export class ClusterDPRController {
       }
 
       const isOwner = dpr.userId?.toString() === userId.toString();
-      const isStaff = req.user?.role === 'admin' || req.user?.role === 'officer';
+      let isStaff = false;
+      if (!isOwner) {
+        const { Project: ProjectModel } = await import('../models/Project.model');
+        const owningProject = await ProjectModel.findById(dpr.projectId).lean();
+        isStaff = await staffMayViewProject(userId, owningProject);
+      }
       if (!isOwner && !isStaff) {
         res.status(403).json({
           success: false,
@@ -1715,8 +1721,8 @@ export class ClusterDPRController {
         res.status(404).json({ success: false, message: 'File not found' });
         return;
       }
-      const staff = role === 'admin' || role === 'officer';
-      if (file.userId !== userId && !staff) {
+      const staff = file.userId === userId ? true : await staffMayViewUserFiles(userId, String(file.userId));
+      if (!staff) {
         res.status(403).json({ success: false, message: 'Not allowed' });
         return;
       }

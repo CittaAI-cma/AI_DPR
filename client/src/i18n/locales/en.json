@@ -54,7 +54,8 @@
       "accountPrivacy": "Privacy settings",
       "adminDocuments": "Documents",
       "admin": "Admin",
-      "home": "Home"
+      "home": "Home",
+      "review": "District review"
     },
     "home": "Home",
     "dashboard": "Dashboard",
@@ -68,7 +69,8 @@
     "allDPRs": "All DPRs",
     "documents": "Documents",
     "privacy": "Privacy",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "review": "District review"
   },
   "auth": {
     "loginTitle": "Login to Your Account",
@@ -191,39 +193,39 @@
   "rbac": {
     "selectRole": "Select your role",
     "accessControl": "Access Control",
-    "accessControlHint": "Preview of the three platform roles. Enforcement is UI-only for now.",
+    "accessControlHint": "The three platform roles. These are enforced by the server: anyone calling a route their role cannot use gets 403 Forbidden.",
     "permissions": "Permissions",
-    "roleCannotChange": "Your role is assigned by a Super Admin",
+    "roleCannotChange": "Your role is assigned by an APMSMEDC Admin",
     "updateRole": "Update role",
-    "roleUpdated": "Role updated in the UI",
-    "uiOnlyNote": "Role labels are shown in the UI. Full permission enforcement will come later.",
+    "roleUpdated": "Role updated",
+    "uiOnlyNote": "Roles are only changed by an APMSMEDC Admin. A District Reviewer must be assigned a district.",
     "roles": {
       "super_admin": {
-        "label": "Super Admin",
-        "description": "Full platform control, users, policies, and analytics.",
-        "p1": "Manage users and assign roles",
-        "p2": "Access admin console and documents",
-        "p3": "Review and approve all DPRs",
+        "label": "APMSMEDC Admin",
+        "description": "Runs the platform: users, roles, districts, policies and every district’s DPRs.",
+        "p1": "Manage users and assign roles and districts",
+        "p2": "Open the admin console and documents",
+        "p3": "Review and approve DPRs from every district",
         "p4": "Create and edit policies",
         "p5": "View platform-wide analytics"
       },
       "consultant": {
-        "label": "Consultant",
-        "description": "Create, edit, and generate DPRs for MSME clients.",
-        "p1": "Create and edit DPRs",
+        "label": "Entrepreneur",
+        "description": "Creates and owns DPRs for their own business.",
+        "p1": "Create and edit own DPRs",
         "p2": "Save drafts and generate documents",
-        "p3": "Use AI-guided builder and chat",
+        "p3": "Use the AI-guided builder and chat",
         "p4": "Match government schemes",
-        "p5": "View own projects and scores"
+        "p5": "See only own projects and scores"
       },
       "govt_official": {
-        "label": "Govt Official",
-        "description": "Review submitted DPRs and scheme alignment.",
-        "p1": "Review submitted DPRs",
-        "p2": "View completeness and quality scores",
-        "p3": "Access scheme and policy information",
-        "p4": "Cannot create or edit DPRs",
-        "p5": "Cannot manage users or admin settings"
+        "label": "District Reviewer",
+        "description": "Reviews submitted DPRs from the district they are assigned to.",
+        "p1": "Review DPRs submitted in the assigned district",
+        "p2": "Approve, or send back with remarks",
+        "p3": "See completeness and quality scores",
+        "p4": "Cannot see other districts",
+        "p5": "Cannot create DPRs or manage users"
       }
     }
   },

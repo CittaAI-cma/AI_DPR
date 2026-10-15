@@ -40,26 +40,53 @@ export const authenticate = (
   }
 };
 
+/**
+ * Role gate. Wrong role is 403 Forbidden, no token is 401.
+ * Gates that exclude entrepreneurs (reviewer and admin routes) re-read the role from the database,
+ * so a demoted or deleted account loses access immediately rather than when its token expires.
+ */
 export const authorize = (...roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
-    const gate = roleAllowed(req.user?.role, roles);
-    if (gate === 'unauthenticated') {
-      res.status(401).json({ 
-        success: false, 
-        message: 'Authentication required' 
-      });
-      return;
-    }
+  const privileged = !roles.includes('entrepreneur');
+  return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (req.user?.userId && privileged) {
+        const { User } = await import('../models/User.model');
+        const fresh: any = await User.findById(req.user.userId).select('role reviewDistrict').lean();
+        if (!fresh) {
+          res.status(401).json({ success: false, message: 'Authentication required' });
+          return;
+        }
+        req.user.role = fresh.role;
+        req.user.reviewDistrict = fresh.reviewDistrict || null;
+      }
 
-    if (gate === 'forbidden') {
-      res.status(403).json({ 
-        success: false, 
-        message: 'Insufficient permissions' 
-      });
-      return;
-    }
+      const gate = roleAllowed(req.user?.role, roles);
+      if (gate === 'unauthenticated') {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
 
-    next();
+      if (gate === 'forbidden') {
+        const { AuditService } = await import('../services/audit.service');
+        await AuditService.log({
+          action: 'access_denied',
+          userId: req.user?.userId,
+          role: req.user?.role,
+          targetType: 'route',
+          targetId: `${req.method} ${req.baseUrl}${req.path}`.slice(0, 200),
+          req,
+        }).catch(() => undefined);
+        res.status(403).json({
+          success: false,
+          code: 'FORBIDDEN',
+          message: 'Forbidden: your role does not have access to this resource',
+        });
+        return;
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
   };
 };
-

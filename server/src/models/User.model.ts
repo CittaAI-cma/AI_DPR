@@ -28,6 +28,11 @@ const userSchema = new Schema<IUser>(
       enum: ['entrepreneur', 'admin', 'officer'],
       default: 'entrepreneur',
     },
+    // District a District Reviewer (role 'officer') is assigned to. Set by an admin only.
+    reviewDistrict: {
+      type: String,
+      trim: true,
+    },
     udyamNumber: {
       type: String,
       sparse: true,
