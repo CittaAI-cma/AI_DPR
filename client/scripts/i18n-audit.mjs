@@ -41,7 +41,7 @@ if (args.has('--list')) {
 fail(missing.length + untranslated.length + noTelugu.length + placeholders.length);
 
 section('Telugu Unicode health');
-const dictFiles = ['lib/individualDpr/formFieldTe.ts', 'lib/individualDpr/schemeFormTe.ts', 'lib/individualDpr/schemeStepTitlesTe.ts', 'lib/individualDpr/businessSkillsTe.ts', 'lib/individualDpr/apPlacesTe.ts', 'lib/clusterDprFormText.ts'].map((f) => path.join(src, f));
+const dictFiles = ['lib/individualDpr/formFieldTe.ts', 'lib/individualDpr/schemeFormTe.ts', 'lib/individualDpr/schemeStepTitlesTe.ts', 'lib/individualDpr/businessSkillsTe.ts', 'lib/individualDpr/apPlacesTe.ts', 'lib/i18n/teDictionary.ts'].map((f) => path.join(src, f));
 for (const f of fs.readdirSync(path.join(src, 'lib/i18n/te'))) if (/Te\.ts$/.test(f)) dictFiles.push(path.join(src, 'lib/i18n/te', f));
 const uniProblems = [];
 const checkUnicode = (label, s) => {

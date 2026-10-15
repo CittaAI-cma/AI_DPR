@@ -264,7 +264,6 @@ const SITE_TE: Record<string, string> = {
   "Down": "కిందికి",
   "Fullscreen": "పూర్తి తెర",
   "Click to edit Step {n}": "{n}వ దశను సవరించడానికి క్లిక్ చేయండి",
-  "Language": "భాష",
   "Existing annual turnover": "ప్రస్తుత వార్షిక టర్నోవర్",
   "Existing credit limit": "ప్రస్తుత క్రెడిట్ పరిమితి",
   "Prior sanction amount": "గత మంజూరు మొత్తం",

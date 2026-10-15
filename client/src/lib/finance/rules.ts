@@ -105,7 +105,6 @@ export function lendingLimit(data: AnyData | null | undefined): { limit: CL; lab
   }
 }
 
-const S12 = 12;
 const S13 = 13;
 
 /** Every funding, ratio and scheme-limit check on the money side of the DPR. */

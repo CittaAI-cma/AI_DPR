@@ -382,7 +382,7 @@ function readSectionBlocks(raw: unknown): Record<string, SectionBlock[]> {
   const out: Record<string, SectionBlock[]> = {};
   for (const [sectionId, value] of Object.entries(raw as Record<string, unknown>)) {
     if (!/^[A-Za-z0-9_-]{1,80}$/.test(sectionId) || !Array.isArray(value)) continue;
-    const blocks = value.flatMap((rawBlock) => {
+    const blocks: SectionBlock[] = value.flatMap((rawBlock): SectionBlock[] => {
       if (!rawBlock || typeof rawBlock !== 'object') return [];
       const item = rawBlock as { id?: unknown; kind?: unknown; text?: unknown; name?: unknown; src?: unknown; hidden?: unknown; frame?: Partial<ImageBox> };
       const id = typeof item.id === 'string' ? item.id.replace(/[^A-Za-z0-9_]/g, '').slice(0, 40) : '';
@@ -845,7 +845,7 @@ export function formatPageNumber(
   ofPattern = 'Page {n} of {total}'
 ): string {
   if (style === 'of') {
-    return ofPattern.replaceAll('{n}', String(n)).replaceAll('{total}', String(total));
+    return ofPattern.split('{n}').join(String(n)).split('{total}').join(String(total));
   }
   return String(n);
 }

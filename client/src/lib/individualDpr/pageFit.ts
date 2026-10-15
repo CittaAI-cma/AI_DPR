@@ -25,7 +25,7 @@ function layoutTop(el: HTMLElement, sheet: HTMLElement, scale: number): number {
   return (el.getBoundingClientRect().top - sheet.getBoundingClientRect().top) / scale;
 }
 
-function layoutHeight(el: HTMLElement, sheet: HTMLElement, scale: number): number {
+function layoutHeight(el: HTMLElement, scale: number): number {
   return el.getBoundingClientRect().height / scale;
 }
 
@@ -52,7 +52,7 @@ export function fitSheetToPages(
     for (let i = 0; i < blocks.length; i += 1) {
       const el = blocks[i];
       const top = layoutTop(el, sheet, scale);
-      const height = layoutHeight(el, sheet, scale);
+      const height = layoutHeight(el, scale);
       let shift = shiftForPageEdge(top, height, pageHeightPx, edgeTopPx, edgeBottomPx);
 
       if (el.classList.contains('individual-sec-title')) {

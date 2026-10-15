@@ -11,6 +11,7 @@ import { connectDatabase } from './config/database';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler.middleware';
 import { getJwtSecret } from './lib/jwtSecret';
+import { RedisRateLimitStore } from './lib/redisRateLimitStore';
 import { requireHttps, hstsOptions, createTlsServer, databaseTransportWarning } from './lib/transportSecurity';
 
 // Load environment variables
@@ -78,8 +79,25 @@ app.use('/uploads', (req, res) => {
   res.status(404).json({ success: false, message: 'Not found' });
 });
 
+// API documentation (OpenAPI 3.0.3). Generated from the route files: `npm run docs:openapi`.
+// Off in production unless ENABLE_API_DOCS=true, so the list of endpoints is not handed to the public.
+if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_API_DOCS === 'true') {
+  try {
+    const swaggerUi = require('swagger-ui-express');
+    const fs = require('fs');
+    const path = require('path');
+    const spec = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'openapi.json'), 'utf8'));
+    app.get('/api/openapi.json', (_req, res) => res.json(spec));
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec, { customSiteTitle: 'MSME AI DPR API' }));
+  } catch (error: any) {
+    console.warn('⚠️  API docs not available:', error.message);
+  }
+}
+
 // Rate limiting
 const limiter = rateLimit({
+  // Shared across servers when REDIS_URL is set; otherwise counted in this server's memory.
+  store: process.env.REDIS_URL ? new RedisRateLimitStore() : undefined,
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
   message: 'Too many requests from this IP, please try again later.',

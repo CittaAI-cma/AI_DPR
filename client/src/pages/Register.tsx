@@ -128,7 +128,7 @@ export const Register: React.FC = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <img 
-              src="/apmsme_logo.png" 
+              src="/apmsme_logo_192.png" 
               alt={tf('APMSME Logo')} 
               className="h-20 w-auto object-contain"
             />

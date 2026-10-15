@@ -15,7 +15,7 @@ import { missingIndividualRequired } from '@/lib/requiredStepFields';
 import { isKycUploaded } from '@/lib/privacy/kycField';
 import type { SchemeStepDef } from './schemeStepCatalog';
 
-import { hasAnswer, type SectionProgress } from './authoringMath';
+import { hasAnswer, type SectionProgress, type SectionStatus } from './authoringMath';
 export * from './authoringMath';
 
 export function sectionProgress(

@@ -76,7 +76,6 @@ export function runDataChecks(data: AnyData, options: { final?: boolean } = {}):
     out.push({ ...f, signature: f.signature ?? JSON.stringify(f.vars ?? {}) });
 
   const s1 = stepOf(data, 1);
-  const s12 = stepOf(data, 12);
   const s13 = stepOf(data, 13);
   const s14 = stepOf(data, 14);
   const extras = data.schemeExtras || {};

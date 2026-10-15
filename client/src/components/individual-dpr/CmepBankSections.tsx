@@ -1,5 +1,4 @@
 import { FieldPrompt } from '@/components/ui/FieldPrompt';
-import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';

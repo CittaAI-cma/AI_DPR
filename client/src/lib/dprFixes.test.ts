@@ -188,8 +188,8 @@ describe('custom sections', () => {
     });
     const saved = resolveDocumentStyle(style, 'PMFME');
     assert.equal(saved.customSections[0].title, 'Site photos');
-    assert.equal(saved.sectionBlocks.a[0].text, 'Hello from the section');
-    assert.equal(saved.sectionBlocks.csec_site[0].name, 'Front');
+    assert.equal((saved.sectionBlocks.a[0] as { text: string }).text, 'Hello from the section');
+    assert.equal((saved.sectionBlocks.csec_site[0] as { name: string }).name, 'Front');
     assert.ok(layoutOrder(steps, saved).includes('csec_site'));
   });
 });

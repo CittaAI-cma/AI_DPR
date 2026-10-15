@@ -72,7 +72,7 @@ export const VentureMatchHelpBubble: React.FC<VentureMatchHelpBubbleProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const uiLang: HelpLang = i18n.language?.startsWith('te') ? 'te' : 'en';
   const [chatLang, setChatLang] = useState<HelpLang>(uiLang);
   const [draft, setDraft] = useState('');

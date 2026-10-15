@@ -766,7 +766,7 @@ const marketGuide: QuestionHelpGuide = {
   },
 };
 
-export const HELP_GUIDES: Record<QuestionId, QuestionHelpGuide> = {
+export const HELP_GUIDES: Partial<Record<QuestionId, QuestionHelpGuide>> = {
   activity: activityGuide,
   stage: stageGuide,
   budget: budgetGuide,
@@ -789,6 +789,8 @@ export function getHelpGuide(questionId: QuestionId): QuestionHelpGuide {
       questionId,
       apRuleNotes: 'Answer based on what you need from government support.',
       clarifyingQuestions: [],
+      mapToOption: () => null,
+      nextQuestionIndex: () => null,
     }
   );
 }

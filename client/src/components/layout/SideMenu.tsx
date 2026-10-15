@@ -62,7 +62,6 @@ export const SideMenu: React.FC = () => {
   const [pinned, setPinned] = useState(false);
   const open = hover || pinned;
 
-  const { user } = useAuthStore();
   const devMode = useDevModeStore((s) => s.on);
   const setDevMode = useDevModeStore((s) => s.setOn);
   const showDevMode = DEV_MODE_PATHS.includes(location.pathname.replace(/\/$/, ''));

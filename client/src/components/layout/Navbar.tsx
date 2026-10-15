@@ -66,7 +66,7 @@ export const Navbar: React.FC = () => {
             className="flex min-w-0 items-center space-x-2 sm:space-x-3"
           >
             <img 
-              src="/apmsme_logo.png" 
+              src="/apmsme_logo_192.png" 
               alt={tf('APMSME Logo')} 
               className="h-10 w-auto shrink-0 object-contain sm:h-12"
             />

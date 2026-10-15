@@ -1,7 +1,14 @@
 // @ts-nocheck
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
-import { MockDataService } from './mockData';
+// The offline sample data is large and only used when the server cannot be reached, so it loads on first use.
+const MockDataService: any = new Proxy(
+  {},
+  {
+    get: (_target, method: string) => (...args: unknown[]) =>
+      import('./mockData').then((module: any) => module.MockDataService[method](...args)),
+  }
+);
 import { OfflineDetector } from './offlineDetector';
 import { useAuthStore } from '@/store/authStore';
 import { useSessionClock } from './sessionClock';

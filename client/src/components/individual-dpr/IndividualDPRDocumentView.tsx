@@ -813,7 +813,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     }
     return getIndividualDocFields(def.contentStep, schemeCode, budget, kind).some(fieldHasAnswers) || blockVisible(def.id);
   };
-  const reportEntries = (style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).flatMap((token) => {
+  type ReportEntry = { id: string; title: string; custom: boolean; n: number };
+  const reportEntries: ReportEntry[] = (style ? layoutOrder(catalogSteps, style) : catalogSteps.map((step) => step.id)).flatMap((token): ReportEntry[] => {
     if (pictureIdFromToken(token)) return [];
     const custom = style?.customSections?.find((item) => item.id === token);
     if (custom) {

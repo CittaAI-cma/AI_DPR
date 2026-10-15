@@ -1,13 +1,13 @@
 // @ts-nocheck
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { buttonVariants } from '@/components/ui/Button';
 import { HeroCarousel } from '@/components/landing/HeroCarousel';
 import { AccessibilityBar } from '@/components/layout/AccessibilityBar';
-import { HowItWorksShowcase } from '@/components/landing/HowItWorksShowcase';
-import { BenefitsAccordion } from '@/components/landing/BenefitsAccordion';
-import { FeaturesScroller } from '@/components/landing/FeaturesScroller';
+const HowItWorksShowcase = lazy(() => import('@/components/landing/HowItWorksShowcase').then((m) => ({ default: m.HowItWorksShowcase })));
+const BenefitsAccordion = lazy(() => import('@/components/landing/BenefitsAccordion').then((m) => ({ default: m.BenefitsAccordion })));
+const FeaturesScroller = lazy(() => import('@/components/landing/FeaturesScroller').then((m) => ({ default: m.FeaturesScroller })));
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useLandingCopy } from '@/i18n/landingCopy';
 import {
@@ -139,7 +139,7 @@ export const Landing: React.FC = () => {
               className="flex min-w-0 items-center gap-2 rounded-lg sm:gap-3"
             >
               <img
-                src="/apmsme_logo.png"
+                src="/apmsme_logo_192.png"
                 alt=""
                 className="h-8 w-auto flex-none object-contain min-[375px]:h-9 sm:h-10 md:h-12"
               />
@@ -181,7 +181,9 @@ export const Landing: React.FC = () => {
           <div className="page-container pt-12 sm:pt-14 lg:pt-16 lg:[@media(max-height:820px)]:pt-10">
             <div className="relative z-10 mx-auto max-w-[60rem] text-center">
               <img
-                src="/apmsme_logo.png"
+                src="/apmsme_logo_192.png"
+                width="78"
+                height="64"
                 alt={tf('APMSME Logo')}
                 className="mx-auto mb-4 h-14 w-auto object-contain md:h-16 lg:[@media(max-height:820px)]:mb-3 lg:[@media(max-height:820px)]:h-12"
               />
@@ -238,11 +240,14 @@ export const Landing: React.FC = () => {
                 <span className="sm:block">{c.benefits.sub[1]}</span>
               </p>
             </div>
-            <BenefitsAccordion items={benefits} />
+            <Suspense fallback={<div className="min-h-[420px]" aria-hidden="true" />}>
+              <BenefitsAccordion items={benefits} />
+            </Suspense>
           </div>
         </section>
 
         {/* Features Section */}
+        <Suspense fallback={<div className="min-h-[640px]" aria-hidden="true" />}>
         <FeaturesScroller
           features={features}
           heading={
@@ -257,6 +262,7 @@ export const Landing: React.FC = () => {
             </>
           }
         />
+        </Suspense>
 
         {/* How It Works Section */}
         <section aria-labelledby="how-title" className="bg-[#f2f6f5] py-16 md:py-24">
@@ -271,7 +277,9 @@ export const Landing: React.FC = () => {
               </p>
             </div>
             <div className="theme-light">
-              <HowItWorksShowcase steps={steps} />
+              <Suspense fallback={<div className="min-h-[420px]" aria-hidden="true" />}>
+                <HowItWorksShowcase steps={steps} />
+              </Suspense>
             </div>
           </div>
         </section>

@@ -206,3 +206,38 @@ describe('AI disclaimer on downloads', () => {
     assert.equal(await stampAiDisclaimer(junk), junk);
   });
 });
+
+describe('shared state in Redis (tested against an in-memory Redis stand-in, not a real server)', () => {
+  it('counts rate-limit hits across servers and resets the window', async () => {
+    const RedisMock = (await import('ioredis-mock')).default as any;
+    const { setRedisForTests } = await import('./lib/redis.ts');
+    const { RedisRateLimitStore } = await import('./lib/redisRateLimitStore.ts');
+    const fake = new RedisMock();
+    fake.status = 'ready';
+    setRedisForTests(fake);
+    const a = new RedisRateLimitStore('t:');
+    const b = new RedisRateLimitStore('t:'); // a second API server
+    a.init({ windowMs: 60_000 });
+    b.init({ windowMs: 60_000 });
+    assert.equal((await a.increment('1.2.3.4')).totalHits, 1);
+    assert.equal((await b.increment('1.2.3.4')).totalHits, 2);
+    const third = await a.increment('1.2.3.4');
+    assert.equal(third.totalHits, 3);
+    assert.ok(third.resetTime.getTime() > Date.now());
+    assert.ok((await fake.pttl('t:1.2.3.4')) > 0, 'the counter must expire');
+    await b.decrement('1.2.3.4');
+    assert.equal((await a.increment('1.2.3.4')).totalHits, 3);
+    await a.resetKey('1.2.3.4');
+    assert.equal((await b.increment('1.2.3.4')).totalHits, 1);
+    setRedisForTests(null);
+  });
+  it('falls back to memory counting when Redis is not available', async () => {
+    const { setRedisForTests } = await import('./lib/redis.ts');
+    const { RedisRateLimitStore } = await import('./lib/redisRateLimitStore.ts');
+    setRedisForTests(null);
+    const store = new RedisRateLimitStore();
+    store.init({ windowMs: 60_000 });
+    assert.equal((await store.increment('x')).totalHits, 1);
+    assert.equal((await store.increment('x')).totalHits, 2);
+  });
+});

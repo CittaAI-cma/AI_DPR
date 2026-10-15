@@ -50,6 +50,20 @@ router.get('/audit', AdminController.getAudit);
 router.get('/audit/csv', AdminController.exportAuditCsv);
 router.get('/audit/verify', AdminController.verifyAudit);
 router.get('/ai/status', (_req, res) => res.json({ success: true, data: gatewayConfig() }));
+router.get('/infra/status', (_req, res) => {
+  const { accountCacheStats, accountCacheHitRate, STATUS_TTL_MS } = require('../lib/accountStatus');
+  const mongoose = require('mongoose');
+  const opts = mongoose.connection.getClient?.()?.options || {};
+  res.json({
+    success: true,
+    data: {
+      database: { readyState: mongoose.connection.readyState, maxPoolSize: opts.maxPoolSize ?? null, minPoolSize: opts.minPoolSize ?? null, maxIdleTimeMS: opts.maxIdleTimeMS ?? null },
+      redis: require('../lib/redis').redisStatus(),
+      accountStatusCache: { ttlMs: STATUS_TTL_MS, ...accountCacheStats, hitRate: accountCacheHitRate() },
+      rateLimitStore: process.env.REDIS_URL ? 'redis (memory when unreachable)' : 'memory (per server)',
+    },
+  });
+});
 router.get('/integrations/status', (_req, res) => res.json({ success: true, data: integrationStatus() }));
 router.post('/retention/run', AdminController.runRetention);
 
