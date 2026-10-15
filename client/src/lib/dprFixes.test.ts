@@ -569,3 +569,40 @@ describe('plain-language wording rules', () => {
     for (const title of ['Means of finance', 'Project cost', 'Documents & uploads', 'Operating cost & sales']) assert.ok(INTROS[title], title);
   });
 });
+
+import { applyContextReuse, deriveProfile, isAutoFilled } from './individualDpr/contextReuse.ts';
+
+describe('cross-section context reuse', () => {
+  const base = () => ({ matchedSchemeCode: null, schemeExtras: {}, step1: { unitName: 'Sri Lakshmi Pickles', district: 'Guntur', location: 'Tenali' } });
+
+  it('fills the applicant name and address from the unit details', () => {
+    const out = applyContextReuse(base());
+    assert.equal(out.step11.spvName, 'Sri Lakshmi Pickles');
+    assert.equal(out.step11.address, 'Tenali, Guntur');
+    assert.ok(isAutoFilled(out, 'step11.spvName'));
+  });
+  it('keeps following the source until the person types their own value', () => {
+    let data: any = applyContextReuse(base());
+    data = applyContextReuse({ ...data, step1: { ...data.step1, unitName: 'Sri Lakshmi Foods' } });
+    assert.equal(data.step11.spvName, 'Sri Lakshmi Foods');
+    data = applyContextReuse({ ...data, step11: { ...data.step11, spvName: 'Lakshmi & Sons' } });
+    data = applyContextReuse({ ...data, step1: { ...data.step1, unitName: 'Something Else' } });
+    assert.equal(data.step11.spvName, 'Lakshmi & Sons');
+    assert.ok(!isAutoFilled(data, 'step11.spvName'));
+  });
+  it('never overwrites something already typed', () => {
+    const out = applyContextReuse({ ...base(), step11: { spvName: 'Typed First', address: '12-3 Main Road' } });
+    assert.equal(out.step11.spvName, 'Typed First');
+    assert.equal(out.step11.address, '12-3 Main Road');
+  });
+  it('uses the proprietor for lean unit packs and returns the same object when nothing changes', () => {
+    const lean: any = applyContextReuse({ ...base(), matchedSchemeCode: 'PMEGP', schemeExtras: { entrepreneurName: 'K. Ravi' } });
+    assert.equal(lean.step11.spvName, 'K. Ravi');
+    assert.equal(applyContextReuse(lean), lean);
+  });
+  it('derives promoter, address and GST for the schedules', () => {
+    const profile = deriveProfile({ ...base(), schemeExtras: { entrepreneurName: 'K. Ravi' }, step11: { gstin: '37abcfe1234f1zv', address: '1-2 Station Road' } });
+    assert.deepEqual([profile.promoterName, profile.address, profile.gstin, profile.unitName], ['K. Ravi', '1-2 Station Road', '37ABCFE1234F1ZV', 'Sri Lakshmi Pickles']);
+    assert.equal(deriveProfile({ step1: { district: 'Guntur', location: 'Tenali' } }).address, 'Tenali, Guntur');
+  });
+});

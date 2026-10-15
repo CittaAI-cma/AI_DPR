@@ -1,3 +1,4 @@
+import { ScheduleDocParties } from '@/components/individual-dpr/ScheduleParties';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getIndividualCoverLines } from '@/lib/individualDpr/coverTitle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -985,6 +986,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               <span className="individual-sec-num">{num}</span>
               {title}
             </h2>
+            {def.contentStep === 12 || def.contentStep === 13 ? <ScheduleDocParties data={data} showEmpty={showEmpty} /> : null}
             {renderSectionFields(fields)}
             {renderBlocks(def.id)}
           </section>

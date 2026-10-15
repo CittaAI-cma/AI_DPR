@@ -368,3 +368,11 @@ Form: `IndividualDPRForm.tsx`
 - Step 11 has optional GSTIN, Firm PAN, Udyam and Contact mobile fields, with tooltips in `data/fieldDescriptions.ts`.
 - Pre-submission gate: `lib/validation/stepFormats.ts` (`invalidFormats`) runs in `guardForward` and before Generate. Filled-but-invalid values block moving forward, are focused/flagged, and a toast names them. Blank optional fields pass.
 - DPDP: only firm PANs are kept. A personal PAN (4th letter P) is rejected in the form and blanked by `sanitizeStoredPayload` on the server.
+
+## Reusing details across sections
+
+Details are entered once and carried forward (`client/src/lib/individualDpr/contextReuse.ts`, applied inside the draft store on every change):
+
+- **Copied into later fields:** step 11 applicant / firm name starts as the unit name (for proprietor packs, the entrepreneur name); step 11 correspondence address starts as "town, district" from step 1. A copied field keeps following its source until the person types something different, after that it is theirs and is never touched. Copies are remembered in `schemeExtras.autoFilled`, and the form says where a field was filled from.
+- **Shown on the schedules:** the project cost (content step 12) and means of finance / bank loan (content step 13) sections show promoter / applicant, unit, address and GSTIN, in the form (read-only card) and as a table in the live document, preview and export. They are read from steps 1 and 11 and never stored separately, so editing step 11 updates every schedule.
+- Never copied: GSTIN, PAN, Udyam number and mobile (typed once, validated, step 11). Only firm PANs are stored.

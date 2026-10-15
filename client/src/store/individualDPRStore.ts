@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { applyContextReuse } from '../lib/individualDpr/contextReuse.ts';
 import { create } from 'zustand';
 
 export interface IndividualDPRData {
@@ -302,11 +303,11 @@ export const useIndividualDPRStore = create<IndividualDPRState>()(
     
     setStepData: (step, stepData) => {
       set((state) => ({
-        data: {
+        data: applyContextReuse({
           ...state.data,
           [`step${step}`]: stepData,
           // lastSaved: new Date(), // Removed auto-save timestamp
-        },
+        }),
       }));
     },
     
@@ -358,7 +359,7 @@ export const useIndividualDPRStore = create<IndividualDPRState>()(
 
     setSchemeExtras: (extras) => {
       set((state) => ({
-        data: { ...state.data, schemeExtras: extras },
+        data: applyContextReuse({ ...state.data, schemeExtras: extras }),
       }));
     },
 
@@ -370,7 +371,7 @@ export const useIndividualDPRStore = create<IndividualDPRState>()(
             next[key] = { ...(next[key] || {}), ...value };
           }
         });
-        return { data: next };
+        return { data: applyContextReuse(next) };
       });
     },
 

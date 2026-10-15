@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { FieldPrompt } from '@/components/ui/FieldPrompt';
+import { ReusedNote, ScheduleParties } from '@/components/individual-dpr/ScheduleParties';
 import React from 'react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { ExpandableInput as Input, ExpandableTextarea, ExpandableSelect } from '@/components/ui/ExpandableField';
@@ -3712,6 +3713,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               onChange={(e) => handleInputChange('spvName', e.target.value)}
               placeholder={tf('Enter applicant or firm name')}
             />
+            <ReusedNote data={data} path="step11.spvName" text="Filled in from your unit details. Change it if the applicant is different." />
           </div>
           <div>
             {renderLabel(
@@ -3784,6 +3786,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               onChange={(e) => handleInputChange('address', e.target.value)}
               placeholder={tf('Full correspondence address for KYC')}
             />
+            <ReusedNote data={data} path="step11.address" text="Started from your town and district. Add the full street address." />
           </div>
           {isApCmep && (
             <CmepPromotersEditor
@@ -3890,6 +3893,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
     return (
       <div className="space-y-6">
+        <ScheduleParties data={data} />
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
@@ -4087,6 +4091,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
     return (
       <div className="space-y-6">
+        <ScheduleParties data={data} />
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
