@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { DPRController } from '../controllers/dpr.controller';
 import { ClusterDPRController } from '../controllers/clusterDPR.controller';
 import { dprParamGuard } from '../middleware/dprAccess.middleware';
+import { auditOnSuccess } from '../lib/auditMiddleware';
 import { uploadGuard } from '../lib/security/uploadGuard';
 import { authenticate } from '../middleware/auth.middleware';
 import { requireAiConsent } from '../middleware/aiConsent.middleware';
@@ -49,7 +50,7 @@ router.post('/upload', (req, res, next) => {
 router.get('/user/list', DPRController.getUserDPRs);
 
 router.get('/scheme-style/:schemeCode', SchemeStyleController.get);
-router.put('/scheme-style/:schemeCode', SchemeStyleController.save);
+router.put('/scheme-style/:schemeCode', auditOnSuccess(SchemeStyleController.save, { action: 'template_update', targetType: 'scheme-style', payload: (req) => ({ scheme: req.params.schemeCode, preset: req.body?.documentStyle?.preset, sections: Array.isArray(req.body?.documentStyle?.sectionOrder) ? req.body.documentStyle.sectionOrder.length : undefined }) }));
 
 router.post('/generate/:projectId', requireAiConsent, DPRController.generateDPR);
 router.get('/project/:projectId', DPRController.getProjectDPRs);

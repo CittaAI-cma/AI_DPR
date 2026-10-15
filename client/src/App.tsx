@@ -20,6 +20,7 @@ import { DPRPreview } from './pages/DPRPreview';
 import { AllDPRs } from './pages/AllDPRs';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminDocuments } from './pages/AdminDocuments';
+import { AcceptInvite } from './pages/AcceptInvite';
 import { DistrictReview } from './pages/DistrictReview';
 import { Profile } from './pages/Profile';
 import { ClusterDPRCreation } from './pages/ClusterDPRCreation';
@@ -81,6 +82,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/accept-invite" element={<AcceptInvite />} />
         
         <Route
           path="/dashboard"

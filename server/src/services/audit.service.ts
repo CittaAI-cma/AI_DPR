@@ -1,5 +1,5 @@
-import { Request } from 'express';
-import { AuditEvent } from '../models/AuditEvent.model';
+import type { Request } from 'express';
+import { appendAuditEvent } from '../lib/auditChain';
 
 export type AuditAction =
   | 'register'
@@ -26,7 +26,21 @@ export type AuditAction =
   | 'nominee_change'
   | 'complaint_submitted'
   | 'retention_warning'
-  | 'retention_purge';
+  | 'retention_purge'
+  | 'user_invite'
+  | 'invite_accepted'
+  | 'user_update'
+  | 'user_delete'
+  | 'user_deactivate'
+  | 'user_reactivate'
+  | 'sessions_revoked'
+  | 'policy_change'
+  | 'document_change'
+  | 'template_update'
+  | 'dpr_decision'
+  | 'audit_export'
+  | 'audit_verify'
+  | 'ai_call';
 
 function clientIp(req?: Request): string | undefined {
   if (!req) return undefined;
@@ -44,17 +58,19 @@ export const AuditService = {
     role?: string;
     targetType?: string;
     targetId?: string;
+    /** What changed or was decided: before/after values, counts, reasons. No secrets or document text. */
+    payload?: unknown;
     req?: Request;
   }): Promise<void> {
     try {
-      await AuditEvent.create({
-        at: new Date(),
+      await appendAuditEvent({
         userId: input.userId || undefined,
         role: input.role,
         action: input.action,
         targetType: input.targetType,
         targetId: input.targetId,
         ip: clientIp(input.req),
+        payload: input.payload,
       });
     } catch (error) {
       console.error('Audit log failed:', (error as Error).message);

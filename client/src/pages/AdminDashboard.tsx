@@ -54,6 +54,12 @@ export const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ name: '', email: '', role: 'govt_official' as AppRole, district: '' });
+  const [inviteResult, setInviteResult] = useState<{ url: string; expiresAt: string } | null>(null);
+  const [deactivatePrompt, setDeactivatePrompt] = useState<{ userId: string; name: string; reason: string } | null>(null);
+  const [auditVerdict, setAuditVerdict] = useState<{ ok: boolean; checked: number; problem?: { seq: number; reason: string } } | null>(null);
+  const [aiStatus, setAiStatus] = useState<any>(null);
   const [reviewerPrompt, setReviewerPrompt] = useState<{ userId: string; name: string; district: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showPolicyModal, setShowPolicyModal] = useState(false);
@@ -110,6 +116,7 @@ export const AdminDashboard: React.FC = () => {
         });
         setAuditEvents(response.data?.events || []);
         setAuditTotal(response.data?.pagination?.total || 0);
+        api.getAiStatus().then((s: any) => setAiStatus(s.data)).catch(() => undefined);
       }
     } catch (error: any) {
       console.error('Failed to load data:', error);
@@ -148,6 +155,62 @@ export const AdminDashboard: React.FC = () => {
       loadData();
     } catch (error: any) {
       toast.error(error.response?.data?.message || tf('Failed to delete user'));
+    }
+  };
+
+  const handleInvite = async () => {
+    try {
+      const backendRole = toBackendRole(inviteForm.role);
+      const res = await api.inviteUser({
+        name: inviteForm.name,
+        email: inviteForm.email,
+        role: backendRole,
+        reviewDistrict: backendRole === 'officer' ? inviteForm.district : undefined,
+      });
+      setInviteResult({ url: res.data.inviteUrl, expiresAt: res.data.expiresAt });
+      loadData();
+    } catch {
+      // the API client shows the server's message
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (!deactivatePrompt) return;
+    try {
+      await api.deactivateUser(deactivatePrompt.userId, deactivatePrompt.reason);
+      toast.success(tf('Account deactivated. Active sessions are being ended now.'));
+      setDeactivatePrompt(null);
+      loadData();
+    } catch {
+      // the API client shows the server's message
+    }
+  };
+
+  const handleReactivate = async (userId: string) => {
+    try {
+      await api.reactivateUser(userId);
+      toast.success(tf('Account reactivated. The person has to sign in again.'));
+      loadData();
+    } catch {
+      // the API client shows the server's message
+    }
+  };
+
+  const handleRevokeSessions = async (userId: string) => {
+    try {
+      await api.revokeUserSessions(userId);
+      toast.success(tf('Signed out everywhere.'));
+    } catch {
+      // the API client shows the server's message
+    }
+  };
+
+  const handleVerifyAudit = async () => {
+    try {
+      const res = await api.verifyAuditLog();
+      setAuditVerdict(res.data);
+    } catch {
+      setAuditVerdict(null);
     }
   };
 
@@ -465,6 +528,7 @@ export const AdminDashboard: React.FC = () => {
                   />
                 </div>
               </div>
+              <Button onClick={() => { setInviteResult(null); setInviteOpen(true); }}>{tf('Invite user')}</Button>
             </div>
 
             {isLoading ? (
@@ -485,6 +549,12 @@ export const AdminDashboard: React.FC = () => {
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                           <div className="flex gap-2 mt-2 items-center flex-wrap">
                             <RoleBadge role={user.role} />
+                            {user.isActive === false && (
+                              <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-800" data-user-status="deactivated">{tf('Deactivated')}</span>
+                            )}
+                            {user.invite?.expiresAt && (
+                              <span className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-900" data-user-status="invited">{tf('Invitation pending')}</span>
+                            )}
                             {user.role === 'officer' && user.reviewDistrict && (
                               <span className="text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-800">
                                 {tf(user.reviewDistrict)}
@@ -518,6 +588,20 @@ export const AdminDashboard: React.FC = () => {
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             {tf('Edit')}
+                          </Button>
+                          {user.isActive === false ? (
+                            <Button variant="outline" size="sm" onClick={() => handleReactivate(user._id)}>{tf('Reactivate')}</Button>
+                          ) : (
+                            <Button variant="outline" size="sm" onClick={() => setDeactivatePrompt({ userId: user._id, name: user.name, reason: '' })}>{tf('Deactivate')}</Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRevokeSessions(user._id)}
+                            data-confirm-title={tf('Sign this person out everywhere?')}
+                            data-confirm-body={tf('{name} will have to sign in again on every device.').replace('{name}', String(user.name))}
+                          >
+                            {tf('Sign out everywhere')}
                           </Button>
                           <Button
                             variant="destructive"
@@ -731,7 +815,21 @@ export const AdminDashboard: React.FC = () => {
               <Button variant="outline" onClick={handleRunRetention}>
                 {tf('Run retention')}
               </Button>
+              <Button variant="outline" onClick={handleVerifyAudit}>{tf('Verify integrity')}</Button>
             </div>
+            {auditVerdict ? (
+              <p role="status" data-audit-verdict={auditVerdict.ok} className={`rounded-md border p-3 text-sm ${auditVerdict.ok ? 'border-emerald-300 text-emerald-800' : 'border-red-300 text-red-800'}`}>
+                {auditVerdict.ok
+                  ? tf('The audit log is intact. {n} events checked.').replace('{n}', String(auditVerdict.checked))
+                  : `${tf('The audit log has been tampered with')}: #${auditVerdict.problem?.seq} — ${auditVerdict.problem?.reason || ""}`}
+              </p>
+            ) : null}
+            {aiStatus ? (
+              <p className="rounded-md border p-3 text-sm text-muted-foreground" data-ai-status>
+                {tf('AI gateway')}: {aiStatus.chatModel} · {tf('personal data is removed before anything is sent')} · {tf('OpenAI storage switched off')} ·{' '}
+                {aiStatus.zeroRetentionConfirmed ? tf('zero data retention confirmed') : tf('zero data retention NOT yet confirmed (check the OpenAI account terms)')}
+              </p>
+            ) : null}
             <p className="text-sm text-muted-foreground">{tf('{n} events (showing latest 100)').replace('{n}', String(auditTotal))}</p>
             {isLoading ? (
               <p className="text-muted-foreground py-12 text-center">{tf('Loading audit log...')}</p>
@@ -746,6 +844,7 @@ export const AdminDashboard: React.FC = () => {
                         <th className="py-2 pr-3">{tf('User')}</th>
                         <th className="py-2 pr-3">{tf('Role')}</th>
                         <th className="py-2 pr-3">{tf('Target')}</th>
+                        <th className="py-2 pr-3">{tf('Details')}</th>
                         <th className="py-2">IP</th>
                       </tr>
                     </thead>
@@ -761,6 +860,9 @@ export const AdminDashboard: React.FC = () => {
                           <td className="py-2 pr-3">
                             {event.targetType || '—'}
                             {event.targetId ? ` · ${event.targetId}` : ''}
+                          </td>
+                          <td className="py-2 pr-3 max-w-xs truncate font-mono text-xs" title={event.payload ? JSON.stringify(event.payload) : ''}>
+                            {event.payload ? JSON.stringify(event.payload) : '—'}
                           </td>
                           <td className="py-2">{event.ip || '—'}</td>
                         </tr>
@@ -891,6 +993,76 @@ export const AdminDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             )}
+          </div>
+        )}
+
+        {inviteOpen && (
+          <div className="motion-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+            <Card className="w-full max-w-md">
+              <CardContent className="space-y-4 p-6">
+                <h2 className="text-lg font-semibold">{tf('Invite a user')}</h2>
+                {inviteResult ? (
+                  <div className="space-y-3" data-invite-result>
+                    <p className="text-sm text-muted-foreground">{tf('Share this link with the person. It works once and expires in 72 hours. It is not shown again.')}</p>
+                    <input readOnly value={inviteResult.url} onFocus={(e) => e.currentTarget.select()} className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" aria-label={tf('Invitation link')} />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => { void navigator.clipboard?.writeText(inviteResult.url); toast.success(tf('Link copied')); }}>{tf('Copy link')}</Button>
+                      <Button variant="primary" onClick={() => setInviteOpen(false)}>{tf('Done')}</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <Input label={tf('Name')} value={inviteForm.name} onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })} />
+                    <Input label={tf('Email')} type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} />
+                    <label className="block text-sm font-medium">
+                      {tf('Role')}
+                      <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as AppRole })} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        {APP_ROLES.map((role) => (
+                          <option key={role} value={role}>{t(ROLE_META[role].labelKey)}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {toBackendRole(inviteForm.role) === 'officer' && (
+                      <label className="block text-sm font-medium">
+                        {tf('District')}
+                        <select value={inviteForm.district} onChange={(e) => setInviteForm({ ...inviteForm, district: e.target.value })} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                          <option value="">{tf('Select a district')}</option>
+                          {AP_DISTRICTS.map((name) => (
+                            <option key={name} value={name}>{tf(name)}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setInviteOpen(false)}>{tf('Cancel')}</Button>
+                      <Button
+                        variant="primary"
+                        disabled={!inviteForm.name.trim() || !inviteForm.email.trim() || (toBackendRole(inviteForm.role) === 'officer' && !inviteForm.district)}
+                        onClick={handleInvite}
+                      >
+                        {tf('Create invitation')}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {deactivatePrompt && (
+          <div className="motion-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+            <Card className="w-full max-w-md">
+              <CardContent className="space-y-4 p-6">
+                <h2 className="text-lg font-semibold">{tf('Deactivate this account?')}</h2>
+                <p className="text-sm text-muted-foreground">{tf('{name} will be signed out within seconds and cannot sign in again until you reactivate the account.').replace('{name}', deactivatePrompt.name)}</p>
+                <Input label={tf('Reason (kept in the audit log)')} value={deactivatePrompt.reason} onChange={(e) => setDeactivatePrompt({ ...deactivatePrompt, reason: e.target.value })} />
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setDeactivatePrompt(null)}>{tf('Cancel')}</Button>
+                  <Button variant="destructive" onClick={handleDeactivate}>{tf('Deactivate')}</Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 

@@ -295,7 +295,7 @@ class APIClient {
       } catch (error: any) {
         const code = error?.response?.data?.code;
         if (error?.response?.status === 401) {
-          useSessionClock.getState().markExpired(code === 'SESSION_IDLE' ? 'idle' : 'expired');
+          useSessionClock.getState().markExpired(code === 'SESSION_IDLE' ? 'idle' : code === 'ACCOUNT_DEACTIVATED' ? 'deactivated' : 'expired');
         }
         return null;
       } finally {
@@ -1533,6 +1533,46 @@ class APIClient {
 
   async reviewDPR(dprId: string, decision: 'approve' | 'reject', remarks?: string) {
     const response = await this.client.post(`/reviewer/dprs/${dprId}/review`, { decision, remarks });
+    return response.data;
+  }
+
+  async inviteUser(data: { name: string; email: string; role: string; reviewDistrict?: string }) {
+    const response = await this.client.post('/admin/users/invite', data);
+    return response.data;
+  }
+
+  async deactivateUser(userId: string, reason: string) {
+    const response = await this.client.post(`/admin/users/${userId}/deactivate`, { reason });
+    return response.data;
+  }
+
+  async reactivateUser(userId: string) {
+    const response = await this.client.post(`/admin/users/${userId}/reactivate`);
+    return response.data;
+  }
+
+  async revokeUserSessions(userId: string) {
+    const response = await this.client.post(`/admin/users/${userId}/revoke-sessions`);
+    return response.data;
+  }
+
+  async verifyAuditLog() {
+    const response = await this.client.get('/admin/audit/verify');
+    return response.data;
+  }
+
+  async getAiStatus() {
+    const response = await this.client.get('/admin/ai/status');
+    return response.data;
+  }
+
+  async getInvite(token: string) {
+    const response = await this.client.get(`/auth/invite/${encodeURIComponent(token)}`);
+    return response.data;
+  }
+
+  async acceptInvite(data: Record<string, unknown>) {
+    const response = await this.client.post('/auth/accept-invite', data);
     return response.data;
   }
 

@@ -28,6 +28,20 @@ const userSchema = new Schema<IUser>(
       enum: ['entrepreneur', 'admin', 'officer'],
       default: 'entrepreneur',
     },
+    // Access control: an admin can switch an account off, which also ends every signed-in session within seconds.
+    isActive: { type: Boolean, default: true, index: true },
+    deactivatedAt: { type: Date },
+    deactivatedBy: { type: String },
+    deactivationReason: { type: String, trim: true },
+    // Any token issued before this moment is refused (sign out everywhere, deactivation, reactivation).
+    sessionsValidFrom: { type: Date },
+    // A pending invitation: only a hash of the one-time token is kept.
+    invite: {
+      tokenHash: { type: String, index: true, sparse: true },
+      expiresAt: { type: Date },
+      invitedBy: { type: String },
+      invitedAt: { type: Date },
+    },
     // District a District Reviewer (role 'officer') is assigned to. Set by an admin only.
     reviewDistrict: {
       type: String,

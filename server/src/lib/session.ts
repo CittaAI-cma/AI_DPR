@@ -15,7 +15,8 @@ const COOKIE = 'dpr_refresh';
 
 export function signAccessToken(user: { _id: unknown; email: string; role: string }): string {
   return jwt.sign(
-    { userId: String(user._id), email: user.email, role: user.role },
+    // iatMs is the issue time to the millisecond, so "signed out at" can be compared exactly (the standard iat is whole seconds).
+    { userId: String(user._id), email: user.email, role: user.role, iatMs: Date.now() },
     getJwtSecret(),
     { expiresIn: ACCESS_TOKEN_SECONDS } as SignOptions
   );
@@ -63,7 +64,7 @@ export async function startSession(user: any, req: Request, res: Response): Prom
 
 export type RefreshOutcome =
   | { ok: true; token: string; user: any; expiresInSeconds: number }
-  | { ok: false; code: 'NO_SESSION' | 'SESSION_IDLE' | 'SESSION_EXPIRED' | 'SESSION_REVOKED' };
+  | { ok: false; code: 'NO_SESSION' | 'SESSION_IDLE' | 'SESSION_EXPIRED' | 'SESSION_REVOKED' | 'ACCOUNT_DEACTIVATED' };
 
 /** Swaps a live session for a fresh 15 minute access token and slides the idle window. */
 export async function refreshSession(req: Request, res: Response): Promise<RefreshOutcome> {
@@ -87,6 +88,11 @@ export async function refreshSession(req: Request, res: Response): Promise<Refre
     await RefreshSession.updateOne({ _id: session._id }, { $set: { revokedAt: new Date() } });
     res.clearCookie(COOKIE, { ...cookieOptions(0), maxAge: undefined });
     return { ok: false, code: 'SESSION_REVOKED' };
+  }
+  if (user.isActive === false) {
+    await RefreshSession.updateOne({ _id: session._id }, { $set: { revokedAt: new Date() } });
+    res.clearCookie(COOKIE, { ...cookieOptions(0), maxAge: undefined });
+    return { ok: false, code: 'ACCOUNT_DEACTIVATED' };
   }
   await RefreshSession.updateOne({ _id: session._id }, { $set: { lastUsedAt: new Date(now) } });
   return { ok: true, token: signAccessToken(user), user, expiresInSeconds: ACCESS_TOKEN_SECONDS };

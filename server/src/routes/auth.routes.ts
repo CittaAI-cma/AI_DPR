@@ -36,6 +36,8 @@ router.post(
 );
 
 router.post('/refresh', AuthController.refresh);
+router.get('/invite/:token', AuthController.inviteInfo);
+router.post('/accept-invite', AuthController.acceptInvite);
 router.post('/logout', AuthController.logout);
 router.post('/consent', authenticate, AuthController.acceptConsent);
 router.get('/profile', authenticate, AuthController.getProfile);

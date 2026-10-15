@@ -168,6 +168,26 @@ export const SessionManager: React.FC = () => {
   if (!signedIn) return null;
   const left = expiresAt ? expiresAt - now : 0;
 
+  if (phase === 'expired' && reason === 'deactivated') {
+    return (
+      <div className="motion-overlay fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="alertdialog" aria-modal="true" aria-labelledby="session-title">
+        <div className="w-full max-w-md space-y-4 rounded-xl border border-border bg-background p-6 shadow-xl">
+          <div className="flex items-center gap-3">
+            <Clock className="h-6 w-6 text-red-600" aria-hidden />
+            <h2 id="session-title" className="text-lg font-semibold">{tf('Your account has been deactivated')}</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">{tf('You have been signed out. Please contact the APMSMEDC Admin if you think this is a mistake.')}</p>
+          <div className="flex justify-end">
+            <Button type="button" variant="primary" onClick={() => void signOut()}>
+              <LogOut className="mr-2 h-4 w-4" />
+              {tf('Sign out')}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (phase === 'expired') {
     return (
       <div className="motion-overlay fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="session-title">

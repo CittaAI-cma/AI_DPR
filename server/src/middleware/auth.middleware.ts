@@ -4,12 +4,14 @@ import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../types';
 import { getJwtSecret } from '../lib/jwtSecret';
 import { roleAllowed } from '../lib/roleGate';
+import { getAccountStatus } from '../lib/accountStatus';
+import { collectPersonNames, enterAiContext } from '../lib/aiContext';
 
-export const authenticate = (
+export const authenticate = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -28,9 +30,25 @@ export const authenticate = (
       userId: string;
       email: string;
       role: string;
+      iat?: number;
+      iatMs?: number;
     };
 
+    // A deactivated account, or a token issued before a "sign out everywhere", stops working here.
+    const status = await getAccountStatus(decoded.userId);
+    if (!status.active) {
+      res.status(401).json({ success: false, code: 'ACCOUNT_DEACTIVATED', message: 'This account has been deactivated' });
+      return;
+    }
+    const issuedAtMs = decoded.iatMs ?? (decoded.iat ? decoded.iat * 1000 : 0);
+    if (issuedAtMs && issuedAtMs < status.validFromMs) {
+      res.status(401).json({ success: false, code: 'SESSION_REVOKED', message: 'You were signed out. Please sign in again' });
+      return;
+    }
+
     req.user = decoded;
+    // For the AI gateway: this person's name and the names typed in the request are swapped for placeholders before any AI call.
+    enterAiContext({ userId: decoded.userId, names: [status.name, ...collectPersonNames(req.body)].filter(Boolean) });
     next();
   } catch (error: any) {
     const expired = error?.name === 'TokenExpiredError';

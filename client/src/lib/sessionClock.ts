@@ -21,7 +21,7 @@ export function tokenTimes(token: string | null | undefined): { issuedAt: number
 }
 
 export type SessionPhase = 'active' | 'warning' | 'expired';
-export type EndReason = 'idle' | 'expired' | null;
+export type EndReason = 'idle' | 'expired' | 'deactivated' | null;
 
 interface SessionClockState {
   expiresAt: number | null;
