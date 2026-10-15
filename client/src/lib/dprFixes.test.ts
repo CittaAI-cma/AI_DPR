@@ -650,3 +650,31 @@ describe('automated data checks', () => {
     assert.equal(openFindings(changed, [dismissalKey(first)]).filter((f) => f.id === 'loan.rate').length, 1);
   });
 });
+
+import { breakEvenPercent, fundingSplit, loanCover, monthlyInstalment, workingCapitalNeed } from './individualDpr/financeCalc.ts';
+
+describe('finance calculators', () => {
+  it('works out a monthly instalment', () => {
+    assert.equal(Math.round(monthlyInstalment(10, 12, 60) * 10000) / 10000, 0.2224);
+    assert.equal(monthlyInstalment(12, 0, 12), 1);
+    assert.equal(monthlyInstalment(0, 12, 60), 0);
+  });
+  it('says whether the profit covers the loan', () => {
+    const comfortable = loanCover({ loan: 10, ratePct: 12, months: 60, yearlyAvailable: 5 });
+    assert.equal(comfortable.verdict, 'comfortable');
+    assert.equal(loanCover({ loan: 10, ratePct: 12, months: 60, yearlyAvailable: 3.2 }).verdict, 'tight');
+    assert.equal(loanCover({ loan: 10, ratePct: 12, months: 60, yearlyAvailable: 1 }).verdict, 'short');
+    assert.equal(loanCover({ loan: 0, ratePct: 12, months: 60, yearlyAvailable: 1 }).verdict, 'unknown');
+  });
+  it('finds the break-even share of capacity', () => {
+    assert.equal(breakEvenPercent({ sales: 100, changingCosts: 40, fixedCosts: 30 }), 50);
+    assert.equal(breakEvenPercent({ sales: 100, changingCosts: 120, fixedCosts: 10 }), null);
+    assert.equal(breakEvenPercent({ sales: 0, changingCosts: 0, fixedCosts: 10 }), null);
+  });
+  it('estimates working capital and splits the funding', () => {
+    assert.equal(workingCapitalNeed(24, 3), 6);
+    const split = fundingSplit(100, 10, 25);
+    assert.deepEqual([split.own, split.grant, split.loan, split.overfunded], [10, 25, 65, false]);
+    assert.equal(fundingSplit(100, 70, 50).overfunded, true);
+  });
+});

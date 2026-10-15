@@ -23,3 +23,12 @@ Goal: a non-technical MSME owner can fill the Create DPR form without any outsid
 - In `npm run dev`, `window.__plainMissing` (browser console) lists labels shown on the screens you visited that have no plain wording yet; `window.__tfMissing` lists untranslated strings.
 - Tests check that wording never promises an outcome ("guaranteed", "you will get"), that nothing asks for a personal PAN or Aadhaar number, and that common steps have an intro.
 - A native Telugu speaker should read the Telugu once before release.
+
+## Calculators (and what was deliberately not built)
+
+- **Not built: hover cards or modal explainers for every term.** About 360 labels already carry a plain note, 50 technical words are explained inline, and 118 tooltips are in plain words. A second layer of pop-ups for the same terms would only add clicks.
+- **Built: four small calculators** for numbers the person has to produce but cannot easily work out (`components/individual-dpr/FinanceCalculators.tsx`, maths in `lib/individualDpr/financeCalc.ts`, unit tested). Each opens from a "Not sure what to enter?" strip, explains the term in two sentences, shows the answer live and has **Use these values** to write it into the form:
+  - Project cost step: **working capital** (months of running costs).
+  - Means of finance step: **split the funding** (own %, subsidy % → bank loan left) and **loan instalment and DSCR** (instalment, DSCR and whether it is comfortable, tight or not enough; Banks usually look for 1.5 or more).
+  - Financial viability step: **break-even** (share of capacity).
+- Inputs default from what is already entered (project cost, loan, interest rate, yearly sales and costs).

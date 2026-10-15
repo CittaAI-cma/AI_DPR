@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { FieldPrompt } from '@/components/ui/FieldPrompt';
+import { FinanceCalcStrip } from '@/components/individual-dpr/FinanceCalculators';
 import { ReusedNote, ScheduleParties } from '@/components/individual-dpr/ScheduleParties';
 import React from 'react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
@@ -346,6 +347,11 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
       return value;
     }
     return '';
+  };
+
+  /** A calculator writes its answers straight into the step they belong to. */
+  const applyCalc = (step: number, patch: Record<string, number>) => {
+    setStepData(step, { ...(getStepData(step) || {}), ...patch });
   };
 
   const handleInputChange = (field: string, value: any) => {
@@ -3894,6 +3900,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     return (
       <div className="space-y-6">
         <ScheduleParties data={data} />
+        <FinanceCalcStrip contentStep={12} data={data} onApply={applyCalc} />
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
@@ -4092,6 +4099,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     return (
       <div className="space-y-6">
         <ScheduleParties data={data} />
+        <FinanceCalcStrip contentStep={13} data={data} onApply={applyCalc} />
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
@@ -4590,6 +4598,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
     return (
       <div className="space-y-6">
+        <FinanceCalcStrip contentStep={15} data={data} onApply={applyCalc} />
         <AISuggestions
           {...aiStore}
           excludeFields={aiExclude}
