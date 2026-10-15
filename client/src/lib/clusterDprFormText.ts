@@ -3,16 +3,42 @@ import { SCHEME_STEP_TITLES_TE } from '@/lib/individualDpr/schemeStepTitlesTe';
 import { BUSINESS_SKILLS_TE } from '@/lib/individualDpr/businessSkillsTe';
 import { FORM_FIELD_TE } from '@/lib/individualDpr/formFieldTe';
 import { AP_PLACES_TE } from '@/lib/individualDpr/apPlacesTe';
+import { EXTRA_TE } from '@/lib/i18n/te';
+import enLocale from '@/i18n/locales/en.json';
+import teLocale from '@/i18n/locales/te.json';
 import { useTranslation } from 'react-i18next';
 import { useCallback } from 'react';
 
+/** Plain-language scheme names (Scheme Finder) reused wherever the same English name is shown. */
+const SCHEME_NAMES_FROM_LOCALE: Record<string, string> = {};
+{
+  const enSchemes = (enLocale as any).ventureMatch?.schemes || {};
+  const teSchemes = (teLocale as any).ventureMatch?.schemes || {};
+  for (const code of Object.keys(enSchemes)) {
+    if (enSchemes[code]?.name && teSchemes[code]?.name) {
+      SCHEME_NAMES_FROM_LOCALE[enSchemes[code].name] = teSchemes[code].name;
+    }
+  }
+}
+
+/** Section titles are shown bare in the document and as "Step N: Title" in the form. */
+const BARE_STEP_TITLES: Record<string, string> = {};
+for (const [en, te] of Object.entries(SCHEME_STEP_TITLES_TE)) {
+  const bareEn = en.replace(/^Step \d+:\s*/, '');
+  const bareTe = te.replace(/^దశ \d+:\s*/, '');
+  if (bareEn !== en && bareTe !== te) BARE_STEP_TITLES[bareEn] = bareTe;
+}
+
 /** English UI string → Telugu. Missing keys fall back to English. */
 const TE: Record<string, string> = {
+  ...SCHEME_NAMES_FROM_LOCALE,
+  ...BARE_STEP_TITLES,
   ...SCHEME_FORM_TE,
   ...SCHEME_STEP_TITLES_TE,
   ...BUSINESS_SKILLS_TE,
   ...FORM_FIELD_TE,
   ...AP_PLACES_TE,
+  ...EXTRA_TE,
   'Suggested for you': 'మీ కోసం సూచించినది',
   'May also suit you': 'మీకు కూడా సరిపోవచ్చు',
   'Tags come from your Scheme Finder answers. They are suggestions, not a promise.': 'ట్యాగ్‌లు మీ స్కీమ్ ఫైండర్ సమాధానాల ఆధారంగా వస్తాయి. ఇవి సూచనలు మాత్రమే, హామీ కాదు.',
@@ -564,7 +590,13 @@ export function useClusterFormText() {
     (en: string) => {
       if (!en) return en;
       if (!isTe) return en;
-      return TE[en] || en;
+      const te = TE[en];
+      if (!te && import.meta.env.DEV && /[A-Za-z]{3,}/.test(en)) {
+        // Dev aid: `window.__tfMissing` lists English strings shown without a Telugu entry.
+        const w = window as unknown as { __tfMissing?: Set<string> };
+        (w.__tfMissing ||= new Set()).add(en);
+      }
+      return te || en;
     },
     [isTe]
   );

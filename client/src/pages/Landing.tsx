@@ -8,6 +8,7 @@ import { AccessibilityBar } from '@/components/layout/AccessibilityBar';
 import { HowItWorksShowcase } from '@/components/landing/HowItWorksShowcase';
 import { BenefitsAccordion } from '@/components/landing/BenefitsAccordion';
 import { FeaturesScroller } from '@/components/landing/FeaturesScroller';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useLandingCopy } from '@/i18n/landingCopy';
 import {
   Sparkles,
@@ -85,6 +86,7 @@ const IconTile: React.FC<{ icon: React.ElementType; tone?: Tone; className?: str
 export const Landing: React.FC = () => {
   const handleLinkClick = useLinkHandler();
   const { c } = useLandingCopy();
+  const tf = useClusterFormText();
   // soft shadow under the sticky header only once the page is scrolled (no divider line at rest)
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -128,7 +130,7 @@ export const Landing: React.FC = () => {
           scrolled ? 'shadow-[0_6px_20px_-12px_rgba(16,40,40,0.35)]' : ''
         }`}
       >
-        <nav aria-label="Primary" className="page-container">
+        <nav aria-label={tf('Primary navigation')} className="page-container">
           <div className="flex min-h-[64px] flex-wrap items-center justify-between gap-x-2 gap-y-2 py-2 sm:gap-x-3 md:min-h-[72px]">
             <a
               href="#hero"
@@ -180,7 +182,7 @@ export const Landing: React.FC = () => {
             <div className="relative z-10 mx-auto max-w-[60rem] text-center">
               <img
                 src="/apmsme_logo.png"
-                alt="APMSME Logo"
+                alt={tf('APMSME Logo')}
                 className="mx-auto mb-4 h-14 w-auto object-contain md:h-16 lg:[@media(max-height:820px)]:mb-3 lg:[@media(max-height:820px)]:h-12"
               />
               <h1 id="hero-title" className="type-display mx-auto text-ink">

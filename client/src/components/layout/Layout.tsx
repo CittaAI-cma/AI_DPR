@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React from 'react';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { Navbar } from './Navbar';
 import { useAuthStore } from '@/store/authStore';
 
@@ -9,6 +10,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, fullBleed = false }) => {
+  const tf = useClusterFormText();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const railClear = isAuthenticated ? 'md:max-[1528px]:pl-[4.75rem]' : '';
 
@@ -31,10 +33,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullBleed = false }) =
       </main>
       <footer className={`border-t py-4 text-center text-xs text-muted-foreground ${railClear}`}>
         <a href="/privacy" className="hover:underline">
-          Privacy notice
+          {tf('Privacy notice')}
         </a>
         {' · '}
-        MSME One Department
+        {tf('MSME One Department')}
       </footer>
     </div>
   );

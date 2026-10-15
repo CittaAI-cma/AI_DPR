@@ -781,7 +781,7 @@ export class DPRController {
   static async downloadPDF(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { dprId } = req.params;
-      const { language = 'english' } = req.query;
+      const language: string = 'english'; // Exported documents are English only, whatever the request asks for.
       // Get enhanced paragraphs from request body (for POST) or query (for GET backward compatibility)
       const enhancedParagraphs = req.body?.enhancedParagraphs || req.query?.enhancedParagraphs;
 
@@ -857,7 +857,7 @@ export class DPRController {
   static async downloadPDFHtml(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { dprId } = req.params;
-      const { language = 'english' } = req.query;
+      const language: string = 'english'; // Exported documents are English only, whatever the request asks for.
       const html = req.body?.html;
 
       if (!html || typeof html !== 'string' || html.trim().length === 0) {
@@ -942,7 +942,7 @@ export class DPRController {
   static async downloadDOCX(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { dprId } = req.params;
-      const { language = 'english' } = req.query;
+      const language: string = 'english'; // Exported documents are English only, whatever the request asks for.
 
       const docxBuffer = await DPRService.generateDOCX(
         dprId,
@@ -982,7 +982,7 @@ export class DPRController {
   static async downloadSessionPDF(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { sessionId } = req.params;
-      const { language = 'english' } = req.query;
+      const language: string = 'english'; // Exported documents are English only, whatever the request asks for.
 
       const pdfBuffer = await DPRService.generatePDFFromSession(
         sessionId,
@@ -1441,7 +1441,7 @@ export class DPRController {
       }
 
       const { dprId } = req.params;
-      const { language = 'english' } = req.query;
+      const language: string = 'english'; // Exported documents are English only, whatever the request asks for.
 
       const dpr = await DPRService.getDPR(dprId);
       

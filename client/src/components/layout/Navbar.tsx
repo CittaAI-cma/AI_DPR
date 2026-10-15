@@ -17,8 +17,10 @@ import { SideMenu, useAppNavLinks } from '@/components/layout/SideMenu';
 import { DevModeToggle } from '@/components/ui/DevModeToggle';
 import { useDevModeStore } from '@/store/devModeStore';
 
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 export const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const tf = useClusterFormText();
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
   const handleLinkClick = useLinkHandler();
@@ -64,7 +66,7 @@ export const Navbar: React.FC = () => {
           >
             <img 
               src="/apmsme_logo.png" 
-              alt="APMSME Logo" 
+              alt={tf('APMSME Logo')} 
               className="h-10 w-auto shrink-0 object-contain sm:h-12"
             />
             <span className="hidden truncate text-base font-semibold text-foreground min-[480px]:inline sm:text-xl">

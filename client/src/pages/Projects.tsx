@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useProjectStore } from '@/store/projectStore';
@@ -16,6 +17,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 
 export const Projects: React.FC = () => {
   const { t } = useTranslation();
+  const tf = useClusterFormText();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const isAdmin = isSuperAdmin(user?.role);
@@ -96,7 +98,7 @@ export const Projects: React.FC = () => {
               className="border-2"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Create DPR
+              {tf('Create DPR')}
             </Button>
             <Button
               variant="outline"
@@ -192,7 +194,7 @@ export const Projects: React.FC = () => {
                   </div>
                   <CardTitle className="text-xl mb-1">{project.projectName}</CardTitle>
                   <CardDescription className="text-base">
-                    {project.industrySector}
+                    {tf(String(project.industrySector ?? ''))}
                   </CardDescription>
                   {isAdmin && project.userId && (
                     <div className="flex items-center gap-2 mt-2">
@@ -235,7 +237,7 @@ export const Projects: React.FC = () => {
                       size="sm"
                       className="flex-1 border-2 hover:bg-secondary/5 hover:border-secondary"
                       onClick={() => navigate('/individual-dpr/create?new=true')}
-                      title="Create DPR"
+                      title={tf('Create DPR')}
                     >
                       <FileText className="h-4 w-4 mr-1" />
                       DPR

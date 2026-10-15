@@ -1083,7 +1083,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               {apEdpSubsidyCapLakhs(extras.enterpriseSize, extras.specialCategory).toLocaleString(
                 'en-IN'
               )}{' '}
-              {tf('L')} · {extras.enterpriseSize || '—'} / special {extras.specialCategory || '—'}.
+              {tf('L')} · {extras.enterpriseSize || '—'} / {tf('special')} {extras.specialCategory || '—'}.
               {apEdpLandRebateEligible(
                 extras.apiicPark,
                 extras.scStOwned,
@@ -1138,7 +1138,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             </div>
             <p className="text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
               {tf('Indicative quantum')} {ECLGS_QUANTUM_PERCENT}% ≈ ₹
-              {eclgsIndicativeQuantumLakhs(extras.peakWcOutstanding).toLocaleString('en-IN')} {tf('L')} · ROI cap {ECLGS_INTEREST_CAP_PERCENT}% · tenor {ECLGS_TENOR_YEARS} {tf('yrs')}.
+              {eclgsIndicativeQuantumLakhs(extras.peakWcOutstanding).toLocaleString('en-IN')} {tf('L')} · {tf('ROI cap')} {ECLGS_INTEREST_CAP_PERCENT}% · {tf('tenor')} {ECLGS_TENOR_YEARS} {tf('yrs')}.
             </p>
           </div>
         )}
@@ -2309,7 +2309,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               {apTechSubsidyCapLakhs(extras.enterpriseSize, extras.specialCategory).toLocaleString(
                 'en-IN'
               )}{' '}
-              {tf('L')} · {extras.enterpriseSize || '—'} / special {extras.specialCategory || '—'}.
+              {tf('L')} · {extras.enterpriseSize || '—'} / {tf('special')} {extras.specialCategory || '—'}.
             </p>
           </div>
         )}
@@ -4276,7 +4276,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {PMFME_SUBSIDY_CAP_LAKHS} {tf('L')}. {tf('Min own')} {PMFME_MIN_OWN_PERCENT}%.{' '}
             {tf('Indicative grant for current project cost fields')} ≈ ₹
             {pmfmeIndicativeGrantLakhs(projectCostFromStep12).toLocaleString('en-IN')}{' '}
-            {tf('Lakhs')} · {extras.unitStage || '—'} / ODOP {extras.odopAligned || '—'}.
+            {tf('Lakhs')} · {extras.unitStage || '—'} / {tf('ODOP')} {extras.odopAligned || '—'}.
           </p>
         )}
         {isSclcss && (
@@ -4286,7 +4286,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             )}{' '}
             ≈ ₹
             {sclcssIndicativeGrantLakhs(toFiniteNumber(step12.machinery)).toLocaleString('en-IN')}{' '}
-            {tf('Lakhs')} · {extras.sclcssCategory || '—'} / stake {extras.controllingStakePercent || '—'}%.
+            {tf('Lakhs')} · {extras.sclcssCategory || '—'} / {tf('stake')} {extras.controllingStakePercent || '—'}%.
           </p>
         )}
         {isApTech && (
@@ -4369,7 +4369,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               'ECLGS is a guaranteed WCTL — governmentGrant usually 0. Bank loan ≈ additional WC sought. Indicative 20% of peak'
             )}{' '}
             ≈ ₹{eclgsIndicativeQuantumLakhs(extras.peakWcOutstanding).toLocaleString('en-IN')}{' '}
-            {tf('L')} · sought {extras.additionalWcSought || '—'} · ROI cap {ECLGS_INTEREST_CAP_PERCENT}%.
+            {tf('L')} · {tf('sought')} {extras.additionalWcSought || '—'} · {tf('ROI cap')} {ECLGS_INTEREST_CAP_PERCENT}%.
           </p>
         )}
         {isCgtmse && (

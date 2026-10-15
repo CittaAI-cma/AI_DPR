@@ -42,8 +42,10 @@ import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
 import { captureElementAsStandaloneHTML } from '@/lib/htmlCapture';
 
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 export const DPRPreview: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const tf = useClusterFormText();
   const { dprId } = useParams();
   const navigate = useNavigate();
   const back = useBackTarget({ path: '/dashboard' });
@@ -228,7 +230,7 @@ export const DPRPreview: React.FC = () => {
         }
       }
       
-      toast.error('Failed to load DPR');
+      toast.error(tf('Failed to load DPR'));
     } finally {
       setLoading(false);
     }
@@ -311,10 +313,10 @@ export const DPRPreview: React.FC = () => {
             : {}),
         },
       });
-      toast.success('Style saved on this DPR');
+      toast.success(tf('Style saved on this DPR'));
       setStyling(false);
     } catch {
-      toast.error('Could not save the style');
+      toast.error(tf('Could not save the style'));
     } finally {
       setStyleSaving(false);
     }
@@ -327,9 +329,9 @@ export const DPRPreview: React.FC = () => {
     try {
       setStyleSaving(true);
       await api.saveSchemeDocumentStyle(scheme, draftStyle);
-      toast.success('The next DPR for this scheme starts from this look');
+      toast.success(tf('The next DPR for this scheme starts from this look'));
     } catch {
-      toast.error('Could not save the scheme default');
+      toast.error(tf('Could not save the scheme default'));
     } finally {
       setStyleSaving(false);
     }
@@ -366,7 +368,7 @@ export const DPRPreview: React.FC = () => {
 
       setEditingSection(null);
       setEditedContent('');
-      toast.success('Content updated successfully');
+      toast.success(tf('Content updated successfully'));
       
       // Reload quality score
       const qualityResponse = await api.analyzeDPRQuality(dprId!);
@@ -375,7 +377,7 @@ export const DPRPreview: React.FC = () => {
         setQualityFeedback(qualityResponse.data);
       }
     } catch (error) {
-      toast.error('Failed to update content');
+      toast.error(tf('Failed to update content'));
     } finally {
       setSaving(false);
     }
@@ -388,11 +390,18 @@ export const DPRPreview: React.FC = () => {
 
   const handleDownload = async (format: 'pdf' | 'docx' | 'xls') => {
     try {
+      // Exports are English only. The on-screen document is what gets printed, so show it in English first.
+      const exportLanguage = 'english' as const;
+      if (viewLanguage !== exportLanguage) {
+        toast(tf('Exports are English only. Switching the document to English.'));
+        setViewLanguage(exportLanguage);
+        await new Promise((resolve) => window.setTimeout(resolve, 900));
+      }
       // Get enhanced paragraphs from database (DPR content) for cluster DPRs
       let enhancedParagraphs: Record<string, string> | undefined;
       if (isClusterDPR && dpr) {
         // Get enhanced content from DPR content (from database)
-        const dprContent = dpr.content?.[viewLanguage] || dpr.content?.english || dpr.content?.telugu || {};
+        const dprContent = dpr.content?.[exportLanguage] || dpr.content?.english || dpr.content?.telugu || {};
         enhancedParagraphs = dprContent.enhancedContent || {};
         if (Object.keys(enhancedParagraphs).length > 0) {
           console.log('📥 Loaded enhanced paragraphs from database for download:', Object.keys(enhancedParagraphs).length, 'sections');
@@ -403,7 +412,7 @@ export const DPRPreview: React.FC = () => {
         dprDownloadName({
           schemeCode: dpr ? dprSchemeCode(dpr) : '',
           projectName: project?.projectName,
-          language: viewLanguage,
+          language: exportLanguage,
           ext,
         });
 
@@ -415,30 +424,30 @@ export const DPRPreview: React.FC = () => {
           if (root) {
             try {
               const html = captureElementAsStandaloneHTML(root);
-              blob = await api.downloadPDFExactFromHTML(dprId!, html, viewLanguage);
+              blob = await api.downloadPDFExactFromHTML(dprId!, html, exportLanguage);
             } catch (htmlErr) {
               console.warn('HTML PDF failed, using server PDF', htmlErr);
-              blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
+              blob = await api.downloadPDF(dprId!, exportLanguage, enhancedParagraphs);
             }
             downloadBlob(blob, fileName('pdf'));
           } else {
-            blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
+            blob = await api.downloadPDF(dprId!, exportLanguage, enhancedParagraphs);
             downloadBlob(blob, fileName('pdf'));
           }
         } else {
-          blob = await api.downloadPDF(dprId!, viewLanguage, enhancedParagraphs);
+          blob = await api.downloadPDF(dprId!, exportLanguage, enhancedParagraphs);
           downloadBlob(blob, fileName('pdf'));
         }
       } else if (format === 'docx') {
-        blob = await api.downloadDOCX(dprId!, viewLanguage);
+        blob = await api.downloadDOCX(dprId!, exportLanguage);
         downloadBlob(blob, fileName('docx'));
       } else if (format === 'xls') {
-        blob = await api.downloadXLS(dprId!, viewLanguage);
+        blob = await api.downloadXLS(dprId!, exportLanguage);
         downloadBlob(blob, fileName('xlsx'));
       }
-      toast.success(`${format.toUpperCase()} downloaded successfully!`);
+      toast.success(tf('{f} downloaded successfully!').replace('{f}', format.toUpperCase()));
     } catch (error) {
-      toast.error(`Failed to download ${format.toUpperCase()}`);
+      toast.error(tf('Failed to download {f}').replace('{f}', format.toUpperCase()));
     }
   };
 
@@ -446,10 +455,10 @@ export const DPRPreview: React.FC = () => {
     try {
       setSubmitting(true);
       await api.submitDPR(dprId!, submittedTo);
-      toast.success('DPR submitted successfully!');
+      toast.success(tf('DPR submitted successfully!'));
       await loadDPR(); // Reload to get updated status
     } catch (error) {
-      toast.error('Failed to submit DPR');
+      toast.error(tf('Failed to submit DPR'));
     } finally {
       setSubmitting(false);
     }
@@ -460,13 +469,13 @@ export const DPRPreview: React.FC = () => {
       setTranslating(true);
       const response = await api.translateToTelugu(dprId!);
       if (response.success) {
-        toast.success('DPR translated to Telugu successfully!');
+        toast.success(tf('DPR translated to Telugu successfully!'));
         setHasTelugu(true);
         await loadDPR(); // Reload to get Telugu content
         setViewLanguage('telugu'); // Switch to Telugu view
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to translate DPR to Telugu');
+      toast.error(error.response?.data?.message || tf('Failed to translate DPR to Telugu'));
     } finally {
       setTranslating(false);
     }
@@ -937,12 +946,12 @@ export const DPRPreview: React.FC = () => {
           <Card className="border-2 shadow-lg">
             <CardHeader className="flex-shrink-0 border-b border-border">
               <div className="flex items-center justify-between">
-                <CardTitle>DPR Preview</CardTitle>
+                <CardTitle>{tf('DPR Preview')}</CardTitle>
                 <div className="flex items-center gap-2">
                   {!styling ? (
                     <Button variant="outline" size="sm" onClick={openEditView}>
                       <Edit2 className="h-4 w-4 mr-2" />
-                      Edit this DPR
+                      {tf('Edit this DPR')}
                     </Button>
                   ) : null}
                   {!styling ? (
@@ -952,7 +961,7 @@ export const DPRPreview: React.FC = () => {
                       size="sm"
                       onClick={() => setPreviewZoom(Math.max(0.3, previewZoom - 0.1))}
                       className="h-7 w-7 p-0"
-                      title="Zoom Out"
+                      title={tf('Zoom Out')}
                     >
                       <ZoomOut className="h-4 w-4" />
                     </Button>
@@ -964,7 +973,7 @@ export const DPRPreview: React.FC = () => {
                       size="sm"
                       onClick={() => setPreviewZoom(Math.min(2, previewZoom + 0.1))}
                       className="h-7 w-7 p-0"
-                      title="Zoom In"
+                      title={tf('Zoom In')}
                     >
                       <ZoomIn className="h-4 w-4" />
                     </Button>
@@ -973,7 +982,7 @@ export const DPRPreview: React.FC = () => {
                       size="sm"
                       onClick={() => setPreviewZoom(0.6)}
                       className="h-7 w-7 p-0"
-                      title="Reset Zoom to 60%"
+                      title={tf('Reset Zoom to 60%')}
                     >
                       <RotateCcw className="h-4 w-4" />
                     </Button>

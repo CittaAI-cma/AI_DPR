@@ -852,8 +852,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             <div className="pmegp-flag-band" aria-hidden="true" />
             <div className="pmegp-cover-top">
               <div className="pmegp-agency">
-                <span className="pmegp-agency-mark">KVIC</span>
-                <span className="pmegp-agency-text">Khadi &amp; Village Industries Commission</span>
+                <span className="pmegp-agency-mark">{tf('KVIC')}</span>
+                <span className="pmegp-agency-text">{tf('Khadi & Village Industries Commission')}</span>
               </div>
               <p className="cover-pack-badge">{tf(schemeUi.badge)}</p>
             </div>
@@ -999,8 +999,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
 
       {schemeUi?.id === 'PMEGP' && !style ? (
         <footer className="pmegp-doc-footer">
-          <span>PMEGP · Bank-unit Detailed Project Report</span>
-          <span>Confidential — for lending appraisal</span>
+          <span>{tf('PMEGP · Bank-unit Detailed Project Report')}</span>
+          <span>{tf('Confidential — for lending appraisal')}</span>
         </footer>
       ) : null}
     </div>

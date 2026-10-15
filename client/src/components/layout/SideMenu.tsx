@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { ChevronRight, FileText, Files, FolderKanban, LayoutDashboard, MessageSquare, Settings } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -52,6 +53,7 @@ export function useAppNavLinks() {
 /** Icon rail under the header on tablet and desktop. Phones use the menu in the top bar instead. Hover (or tap) expands it over the page. */
 export const SideMenu: React.FC = () => {
   const { t } = useTranslation();
+  const tf = useClusterFormText();
   const location = useLocation();
   const handleLinkClick = useLinkHandler();
   const fineHover = useFineHover();
@@ -167,7 +169,7 @@ export const SideMenu: React.FC = () => {
           type="button"
           className={`mb-2 ${showDevMode ? '' : 'mt-auto'} flex h-11 w-12 items-center justify-center text-muted-foreground hover:text-foreground`}
           aria-expanded={open}
-          aria-label={open ? 'Collapse menu' : 'Expand menu'}
+          aria-label={tf(open ? 'Collapse menu' : 'Expand menu')}
           onClick={() => setPinned((value) => !value)}
         >
           <ChevronRight className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} />

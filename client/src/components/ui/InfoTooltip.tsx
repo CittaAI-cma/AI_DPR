@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Info } from 'lucide-react';
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 
 interface InfoTooltipProps {
   content: string;
@@ -13,6 +14,7 @@ const GAP = 8;
 const MAX_WIDTH = 288;
 
 export const InfoTooltip: React.FC<InfoTooltipProps> = ({ content, className = '' }) => {
+  const tf = useClusterFormText();
   const [isOpen, setIsOpen] = useState(false);
   const [pos, setPos] = useState(null);
   const buttonRef = useRef(null);
@@ -76,7 +78,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({ content, className = '
         onBlur={() => setIsOpen(false)}
         onClick={() => setIsOpen((open) => !open)}
         className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-help"
-        aria-label="Information"
+        aria-label={tf("Information")}
       >
         <Info className="h-3 w-3" />
       </button>

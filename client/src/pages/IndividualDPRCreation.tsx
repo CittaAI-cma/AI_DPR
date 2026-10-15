@@ -700,7 +700,7 @@ export const IndividualDPRCreation: React.FC = () => {
   };
 
   const selectedSchemeLabel =
-    SCHEME_OPTIONS.find((o) => o.code === (data.matchedSchemeCode || ''))?.label ||
+    tf(SCHEME_OPTIONS.find((o) => o.code === (data.matchedSchemeCode || ''))?.label || '') ||
     tf(schemeImpact.title);
   const schemeUi = getSchemeUiTemplate(data.matchedSchemeCode || null);
 
@@ -816,7 +816,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       >
                         {SCHEME_OPTIONS.map((opt) => (
                           <option key={opt.code || 'vanilla'} value={opt.code}>
-                            {opt.label}
+                            {tf(opt.label)}
                           </option>
                         ))}
                       </select>
@@ -1265,10 +1265,10 @@ export const IndividualDPRCreation: React.FC = () => {
                             size="sm"
                             className="h-8 px-2 bg-white/95 shadow"
                             onClick={() => goToPreviewHit(previewHitIndex - 1)}
-                            title="Previous changed place"
+                            title={tf('Previous changed place')}
                           >
                             <ChevronUp className="h-4 w-4 mr-1" />
-                            Up
+                            {tf('Up')}
                           </Button>
                         )}
                         {previewHitIndex < previewHitCount - 1 && (
@@ -1278,10 +1278,10 @@ export const IndividualDPRCreation: React.FC = () => {
                             size="sm"
                             className="h-8 px-2 bg-white/95 shadow"
                             onClick={() => goToPreviewHit(previewHitIndex + 1)}
-                            title="Next changed place"
+                            title={tf('Next changed place')}
                           >
                             <ChevronDown className="h-4 w-4 mr-1" />
-                            Down
+                            {tf('Down')}
                           </Button>
                         )}
                         <span className="text-[10px] text-center text-gray-600 bg-white/90 rounded px-1 py-0.5 shadow">

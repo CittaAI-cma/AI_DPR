@@ -18,8 +18,10 @@ import { ageFromDob } from '@/lib/privacy/under18';
 import { PRIVACY_NOTICE_VERSION, UNDER_18_CODE } from '@/lib/privacy/constants';
 import { toBackendRole, type AppRole } from '@/lib/rbac';
 
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 export const Register: React.FC = () => {
   const { t } = useTranslation();
+  const tf = useClusterFormText();
   const navigate = useNavigate();
   const handleLinkClick = useLinkHandler();
   const { login } = useAuthStore();
@@ -131,7 +133,7 @@ export const Register: React.FC = () => {
           <div className="inline-flex items-center justify-center mb-4">
             <img 
               src="/apmsme_logo.png" 
-              alt="APMSME Logo" 
+              alt={tf('APMSME Logo')} 
               className="h-20 w-auto object-contain"
             />
           </div>
@@ -163,7 +165,7 @@ export const Register: React.FC = () => {
                 <Input
                   label={t('auth.name')}
                   type="text"
-                  placeholder="John Doe"
+                  placeholder={tf('John Doe')}
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
@@ -220,7 +222,7 @@ export const Register: React.FC = () => {
                 <Input
                   label={t('auth.location')}
                   type="text"
-                  placeholder="Hyderabad, Telangana"
+                  placeholder={tf('Hyderabad, Telangana')}
                   value={formData.location}
                   onChange={(e) =>
                     setFormData({ ...formData, location: e.target.value })

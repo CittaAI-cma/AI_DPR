@@ -816,7 +816,7 @@ export const ClusterDPRCreation: React.FC = () => {
                           className="gap-2"
                         >
                           <Maximize2 className="h-4 w-4" />
-                          Fullscreen
+                          {tf('Fullscreen')}
                         </Button>
                       </div>
                     </div>

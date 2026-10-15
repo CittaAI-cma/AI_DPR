@@ -30,6 +30,7 @@ import { useDprActions } from '@/lib/dprActions';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { canCreateDpr, ROLE_META, toAppRole } from '@/lib/rbac';
 
+import { useClusterFormText } from '@/lib/clusterDprFormText';
 interface DPR {
   _id: string;
   projectId: any;
@@ -44,6 +45,7 @@ interface DPR {
 
 export const Dashboard: React.FC = () => {
   const { t } = useTranslation();
+  const tf = useClusterFormText();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { dprs: cachedDPRs, setDPRs, isStale: isDPRsStale } = useDPRStore();
@@ -173,7 +175,7 @@ export const Dashboard: React.FC = () => {
       }
       
       // If we reach here, show error but don't prevent UI from rendering
-      toast.error('Failed to load dashboard data. Showing empty state.');
+      toast.error(tf('Failed to load dashboard data. Showing empty state.'));
     } finally {
       setLoading(false);
     }
@@ -329,7 +331,7 @@ export const Dashboard: React.FC = () => {
                   className="gap-2 whitespace-nowrap"
                 >
                   <FileText className="h-4 w-4" />
-                  Create DPR
+                  {tf('Create DPR')}
                 </Button>
                 <Button
                   variant="outline"
@@ -428,7 +430,7 @@ export const Dashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Analyzed
+                    {tf('Analyzed')}
                   </p>
                   {showPlaceholders ? (
                     <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
@@ -436,7 +438,7 @@ export const Dashboard: React.FC = () => {
                     <h3 className="text-3xl font-bold text-foreground">{stats.analyzed}</h3>
                   )}
                   {!showPlaceholders && (
-                    <p className="text-sm text-muted-foreground mt-1">{stats.analyzed} Analyzed DPRs</p>
+                    <p className="text-sm text-muted-foreground mt-1">{stats.analyzed} {tf('Analyzed DPRs')}</p>
                   )}
                 </div>
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -554,7 +556,7 @@ export const Dashboard: React.FC = () => {
                     size="lg"
                   >
                     <FileText className="h-5 w-5 mr-2" />
-                    Create DPR
+                    {tf('Create DPR')}
                   </Button>
                   <Button
                     variant="outline"
@@ -592,7 +594,7 @@ export const Dashboard: React.FC = () => {
                           {(() => {
                             const effectiveStatus = getEffectiveStatus(dpr);
                             if (effectiveStatus === 'analyzed') {
-                              return `Analyzed (${dpr.qualityScore}/100)`;
+                              return `${tf('Analyzed')} (${dpr.qualityScore}/100)`;
                             }
                             return effectiveStatus ? (effectiveStatus.charAt(0).toUpperCase() + effectiveStatus.slice(1)) : 'Draft';
                           })()}
@@ -685,8 +687,8 @@ export const Dashboard: React.FC = () => {
                 <div className="h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center">
                   <FileText className="h-6 w-6" />
                 </div>
-                <span className="font-semibold">Create DPR</span>
-                <span className="text-sm opacity-90">Individual / scheme-aware</span>
+                <span className="font-semibold">{tf('Create DPR')}</span>
+                <span className="text-sm opacity-90">{tf('Individual / scheme-aware')}</span>
               </Button>
               <Button
                 variant="outline"

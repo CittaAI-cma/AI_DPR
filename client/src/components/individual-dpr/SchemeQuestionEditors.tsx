@@ -134,7 +134,7 @@ export function RawMaterialEditor({ value, onChange }: { value: unknown; onChang
   const rows = normalizeRawMaterials(value);
   return (
     <RowList
-      title="Raw materials"
+      title={tf('Raw materials')}
       rows={rows}
       onChange={onChange}
       blank={{ name: '', use: '', basis: '' }}
@@ -165,7 +165,7 @@ export function StaffRoleEditor({ value, onChange }: { value: unknown; onChange:
   const rows = normalizeStaffRoles(value);
   return (
     <RowList
-      title="Staff by role and monthly pay"
+      title={tf('Staff by role and monthly pay')}
       rows={rows}
       onChange={onChange}
       blank={{ role: '', count: 0, monthlyPay: 0 }}
@@ -196,7 +196,7 @@ export function RiskEditor({ value, onChange }: { value: unknown; onChange: (nex
   const rows = normalizeRisks(value);
   return (
     <RowList
-      title="Risks and how they will be handled"
+      title={tf('Risks and how they will be handled')}
       rows={rows}
       onChange={onChange}
       blank={{ risk: '', mitigation: '' }}

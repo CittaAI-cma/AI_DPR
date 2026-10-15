@@ -84,6 +84,17 @@ export const LEAN_UNIT_CODES = new Set([
 ]);
 
 export const EXTRA_FIELD_LABELS: Record<string, string> = {
+  yearsInOperation: 'Years in operation',
+  existingTurnover: 'Existing annual turnover',
+  existingLimit: 'Existing credit limit',
+  experienceYears: 'Experience (years)',
+  priorSanctionAmount: 'Prior sanction amount',
+  marginMoneyAdjusted: 'Margin money already adjusted',
+  yearsProfitable: 'Years of profit',
+  sectorBand: 'Sector band',
+  rawMaterialSources: 'Raw material sources',
+  udyamStatus: 'Udyam status',
+  loanAmountSought: 'Loan amount sought',
   directEmployment: 'Direct employment (count)',
   indirectEmployment: 'Indirect employment (count)',
   impactNote: 'Short impact note',
