@@ -127,10 +127,10 @@ for (const file of files) {
     if (ts.isJsxText(n)) {
       const s = n.text.replace(/\s+/g, ' ').trim();
       if (s && isWords(s)) literals.push(`${where(n)} text "${s.slice(0, 50)}"`);
-    } else if (ts.isJsxAttribute(n) && ATTRS.has(n.name.text) && n.initializer && ts.isStringLiteral(n.initializer) && !(ts.isJsxOpeningLikeElement(n.parent.parent) && n.parent.parent.tagName.getText() === 'FieldPrompt')) {
+    } else if (ts.isJsxAttribute(n) && ATTRS.has(n.name.text) && n.initializer && ts.isStringLiteral(n.initializer) && !(ts.isJsxOpeningLikeElement(n.parent.parent) && ['FieldPrompt', 'FieldHelp'].includes(n.parent.parent.tagName.getText()))) {
       const s = n.initializer.text;
       if (isWords(s)) literals.push(`${where(n)} ${n.name.text}="${s.slice(0, 50)}"`);
-    } else if (ts.isJsxSelfClosingElement(n) && n.tagName.getText() === 'FieldPrompt') {
+    } else if (ts.isJsxSelfClosingElement(n) && ['FieldPrompt', 'FieldHelp'].includes(n.tagName.getText())) {
       const attr = n.attributes.properties.find((a) => ts.isJsxAttribute(a) && a.name.text === 'label');
       const raw = attr && attr.initializer && ts.isStringLiteral(attr.initializer) ? attr.initializer.text.replace(/&quot;/g, '"') : '';
       if (raw && needsTe(raw) && !KEEP.test(raw) && !dictEntries.has(raw)) missingTf.push(`${where(n)} FieldPrompt("${raw.slice(0, 60)}")`);

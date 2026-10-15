@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { FieldHelp, FieldPrompt } from '@/components/ui/FieldPrompt';
+import { FieldPrompt } from '@/components/ui/FieldPrompt';
 import React from 'react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { ExpandableInput as Input, ExpandableTextarea, ExpandableSelect } from '@/components/ui/ExpandableField';
@@ -311,14 +311,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     const missed = invalidFields.includes(fieldName);
     return (
       <label className={`block text-sm font-medium mb-2 ${missed ? 'text-red-600' : ''}`}>
-        <span className="flex items-center gap-2">
-          <FieldPrompt label={label} compact />
-          {required && <span className="text-red-500">*</span>}
-          {description && (
-            <InfoTooltip content={tf(description)} />
-          )}
-        </span>
-        <FieldHelp label={label} />
+        <FieldPrompt label={label} extra={description} required={required} />
       </label>
     );
   };
@@ -432,14 +425,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           }}
         />
           <div>
-            <label className={`block text-sm font-medium mb-2 flex items-center gap-2 ${invalidFields.includes('unitName') ? 'text-red-600' : ''}`}>
-              <FieldPrompt label="Unit / Project Name *" />
-            {stepDescriptions.unitName && (
-              <InfoTooltip content={tf(stepDescriptions.unitName)} />
-            )}
-            {!stepDescriptions.unitName && stepDescriptions.clusterName && (
-                <InfoTooltip content={tf(stepDescriptions.clusterName)} />
-              )}
+            <label className={`block text-sm font-medium mb-2 ${invalidFields.includes('unitName') ? 'text-red-600' : ''}`}>
+              <FieldPrompt label="Unit / Project Name *" extra={stepDescriptions.unitName || stepDescriptions.clusterName} />
             </label>
             <Input
             data-required-field="unitName"
@@ -484,11 +471,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
         <div className="form-field-grid">
           <div>
-            <label className={`block text-sm font-medium mb-2 flex items-center gap-2 ${invalidFields.includes('district') ? 'text-red-600' : ''}`}>
-              <FieldPrompt label="District *" />
-              {stepDescriptions.district && (
-                <InfoTooltip content={tf(stepDescriptions.district)} />
-              )}
+            <label className={`block text-sm font-medium mb-2 ${invalidFields.includes('district') ? 'text-red-600' : ''}`}>
+              <FieldPrompt label="District *" extra={stepDescriptions.district} />
             </label>
             <ExpandableSelect
               data-required-field="district"
@@ -513,12 +497,9 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             {requiredHint('district')}
           </div>
         <div>
-          <label className={`block text-sm font-medium mb-2 flex items-center gap-2 ${invalidFields.includes('location') ? 'text-red-600' : ''}`}>
-            <FieldPrompt label="Location *" />
-            {stepDescriptions.location && (
-              <InfoTooltip content={tf(stepDescriptions.location)} />
-            )}
-          </label>
+          <label className={`block text-sm font-medium mb-2 ${invalidFields.includes('location') ? 'text-red-600' : ''}`}>
+              <FieldPrompt label="Location *" extra={stepDescriptions.location} />
+            </label>
             <ExpandableSelect
               data-required-field="location"
               className={fieldRing('location', 'w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm')}
@@ -542,11 +523,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
 
         <div className="form-field-grid">
           <div>
-            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-              <FieldPrompt label="Nature of Business" />
-              {stepDescriptions.natureOfBusiness && (
-                <InfoTooltip content={tf(stepDescriptions.natureOfBusiness)} />
-              )}
+            <label className="block text-sm font-medium mb-2">
+              <FieldPrompt label="Nature of Business" extra={stepDescriptions.natureOfBusiness} />
             </label>
             <Input
               value={stepData.natureOfBusiness || ''}
@@ -622,11 +600,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-              <FieldPrompt label="Major Products" />
-              {stepDescriptions.majorProducts && (
-                <InfoTooltip content={tf(stepDescriptions.majorProducts)} />
-              )}
+            <label className="block text-sm font-medium mb-2">
+              <FieldPrompt label="Major Products" extra={stepDescriptions.majorProducts} />
             </label>
             <Input
               value={stepData.majorProducts || ''}

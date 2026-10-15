@@ -1,12 +1,18 @@
 import React, { useMemo } from 'react';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { describeField, PLAIN_PROMPTS, STEP_INTROS } from '@/lib/plainLanguage';
 
 /**
- * A form question in plain words. The official label stays in brackets so it still matches bank and government forms.
- * Under it: what it means, an example, the unit if there is one, and a one-line meaning for each technical word.
+ * A form label exactly as the form words it, the older (i) tooltip when the field has one (`extra`), and a short note underneath: what it means, an example, the unit, and a one-line
+ * meaning for each technical word.
  */
-export const FieldPrompt: React.FC<{ label: string; compact?: boolean }> = ({ label, compact = false }) => {
+export const FieldPrompt: React.FC<{ label: string; extra?: string; required?: boolean; compact?: boolean }> = ({
+  label,
+  extra,
+  required = false,
+  compact = false,
+}) => {
   const tf = useClusterFormText();
   const copy = useMemo(() => describeField(label, PLAIN_PROMPTS), [label]);
   if (import.meta.env.DEV && !copy.ask && /[A-Za-z]{3,}/.test(label)) {
@@ -17,16 +23,15 @@ export const FieldPrompt: React.FC<{ label: string; compact?: boolean }> = ({ la
 
   return (
     <>
-      <span>{tf(copy.ask || label)}</span>
-      {copy.ask && copy.ask !== label ? (
-        <span className="ml-1 text-xs font-normal text-muted-foreground">({tf(label)})</span>
-      ) : null}
+      <span>{tf(label)}</span>
+      {required ? <span className="ml-1 text-red-500">*</span> : null}
+      {extra ? <InfoTooltip className="ml-1.5 align-middle" content={tf(extra)} /> : null}
       {!compact && <FieldHelp label={label} />}
     </>
   );
 };
 
-/** Only the help lines (meaning, example, unit, technical words) for a label. */
+/** The short note under a label: meaning, example, unit and the meaning of technical words. */
 export const FieldHelp: React.FC<{ label: string }> = ({ label }) => {
   const tf = useClusterFormText();
   const copy = useMemo(() => describeField(label, PLAIN_PROMPTS), [label]);

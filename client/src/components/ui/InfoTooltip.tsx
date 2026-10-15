@@ -5,7 +5,7 @@ import { Info } from 'lucide-react';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 
 interface InfoTooltipProps {
-  content: string;
+  content: React.ReactNode;
   className?: string;
 }
 
@@ -107,7 +107,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({ content, className = '
               }}
             />
             <div className="relative overflow-y-auto" style={{ maxHeight: pos ? pos.maxHeight - 24 : undefined }}>
-              <p className="text-sm leading-relaxed">{content}</p>
+              <div className="text-sm leading-relaxed">{content}</div>
             </div>
           </div>,
           document.body
