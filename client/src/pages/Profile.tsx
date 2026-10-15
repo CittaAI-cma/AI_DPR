@@ -189,6 +189,7 @@ export const Profile: React.FC = () => {
                     id="udyamNumber"
                     name="udyamNumber"
                     type="text"
+                    format="udyam"
                     value={formData.udyamNumber}
                     onChange={handleChange}
                     placeholder="Enter your Udyam registration number"

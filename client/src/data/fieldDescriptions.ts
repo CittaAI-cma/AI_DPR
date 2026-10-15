@@ -103,6 +103,10 @@ export const FIELD_DESCRIPTIONS: Record<string, Record<string, string>> = {
     memberUnits: 'List of member units/enterprises in the SPV.',
     statutoryRegistrations: 'List of statutory registrations obtained by SPV (GST, MSME, etc.).',
     submittedTo: 'Government department or agency to which DPR is being submitted.',
+    gstin: 'The firm’s 15-character GST number, for example 37ABCFE1234F1ZV: 2-digit state code, the firm’s PAN, a number or letter, Z, and a check character. Leave blank if there is no GST registration.',
+    firmPan: 'The PAN of the firm, company or trust (10 characters, for example ABCFE1234F). The 4th letter shows the type: F firm, C company, T trust, H HUF. A personal PAN (4th letter P) is not stored.',
+    udyamNumber: 'Your Udyam registration number, like UDYAM-AP-01-0001234: the state letters, a 2-digit district number and a 7-digit serial. It is on your Udyam certificate.',
+    applicantMobile: 'A 10-digit mobile number the bank or DIC can call. Indian mobile numbers start with 6, 7, 8 or 9.',
   },
   step12: {
     land: 'Cost of land acquisition or lease for the project.',

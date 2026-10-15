@@ -360,3 +360,11 @@ Form: `IndividualDPRForm.tsx`
 - Eligibility matching stays in Scheme Finder; this page trusts `matchedSchemeCode` (or vanilla).  
 - Brochure text is a drafting aid — confirm live GOs / ceilings with the agency.  
 - Cluster DPR (`/cluster-dpr/create`) is a separate multi-unit flow; this doc is **individual only**.
+
+## Field validation, masks and tooltips
+
+- `client/src/lib/validation/formats.ts` holds pure masks and checks (PAN, GSTIN incl. check character, Udyam, mobile, IFSC, pincode, email, numeric ranges). Every message is bilingual (EN/TE).
+- `components/ui/Input.tsx` takes `format`, `firmPanOnly`, `hint`, and numeric `min`/`max`. It masks while typing (upper-casing, stripping bad characters, auto hyphens, max length), and shows a red inline `role="alert"` message as soon as a value is wrong. "Incomplete" messages wait until the field is left (blur).
+- Step 11 has optional GSTIN, Firm PAN, Udyam and Contact mobile fields, with tooltips in `data/fieldDescriptions.ts`.
+- Pre-submission gate: `lib/validation/stepFormats.ts` (`invalidFormats`) runs in `guardForward` and before Generate. Filled-but-invalid values block moving forward, are focused/flagged, and a toast names them. Blank optional fields pass.
+- DPDP: only firm PANs are kept. A personal PAN (4th letter P) is rejected in the form and blanked by `sanitizeStoredPayload` on the server.

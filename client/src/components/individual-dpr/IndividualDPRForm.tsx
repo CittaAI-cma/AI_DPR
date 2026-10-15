@@ -714,7 +714,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Age (≥ 18)')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('e.g. 32')}
@@ -723,7 +723,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Years practising this craft')}</label>
                 <Input
-                  type="number"
+                  type="number" min={0} max={80}
                   value={extras.experienceYears || ''}
                   onChange={(e) => updateExtras({ experienceYears: e.target.value })}
                   placeholder={tf('e.g. 8')}
@@ -837,7 +837,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Age (≥ 18)')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('e.g. 35')}
@@ -950,7 +950,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('e.g. 32')}
@@ -1069,7 +1069,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('e.g. 35')}
@@ -1326,7 +1326,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Age')}</label>
-                <Input type="number" value={extras.entrepreneurAge || ''} onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })} />
+                <Input type="number" min={18} max={100} value={extras.entrepreneurAge || ''} onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })} />
               </div>
             </div>
             <div>
@@ -1426,7 +1426,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Expected saving (%)')}</label>
-                <Input type="number" value={extras.expectedSaving || ''} onChange={(e) => updateExtras({ expectedSaving: e.target.value })} />
+                <Input type="number" min={0} max={100} value={extras.expectedSaving || ''} onChange={(e) => updateExtras({ expectedSaving: e.target.value })} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('EE equipment focus')}</label>
@@ -1698,7 +1698,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Age')}</label>
-                <Input type="number" value={extras.entrepreneurAge || ''} onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })} />
+                <Input type="number" min={18} max={100} value={extras.entrepreneurAge || ''} onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur name')}</label>
@@ -1724,7 +1724,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Existing unit years')}</label>
-                <Input type="number" value={extras.existingUnitYears || ''} onChange={(e) => updateExtras({ existingUnitYears: e.target.value })} />
+                <Input type="number" min={0} max={100} value={extras.existingUnitYears || ''} onChange={(e) => updateExtras({ existingUnitYears: e.target.value })} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Proposed P&M cost (₹ Lakhs)')}</label>
@@ -1938,7 +1938,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('Must be 18 or older')}
@@ -2082,7 +2082,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   {tf('Years of continuous profit')}
                 </label>
                 <Input
-                  type="number"
+                  type="number" min={0} max={100}
                   value={extras.yearsProfitable || ''}
                   onChange={(e) => updateExtras({ yearsProfitable: e.target.value })}
                   placeholder={tf('Expect ≥ 3')}
@@ -2110,7 +2110,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('Must be 18 or older')}
@@ -2168,7 +2168,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   {tf('SC/ST controlling stake % (if not sole prop)')}
                 </label>
                 <Input
-                  type="number"
+                  type="number" min={0} max={100}
                   value={extras.controllingStakePercent || ''}
                   onChange={(e) => updateExtras({ controllingStakePercent: e.target.value })}
                   placeholder={tf(`Must be ≥ ${SCLCSS_MIN_STAKE_PERCENT} for firms`)}
@@ -2193,7 +2193,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('e.g. 35')}
@@ -2267,7 +2267,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Years in operation')}</label>
                 <Input
-                  type="number"
+                  type="number" min={0} max={100}
                   value={extras.yearsInOperation || ''}
                   onChange={(e) => updateExtras({ yearsInOperation: e.target.value })}
                   placeholder={tf('e.g. 5')}
@@ -2295,7 +2295,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('e.g. 38')}
@@ -2362,7 +2362,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('Must be 18 or older')}
@@ -2373,7 +2373,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   {tf('Experience in this line (years)')}
                 </label>
                 <Input
-                  type="number"
+                  type="number" min={0} max={80}
                   value={extras.experienceYears || ''}
                   onChange={(e) => updateExtras({ experienceYears: e.target.value })}
                   placeholder={tf('e.g. 3')}
@@ -2429,7 +2429,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-2">{tf('Entrepreneur age')}</label>
                 <Input
-                  type="number"
+                  type="number" min={18} max={100}
                   value={extras.entrepreneurAge || ''}
                   onChange={(e) => updateExtras({ entrepreneurAge: e.target.value })}
                   placeholder={tf('Must be 18 or older')}
@@ -2440,7 +2440,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
                   {tf('Controlling stake % (if not sole prop)')}
                 </label>
                 <Input
-                  type="number"
+                  type="number" min={0} max={100}
                   value={extras.controllingStakePercent || ''}
                   onChange={(e) => updateExtras({ controllingStakePercent: e.target.value })}
                   placeholder={tf('Must be ≥ 51 for firms')}
@@ -2890,6 +2890,8 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           {renderLabel('yearOfEstablishment', 'Year of Establishment')}
           <Input
             type="number"
+            min={1900}
+            max={new Date().getFullYear()}
             value={stepData.yearOfEstablishment || ''}
             onChange={(e) => handleInputChange('yearOfEstablishment', parseInt(e.target.value) || 0)}
             placeholder={tf('YYYY')}
@@ -2944,7 +2946,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
               {tf('Capacity utilisation Year 1 (%)')}
             </label>
           <Input
-              type="number"
+              type="number" min={0} max={100}
               value={extras.capacityUtilisationY1 || ''}
               onChange={(e) => updateExtras({ capacityUtilisationY1: e.target.value })}
               placeholder={isPmfme ? tf('e.g. 60 (NIFTEM models ramp 60→70→80)') : tf('e.g. 60')}
@@ -3748,6 +3750,49 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
             />
           </div>
         </div>
+        <div className="form-field-grid">
+          <div>
+            {renderLabel('gstin', 'GSTIN (optional)')}
+            <Input
+              format="gstin"
+              data-format-field="gstin"
+              value={stepData.gstin || ''}
+              onChange={(e) => handleInputChange('gstin', e.target.value)}
+              hint={tf('15 characters. Leave blank if the firm has no GST registration.')}
+            />
+          </div>
+          <div>
+            {renderLabel('firmPan', 'Firm PAN (optional)')}
+            <Input
+              format="pan"
+              firmPanOnly
+              data-format-field="firmPan"
+              value={stepData.firmPan || ''}
+              onChange={(e) => handleInputChange('firmPan', e.target.value)}
+              hint={tf('The firm’s or company’s PAN. Do not enter a personal PAN.')}
+            />
+          </div>
+          <div>
+            {renderLabel('udyamNumber', 'Udyam registration number (optional)')}
+            <Input
+              format="udyam"
+              data-format-field="udyamNumber"
+              value={stepData.udyamNumber || ''}
+              onChange={(e) => handleInputChange('udyamNumber', e.target.value)}
+              hint={tf('Type the letters and digits; the hyphens are added for you.')}
+            />
+          </div>
+          <div>
+            {renderLabel('applicantMobile', 'Contact mobile number (optional)')}
+            <Input
+              format="mobile"
+              data-format-field="applicantMobile"
+              value={stepData.applicantMobile || ''}
+              onChange={(e) => handleInputChange('applicantMobile', e.target.value)}
+              hint={tf('10 digits, starting with 6, 7, 8 or 9.')}
+            />
+          </div>
+        </div>
         {isLeanUnit ? (
           <>
           <div>
@@ -3774,7 +3819,7 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
           <div>
             {renderLabel('yearOfIncorporation', 'Year of establishment')}
             <Input
-              type="number"
+              type="number" min={1900} max={new Date().getFullYear()}
               value={stepData.yearOfIncorporation || ''}
               onChange={(e) => handleInputChange('yearOfIncorporation', parseInt(e.target.value) || 0)}
               placeholder={tf("YYYY")}

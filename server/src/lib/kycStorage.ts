@@ -135,6 +135,10 @@ export function sanitizeStoredPayload<T>(value: T, key = '', depth = 0): T {
     if (FILE_KEY.test(key) && isPublicFileUrl(trimmed)) {
       return toUploadedRef(trimmed) as T;
     }
+    // A firm PAN is kept; a personal PAN (4th letter P) is dropped.
+    if (/^firmPan$/i.test(key) && /^[A-Z]{3}P[A-Z]\d{4}[A-Z]$/i.test(trimmed)) {
+      return '' as T;
+    }
     if (ID_NUMBER_KEY.test(key) && (AADHAAR_WHOLE.test(trimmed) || PAN_WHOLE.test(trimmed))) {
       return '' as T;
     }

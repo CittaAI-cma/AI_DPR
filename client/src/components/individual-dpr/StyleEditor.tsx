@@ -145,7 +145,7 @@ export function StyleEditor({
     const startEdit = Math.max(paneWidths.edit, editFloor.current);
     const move = (moveEvent) => {
       const dx = moveEvent.clientX - startX;
-      if (key === 'edit') setPaneWidths({ edit: clampPane(startEdit - dx, editFloor.current, 720) });
+      if (key === 'edit') setPaneWidths({ edit: clampPane(startEdit + dx, editFloor.current, 720) });
     };
     const stop = () => {
       window.removeEventListener('pointermove', move);
@@ -998,29 +998,13 @@ export function StyleEditor({
       <div className="flex flex-wrap items-center gap-2 border-b bg-white px-3 py-2">
         <div className="order-2 w-full min-w-0 sm:order-1 sm:w-auto sm:flex-1">{stepsBar}</div>
         <div className="order-1 ml-auto flex max-w-full flex-wrap items-center justify-end gap-1 sm:order-2 sm:shrink-0">
-        <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Undo')} aria-label={tf('Undo')} onClick={undo} disabled={historyTick < 0 || !past.current.length}><Undo2 className="h-4 w-4" /></Button>
-        <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Redo')} aria-label={tf('Redo')} onClick={redo} disabled={historyTick < 0 || !future.current.length}><Redo2 className="h-4 w-4" /></Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            past.current = [];
-            future.current = [];
-            setHistoryTick((n) => n + 1);
-            onChange(defaultStyleForScheme(schemeCode));
-          }}
-        >
-          {tf('Reset')}
-        </Button>
         <div className="flex flex-wrap items-center justify-end gap-2 sm:ml-1">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>{tf('Close')}</Button>
           {canSaveSchemeDefault ? (
-            <Button type="button" variant="outline" size="sm" onClick={onSaveSchemeDefault} disabled={saving || blocking}>
+            <Button type="button" variant="outline" size="sm" title={tf('Admin: makes this look the starting style for new DPRs of this scheme.')} onClick={onSaveSchemeDefault} disabled={saving || blocking}>
               {tf('Save as the scheme default')}
             </Button>
           ) : null}
-          <Button type="button" size="sm" onClick={onSave} disabled={saving || blocking}>
+          <Button type="button" size="sm" title={tf('Keeps this look (fonts, layout, sections) on this DPR only.')} onClick={onSave} disabled={saving || blocking}>
             {saving ? tf('Saving') : tf('Save on this DPR')}
           </Button>
         </div>
@@ -1047,18 +1031,37 @@ export function StyleEditor({
       </div>
       <div className="relative min-h-0 flex-1">
         <div className="flex h-full min-h-0">
-          <div className="relative flex h-full min-h-0 min-w-0 flex-1">
+          <div className="relative flex h-full min-h-0 min-w-0 flex-1 lg:flex-row-reverse">
             <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
-            <div className="flex items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
               <div className="flex items-center gap-1">
-                <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
+                <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Undo')} aria-label={tf('Undo')} onClick={undo} disabled={historyTick < 0 || !past.current.length}><Undo2 className="h-4 w-4" /></Button>
+                <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Redo')} aria-label={tf('Redo')} onClick={redo} disabled={historyTick < 0 || !future.current.length}><Redo2 className="h-4 w-4" /></Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  title={tf("Restore the scheme's original look.")}
+                  onClick={() => {
+                    past.current = [];
+                    future.current = [];
+                    setHistoryTick((n) => n + 1);
+                    onChange(defaultStyleForScheme(schemeCode));
+                  }}
+                >
+                  {tf('Reset')}
+                </Button>
+              </div>
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+              <div className="flex items-center gap-1">
+                <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Zoom out')} aria-label={tf('Zoom out')} onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
                   <ZoomOut className="h-4 w-4" />
                 </Button>
                 <span className="w-10 text-center text-xs">{Math.round(zoom * 100)}%</span>
-                <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.min(1.35, Math.round((z + 0.05) * 100) / 100)); }}>
+                <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Zoom in')} aria-label={tf('Zoom in')} onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.min(1.35, Math.round((z + 0.05) * 100) / 100)); }}>
                   <ZoomIn className="h-4 w-4" />
                 </Button>
-                <Button type="button" variant="ghost" size="sm" className="h-7 whitespace-nowrap px-2 text-xs" onClick={() => { fitWidthRef.current = true; setFitWidth(true); }}>
+                <Button type="button" variant="ghost" size="sm" className="h-7 whitespace-nowrap px-2 text-xs" title={tf('Fit the page to the available width.')} onClick={() => { fitWidthRef.current = true; setFitWidth(true); }}>
                   {tf('Fit page')}
                 </Button>
                 <Button
@@ -1066,6 +1069,7 @@ export function StyleEditor({
                   variant="ghost"
                   size="sm"
                   className="h-7 shrink-0 gap-1 whitespace-nowrap px-2 text-xs"
+                  title={tf('See the final document, read-only.')}
                   onClick={() => setPreviewOpen(true)}
                 >
                   <Maximize2 className="h-4 w-4" />
@@ -1080,6 +1084,7 @@ export function StyleEditor({
                 <option value="english">{tf('English')}</option>
                 <option value="telugu" disabled={hasTelugu === false}>{tf('Telugu')}</option>
               </select>
+              </div>
             </div>
             <div ref={centerRef} data-dpr-scroll className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3">
               <div style={{ zoom }}>{sheet}</div>
@@ -1094,7 +1099,7 @@ export function StyleEditor({
               maxWidth: 720,
               flex: `0 0 ${Math.max(paneWidths.edit, editFloor.current)}px`,
             }}
-            className="hidden h-full min-h-0 flex-col overflow-hidden border-l bg-white lg:flex"
+            className="hidden h-full min-h-0 flex-col overflow-hidden border-r bg-white lg:flex"
           >
             <div className="flex shrink-0 border-b" role="tablist">
               {[

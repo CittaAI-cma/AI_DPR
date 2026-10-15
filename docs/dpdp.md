@@ -370,3 +370,7 @@ We may say: we do not keep identity scans or cluster photos as public links; unu
 
 We must **not** say: legal compliance is complete. We must **not** say we comply with DPDP.
 
+
+## Firm PAN field
+
+The optional `firmPan` accepts company/firm PANs only. Individual PANs (4th letter P) are rejected client-side and stripped server-side in `sanitizeStoredPayload`.

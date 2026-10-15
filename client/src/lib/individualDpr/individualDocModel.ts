@@ -523,6 +523,10 @@ export function getIndividualDocFields(
         stepField('spvName', 'Firm / proprietor name', 11),
         stepField('legalStatus', 'Legal status', 11),
         stepField('address', 'Correspondence address', 11),
+        stepField('gstin', 'GSTIN', 11),
+        stepField('firmPan', 'Firm PAN', 11),
+        stepField('udyamNumber', 'Udyam registration number', 11),
+        stepField('applicantMobile', 'Contact mobile number', 11),
       ];
       if (schemeCode === 'AP_CMEP') fields.push(stepField('promoters', 'Promoters', 11));
       return fields;
@@ -534,6 +538,10 @@ export function getIndividualDocFields(
       stepField('submittedTo', 'Submitted To', 11),
       stepField('objectives', 'Objectives', 11),
       stepField('boardOfDirectors', 'Owner(s)', 11),
+      stepField('gstin', 'GSTIN', 11),
+      stepField('firmPan', 'Firm PAN', 11),
+      stepField('udyamNumber', 'Udyam registration number', 11),
+      stepField('applicantMobile', 'Contact mobile number', 11),
     ];
   }
 

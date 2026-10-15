@@ -32,6 +32,7 @@ import { toIndividualPayload, getUnitName } from '@/lib/individualDpr/toIndividu
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { getVisibleSteps, getStepTitle, getSchemeImpact, SCHEME_OPTIONS, getContentStep } from '@/lib/individualDpr/schemeFormConfig';
 import { missingIndividualRequired } from '@/lib/requiredStepFields';
+import { invalidFormats } from '@/lib/validation/stepFormats';
 import { contentToLocal, getSchemeStepCount } from '@/lib/individualDpr/schemeStepCatalog';
 import { patchFromDocEdit } from '@/lib/individualDpr/liveDocEdit';
 import { peekHandoff } from '@/lib/ventureMatch/mapToDpr';
@@ -427,6 +428,26 @@ export const IndividualDPRCreation: React.FC = () => {
     }, 80);
   };
 
+  const warnFormats = (problems: ReturnType<typeof invalidFormats>) => {
+    const root = document.getElementById('individual-dpr-form');
+    problems.forEach((problem) => {
+      const el = root?.querySelector(`[data-format-field="${problem.key}"]`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.blur();
+      }
+    });
+    toast.error(
+      `${tf('Correct these fields before continuing')}: ${problems
+        .map((problem) => tf(problem.label))
+        .join(', ')}`
+    );
+    (root?.querySelector(`[data-format-field="${problems[0].key}"]`) as HTMLElement | null)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  };
+
   const guardForward = (targetStep: number) => {
     if (isAdmin && devMode) return true;
     const from = selectionSteps.indexOf(currentStep);
@@ -439,6 +460,12 @@ export const IndividualDPRCreation: React.FC = () => {
       if (missing.length) {
         if (step !== currentStep) setCurrentStep(step);
         warnRequired(missing);
+        return false;
+      }
+      const badFormats = invalidFormats(data[`step${content}`]);
+      if (badFormats.length) {
+        if (step !== currentStep) setCurrentStep(step);
+        window.setTimeout(() => warnFormats(badFormats), step !== currentStep ? 120 : 0);
         return false;
       }
     }
@@ -577,6 +604,13 @@ export const IndividualDPRCreation: React.FC = () => {
     try {
       if (!data.step1 || !getUnitName(data.step1)) {
         toast.error(t('individualDpr.toasts.needUnitNameGenerate'));
+        setIsGenerating(false);
+        return;
+      }
+      const badFormats = invalidFormats(data.step11);
+      if (badFormats.length) {
+        setCurrentStep(11);
+        window.setTimeout(() => warnFormats(badFormats), 120);
         setIsGenerating(false);
         return;
       }
@@ -787,7 +821,7 @@ export const IndividualDPRCreation: React.FC = () => {
                         ))}
                       </select>
                     </label>
-                    <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2">
+                    <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2" title={tf('Saves your answers and current step so you can resume later. Also runs every 30 seconds.')}>
                       <Save className="h-4 w-4" />
                       {t('individualDpr.saveDraft')}
                     </Button>
@@ -797,6 +831,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       onClick={handleGenerateDPR}
                       isLoading={isGenerating}
                       className="gap-2"
+                      title={tf('Creates the final DPR from your answers. Available on the last step.')}
                       disabled={currentStep !== lastVisible}
                     >
                       {t('individualDpr.generateDpr')}

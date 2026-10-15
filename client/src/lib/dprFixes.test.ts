@@ -479,3 +479,30 @@ describe('draft saving and restoring', () => {
     assert.equal(hasDraftContent({ step1: { unitName: 'A' } }), true);
   });
 });
+
+import { checkFormat, checkRange, gstinCheckChar, maskGstin, maskPan, maskUdyam } from './validation/formats.ts';
+
+describe('field formats and masks', () => {
+  it('masks PAN to upper-case pattern and rejects malformed values', () => {
+    assert.equal(maskPan('abcfe1234f'), 'ABCFE1234F');
+    assert.equal(checkFormat('pan', 'ABCFE1234F').ok, true);
+    assert.equal(checkFormat('pan', 'ABCFE12345').ok, false);
+    assert.equal(checkFormat('pan', 'ABC').ok, false);
+  });
+  it('validates GSTIN including the check character', () => {
+    const base = '27AAPFU0939F1Z';
+    const gstin = base + gstinCheckChar(base);
+    assert.equal(maskGstin(gstin.toLowerCase()), gstin);
+    assert.equal(checkFormat('gstin', gstin).ok, true);
+    const bad = base + (gstin.endsWith('A') ? 'B' : 'A');
+    assert.equal(checkFormat('gstin', bad).ok, false);
+  });
+  it('validates mobile, Udyam and numeric ranges', () => {
+    assert.equal(checkFormat('mobile', '9876543210').ok, true);
+    assert.equal(checkFormat('mobile', '5876543210').ok, false);
+    assert.equal(maskUdyam('udyam-ap-01-1234567').startsWith('UDYAM-AP-01-'), true);
+    assert.equal(checkRange('150', { min: 0, max: 100 }).ok, false);
+    assert.equal(checkRange('50', { min: 0, max: 100 }).ok, true);
+    assert.equal(checkRange('1.5', { min: 0, integer: true }).ok, false);
+  });
+});
