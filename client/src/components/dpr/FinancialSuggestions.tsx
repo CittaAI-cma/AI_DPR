@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { safeUrl } from '@/lib/security/sanitizeText';
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -142,7 +143,7 @@ export const FinancialSuggestions: React.FC<FinancialSuggestionsProps> = ({
                     </Button>
                     {scheme.applicationUrl && (
                       <Button size="sm" variant="outline" asChild>
-                        <a href={scheme.applicationUrl} target="_blank" rel="noopener noreferrer">
+                        <a href={safeUrl(scheme.applicationUrl)} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3 w-3 mr-1" />
                           {tf('Apply')}
                         </a>

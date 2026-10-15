@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { contentDisposition, fileResponseHeaders } from '../lib/security/http';
+import { extensionForMime, safeFileName } from '../lib/security/uploadGuard';
 import { staffMayViewProject, staffMayViewUserFiles } from '../lib/staffScope';
 import { Response } from 'express';
 import { AuthRequest } from '../types';
@@ -315,7 +317,7 @@ export class ClusterDPRController {
         },
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          cb(null, uniqueSuffix + path.extname(file.originalname));
+          cb(null, uniqueSuffix + extensionForMime(file.mimetype));
         },
       }),
       limits: {
@@ -347,7 +349,7 @@ export class ClusterDPRController {
         },
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          cb(null, uniqueSuffix + path.extname(file.originalname));
+          cb(null, uniqueSuffix + extensionForMime(file.mimetype));
         },
       }),
       limits: {
@@ -1732,6 +1734,8 @@ export class ClusterDPRController {
       }
       const bytes = readKycBytes(file.storagePath);
       res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', contentDisposition('inline', file.originalName || 'file'));
+      fileResponseHeaders(res);
       res.setHeader('Cache-Control', 'private, max-age=60');
       res.send(bytes);
     } catch (error: any) {

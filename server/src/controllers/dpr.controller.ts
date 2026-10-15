@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { extensionForMime, safeFileName } from '../lib/security/uploadGuard';
 import { staffMayViewProject } from '../lib/staffScope';
 import { Request, Response } from 'express';
 import { OpenAIService } from '../services/openai.service';
@@ -73,7 +74,7 @@ const upload = multer({
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
+      cb(null, uniqueSuffix + extensionForMime(file.mimetype));
     },
   }),
   limits: {

@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { checkUploadFile } from '@/lib/security/fileGuard';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronDown, Eye, EyeOff, GripVertical, ImagePlus, Maximize2, Plus, Redo2, Type, Undo2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -45,12 +46,11 @@ const ROLE_LABELS: Record<(typeof ROLE_KEYS)[number], string> = {
   caption: 'Caption',
 };
 
-function readImageFile(file: File): Promise<string> {
+async function readImageFile(file: File): Promise<string> {
+  // Only real PNG, JPEG or WebP pictures: the file's bytes are checked, not its name or declared type.
+  const verdict = await checkUploadFile(file, ['image']);
+  if (!verdict.ok) throw new Error('Choose a JPG, PNG or WebP picture.');
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) {
-      reject(new Error('Choose an image file.'));
-      return;
-    }
     if (file.size > 350_000) {
       reject(new Error('Use an image under 350 KB.'));
       return;

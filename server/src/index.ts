@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { sanitizeRequest } from './lib/security/sanitizeInput';
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -59,6 +60,8 @@ app.use(morgan('dev')); // Logging
 // Increase payload limits to support HTML+CSS capture for exact PDF generation
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Strip Mongo operators, prototype keys, control characters and script markup from every request.
+app.use(sanitizeRequest);
 
 // No public file tree. KYC and cluster photos are served only via authenticated APIs.
 app.use('/uploads', (req, res) => {

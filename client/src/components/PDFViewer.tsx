@@ -1,3 +1,4 @@
+import { safeUrl } from '@/lib/security/sanitizeText';
 import React, { useState, useEffect } from 'react';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 
@@ -71,7 +72,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url }) => {
                 <p className="text-gray-600 font-medium mb-2">{tf("Unable to display PDF preview")}</p>
                 <p className="text-gray-400 text-sm mb-4">{tf("The PDF file couldn't be loaded inline")}</p>
                 <a
-                    href={url}
+                    href={safeUrl(url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

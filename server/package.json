@@ -8,9 +8,10 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
-    "test": "node --experimental-strip-types --import ./register-tests.mjs --test src/production.backend.test.ts",
+    "test": "node --experimental-strip-types --import ./register-tests.mjs --test src/production.backend.test.ts src/security.test.ts",
     "test:rbac": "node --experimental-strip-types --test --test-concurrency=1 src/rbac.live.test.ts",
     "test:session": "node --experimental-strip-types --test --test-concurrency=1 src/session.live.test.ts",
+    "test:security": "node --experimental-strip-types --test --test-concurrency=1 src/security.live.test.ts",
     "test:api": "node --experimental-strip-types --test --test-concurrency=1 src/api.live.test.ts",
     "test:pdf": "node --experimental-strip-types --import ./register-tests.mjs --test --test-concurrency=1 src/pdf.smoke.test.ts"
   },
@@ -47,6 +48,7 @@
     "pdfkit": "^0.13.0",
     "pdfmake": "^0.2.20",
     "puppeteer": "^24.36.0",
+    "sanitize-html": "^2.17.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
@@ -59,6 +61,7 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.0",
     "@types/pdfkit": "^0.12.12",
+    "@types/sanitize-html": "^2.16.2",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.54.0",

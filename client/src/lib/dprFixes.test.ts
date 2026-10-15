@@ -713,3 +713,24 @@ describe('business kind and scale', () => {
     assert.deepEqual(normalizeAssetItems(null), []);
   });
 });
+
+import { detectFileType as detectClientFile } from './security/fileGuard.ts';
+import { sanitizeDeep } from './security/sanitizeText.ts';
+
+describe('client-side input safety', () => {
+  it('drops operator and prototype keys and control characters before sending', () => {
+    const out: any = sanitizeDeep(JSON.parse('{"email":{"$ne":null},"__proto__":{"x":1},"note":"a\\u0000b","password":"<b>keep</b>","list":[{"$gt":1,"ok":"< 5 years"}]}'));
+    assert.deepEqual(out.email, {});
+    assert.equal(Object.keys(out).includes('__proto__'), false);
+    assert.equal(out.note, 'ab');
+    assert.equal(out.password, '<b>keep</b>');
+    assert.deepEqual(out.list, [{ ok: '< 5 years' }]);
+  });
+  it('recognises real files by their bytes and refuses a renamed web page', () => {
+    assert.equal(detectClientFile(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]))?.kind, 'image');
+    assert.equal(detectClientFile(new TextEncoder().encode('%PDF-1.4'))?.mime, 'application/pdf');
+    assert.equal(detectClientFile(new TextEncoder().encode('plain notes'))?.kind, 'text');
+    assert.equal(detectClientFile(new Uint8Array([0x4d, 0x5a, 0x90, 0, 3, 0, 0, 0])), null);
+    assert.equal(detectClientFile(new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x14, 0, 0, 0])), null);
+  });
+});

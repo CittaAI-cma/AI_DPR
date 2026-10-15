@@ -2,6 +2,8 @@
 import { Router } from 'express';
 import { DPRController } from '../controllers/dpr.controller';
 import { ClusterDPRController } from '../controllers/clusterDPR.controller';
+import { dprParamGuard } from '../middleware/dprAccess.middleware';
+import { uploadGuard } from '../lib/security/uploadGuard';
 import { authenticate } from '../middleware/auth.middleware';
 import { requireAiConsent } from '../middleware/aiConsent.middleware';
 import { SchemeStyleController } from '../controllers/schemeStyle.controller';
@@ -9,6 +11,8 @@ import { SchemeStyleController } from '../controllers/schemeStyle.controller';
 const router = Router();
 
 router.use(authenticate);
+// Every route with a :dprId checks that the DPR belongs to the caller (or to staff in scope, read-only).
+router.param('dprId', dprParamGuard);
 
 router.post('/templates/analyze/:documentId', requireAiConsent, DPRController.analyzeTemplate);
 router.get('/templates', DPRController.getTemplates);
@@ -40,7 +44,7 @@ router.post('/upload', (req, res, next) => {
     }
     next();
   });
-}, requireAiConsent, DPRController.uploadDPR);
+}, uploadGuard(['document', 'text']), requireAiConsent, DPRController.uploadDPR);
 
 router.get('/user/list', DPRController.getUserDPRs);
 
@@ -74,7 +78,7 @@ router.post('/cluster/images/upload', (req, res, next) => {
     }
     next();
   });
-}, ClusterDPRController.uploadImage);
+}, uploadGuard(['image']), ClusterDPRController.uploadImage);
 
 router.post('/cluster/sections/enhance', requireAiConsent, ClusterDPRController.enhanceSection);
 
@@ -98,7 +102,7 @@ router.post('/cluster/documents/upload', (req, res, next) => {
     }
     next();
   });
-}, ClusterDPRController.uploadDocument);
+}, uploadGuard(['document', 'image', 'text']), ClusterDPRController.uploadDocument);
 router.post('/cluster/annexures/update', ClusterDPRController.updateAnnexureDocument);
 
 router.get('/:dprId', DPRController.getDPR);

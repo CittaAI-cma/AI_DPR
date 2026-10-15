@@ -5,6 +5,9 @@ import { MockDataService } from './mockData';
 import { OfflineDetector } from './offlineDetector';
 import { useAuthStore } from '@/store/authStore';
 import { useSessionClock } from './sessionClock';
+import { sanitizeDeep } from './security/sanitizeText';
+import { checkUploadFile, type UploadKind } from './security/fileGuard';
+import { translateNow } from './clusterDprFormText';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false;
@@ -90,6 +93,12 @@ class APIClient {
           config.headers.Authorization = `Bearer ${token}`;
         }
         
+        // Clean every JSON body before it leaves the browser (operator keys, script markup, control characters).
+        // The page-capture HTML for PDF export is cleaned by the server's stricter document sanitiser instead.
+        if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData) && !/\/download\/pdf\/html$/.test(config.url || '')) {
+          config.data = sanitizeDeep(config.data);
+        }
+
         // Remove Content-Type header for FormData - let axios set it automatically with boundary
         if (config.data instanceof FormData) {
           delete config.headers['Content-Type'];
@@ -871,7 +880,18 @@ class APIClient {
     return response.data as Blob;
   }
 
+  /** Stops a bad file on the device with a clear message; the server checks again. */
+  private async guardFile(file: File, accepted: UploadKind[]): Promise<void> {
+    const verdict = await checkUploadFile(file, accepted);
+    if (!verdict.ok) {
+      const message = translateNow(verdict.reason);
+      toast.error(message);
+      throw new Error(message);
+    }
+  }
+
   async uploadClusterDPRImage(file: File) {
+    await this.guardFile(file, ['image']);
     return this.handleRequest(
       async () => {
         const formData = new FormData();
@@ -1039,6 +1059,7 @@ class APIClient {
   }
 
   async uploadClusterDPRDocument(file: File) {
+    await this.guardFile(file, ['document', 'image', 'text']);
     return this.handleRequest(
       async () => {
         const formData = new FormData();
@@ -1130,6 +1151,7 @@ class APIClient {
   }
 
   async uploadDPR(file: File) {
+    await this.guardFile(file, ['document', 'text']);
     const formData = new FormData();
     formData.append('file', file);
     
@@ -1270,6 +1292,7 @@ class APIClient {
   }
 
   async transcribeAudio(audioFile: File, language?: 'en' | 'te') {
+    await this.guardFile(audioFile, ['audio']);
     const formData = new FormData();
     formData.append('audio', audioFile);
     if (language) {
@@ -1377,6 +1400,7 @@ class APIClient {
 
   // Document management endpoints
   async uploadDocument(file: File, metadata: any) {
+    await this.guardFile(file, ['document', 'text']);
     const formData = new FormData();
     formData.append('file', file);
     Object.keys(metadata).forEach(key => {

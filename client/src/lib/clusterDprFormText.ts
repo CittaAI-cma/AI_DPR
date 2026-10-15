@@ -7,6 +7,7 @@ import { EXTRA_TE } from '@/lib/i18n/te';
 import enLocale from '@/i18n/locales/en.json';
 import teLocale from '@/i18n/locales/te.json';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n/config';
 import { useCallback } from 'react';
 
 /** Plain-language scheme names (Scheme Finder) reused wherever the same English name is shown. */
@@ -581,6 +582,12 @@ const TE: Record<string, string> = {
     '18 వృత్తులు; టూల్‌కిట్ ₹15,000; రుణం ₹1 లక్ష తర్వాత ₹2 లక్షలు, 5%',
   'Spec: docs/schemes/ZED/zed.md': 'ZED ప్యాక్',
 };
+
+/** The same lookup as tf() for code outside React components (toasts raised from the API layer). */
+export function translateNow(en: string): string {
+  const lang = (i18n.resolvedLanguage || i18n.language || 'en').toLowerCase();
+  return lang.startsWith('te') ? TE[en] || en : en;
+}
 
 export function useClusterFormText() {
   const { i18n } = useTranslation();

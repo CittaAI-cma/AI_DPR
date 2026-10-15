@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Router } from 'express';
 import { DocumentController } from '../controllers/document.controller';
+import { uploadGuard } from '../lib/security/uploadGuard';
 import { authenticate, authorize } from '../middleware/auth.middleware';
 import { requireAiConsent } from '../middleware/aiConsent.middleware';
 
@@ -22,7 +23,7 @@ router.get('/file-by-id/:documentId', DocumentController.serveFileById);
 router.use(authorize('admin'));
 
 // Document management routes (admin only)
-router.post('/upload', DocumentController.getUploadMiddleware(), DocumentController.uploadDocument);
+router.post('/upload', DocumentController.getUploadMiddleware(), uploadGuard(['document', 'text']), DocumentController.uploadDocument);
 router.get('/', DocumentController.getDocuments);
 router.get('/:documentId', DocumentController.getDocument);
 router.delete('/:documentId', DocumentController.deleteDocument);
