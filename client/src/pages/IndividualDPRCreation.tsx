@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { StepIntro } from '@/components/ui/FieldPrompt';
 import { ResumeDrafts } from '@/components/individual-dpr/ResumeDrafts';
 import { draftSignature, hasDraftContent } from '@/lib/individualDpr/draftState';
 import { registerDraftFlusher } from '@/lib/draftFlush';
@@ -984,6 +985,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       <CardTitle>
                         {tf(getStepTitle(currentStep, data.matchedSchemeCode))}
                       </CardTitle>
+                      <StepIntro title={getStepTitle(currentStep, data.matchedSchemeCode)} />
                       {schemeUi ? (
                         <p className="text-xs text-muted-foreground mt-1">{tf(schemeUi.badge)}</p>
                       ) : null}
@@ -1165,6 +1167,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       <CardTitle>
                         {tf(getStepTitle(currentStep, data.matchedSchemeCode))}
                       </CardTitle>
+                      <StepIntro title={getStepTitle(currentStep, data.matchedSchemeCode)} />
                       {schemeUi ? (
                         <p className="text-xs text-muted-foreground mt-1">{tf(schemeUi.badge)}</p>
                       ) : null}

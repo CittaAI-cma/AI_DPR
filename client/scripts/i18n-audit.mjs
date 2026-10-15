@@ -78,6 +78,33 @@ console.log(`Unicode problems: ${uniProblems.length}`);
 uniProblems.slice(0, 40).forEach((p) => console.log('  ' + p));
 fail(uniProblems.length);
 
+section('Plain-language prompts have Telugu');
+const plainMissing = [];
+const plainFiles = [];
+const promptsDir = path.join(src, 'lib/plainLanguage');
+for (const f of ['glossary.ts', 'units.ts']) plainFiles.push(path.join(promptsDir, f));
+plainFiles.push(path.join(src, 'data/fieldDescriptions.ts'));
+for (const f of fs.readdirSync(path.join(promptsDir, 'prompts'))) if (/\.ts$/.test(f)) plainFiles.push(path.join(promptsDir, 'prompts', f));
+for (const file of plainFiles) {
+  const sf = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+  const visit = (n) => {
+    if (ts.isPropertyAssignment(n) && ts.isStringLiteralLike(n.initializer)) {
+      const name = keyText(n.name);
+      const inPromptEntry = ['ask', 'help', 'example', 'means', 'hint'].includes(name);
+      const inDescriptions = n.parent && ts.isObjectLiteralExpression(n.parent) && n.parent.parent && ts.isPropertyAssignment(n.parent.parent) && file.endsWith('fieldDescriptions.ts');
+      const inIntros = n.parent && ts.isObjectLiteralExpression(n.parent) && n.parent.parent && ts.isVariableDeclaration(n.parent.parent) && n.parent.parent.name.getText() === 'STEP_INTROS';
+      if ((inPromptEntry || inIntros || inDescriptions) && !dictEntries.has(n.initializer.text)) {
+        plainMissing.push(`${path.relative(src, file)} ${n.initializer.text.slice(0, 70)}`);
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+}
+console.log(`plain-language strings without a Telugu entry: ${plainMissing.length}`);
+plainMissing.slice(0, args.has('--list') ? 9999 : 10).forEach((l) => console.log('  PLAIN ' + l));
+fail(plainMissing.length);
+
 section('UI literals in source');
 const files = [];
 (function walk(d) {
@@ -100,9 +127,13 @@ for (const file of files) {
     if (ts.isJsxText(n)) {
       const s = n.text.replace(/\s+/g, ' ').trim();
       if (s && isWords(s)) literals.push(`${where(n)} text "${s.slice(0, 50)}"`);
-    } else if (ts.isJsxAttribute(n) && ATTRS.has(n.name.text) && n.initializer && ts.isStringLiteral(n.initializer)) {
+    } else if (ts.isJsxAttribute(n) && ATTRS.has(n.name.text) && n.initializer && ts.isStringLiteral(n.initializer) && !(ts.isJsxOpeningLikeElement(n.parent.parent) && n.parent.parent.tagName.getText() === 'FieldPrompt')) {
       const s = n.initializer.text;
       if (isWords(s)) literals.push(`${where(n)} ${n.name.text}="${s.slice(0, 50)}"`);
+    } else if (ts.isJsxSelfClosingElement(n) && n.tagName.getText() === 'FieldPrompt') {
+      const attr = n.attributes.properties.find((a) => ts.isJsxAttribute(a) && a.name.text === 'label');
+      const raw = attr && attr.initializer && ts.isStringLiteral(attr.initializer) ? attr.initializer.text.replace(/&quot;/g, '"') : '';
+      if (raw && needsTe(raw) && !KEEP.test(raw) && !dictEntries.has(raw)) missingTf.push(`${where(n)} FieldPrompt("${raw.slice(0, 60)}")`);
     } else if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'tf' && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) {
       const s = n.arguments[0].text;
       if (needsTe(s) && !KEEP.test(s) && !dictEntries.has(s)) missingTf.push(`${where(n)} tf("${s.slice(0, 60)}")`);

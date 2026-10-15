@@ -506,3 +506,66 @@ describe('field formats and masks', () => {
     assert.equal(checkRange('1.5', { min: 0, integer: true }).ok, false);
   });
 });
+
+import { describeField } from './plainLanguage/describe.ts';
+import { GLOSSARY } from './plainLanguage/glossary.ts';
+
+describe('plain-language field copy', () => {
+  const prompts = {
+    'Break-even (capacity %)': { ask: 'At what level of production do you stop losing money?', help: 'Often 50–60%.' },
+  };
+  it('uses the plain question and keeps the official label', () => {
+    const copy = describeField('Break-even (capacity %)', prompts);
+    assert.equal(copy.official, 'Break-even (capacity %)');
+    assert.match(copy.ask ?? '', /stop losing money/);
+  });
+  it('adds a unit hint for lakhs and percentages', () => {
+    assert.match(describeField('Wages (₹ Lakhs)', {}).units[0], /1 lakh is ₹1,00,000/);
+    assert.match(describeField('Break-even (capacity %)', prompts).units[0], /0 to 100/);
+    assert.equal(describeField('Address', {}).units.length, 0);
+  });
+  it('explains technical words found in the label', () => {
+    const terms = describeField('Peak Q4 WC outstanding (₹ Lakhs)', {}).terms.map((t) => t.term);
+    assert.deepEqual(terms, ['WC']);
+    assert.ok(describeField('DSCR target', {}).terms.some((t) => t.term === 'DSCR'));
+  });
+  it('does not match acronyms inside ordinary words', () => {
+    assert.equal(describeField('Total cost of the settlement', {}).terms.length, 0);
+    assert.equal(describeField('Standard stall', {}).terms.length, 0);
+  });
+  it('finds the plain question even when the label has a required star', () => {
+    assert.ok(describeField('Break-even (capacity %) *', prompts).ask);
+  });
+  it('every glossary entry matches its own term', () => {
+    for (const entry of GLOSSARY) {
+      const sample = entry.term === 'P&M' ? 'P&M' : entry.term;
+      assert.ok(entry.pattern.test(sample) || entry.pattern.test(entry.means), entry.term);
+    }
+  });
+});
+
+import { PROMPTS as PROMPTS_A } from './plainLanguage/prompts/formA.ts';
+import { PROMPTS as PROMPTS_B } from './plainLanguage/prompts/formB.ts';
+import { PROMPTS as PROMPTS_C } from './plainLanguage/prompts/formC.ts';
+import { STEP_INTROS as INTROS } from './plainLanguage/prompts/steps.ts';
+
+describe('plain-language wording rules', () => {
+  const all = { ...PROMPTS_A, ...PROMPTS_B, ...PROMPTS_C };
+  it('every entry asks a short question and promises nothing', () => {
+    const banned = /\b(guaranteed|assured|you will get|definitely)\b/i;
+    for (const [label, entry] of Object.entries(all)) {
+      assert.ok(entry.ask.length > 0 && entry.ask.length <= 140, `${label}: ask length`);
+      for (const text of [entry.ask, entry.help ?? '', entry.example ?? '']) assert.ok(!banned.test(text), `${label}: promise wording`);
+    }
+    for (const [title, text] of Object.entries(INTROS)) assert.ok(!banned.test(text), `${title}: promise wording`);
+  });
+  it('never asks anyone to type a personal PAN or Aadhaar number', () => {
+    for (const [label, entry] of Object.entries(all)) {
+      const text = `${entry.ask} ${entry.help ?? ''}`;
+      if (/aadhaar|\bPAN\b/i.test(text)) assert.match(text, /not|upload|copy|card|firm/i, label);
+    }
+  });
+  it('has a plain sentence for the common steps', () => {
+    for (const title of ['Means of finance', 'Project cost', 'Documents & uploads', 'Operating cost & sales']) assert.ok(INTROS[title], title);
+  });
+});
