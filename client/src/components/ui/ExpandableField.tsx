@@ -7,6 +7,10 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
+import { findNearbyFieldTitle } from '@/lib/fieldTitle';
+import { MicButton } from '@/components/ui/MicButton';
+import { useVoiceEnabled } from '@/components/ui/VoiceContext';
+import { appendSpoken } from '@/lib/voice/spokenValue';
 import { useAuthStore } from '@/store/authStore';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { AISuggestionsService } from '@/services/aiSuggestions.service';
@@ -77,6 +81,7 @@ function FieldExpandModal({
 }) {
   const tf = useClusterFormText();
   const { t } = useTranslation();
+  const voiceOn = useVoiceEnabled();
   const titleId = useId();
   const editorRef = useRef<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement | null>(null);
   const [improving, setImproving] = useState(false);
@@ -220,6 +225,13 @@ function FieldExpandModal({
             {title || tf('Edit field')}
           </p>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {voiceOn && (kind === 'textarea' || (kind === 'input' && (!inputType || inputType === 'text'))) ? (
+              <MicButton
+                kind="text"
+                label={title}
+                onText={(spoken) => setDraft(kind === 'textarea' ? appendSpoken(draft, spoken) : spoken)}
+              />
+            ) : null}
             {showMatchSkill && (
               <Button
                 type="button"
@@ -314,42 +326,6 @@ function FieldExpandModal({
   );
 }
 
-function cleanLabelText(raw: string): string {
-  return raw
-    .replace(/\s*\*\s*$/, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/** Pick the visible field title near a control (sibling / parent label). */
-function findNearbyFieldTitle(el: HTMLElement | null): string {
-  if (!el) return '';
-  const aria = el.getAttribute('aria-label');
-  if (aria?.trim()) return cleanLabelText(aria);
-
-  const labelledBy = el.getAttribute('aria-labelledby');
-  if (labelledBy) {
-    const node = document.getElementById(labelledBy);
-    if (node?.textContent) return cleanLabelText(node.textContent);
-  }
-
-  const wrap = el.closest('div');
-  const container = wrap?.parentElement || wrap;
-  const labelInContainer = container?.querySelector('label');
-  if (labelInContainer?.textContent) return cleanLabelText(labelInContainer.textContent);
-
-  let sibling = wrap?.previousElementSibling as HTMLElement | null;
-  while (sibling) {
-    if (sibling.tagName === 'LABEL' || sibling.classList.contains('font-medium') || sibling.classList.contains('font-semibold')) {
-      if (sibling.textContent) return cleanLabelText(sibling.textContent);
-    }
-    const nested = sibling.querySelector?.('label');
-    if (nested?.textContent) return cleanLabelText(nested.textContent);
-    sibling = sibling.previousElementSibling as HTMLElement | null;
-  }
-  return '';
-}
-
 function useExpandEditor(
   value: unknown,
   onChange?: (e: any) => void
@@ -441,13 +417,19 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
       onChange
     );
     const modalTitle = (expandTitle || label || resolvedTitle || '').trim() || tf('Edit field');
+    const voiceOn = useVoiceEnabled();
+    const voiceShown = voiceOn && !disabled && !readOnly;
+    const speak = (spoken: string) => {
+      const next = appendSpoken(String(resolvedValue ?? ''), spoken);
+      onChange?.({ target: { value: next }, currentTarget: { value: next } } as any);
+    };
 
     return (
       <>
         <div className="relative w-full">
           <textarea
             ref={ref}
-            className={cn('pr-8 cursor-pointer', className)}
+            className={cn(voiceShown ? 'pr-16 cursor-pointer' : 'pr-8 cursor-pointer', className)}
             onChange={onChange}
             value={value}
             defaultValue={defaultValue}
@@ -468,6 +450,11 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
           {!disabled && (
             <span className="pointer-events-none absolute right-2 top-2 text-muted-foreground/70" aria-hidden>
               <Maximize2 className="h-3.5 w-3.5" />
+            </span>
+          )}
+          {voiceShown && (
+            <span className="absolute right-8 top-1">
+              <MicButton kind="text" label={expandTitle || label || props['aria-label']} onText={speak} />
             </span>
           )}
         </div>

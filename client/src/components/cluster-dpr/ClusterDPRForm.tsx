@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { VoiceProvider } from '@/components/ui/VoiceContext';
 import React from 'react';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { Input } from '@/components/ui/Input';
@@ -19,7 +20,7 @@ interface ClusterDPRFormProps {
   onPrevious: () => void;
 }
 
-export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
+const ClusterDPRFormInner: React.FC<ClusterDPRFormProps> = ({
   currentStep,
   onNext,
   onPrevious,
@@ -2112,3 +2113,10 @@ export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = ({
     </div>
   );
 };
+
+/** The microphone button shows on every text box of this form. */
+export const ClusterDPRForm: React.FC<ClusterDPRFormProps> = (props) => (
+  <VoiceProvider>
+    <ClusterDPRFormInner {...props} />
+  </VoiceProvider>
+);

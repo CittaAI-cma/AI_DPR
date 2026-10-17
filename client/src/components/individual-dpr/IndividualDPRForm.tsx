@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { VoiceProvider } from '@/components/ui/VoiceContext';
 import { FieldPrompt } from '@/components/ui/FieldPrompt';
 import { AssetListEditor, BusinessKindPicker } from '@/components/individual-dpr/AssetItems';
 import { businessKind, kindLabel, scaleOf } from '@/lib/individualDpr/businessKind';
@@ -187,7 +188,7 @@ interface IndividualDPRFormProps {
   invalidFields?: string[];
 }
 
-export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
+const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
   currentStep,
   onNext,
   onPrevious,
@@ -4964,3 +4965,10 @@ export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = ({
     </div>
   );
 };
+
+/** The microphone button shows on every text box of this form. */
+export const IndividualDPRForm: React.FC<IndividualDPRFormProps> = (props) => (
+  <VoiceProvider>
+    <IndividualDPRFormInner {...props} />
+  </VoiceProvider>
+);

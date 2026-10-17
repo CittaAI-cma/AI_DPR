@@ -206,8 +206,8 @@ export class AIController {
           audioFormat = 'wav';
         } else if (file.mimetype.includes('ogg')) {
           audioFormat = 'ogg';
-        } else if (file.mimetype.includes('m4a')) {
-          audioFormat = 'm4a';
+        } else if (file.mimetype.includes('m4a') || file.mimetype.includes('mp4')) {
+          audioFormat = 'm4a'; // Safari records audio/mp4
         }
       }
 

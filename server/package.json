@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
-    "test": "node --experimental-strip-types --import ./register-tests.mjs --test src/production.backend.test.ts src/security.test.ts src/financeGuard.parity.test.ts src/aiGateway.test.ts src/platform.test.ts src/openapi.test.ts",
+    "test": "node --experimental-strip-types --import ./register-tests.mjs --test src/production.backend.test.ts src/security.test.ts src/financeGuard.parity.test.ts src/aiGateway.test.ts src/platform.test.ts src/openapi.test.ts src/sarvamStt.test.ts src/openStt.test.ts",
     "test:rbac": "node --experimental-strip-types --test --test-concurrency=1 src/rbac.live.test.ts",
     "test:session": "node --experimental-strip-types --test --test-concurrency=1 src/session.live.test.ts",
     "test:security": "node --experimental-strip-types --test --test-concurrency=1 src/security.live.test.ts",
