@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,6 @@ import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
 import { dprEditPath } from '@/lib/dprActions';
 import {
-  ArrowLeft,
   Download,
   Edit2,
   Save,
@@ -573,10 +573,7 @@ export const DPRPreview: React.FC = () => {
   return (
     <Layout>
       <div className={`${isClusterDPR ? 'w-full max-w-none' : 'max-w-6xl mx-auto'} space-y-6 pb-8`}>
-        <Button variant="ghost" onClick={back.go} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {back.label}
-        </Button>
+        <BackButton label={back.label} onClick={back.go} />
 
         {/* Header Section - Only show for non-cluster DPRs */}
         {!isClusterDPR && (

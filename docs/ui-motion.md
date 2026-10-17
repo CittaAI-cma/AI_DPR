@@ -10,6 +10,14 @@ Short, eased animations used across the app. They are plain CSS in `client/src/i
 | Card grids and lists (Dashboard, Projects, All DPRs, Analytics, Admin, Chat starters) | add `motion-stagger` to the container: its children rise in one after another (first 8 are staggered) |
 | Pop-ups and slide-over panels | add `motion-overlay` to the fixed overlay: it fades in and its first child pops in |
 | Inputs, selects, textareas, links | Border, shadow and colour changes ease instead of snapping |
+| Create DPR steps | The step content slides in from the side you moved towards (`motion-step-forward` / `motion-step-back`, 0.26 s). The step strip scrolls the current step into view |
+| Style panel groups | Open and close by height (`motion-collapse`, set `data-open`); the content is built the first time and then kept, so reopening is instant. Closed groups are `inert` |
+| Pop-ups with an exit | `useDialogPresence` keeps the pop-up mounted for 0.16 s so `motion-overlay.is-closing` can fade it out; `useDialogFocus` stops the page scrolling behind it, moves focus into it and returns focus to the opener (`client/src/lib/useDialog.ts`) |
+| Loading placeholders | `motion-skeleton` shimmer, then `motion-fade-in` (template thumbnails are drawn one after another) |
+| Back buttons | `BackButton` (`components/ui/BackButton.tsx`) is icon-only. The name ("Back to Dashboard") is the accessible label and shows as a `Tooltip` (`components/ui/Tooltip.tsx`) on hover after 0.3 s and at once on keyboard focus; no tooltip on touch screens. Wizard Previous/Next buttons keep their words |
+| Tabs | A tab panel carries `motion-tab` and a `key` that changes with the tab, so it fades and rises in; tab buttons ease their colour and underline (`[role=tab]` also gets this globally) |
+| Screen changes | `ScrollToTop` (in `lib/navHistory.tsx`) opens a new screen at its top and leaves Back/Forward scroll alone; the loading spinner (`PageLoading`) waits 200 ms so quick loads show nothing |
+| Every button | Presses down slightly while clicked and eases colour/shadow (`:where` rules in `index.css`, so any component's own transform wins); taps respond at once on phones (`touch-action: manipulation`); the page keeps a stable scrollbar gutter so locking scroll behind a pop-up does not shift the layout; scrolling is smooth unless reduced motion is requested |
 | Scheme Finder | Its own extras: `vm-*` / `motion-slide-*` slide between questions, `motion-pop` check on chosen option, header shadow on scroll (see `venture-match-business-logic.md`) |
 
 Rules of thumb: use `backwards` fill (not `both`) for entrance animations so hover transforms still work afterwards; keep durations under about 0.5 s; do not animate large tables or long forms row by row.

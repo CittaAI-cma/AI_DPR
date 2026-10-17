@@ -6,13 +6,21 @@ import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { templateSpecimenDpr, templateSpecimenStyle } from '@/lib/individualDpr/templateSpecimen';
+import { TemplateThumb } from '@/components/individual-dpr/TemplateThumb';
+import { useDialogFocus, useDialogPresence } from '@/lib/useDialog';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
   FONT_CHOICES,
   MARGIN_MAX,
   MARGIN_MIN,
+  COLOR_PALETTES,
+  MARGIN_CHOICES,
   PRESET_IDS,
   PRESET_LABELS,
+  PRESET_NOTES,
+  SPACING_CHOICES,
+  presetStyle,
+  scaleTypeSizes,
   applyPreset,
   contrastOk,
   defaultStyleForScheme,
@@ -35,6 +43,7 @@ import {
   type TypeRole,
 } from '@/lib/individualDpr/documentStyle';
 
+const PT = '\u00a0pt';
 const PAGE_SIZES: PageSize[] = ['A4', 'A3', 'Letter', 'Legal'];
 const ROLE_KEYS = ['cover', 'sectionTitle', 'body', 'table', 'caption'] as const;
 
@@ -63,19 +72,46 @@ async function readImageFile(file: File): Promise<string> {
 }
 
 function StyleGroup({ title, open, onToggle, children }) {
+  // The content is built the first time the group opens and then kept, so reopening is instant and nothing re-renders.
+  const [seen, setSeen] = useState(!!open);
+  useEffect(() => {
+    if (open) setSeen(true);
+  }, [open]);
   return (
     <section className="rounded-md border border-slate-200 bg-white">
       <button
         type="button"
         aria-expanded={open}
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-700 hover:bg-slate-50"
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-700 transition-colors hover:bg-slate-50"
       >
         <span>{title}</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${open ? '' : '-rotate-90'}`} />
+        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 ${open ? '' : '-rotate-90'}`} />
       </button>
-      {open ? <div className="space-y-2 border-t border-slate-200 px-3 py-3">{children}</div> : null}
+      <div className="motion-collapse" data-open={open ? 'true' : 'false'} aria-hidden={!open} {...(open ? {} : { inert: '' })}>
+        <div>
+          {seen ? <div className="space-y-2 border-t border-slate-200 px-3 py-3">{children}</div> : null}
+        </div>
+      </div>
     </section>
+  );
+}
+
+function Segmented({ value, options, onChange, label }) {
+  return (
+    <div role="group" aria-label={label} className="inline-flex w-full overflow-hidden rounded-md border border-slate-300 text-xs">
+      {options.map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          aria-pressed={value === option.id}
+          onClick={() => onChange(option.id)}
+          className={`flex-1 px-2 py-1.5 font-medium transition-colors ${value === option.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -115,6 +151,16 @@ export function StyleEditor({
   const [previewZoom, setPreviewZoom] = useState(0.8);
   const [templatePreview, setTemplatePreview] = useState(null);
   const previewBoxRef = useRef<HTMLDivElement>(null);
+  const previewDialogRef = useRef<HTMLDivElement>(null);
+  const templateDialogRef = useRef<HTMLDivElement>(null);
+  const previewPresence = useDialogPresence(previewOpen);
+  const templatePresence = useDialogPresence(!!templatePreview);
+  // The template pop-up keeps showing the last template while it fades out.
+  const lastTemplate = useRef(null);
+  if (templatePreview) lastTemplate.current = templatePreview;
+  const shownTemplate = templatePreview || lastTemplate.current;
+  useDialogFocus(previewOpen, previewDialogRef);
+  useDialogFocus(!!templatePreview, templateDialogRef);
   const [openGroups, setOpenGroups] = useState({});
   const toggleGroup = (id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
   const [editStep, setEditStep] = useState(null);
@@ -220,6 +266,15 @@ export function StyleEditor({
     return () => window.removeEventListener('keydown', onKey);
   }, [previewOpen]);
 
+  useEffect(() => {
+    if (!templatePreview) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setTemplatePreview(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [templatePreview]);
+
   const scrollLiveToSection = (step) => {
     const id = step?.id;
     if (!id) return;
@@ -308,6 +363,44 @@ export function StyleEditor({
   const setRole = (key: (typeof ROLE_KEYS)[number], patch: Partial<TypeRole>) => {
     commit({ ...style, [key]: { ...style[key], ...patch } });
   };
+
+  /** Put one group of settings back to what the chosen template ships with. Content (logo, agency name, pictures) is kept. */
+  const groupKeys = {
+    page: ['pageSize', 'wideTablesLandscape', 'marginMm'],
+    type: ['cover', 'sectionTitle', 'body', 'table', 'caption', 'align', 'lineHeight', 'paragraphGap'],
+    colors: ['colors'],
+    header: ['logoAlign', 'headerLine', 'pageNumberStyle', 'footerText'],
+    watermark: ['watermark', 'watermarkOpacity', 'watermarkAngle'],
+    tables: ['tableStriped', 'tableDensity', 'tableBorders'],
+    layout: ['showToc', 'headingNumbers', 'sectionBreak'],
+  };
+  const groupIsDefault = (group) => {
+    const base = presetStyle(style.preset);
+    return groupKeys[group].every((key) => JSON.stringify(style[key]) === JSON.stringify(base[key]));
+  };
+  const resetGroup = (group) => {
+    const base = presetStyle(style.preset);
+    const next = { ...style };
+    groupKeys[group].forEach((key) => { next[key] = base[key]; });
+    setBlockedColor('');
+    commit(next);
+  };
+  const resetLink = (group) => (
+    <button
+      type="button"
+      disabled={groupIsDefault(group)}
+      onClick={() => resetGroup(group)}
+      className="text-xs font-medium text-teal-700 underline-offset-2 hover:underline disabled:cursor-default disabled:text-slate-400 disabled:no-underline"
+    >
+      {tf('Reset to template')}
+    </button>
+  );
+  const allGroups = ['presets', 'page', 'type', 'colors', 'header', 'watermark', 'tables', 'layout', 'pictures'];
+  const anyGroupOpen = allGroups.some((id) => openGroups[id]);
+  const setAllGroups = (open) => setOpenGroups(Object.fromEntries(allGroups.map((id) => [id, open])));
+  const marginChoice = MARGIN_CHOICES.find((c) => ['top', 'right', 'bottom', 'left'].every((s) => style.marginMm[s] === c.mm))?.id || '';
+  const spacingChoice = SPACING_CHOICES.find((c) => c.lineHeight === style.lineHeight && c.paragraphGap === style.paragraphGap)?.id || '';
+  const paletteChoice = COLOR_PALETTES.find((c) => ['primary', 'header', 'table', 'border'].every((k) => c.colors[k] === style.colors[k]))?.id || '';
 
   const setMargin = (side: keyof DocumentStyle['marginMm'], raw: string) => {
     const n = Number(raw);
@@ -689,19 +782,39 @@ export function StyleEditor({
   const stylePanel = (
     <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l">
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+        <div className="flex items-center justify-between px-1 pb-1">
+          <p className="text-xs text-slate-500">{tf('Changes apply to this report only.')}</p>
+          <button type="button" onClick={() => setAllGroups(!anyGroupOpen)} className="text-xs font-medium text-teal-700 hover:underline">
+            {anyGroupOpen ? tf('Collapse all') : tf('Expand all')}
+          </button>
+        </div>
         <StyleGroup title={tf('Templates')} open={!!openGroups.presets} onToggle={() => toggleGroup('presets')}>
-          <div className="flex flex-wrap gap-1.5">
-            {PRESET_IDS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setTemplatePreview(id)}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
-                  style.preset === id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white'
-                }`}
-              >
-                {tf(PRESET_LABELS[id])}
-              </button>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-3">
+            {PRESET_IDS.map((id, index) => (
+              <div key={id} className="group relative">
+                <button
+                  type="button"
+                  onClick={() => commit(applyPreset(style, id))}
+                  aria-pressed={style.preset === id}
+                  title={tf(PRESET_LABELS[id])}
+                  className={`flex w-full flex-col items-center gap-1.5 rounded-lg border p-2 text-xs font-medium transition-colors hover:border-slate-400 ${
+                    style.preset === id ? 'border-slate-900 bg-slate-50 ring-1 ring-slate-900' : 'border-slate-200 bg-white'
+                  }`}
+                >
+                  <TemplateThumb id={id} style={style} schemeCode={schemeCode} order={index} />
+                  <span>{tf(PRESET_LABELS[id])}</span>
+                  <span className="text-center text-[11px] font-normal leading-tight text-slate-500">{tf(PRESET_NOTES[id])}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplatePreview(id)}
+                  aria-label={`${tf('Enlarge preview')}: ${tf(PRESET_LABELS[id])}`}
+                  title={tf('Enlarge preview')}
+                  className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white/90 text-slate-600 opacity-80 shadow-sm backdrop-blur transition hover:bg-white hover:text-slate-900 hover:opacity-100 focus-visible:opacity-100 group-hover:opacity-100"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
             ))}
           </div>
         </StyleGroup>
@@ -730,6 +843,18 @@ export function StyleEditor({
             <span>{tf('Landscape for wide money tables')}</span>
           </label>
           {problemFor('wide') ? <p className="text-xs font-medium text-red-700">{tf(problemFor('wide'))}</p> : null}
+          <div>
+            <p className="mb-1 text-xs">{tf('Margins')}</p>
+            <Segmented
+              label={tf('Margins')}
+              value={marginChoice}
+              options={MARGIN_CHOICES.map((c) => ({ id: c.id, label: `${tf(c.label)} · ${c.mm}` }))}
+              onChange={(id) => {
+                const mm = MARGIN_CHOICES.find((c) => c.id === id).mm;
+                commit({ ...style, marginMm: { top: mm, right: mm, bottom: mm, left: mm } });
+              }}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
               <label key={side} className="text-xs capitalize">
@@ -745,9 +870,29 @@ export function StyleEditor({
               </label>
             ))}
           </div>
+          {resetLink('page')}
         </StyleGroup>
 
         <StyleGroup title={tf('Type')} open={!!openGroups.type} onToggle={() => toggleGroup('type')}>
+          <div className="flex items-center justify-between gap-2 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
+            <span>{tf('Text size')} ({style.body.size}{PT})</span>
+            <span className="flex gap-1">
+              <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" aria-label={tf('Smaller text')} onClick={() => commit(scaleTypeSizes(style, -0.5))}>A−</Button>
+              <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" aria-label={tf('Larger text')} onClick={() => commit(scaleTypeSizes(style, 0.5))}>A+</Button>
+            </span>
+          </div>
+          <div>
+            <p className="mb-1 text-xs">{tf('Spacing')}</p>
+            <Segmented
+              label={tf('Spacing')}
+              value={spacingChoice}
+              options={SPACING_CHOICES.map((c) => ({ id: c.id, label: tf(c.label) }))}
+              onChange={(id) => {
+                const choice = SPACING_CHOICES.find((c) => c.id === id);
+                commit({ ...style, lineHeight: choice.lineHeight, paragraphGap: choice.paragraphGap });
+              }}
+            />
+          </div>
           {ROLE_KEYS.map((key) => (
             <div key={key} className={`rounded-md border p-2 ${problemFor('body-font') && key === 'body' ? 'border-red-500' : 'border-slate-200'}`}>
               <p className="mb-1 text-xs font-medium">{tf(ROLE_LABELS[key])}</p>
@@ -816,9 +961,27 @@ export function StyleEditor({
               onChange={(event) => commit({ ...style, paragraphGap: Number(event.target.value) })}
             />
           </label>
+          {resetLink('type')}
         </StyleGroup>
 
         <StyleGroup title={tf('Colors')} open={!!openGroups.colors} onToggle={() => toggleGroup('colors')}>
+          <div>
+            <p className="mb-1 text-xs">{tf('Color sets')}</p>
+            <div className="flex flex-wrap gap-2">
+              {COLOR_PALETTES.map((palette) => (
+                <button
+                  key={palette.id}
+                  type="button"
+                  title={tf(palette.label)}
+                  aria-label={tf(palette.label)}
+                  aria-pressed={paletteChoice === palette.id}
+                  onClick={() => { setBlockedColor(''); commit({ ...style, colors: { ...palette.colors } }); }}
+                  className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 ${paletteChoice === palette.id ? 'border-slate-900 ring-2 ring-offset-1 ring-slate-400' : 'border-white shadow'}`}
+                  style={{ background: `linear-gradient(135deg, ${palette.colors.primary} 50%, ${palette.colors.table} 50%)` }}
+                />
+              ))}
+            </div>
+          </div>
           {([
             ['primary', 'Primary'],
             ['header', 'Header'],
@@ -841,6 +1004,7 @@ export function StyleEditor({
           {['primary', 'header', 'table', 'border'].map((key) =>
             problemFor(key) ? <p key={key} className="text-xs font-medium text-red-700">{tf(problemFor(key))}</p> : null
           )}
+          {resetLink('colors')}
         </StyleGroup>
 
         <StyleGroup title={tf('Header and footer')} open={!!openGroups.header} onToggle={() => toggleGroup('header')}>
@@ -884,6 +1048,16 @@ export function StyleEditor({
             </select>
           </label>
           <label className="block text-xs">
+            {tf('Footer text (left of the page number)')}
+            <input
+              className="mt-1 w-full rounded-md border px-2 py-1.5 text-sm"
+              maxLength={80}
+              placeholder={tf('For example: Sri Lakshmi Foods · Draft')}
+              value={style.footerText || ''}
+              onChange={(event) => commit({ ...style, footerText: event.target.value })}
+            />
+          </label>
+          <label className="block text-xs">
             {tf('Logo')}
             <input
               type="file"
@@ -908,6 +1082,7 @@ export function StyleEditor({
               {tf('Remove logo')}
             </button>
           ) : null}
+          {resetLink('header')}
         </StyleGroup>
 
         <StyleGroup title={tf('Watermark')} open={!!openGroups.watermark} onToggle={() => toggleGroup('watermark')}>
@@ -939,6 +1114,7 @@ export function StyleEditor({
               onChange={(event) => commit({ ...style, watermarkAngle: Number(event.target.value) })}
             />
           </label>
+          {resetLink('watermark')}
         </StyleGroup>
 
         <StyleGroup title={tf('Tables')} open={!!openGroups.tables} onToggle={() => toggleGroup('tables')}>
@@ -950,6 +1126,63 @@ export function StyleEditor({
             />
             {tf('Striped rows')}
           </label>
+          <div>
+            <p className="mb-1 text-xs">{tf('Row height')}</p>
+            <Segmented
+              label={tf('Row height')}
+              value={style.tableDensity}
+              options={[
+                { id: 'compact', label: tf('Compact') },
+                { id: 'normal', label: tf('Normal') },
+                { id: 'roomy', label: tf('Roomy') },
+              ]}
+              onChange={(id) => commit({ ...style, tableDensity: id })}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-xs">{tf('Table lines')}</p>
+            <Segmented
+              label={tf('Table lines')}
+              value={style.tableBorders}
+              options={[
+                { id: 'template', label: tf('Template') },
+                { id: 'grid', label: tf('Grid') },
+                { id: 'rows', label: tf('Rows') },
+                { id: 'none', label: tf('None') },
+              ]}
+              onChange={(id) => commit({ ...style, tableBorders: id })}
+            />
+          </div>
+          {resetLink('tables')}
+        </StyleGroup>
+
+        <StyleGroup title={tf('Layout')} open={!!openGroups.layout} onToggle={() => toggleGroup('layout')}>
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={style.showToc}
+              onChange={(event) => commit({ ...style, showToc: event.target.checked })}
+            />
+            {tf('Show the table of contents')}
+          </label>
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={style.headingNumbers}
+              onChange={(event) => commit({ ...style, headingNumbers: event.target.checked })}
+            />
+            {tf('Number the section headings')}
+          </label>
+          <label className="flex items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={style.sectionBreak === 'newPage'}
+              onChange={(event) => commit({ ...style, sectionBreak: event.target.checked ? 'newPage' : 'flow' })}
+            />
+            <span>{tf('Start each section on a new page')}</span>
+          </label>
+          {resetLink('layout')}
         </StyleGroup>
 
         <StyleGroup title={tf('Pictures')} open={!!openGroups.pictures} onToggle={() => toggleGroup('pictures')}>
@@ -1115,8 +1348,8 @@ export function StyleEditor({
                     role="tab"
                     aria-selected={selected}
                     onClick={() => onTab?.(id)}
-                    className={`flex-1 px-2 py-2.5 text-sm font-semibold ${
-                      selected ? 'border-b-2 border-teal-800 text-teal-900' : 'text-slate-500 hover:bg-slate-50'
+                    className={`flex-1 border-b-2 px-2 py-2.5 text-sm font-semibold transition-colors ${
+                      selected ? 'border-teal-800 text-teal-900' : 'border-transparent text-slate-500 hover:bg-slate-50'
                     }`}
                   >
                     {tf(label)}
@@ -1124,7 +1357,7 @@ export function StyleEditor({
                 );
               })}
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
+            <div key={tab} className="motion-tab min-h-0 flex-1 overflow-hidden flex flex-col">
             {tab === 'sections' || (tab === 'form' && !renderEditor) ? sectionsPanel : tab === 'style' ? stylePanel : (
               <>
                 <div className="fill-edit-scroll min-h-0 flex-1 overflow-y-auto p-3">
@@ -1161,9 +1394,20 @@ export function StyleEditor({
           </div>
         ) : null}
       </div>
-      {previewOpen && (
-        <div className="motion-overlay fixed inset-0 z-[70] bg-slate-900/50">
-          <div className="flex h-full min-h-0 flex-col bg-slate-100">
+      {previewPresence.render && (
+        <div
+          className={`motion-overlay${previewPresence.closing ? ' is-closing' : ''} fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3 sm:p-6`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setPreviewOpen(false);
+          }}
+        >
+          <div
+            ref={previewDialogRef}
+            className="flex h-full max-h-[92vh] min-h-0 w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-slate-100 shadow-2xl outline-none"
+            role="dialog"
+            aria-modal="true"
+            aria-label={tf('Final preview')}
+          >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-white px-4 py-2">
               <div>
                 <p className="text-sm font-semibold">{tf('Final preview')}</p>
@@ -1178,7 +1422,7 @@ export function StyleEditor({
                   <ZoomIn className="h-4 w-4" />
                 </Button>
                 <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={fitPreview}>{tf('Fit page')}</Button>
-                <Button type="button" size="sm" className="ml-2" onClick={() => setPreviewOpen(false)}>
+                <Button type="button" size="sm" className="ml-2" onClick={() => setPreviewOpen(false)} aria-label={tf('Close preview')}>
                   <X className="mr-1 h-4 w-4" />
                   {tf('Close preview')}
                 </Button>
@@ -1274,24 +1518,36 @@ export function StyleEditor({
           </div>
         </div>
       ) : null}
-      {templatePreview ? (
-        <div className="fixed inset-0 z-[80] flex flex-col bg-slate-900/50" role="dialog" aria-modal="true" aria-label={tf(PRESET_LABELS[templatePreview])}>
+      {templatePresence.render && shownTemplate ? (
+        <div
+          className={`motion-overlay${templatePresence.closing ? ' is-closing' : ''} fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/50 p-3 sm:p-6`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setTemplatePreview(null);
+          }}
+        >
+         <div
+          ref={templateDialogRef}
+          className="flex h-full max-h-[92vh] min-h-0 w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-slate-100 shadow-2xl outline-none"
+          role="dialog"
+          aria-modal="true"
+          aria-label={tf(PRESET_LABELS[shownTemplate])}
+         >
           <div className="flex shrink-0 items-center justify-between gap-3 bg-white px-4 py-3 shadow">
-            <p className="min-w-0 truncate text-sm font-semibold">{tf(PRESET_LABELS[templatePreview])}</p>
-            <div className="flex shrink-0 gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setTemplatePreview(null)}>
-                {tf('Cancel')}
-              </Button>
+            <p className="min-w-0 truncate text-sm font-semibold">{tf(PRESET_LABELS[shownTemplate])}</p>
+            <div className="flex shrink-0 items-center gap-2">
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
                 onClick={() => {
-                  commit(applyPreset(style, templatePreview));
+                  commit(applyPreset(style, shownTemplate));
                   setTemplatePreview(null);
                 }}
               >
                 {tf('Use this theme')}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label={tf('Close')} onClick={() => setTemplatePreview(null)}>
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -1304,10 +1560,11 @@ export function StyleEditor({
             >
               <IndividualDPRDocumentView
                 dpr={templateSpecimenDpr(schemeCode)}
-                documentStyle={templateSpecimenStyle(style, templatePreview, schemeCode)}
+                documentStyle={templateSpecimenStyle(style, shownTemplate, schemeCode)}
               />
             </PageSheet>
           </div>
+         </div>
         </div>
       ) : null}
     </div>

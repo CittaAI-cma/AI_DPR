@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -1485,10 +1486,7 @@ Return ready-to-use content that can be directly filled into form fields. The us
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-6 pb-8">
-        <Button variant="ghost" onClick={back.go} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {back.label}
-        </Button>
+        <BackButton label={back.label} onClick={back.go} />
 
         {/* Header Section */}
         <div className="relative overflow-hidden rounded-2xl bg-primary p-8 mb-6 shadow-2xl border-2 border-primary/20">

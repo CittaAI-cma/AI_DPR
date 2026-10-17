@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import { pageEdgeMm, presetStyle } from '@/lib/individualDpr/documentStyle';
 import { highlightHit, scrollHitIntoPreview } from '@/lib/individualDpr/previewFieldHits';
 import {
@@ -296,9 +297,7 @@ export function ReportGuide() {
   return (
     <Layout>
       <div className="mx-auto max-w-7xl">
-        <button type="button" onClick={back.go} className="text-sm font-medium text-primary hover:underline">
-          {back.label}
-        </button>
+        <BackButton label={back.label} onClick={back.go} />
         <h1 className="mt-3 text-3xl font-bold">{t('reportGuide.title')}</h1>
         <p className="mt-2 text-muted-foreground">{t('reportGuide.intro')}</p>
 

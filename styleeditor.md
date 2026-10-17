@@ -30,17 +30,21 @@ English and Telugu are a switch on the preview. The same style applies to both. 
 
 ## Style
 
-One row of presets: Government, Bank appraisal, PMEGP, AP CMEP, Formal, Minimal. Choosing one restyles the preview at once and keeps the section order and pictures.
+Ten templates, each shown as a small picture of its first page (drawn by the real report renderer, with sample text): Gazette, Ledger, Ribbon, Docket, Manuscript, Quiet, plus the newer Corporate, Heritage, Fresh and Compact. Corporate, Heritage, Fresh and Compact reuse an existing outline (`PRESET_LAYOUT`) with their own type, colors and spacing. Compact uses smaller type and tighter margins to save pages. Clicking a picture opens the full preview in a popup (close with X, Esc or a click outside); **Use this theme** applies it and keeps the section order, pictures and footer text.
 
-Page size is A4, A3, Letter, or Legal. The write-up stays portrait. **Landscape for wide money tables** gives those sheets their own landscape page in the PDF. Margins are four fields, in millimetres, kept between 10 and 40 so text cannot run off the page.
+Every group has a **Reset to template** link that puts only that group back to what the chosen template ships with (logo, agency name and pictures are kept), and the panel has **Expand all / Collapse all**.
 
-Type is five roles, not a font on every paragraph: Cover, Section title, Body, Table, Caption. Each has font, size, and weight. The fonts are Times New Roman, Arial, Calibri, Helvetica, and Noto Sans Telugu. Alignment, line spacing, and space between paragraphs are set once for the whole report.
+Page size is A4, A3, Letter, or Legal. Margins have three quick choices (Narrow 12, Normal 16, Wide 22 mm) as well as the four fields. The write-up stays portrait. **Landscape for wide money tables** gives those sheets their own landscape page in the PDF. Margins are four fields, in millimetres, kept between 10 and 40 so text cannot run off the page.
 
-Colors are Primary, Header, Table header, and Borders. If a pair would hide the text, that control turns red and the color is not applied.
+Type is five roles, not a font on every paragraph: Cover, Section title, Body, Table, Caption. Each has font, size, and weight. The fonts are Times New Roman, Arial, Calibri, Helvetica, and Noto Sans Telugu. Alignment, line spacing, and space between paragraphs are set once for the whole report. **Text size** (A− / A+) moves all five roles by half a point, and **Spacing** has Tight, Normal and Relaxed.
+
+Colors are Primary, Header, Table header, and Borders; nine **color sets** (Navy, Blue, Teal, Forest, Indigo, Purple, Maroon, Amber, Charcoal) set all four at once. If a pair would hide the text, that control turns red and the color is not applied.
 
 The header can place a logo on the left, center, or right, show the agency name, and draw a thin line. Page numbers read as `3` or `Page 3 of 12`. The watermark has text, how faint it is, and an angle. It starts as “Confidential — for lending appraisal”.
 
-Tables share one preset: header color, borders, and striped rows. If a wide money table still sticks out of the page, the table control says so.
+Tables: striped rows, **row height** (Compact, Normal, Roomy) and **table lines** (Template, Grid, Rows, None).
+
+**Layout** has three switches: show the table of contents, number the section headings, and start each section on a new page (the contents and every section start at the top of a page in the live view and the PDF). The header group also has **Footer text**, a short line on the left of every page's number (up to 80 characters). If a wide money table still sticks out of the page, the table control says so.
 
 Pictures go in named spots only: the cover, after a section, or the annexure. Add, replace, or remove. The picture sits in the flow of the page.
 

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -102,4 +103,15 @@ export function useBackTarget(fallback: { path: string }) {
       else navigate(fallback.path);
     },
   };
+}
+
+/** A new screen opens at its top. Going Back or Forward leaves the browser's own scroll position alone. */
+export function ScrollToTop() {
+  const { pathname } = useLocation();
+  const type = useNavigationType();
+  useEffect(() => {
+    if (type === 'POP') return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname, type]);
+  return null;
 }

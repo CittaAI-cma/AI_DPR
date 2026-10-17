@@ -118,8 +118,8 @@ export const DistrictReview: React.FC = () => {
               role="tab"
               aria-selected={status === tab.status}
               onClick={() => setStatus(tab.status)}
-              className={`whitespace-nowrap px-4 py-2 text-sm font-semibold ${
-                status === tab.status ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
+              className={`whitespace-nowrap border-b-2 px-4 py-2 text-sm font-semibold transition-colors ${
+                status === tab.status ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               {tf(tab.label)} ({counts[tab.status] ?? 0})
@@ -136,7 +136,7 @@ export const DistrictReview: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <ul className="space-y-3">
+          <ul key={status} className="motion-stagger space-y-3">
             {rows.map((row) => (
               <li key={row.dprId}>
                 <Card>

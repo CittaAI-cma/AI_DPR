@@ -204,7 +204,7 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
       </div>
 
       <div className="mb-5 space-y-3">
-        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
           <div className="relative min-w-0 sm:col-span-2 md:col-span-1">
             <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
@@ -229,24 +229,24 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
             onToggle={(id) => setKinds((current) => toggleValue(current, id))}
             labelOf={tf}
           />
+          {/* Same row as the filters. Its space is kept (just hidden) while no filter is set, so nothing shifts when it appears. */}
+          <div className={filtersActive ? 'sm:col-span-2 md:col-span-1' : 'hidden md:invisible md:block'}>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 w-full gap-1 px-4"
+              tabIndex={filtersActive ? 0 : -1}
+              onClick={() => {
+                setQuery('');
+                setLevels([]);
+                setKinds([]);
+              }}
+            >
+              <X className="h-4 w-4" />
+              {tf('Clear')}
+            </Button>
+          </div>
         </div>
-          {filtersActive && (
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10"
-                onClick={() => {
-                  setQuery('');
-                  setLevels([]);
-                  setKinds([]);
-                }}
-              >
-                <X className="h-4 w-4 mr-1" />
-                {tf('Clear')}
-              </Button>
-            </div>
-          )}
       </div>
 
       <p className="mb-4 text-sm text-muted-foreground">

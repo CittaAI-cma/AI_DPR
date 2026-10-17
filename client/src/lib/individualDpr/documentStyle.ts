@@ -13,8 +13,31 @@ export const FONT_CHOICES = [
 
 export type FontChoice = (typeof FONT_CHOICES)[number];
 
-export const PRESET_IDS = ['government', 'bank', 'pmegp', 'apCmep', 'formal', 'minimal'] as const;
+export const PRESET_IDS = ['government', 'bank', 'pmegp', 'apCmep', 'formal', 'minimal', 'corporate', 'heritage', 'fresh', 'compact'] as const;
 export type DocPresetId = (typeof PRESET_IDS)[number];
+
+/** Outline family that draws a preset (cover frame, section titles). The newer looks reuse an existing outline with their own type and colors. */
+export type DocLayoutId = 'government' | 'bank' | 'pmegp' | 'apCmep' | 'formal' | 'minimal';
+export const PRESET_LAYOUT: Record<DocPresetId, DocLayoutId> = {
+  government: 'government',
+  bank: 'bank',
+  pmegp: 'pmegp',
+  apCmep: 'apCmep',
+  formal: 'formal',
+  minimal: 'minimal',
+  corporate: 'bank',
+  heritage: 'formal',
+  fresh: 'minimal',
+  compact: 'government',
+};
+export const layoutOfPreset = (id: DocPresetId): DocLayoutId => PRESET_LAYOUT[id] || 'government';
+
+export const TABLE_DENSITIES = ['compact', 'normal', 'roomy'] as const;
+export type TableDensity = (typeof TABLE_DENSITIES)[number];
+export const TABLE_BORDERS = ['template', 'grid', 'rows', 'none'] as const;
+export type TableBorders = (typeof TABLE_BORDERS)[number];
+export const SECTION_BREAKS = ['flow', 'newPage'] as const;
+export type SectionBreak = (typeof SECTION_BREAKS)[number];
 
 export const PAGE_SIZES = ['A4', 'A3', 'Letter', 'Legal'] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
@@ -56,6 +79,16 @@ export interface DocumentStyle {
   watermarkOpacity: number;
   watermarkAngle: number;
   tableStriped: boolean;
+  /** Cell padding in tables. */
+  tableDensity: TableDensity;
+  /** 'template' keeps the lines the chosen template draws. */
+  tableBorders: TableBorders;
+  /** 'newPage' starts the contents and every section at the top of a page. */
+  sectionBreak: SectionBreak;
+  showToc: boolean;
+  headingNumbers: boolean;
+  /** Short line at the foot of every page, left side (for example the firm name or "Draft"). */
+  footerText: string;
   sectionOrder: string[];
   hiddenSectionIds: string[];
   images: { cover: string; annexure: string; after: Record<string, string> };
@@ -95,6 +128,24 @@ export const PRESET_LABELS: Record<DocPresetId, string> = {
   apCmep: 'Docket',
   formal: 'Manuscript',
   minimal: 'Quiet',
+  corporate: 'Corporate',
+  heritage: 'Heritage',
+  fresh: 'Fresh',
+  compact: 'Compact',
+};
+
+/** One line on what each template is good for, shown under its picture. */
+export const PRESET_NOTES: Record<DocPresetId, string> = {
+  government: 'Boxed cover, navy headings',
+  bank: 'Dark section bars, clean tables',
+  pmegp: 'Teal ribbon, KVIC style',
+  apCmep: 'Indigo cards, AP MSME style',
+  formal: 'Serif, justified, plain rules',
+  minimal: 'Light and quiet',
+  corporate: 'Blue bars, sans-serif',
+  heritage: 'Maroon serif, classic',
+  fresh: 'Green accents, airy',
+  compact: 'Smaller type, fewer pages',
 };
 
 const DEFAULT_WATERMARK = 'Confidential — for lending appraisal';
@@ -221,6 +272,12 @@ export function presetStyle(id: DocPresetId): DocumentStyle {
     watermarkOpacity: 0.12,
     watermarkAngle: -32,
     tableStriped: true,
+    tableDensity: 'normal' as TableDensity,
+    tableBorders: 'template' as TableBorders,
+    sectionBreak: 'flow' as SectionBreak,
+    showToc: true,
+    headingNumbers: true,
+    footerText: '',
     sectionOrder: [] as string[],
     hiddenSectionIds: [] as string[],
     images: emptyImages(),
@@ -303,6 +360,71 @@ export function presetStyle(id: DocPresetId): DocumentStyle {
       headerLine: false,
       watermark: '',
       tableStriped: false,
+    };
+  }
+  if (id === 'corporate') {
+    return {
+      ...shared,
+      preset: id,
+      marginMm: margins(16),
+      cover: role('Calibri', 22, 700),
+      sectionTitle: role('Calibri', 14, 700),
+      body: role('Calibri', 11, 400),
+      table: role('Calibri', 9, 600),
+      caption: role('Calibri', 9, 400),
+      colors: { primary: '#1e40af', header: '#1e3a8a', table: '#1d4ed8', border: '#1e3a8a' },
+      watermark: '',
+    };
+  }
+  if (id === 'heritage') {
+    return {
+      ...shared,
+      preset: id,
+      marginMm: margins(20),
+      cover: role('Times New Roman', 22, 700),
+      sectionTitle: role('Times New Roman', 14, 700),
+      body: role('Times New Roman', 11.5, 400),
+      table: role('Times New Roman', 9.5, 600),
+      caption: role('Times New Roman', 9, 400),
+      colors: { primary: '#7f1d1d', header: '#7f1d1d', table: '#7f1d1d', border: '#7f1d1d' },
+      align: 'justify',
+      lineHeight: 1.55,
+      tableStriped: false,
+      watermark: '',
+    };
+  }
+  if (id === 'fresh') {
+    return {
+      ...shared,
+      preset: id,
+      marginMm: margins(18),
+      cover: role('Helvetica', 21, 600),
+      sectionTitle: role('Helvetica', 13, 600),
+      body: role('Helvetica', 11, 400),
+      table: role('Helvetica', 9, 600),
+      caption: role('Helvetica', 9, 400),
+      colors: { primary: '#166534', header: '#166534', table: '#15803d', border: '#166534' },
+      lineHeight: 1.55,
+      paragraphGap: 8,
+      tableDensity: 'roomy',
+      tableStriped: true,
+      watermark: '',
+    };
+  }
+  if (id === 'compact') {
+    return {
+      ...shared,
+      preset: id,
+      marginMm: margins(12),
+      cover: role('Arial', 20, 700),
+      sectionTitle: role('Arial', 12, 700),
+      body: role('Arial', 10, 400),
+      table: role('Arial', 8.5, 600),
+      caption: role('Arial', 8.5, 400),
+      colors: { primary: '#1e3a5f', header: '#1e3a5f', table: '#1e3a5f', border: '#1e3a5f' },
+      lineHeight: 1.3,
+      paragraphGap: 4,
+      tableDensity: 'compact',
     };
   }
   return {
@@ -448,6 +570,12 @@ export function resolveDocumentStyle(saved: unknown, schemeCode?: string | null)
     watermarkOpacity: clampNum(s.watermarkOpacity, 0.04, 0.4, fromPreset.watermarkOpacity),
     watermarkAngle: clampNum(s.watermarkAngle, -90, 90, fromPreset.watermarkAngle),
     tableStriped: typeof s.tableStriped === 'boolean' ? s.tableStriped : fromPreset.tableStriped,
+    tableDensity: TABLE_DENSITIES.includes(s.tableDensity as TableDensity) ? (s.tableDensity as TableDensity) : fromPreset.tableDensity,
+    tableBorders: TABLE_BORDERS.includes(s.tableBorders as TableBorders) ? (s.tableBorders as TableBorders) : fromPreset.tableBorders,
+    sectionBreak: SECTION_BREAKS.includes(s.sectionBreak as SectionBreak) ? (s.sectionBreak as SectionBreak) : fromPreset.sectionBreak,
+    showToc: typeof s.showToc === 'boolean' ? s.showToc : fromPreset.showToc,
+    headingNumbers: typeof s.headingNumbers === 'boolean' ? s.headingNumbers : fromPreset.headingNumbers,
+    footerText: safeText(s.footerText, fromPreset.footerText, 80),
     sectionOrder: Array.isArray(s.sectionOrder) ? s.sectionOrder.filter((id) => typeof id === 'string') : [],
     hiddenSectionIds: Array.isArray(s.hiddenSectionIds) ? s.hiddenSectionIds.filter((id) => typeof id === 'string') : [],
     images: {
@@ -614,6 +742,7 @@ export function applyPreset(current: DocumentStyle, id: DocPresetId): DocumentSt
     agencyName: current.agencyName || next.agencyName,
     pageSize: current.pageSize,
     marginMm: current.marginMm,
+    footerText: current.footerText || '',
   };
 }
 
@@ -811,6 +940,39 @@ export function contrastRatio(fg: string, bg: string): number {
   const a = L(fg);
   const b = L(bg);
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+/** One-click color sets for the Colors group. Every color keeps the contrast the color controls demand. */
+export const COLOR_PALETTES: { id: string; label: string; colors: DocumentStyle['colors'] }[] = [
+  { id: 'navy', label: 'Navy', colors: { primary: '#1e3a5f', header: '#1e3a5f', table: '#1e3a5f', border: '#1e3a5f' } },
+  { id: 'blue', label: 'Blue', colors: { primary: '#1e40af', header: '#1e3a8a', table: '#1d4ed8', border: '#1e3a8a' } },
+  { id: 'teal', label: 'Teal', colors: { primary: '#115e59', header: '#115e59', table: '#0f766e', border: '#115e59' } },
+  { id: 'forest', label: 'Forest', colors: { primary: '#166534', header: '#14532d', table: '#15803d', border: '#166534' } },
+  { id: 'indigo', label: 'Indigo', colors: { primary: '#3730a3', header: '#312e81', table: '#3730a3', border: '#3730a3' } },
+  { id: 'purple', label: 'Purple', colors: { primary: '#6b21a8', header: '#581c87', table: '#7e22ce', border: '#6b21a8' } },
+  { id: 'maroon', label: 'Maroon', colors: { primary: '#7f1d1d', header: '#7f1d1d', table: '#7f1d1d', border: '#7f1d1d' } },
+  { id: 'amber', label: 'Amber', colors: { primary: '#92400e', header: '#78350f', table: '#b45309', border: '#92400e' } },
+  { id: 'charcoal', label: 'Charcoal', colors: { primary: '#111827', header: '#111827', table: '#374151', border: '#6b7280' } },
+];
+
+/** Line and paragraph spacing choices for the Type group. */
+export const SPACING_CHOICES: { id: string; label: string; lineHeight: number; paragraphGap: number }[] = [
+  { id: 'tight', label: 'Tight', lineHeight: 1.25, paragraphGap: 3 },
+  { id: 'normal', label: 'Normal', lineHeight: 1.45, paragraphGap: 6 },
+  { id: 'relaxed', label: 'Relaxed', lineHeight: 1.7, paragraphGap: 10 },
+];
+
+/** Margin choices for the Page group (mm, all four sides). */
+export const MARGIN_CHOICES: { id: string; label: string; mm: number }[] = [
+  { id: 'narrow', label: 'Narrow', mm: 12 },
+  { id: 'normal', label: 'Normal', mm: 16 },
+  { id: 'wide', label: 'Wide', mm: 22 },
+];
+
+/** Every type size up or down together, kept inside the 8 to 36 pt the controls allow. */
+export function scaleTypeSizes(style: DocumentStyle, deltaPt: number): DocumentStyle {
+  const bump = (role: TypeRole): TypeRole => ({ ...role, size: Math.min(36, Math.max(8, Math.round((role.size + deltaPt) * 2) / 2)) });
+  return { ...style, cover: bump(style.cover), sectionTitle: bump(style.sectionTitle), body: bump(style.body), table: bump(style.table), caption: bump(style.caption) };
 }
 
 /** Text must stay readable. 3:1 is the floor used by the color controls. */

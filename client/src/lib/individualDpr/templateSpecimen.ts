@@ -137,3 +137,40 @@ export function templateSpecimenStyle(current: DocumentStyle, id: DocPresetId, s
     images: { cover: '', annexure: '', after: {} },
   };
 }
+
+/** Small specimen for menu thumbnails: only the cover and a few sections, so six of them stay light. */
+export function templateThumbDpr(schemeCode?: string | null) {
+  const full = templateSpecimenDpr(schemeCode);
+  const keep = new Set(getSchemeDocSteps(schemeCode).slice(0, 3).map((step) => step.contentStep));
+  const data: Record<string, any> = {
+    isIndividualDPR: true,
+    matchedSchemeCode: full.matchedSchemeCode,
+    schemeExtras: {},
+  };
+  for (const step of getSchemeDocSteps(schemeCode)) {
+    if (!keep.has(step.contentStep)) continue;
+    for (const field of getIndividualDocFields(step.contentStep, schemeCode)) {
+      const value = full[`step${step.contentStep}`]?.[field.name] ?? full.schemeExtras?.[field.name];
+      if (field.source === 'extras') data.schemeExtras[field.name] = value;
+      else {
+        const stepKey = field.path.split('.')[0];
+        data[stepKey] = data[stepKey] || {};
+        data[stepKey][field.name] = value;
+      }
+    }
+  }
+  return data;
+}
+
+/** The theme on its own, with no extra sections, for a thumbnail. */
+export function templateThumbStyle(current: DocumentStyle, id: DocPresetId): DocumentStyle {
+  return {
+    ...applyPreset(current, id),
+    pageSize: 'A4',
+    customSections: [],
+    sectionBlocks: {},
+    sectionOrder: [],
+    pictures: [],
+    images: { cover: '', annexure: '', after: {} },
+  };
+}

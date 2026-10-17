@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { VentureMatchCard } from '@/components/venture-match/VentureMatchCard';
@@ -214,10 +215,7 @@ export const VentureMatch: React.FC = () => {
         <div className={`sticky top-16 z-30 -mx-4 -mt-8 mb-6 border-b border-border bg-background/95 px-4 pb-3 pt-4 backdrop-blur transition-shadow duration-300 supports-[backdrop-filter]:bg-background/60 ${scrolled ? 'shadow-md' : 'shadow-none'}`}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <Button variant="ghost" size="sm" className="gap-2" onClick={back.go}>
-                <ArrowLeft className="h-4 w-4" />
-                {back.label}
-              </Button>
+              <BackButton label={back.label} onClick={back.go} />
               <h1 className="truncate text-2xl font-bold">{t('ventureMatch.title')}</h1>
             </div>
           </div>

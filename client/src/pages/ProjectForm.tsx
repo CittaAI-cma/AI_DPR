@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,6 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ArrowLeft } from 'lucide-react';
 
 export const ProjectForm: React.FC = () => {
   const { t } = useTranslation();
@@ -95,10 +95,7 @@ export const ProjectForm: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6 pb-8">
-        <Button variant="ghost" onClick={back.go} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {back.label}
-        </Button>
+        <BackButton label={back.label} onClick={back.go} />
 
         {/* Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-white mb-6">

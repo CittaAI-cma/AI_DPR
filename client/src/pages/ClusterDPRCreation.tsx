@@ -1,11 +1,12 @@
 // @ts-nocheck
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ArrowLeft, Save, Download, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2 } from 'lucide-react';
+import { Save, Download, Eye, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2 } from 'lucide-react';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
 import { ClusterDPRForm } from '@/components/cluster-dpr/ClusterDPRForm';
 import { ClusterDPRDocumentView } from '@/components/cluster-dpr/ClusterDPRDocumentView';
@@ -568,15 +569,7 @@ export const ClusterDPRCreation: React.FC = () => {
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={back.go}
-                  className="gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  {back.label}
-                </Button>
+                <BackButton label={back.label} onClick={back.go} />
                 <div>
                   <h1 className="text-2xl font-bold">
                     {params.projectId || searchParams.get('projectId')

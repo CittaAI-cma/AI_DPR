@@ -10,12 +10,13 @@ import { useDraftAutosave } from '@/lib/useDraftAutosave';
 import { AuthoringStepper } from '@/components/individual-dpr/AuthoringStepper';
 import { computeSections, overallProgress, sectionsUnsaved } from '@/lib/individualDpr/authoringProgress';
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ClipboardCheck, ArrowLeft, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown, FlaskConical } from 'lucide-react';
+import { ClipboardCheck, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown, FlaskConical } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
@@ -122,6 +123,13 @@ export const IndividualDPRCreation: React.FC = () => {
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
 
   const currentStep = data.currentStep || 1;
+  // Which way the person moved between steps, so the new step slides in from that side.
+  const lastStepRef = useRef(data.currentStep || 1);
+  const stepSlide = useRef('motion-step-forward');
+  if (lastStepRef.current !== currentStep) {
+    stepSlide.current = currentStep < lastStepRef.current ? 'motion-step-back' : 'motion-step-forward';
+    lastStepRef.current = currentStep;
+  }
   const schemeCode = data.matchedSchemeCode || null;
   const visibleSteps = getVisibleSteps(schemeCode);
   const schemeImpact = getSchemeImpact(schemeCode);
@@ -844,9 +852,16 @@ export const IndividualDPRCreation: React.FC = () => {
           <div className={styling && docStyle ? '' : 'max-w-[1920px] mx-auto px-4 py-4 sm:px-6 lg:px-8'}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <BackButton
+                  label={setupPhase === 'pick'
+                    ? back.label
+                    : setupPhase === 'brief'
+                      ? enteredAtBrief.current && back.fromHistory
+                        ? back.label
+                        : t('individualDpr.picker.backToSchemes', { defaultValue: 'All Schemes' })
+                      : enteredAtForm.current
+                        ? back.label
+                        : t('common.previous')}
                   onClick={() => {
                     if (setupPhase === 'brief') {
                       if (enteredAtBrief.current && back.fromHistory) {
@@ -867,19 +882,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     }
                     back.go();
                   }}
-                  className="gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  {setupPhase === 'pick'
-                    ? back.label
-                    : setupPhase === 'brief'
-                      ? enteredAtBrief.current && back.fromHistory
-                        ? back.label
-                        : t('individualDpr.picker.backToSchemes', { defaultValue: 'All Schemes' })
-                      : enteredAtForm.current
-                        ? back.label
-                        : t('common.previous')}
-                </Button>
+                />
                 <div>
                   <h1 className="text-2xl font-bold">
                     {isEditing
@@ -931,10 +934,10 @@ export const IndividualDPRCreation: React.FC = () => {
                         onClick={() => void handleApplySampleData()}
                         isLoading={applyingSample}
                         className="gap-2 border-amber-400 bg-amber-50 text-amber-950 hover:bg-amber-100"
-                        title="Dev mode: fills every step of this scheme with sample answers. You can edit them afterwards."
+                        title={tf('Dev mode: fills every step of this scheme with sample answers. You can edit them afterwards.')}
                       >
                         <FlaskConical className="h-4 w-4" />
-                        Apply sample data
+                        {tf('Apply sample data')}
                       </Button>
                     )}
                     <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2" title={tf('Saves your answers and current step so you can resume later. Also runs every 30 seconds.')}>
@@ -1130,13 +1133,14 @@ export const IndividualDPRCreation: React.FC = () => {
                         </p>
                       ) : null}
                       <StepChecks findings={stepFindings} onDismiss={dismissFinding} />
-                      <IndividualDPRForm
-                        key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`}
-                        currentStep={currentStep}
-                        invalidFields={invalidFields}
-                        onNext={() => goAdjacent(1)}
-                        onPrevious={() => goAdjacent(-1)}
-                      />
+                      <div key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`} className={stepSlide.current}>
+                        <IndividualDPRForm
+                          currentStep={currentStep}
+                          invalidFields={invalidFields}
+                          onNext={() => goAdjacent(1)}
+                          onPrevious={() => goAdjacent(-1)}
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                   <div className="flex items-center justify-between">
@@ -1313,13 +1317,14 @@ export const IndividualDPRCreation: React.FC = () => {
                         </p>
                       ) : null}
                       <StepChecks findings={stepFindings} onDismiss={dismissFinding} />
-                      <IndividualDPRForm
-                        key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`}
-                        currentStep={currentStep}
-                        invalidFields={invalidFields}
-                        onNext={() => goAdjacent(1)}
-                        onPrevious={() => goAdjacent(-1)}
-                      />
+                      <div key={`step-${currentStep}-${data.projectId || 'new'}-${data.matchedSchemeCode || 'vanilla'}`} className={stepSlide.current}>
+                        <IndividualDPRForm
+                          currentStep={currentStep}
+                          invalidFields={invalidFields}
+                          onNext={() => goAdjacent(1)}
+                          onPrevious={() => goAdjacent(-1)}
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 )}

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { Suspense, lazy } from 'react';
-import { RouteTracker } from '@/lib/navHistory';
+import { RouteTracker, ScrollToTop } from '@/lib/navHistory';
+import { PageLoading } from '@/components/ui/PageLoading';
 import { SessionManager } from '@/components/session/SessionManager';
 import { ConfirmProvider } from '@/components/ui/ConfirmProvider';
 import { ThemeApplier } from '@/components/layout/ThemeToggle';
@@ -75,9 +76,10 @@ function App() {
         }}
       />
       <RouteTracker />
+      <ScrollToTop />
       <SessionManager />
       <ThemeApplier />
-      <Suspense fallback={<div className="flex min-h-screen items-center justify-center" role="status" aria-busy="true"><span className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" /></div>}>
+      <Suspense fallback={<PageLoading />}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />

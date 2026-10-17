@@ -89,7 +89,7 @@ export const SchemeBriefPanel: React.FC<SchemeBriefPanelProps> = ({ schemeCode, 
             })}
           </div>
 
-          <div className="mt-5 min-h-[160px]">
+          <div key={tab} className="motion-tab mt-5 min-h-[160px]">
             {tab === 'faqs' ? (
               <dl className="space-y-4">
                 {brief.faqs.map((faq, i) => (

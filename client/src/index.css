@@ -237,6 +237,39 @@
 .dpr-inline-input[type='number'] {
   width: 9rem;
 }
+/* Inside the live document's tables the boxes must shrink with the column: fixed widths made wide tables overflow
+   the page and squeezed the label column to one letter per line. */
+.individual-particulars td .dpr-inline-input,
+.individual-particulars td .dpr-inline-select,
+.individual-particulars td .dpr-inline-input[type='number'] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 3.25rem;
+  padding: 1px 4px;
+  font-size: 0.95em;
+}
+.individual-particulars td .dpr-inline-input[type='date'] {
+  min-width: 7.5rem;
+}
+.individual-particulars th,
+.individual-particulars td:not(.part) {
+  min-width: 4.5em;
+}
+.individual-particulars th {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+/* Tables with 8+ columns (e.g. AP CMEP sales and costs) tighten up so every template keeps them inside the page. */
+.individual-particulars:has(th:nth-child(8)) th,
+.individual-particulars:has(th:nth-child(8)) td {
+  font-size: 9pt;
+  padding: 4pt 4pt;
+  letter-spacing: 0;
+}
+.individual-particulars:has(th:nth-child(8)) th,
+.individual-particulars:has(th:nth-child(8)) td:not(.part) {
+  min-width: 0;
+}
 .dpr-inline-select:hover,
 .dpr-inline-select:focus,
 .dpr-inline-input:hover,
@@ -1014,4 +1047,119 @@ html.dark .theme-light, html.dark .dpr-document { --r-bg-f2f6f5: #f2f6f5; }
 html.dark .bg-\[\#f2f6f5\] { background-color: var(--r-bg-f2f6f5); }
 @layer base {
   .theme-light { color: hsl(var(--foreground)); }
+}
+
+
+/* Interaction polish: step changes, collapsing groups, pop-up exit, loading placeholders. */
+@keyframes motion-step-forward {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes motion-step-back {
+  from { opacity: 0; transform: translateX(-14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.motion-step-forward { animation: motion-step-forward 0.26s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.motion-step-back { animation: motion-step-back 0.26s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+
+/* A group that opens and closes by height. The inner box must be the only child. */
+.motion-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.motion-collapse[data-open='true'] { grid-template-rows: 1fr; }
+.motion-collapse > * { min-height: 0; overflow: hidden; }
+
+@keyframes motion-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes motion-modal-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+.motion-overlay.is-closing { animation: motion-fade-out 0.16s ease-in forwards; pointer-events: none; }
+.motion-overlay.is-closing > * { animation: motion-modal-out 0.16s ease-in forwards; }
+
+@keyframes motion-shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+.motion-skeleton {
+  background: linear-gradient(90deg, #eef2f6 0%, #f8fafc 40%, #eef2f6 80%) no-repeat #eef2f6;
+  background-size: 200px 100%;
+  animation: motion-shimmer 1.2s ease-in-out infinite;
+}
+.motion-fade-in { animation: motion-fade 0.25s ease-out backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-step-forward, .motion-step-back, .motion-skeleton, .motion-fade-in,
+  .motion-overlay.is-closing, .motion-overlay.is-closing > * { animation: none !important; }
+  .motion-collapse { transition: none !important; }
+}
+
+
+/* Back-button name tag: shows under the icon on hover (after a short pause) and at once on keyboard focus. */
+.tt-wrap { position: relative; display: inline-flex; }
+.tt-bubble {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 80;
+  max-width: 18rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-3px);
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: 0 6px 16px -6px rgba(15, 23, 42, 0.45);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+.tt-wrap:hover > .tt-bubble,
+.tt-wrap:focus-within > .tt-bubble {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.3s;
+}
+.tt-wrap:has(:focus-visible) > .tt-bubble { transition-delay: 0s; }
+@media (hover: none) { .tt-bubble { display: none; } }
+@media (prefers-reduced-motion: reduce) { .tt-bubble { transition: none; } }
+
+/* Tab panels fade and rise a little when the tab changes. Give the panel a key that changes with the tab. */
+@keyframes motion-tab-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.motion-tab { animation: motion-tab-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+@media (prefers-reduced-motion: reduce) { .motion-tab { animation: none !important; } }
+
+/* App-wide touch and click feel. Low specificity (:where) so any component that sets its own transform or transition wins. */
+html { scrollbar-gutter: stable; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+:where(a, button, [role='button'], [role='tab'], summary, select, label[for], input[type='checkbox'], input[type='radio']) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+:where([role='tab']) {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+:where(button:not(:disabled), [role='button']):active {
+  transform: scale(0.97);
+}
+:where(button, [role='button']) {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(button:not(:disabled), [role='button']):active { transform: none; }
 }

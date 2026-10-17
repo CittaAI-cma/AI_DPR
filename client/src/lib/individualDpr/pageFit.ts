@@ -46,6 +46,7 @@ export function fitSheetToPages(
   if (!blocks.length) return;
 
   const scale = scaleOf(sheet);
+  const forceBreak = root.classList.contains('dpr-section-newpage');
 
   for (let pass = 0; pass < blocks.length + 1; pass += 1) {
     let moved = false;
@@ -77,6 +78,15 @@ export function fitSheetToPages(
         }
       }
 
+      // "Start each section on a new page": a section title that is not already at the top of a page moves to the next one.
+      if (forceBreak && el.classList.contains('individual-sec-title')) {
+        const pageStart = Math.floor(Math.max(0, top) / pageHeightPx) * pageHeightPx;
+        if (top - pageStart > edgeTopPx + 1) {
+          const jump = pageStart + pageHeightPx + edgeTopPx - top;
+          if (jump > shift) shift = jump;
+        }
+      }
+
       if (shift > 0.5) {
         const current = parseFloat(el.style.marginTop) || 0;
         el.style.marginTop = `${current + shift}px`;
@@ -105,7 +115,7 @@ export function mmToLayoutPx(sheet: HTMLElement, mm: number): number {
 /** Put 1, 2, 3… at the bottom of each sheet. Replaces the single footer that always said 1. */
 export function stampSheetPageNumbers(sheet: HTMLElement, pageHeightPx: number, edgeBottomPx: number): void {
   const doc = sheet.querySelector<HTMLElement>('.individual-dpr-document');
-  doc?.querySelectorAll('.dpr-page-number').forEach((node) => node.remove());
+  doc?.querySelectorAll('.dpr-page-number, .dpr-footer-text').forEach((node) => node.remove());
   if (!doc || !(pageHeightPx > 0)) return;
   const mode = doc.getAttribute('data-page-numbers') || '';
   if (mode !== 'plain' && mode !== 'of') return;
@@ -118,7 +128,21 @@ export function stampSheetPageNumbers(sheet: HTMLElement, pageHeightPx: number, 
   // Page numbers sit above the disclaimer block at the foot of the page.
   const band = Math.max(edgeBottomPx - mmToLayoutPx(sheet, AI_FOOTER_MM), 1);
 
+  const footerText = doc.getAttribute('data-footer-text') || '';
+
   for (let i = 0; i < total; i += 1) {
+    if (footerText) {
+      const note = document.createElement('div');
+      note.className = 'dpr-footer-text';
+      note.textContent = footerText;
+      note.style.top = `${(i + 1) * pageHeightPx - band - mmToLayoutPx(sheet, AI_FOOTER_MM)}px`;
+      note.style.height = `${band}px`;
+      note.style.paddingRight = computed.paddingRight;
+      note.style.paddingLeft = computed.paddingLeft;
+      if (color) note.style.color = color;
+      if (font) note.style.fontFamily = font;
+      doc.appendChild(note);
+    }
     const el = document.createElement('div');
     el.className = 'dpr-page-number';
     el.textContent = formatPageNumber(mode, i + 1, total, pattern);
@@ -153,5 +177,29 @@ export function stampSheetDisclaimers(sheet: HTMLElement, pageHeightPx: number):
     body.textContent = AI_DISCLAIMER_TEXT;
     el.append(body);
     doc.appendChild(el);
+  }
+}
+
+/**
+ * The watermark on every sheet, not just one. The report holds one watermark element (it carries the text and the style);
+ * on screen it is hidden and a copy is placed on each page. When printed, the original is shown instead as a fixed
+ * element, which the browser repeats on every printed page (see dpr-print.css), and the copies are hidden.
+ */
+export function stampSheetWatermarks(sheet: HTMLElement, pageHeightPx: number): void {
+  const doc = sheet.querySelector<HTMLElement>('.individual-dpr-document');
+  doc?.querySelectorAll('.dpr-watermark-page').forEach((node) => node.remove());
+  if (!doc || !(pageHeightPx > 0)) return;
+  const source = doc.querySelector<HTMLElement>('.dpr-watermark:not(.dpr-watermark-page)');
+  if (!source) return;
+  source.style.display = 'none';
+  const total = pageCountForHeight(sheet.offsetHeight, pageHeightPx);
+  for (let i = 0; i < total; i += 1) {
+    const copy = source.cloneNode(true) as HTMLElement;
+    copy.classList.add('dpr-watermark-page');
+    copy.removeAttribute('data-style-spot');
+    if (i === 0 && source.getAttribute('data-style-spot')) copy.setAttribute('data-style-spot', source.getAttribute('data-style-spot') || '');
+    copy.style.display = 'block';
+    copy.style.top = `${i * pageHeightPx + pageHeightPx * 0.4}px`;
+    doc.appendChild(copy);
   }
 }

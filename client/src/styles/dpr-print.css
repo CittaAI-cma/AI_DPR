@@ -1269,6 +1269,20 @@
   color: var(--dpr-header, #111827);
 }
 
+.dpr-footer-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  font-size: 9pt;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .dpr-page-number {
   position: absolute;
   left: 0;
@@ -1331,6 +1345,26 @@
   .dpr-document:not(.individual-dpr-document) .page-break.relative::after { display: none !important; }
   .dpr-ai-footer { display: none !important; }
   .dpr-page-number { display: none !important; }
+  .dpr-footer-text { display: none !important; }
+  /* One fixed watermark: the browser repeats a fixed element on every printed page. The per-page copies used on screen are hidden. */
+  .individual-dpr-document .dpr-watermark:not(.dpr-watermark-page) {
+    display: block !important;
+    position: fixed;
+    left: 8%;
+    right: 8%;
+    top: 40%;
+  }
+  .dpr-watermark-page { display: none !important; }
+  .individual-dpr-document.dpr-styled[data-footer-text]::before {
+    content: attr(data-footer-text);
+    position: fixed;
+    bottom: 11mm;
+    left: 16mm;
+    z-index: 4;
+    font-size: 9pt;
+    line-height: 1;
+    color: var(--dpr-header, #111827);
+  }
   .individual-dpr-document.dpr-styled[data-page-numbers='plain']::after,
   .individual-dpr-document.dpr-styled[data-page-numbers='of']::after {
     position: fixed;
@@ -1643,4 +1677,40 @@
     padding: 0;
     appearance: none;
   }
+}
+
+
+/* Style panel options: table density, table lines and heading numbers. They sit after the template rules and match their weight. */
+.individual-dpr-document.dpr-styled.dpr-density-compact .individual-particulars th,
+.individual-dpr-document.dpr-styled.dpr-density-compact .individual-particulars td,
+.individual-dpr-document.dpr-styled.dpr-density-compact table.individual-qa th,
+.individual-dpr-document.dpr-styled.dpr-density-compact table.individual-qa td {
+  padding-top: 2pt;
+  padding-bottom: 2pt;
+}
+.individual-dpr-document.dpr-styled.dpr-density-roomy .individual-particulars th,
+.individual-dpr-document.dpr-styled.dpr-density-roomy .individual-particulars td,
+.individual-dpr-document.dpr-styled.dpr-density-roomy table.individual-qa th,
+.individual-dpr-document.dpr-styled.dpr-density-roomy table.individual-qa td {
+  padding-top: 8pt;
+  padding-bottom: 8pt;
+}
+.individual-dpr-document.dpr-styled.dpr-borders-grid .individual-particulars th,
+.individual-dpr-document.dpr-styled.dpr-borders-grid .individual-particulars td {
+  border: 1px solid var(--dpr-border, #1f2937);
+}
+.individual-dpr-document.dpr-styled.dpr-borders-rows .individual-particulars th,
+.individual-dpr-document.dpr-styled.dpr-borders-rows .individual-particulars td {
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid var(--dpr-border, #1f2937);
+}
+.individual-dpr-document.dpr-styled.dpr-borders-none .individual-particulars,
+.individual-dpr-document.dpr-styled.dpr-borders-none .individual-particulars th,
+.individual-dpr-document.dpr-styled.dpr-borders-none .individual-particulars td {
+  border: none;
+}
+.individual-dpr-document.dpr-styled.dpr-no-heading-num .individual-sec-num {
+  display: none;
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Check, CheckCircle2, Save } from 'lucide-react';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
@@ -165,10 +165,21 @@ export const AuthoringStepper: React.FC<Props> = ({
     </div>
   );
 
+  // Keep the current step in view when the strip is wider than the screen, scrolling only the strip (not the page).
+  const stripRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const strip = stripRef.current;
+    const button = strip?.querySelector<HTMLElement>('[aria-current="step"]');
+    if (!strip || !button) return;
+    const target = button.offsetLeft - (strip.clientWidth - button.offsetWidth) / 2;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    strip.scrollTo({ left: Math.max(0, target), behavior: reduced ? 'auto' : 'smooth' });
+  }, [currentStep]);
+
   return (
     <div>
       {summary}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1" role="list">
+      <div ref={stripRef} className="relative flex items-center gap-2 overflow-x-auto pb-1" role="list">
         {sections.map((section) => {
           const current = section.step === currentStep;
           const done = section.status === 'complete';

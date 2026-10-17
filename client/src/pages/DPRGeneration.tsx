@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useBackTarget } from '@/lib/navHistory';
+import { BackButton } from '@/components/ui/BackButton';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +9,7 @@ import { api } from '@/lib/api';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Download, FileText, Loader2 } from 'lucide-react';
+import { Download, FileText, Loader2 } from 'lucide-react';
 import { downloadBlob } from '@/lib/utils';
 import { dprDownloadName } from '@/lib/dprExportName';
 import { dprSchemeCode } from '@/lib/dprSearchTags';
@@ -155,10 +156,7 @@ export const DPRGeneration: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-6">
-        <Button variant="ghost" onClick={back.go}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {back.label}
-        </Button>
+        <BackButton label={back.label} onClick={back.go} />
 
         <Card>
           <CardHeader>

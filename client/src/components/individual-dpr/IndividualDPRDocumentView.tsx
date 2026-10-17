@@ -19,6 +19,7 @@ import {
 import { getSchemeUiTemplate } from '@/lib/individualDpr/schemeUiTemplate';
 import {
   layoutOrder,
+  layoutOfPreset,
   pageEdgeMm,
   pictureIdFromToken,
   resizeImageBox,
@@ -832,10 +833,14 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     <div
       className={`dpr-document individual-dpr-document${schemeUi ? ` ${schemeUi.documentClass}` : ''}${
         style ? ' dpr-styled' : ''
-      }${style?.tableStriped ? ' dpr-striped' : ''}${style?.wideTablesLandscape ? ' dpr-wide-landscape' : ''}`}
+      }${style?.tableStriped ? ' dpr-striped' : ''}${style?.wideTablesLandscape ? ' dpr-wide-landscape' : ''}${
+        style ? ` dpr-density-${style.tableDensity} dpr-borders-${style.tableBorders}` : ''
+      }${style?.sectionBreak === 'newPage' ? ' dpr-section-newpage' : ''}${style && !style.headingNumbers ? ' dpr-no-heading-num' : ''}`}
       style={style ? styleCssVars(style) : undefined}
       data-dpr-styled={style ? '1' : undefined}
-      data-template={style?.preset}
+      data-template={style ? layoutOfPreset(style.preset) : undefined}
+      data-theme={style?.preset}
+      data-footer-text={style?.footerText || undefined}
       data-page-size={style?.pageSize}
       data-page-edge-top={style ? String(pageEdgeMm(style.marginMm.top)) : undefined}
       data-page-edge-bottom={style ? String(pageEdgeMm(style.marginMm.bottom)) : undefined}
@@ -914,7 +919,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         {schemeUi?.id === 'PMEGP' ? <div className="pmegp-cover-rule" aria-hidden="true" /> : null}
       </header>
 
-      {reportEntries.length ? (
+      {reportEntries.length && (style ? style.showToc : true) ? (
       <section className="individual-toc">
         <h2 className="individual-sec-title">
           <span className="individual-sec-num">0</span>
