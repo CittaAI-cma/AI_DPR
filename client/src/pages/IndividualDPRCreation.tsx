@@ -15,7 +15,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ClipboardCheck, ArrowLeft, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
+import { ClipboardCheck, ArrowLeft, Save, ChevronRight, ChevronLeft, ZoomIn, ZoomOut, Maximize2, RotateCcw, Loader2, ChevronUp, ChevronDown, FlaskConical } from 'lucide-react';
 import { useIndividualDPRStore } from '@/store/individualDPRStore';
 import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
@@ -29,6 +29,7 @@ import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { useDevModeStore } from '@/store/devModeStore';
+import { loadSampleData } from '@/lib/individualDpr/sampleData';
 import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -151,6 +152,36 @@ export const IndividualDPRCreation: React.FC = () => {
   );
   const allFindings = [...blockers, ...advisory].sort((x, y) => KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind) || x.step - y.step);
   const canBypassBlocks = isAdmin && devMode;
+  const [applyingSample, setApplyingSample] = useState(false);
+  /** Dev mode only: fill every answer of the chosen scheme with realistic sample data. Everything stays editable. */
+  const handleApplySampleData = async () => {
+    setApplyingSample(true);
+    try {
+      const sample = await loadSampleData(useIndividualDPRStore.getState().data.matchedSchemeCode || null);
+      if (!sample) {
+        toast.error('No sample data for this scheme yet.');
+        return;
+      }
+      const store = useIndividualDPRStore.getState();
+      Object.entries(sample).forEach(([key, value]) => {
+        const match = /^step(\d+)$/.exec(key);
+        if (match && value) store.setStepData(Number(match[1]), JSON.parse(JSON.stringify(value)));
+      });
+      if (sample.ventureMatchAnswers) store.setVentureMatchAnswers(JSON.parse(JSON.stringify(sample.ventureMatchAnswers)));
+      if (sample.schemeExtras) {
+        const current = useIndividualDPRStore.getState().data.schemeExtras || {};
+        store.setSchemeExtras({ ...current, ...JSON.parse(JSON.stringify(sample.schemeExtras)) });
+      }
+      setInvalidFields([]);
+      setRequiredNotice('');
+      toast.success('Sample data applied. Review and edit as needed. Uploads are not filled.');
+    } catch (error) {
+      console.error('Apply sample data failed', error);
+      toast.error('Could not apply sample data.');
+    } finally {
+      setApplyingSample(false);
+    }
+  };
   const [reviewOpen, setReviewOpen] = useState(false);
   const dismissFinding = (finding: Finding) =>
     setSchemeExtras({ ...(data.schemeExtras || {}), dismissedChecks: [...dismissedChecks, dismissalKey(finding)] });
@@ -893,6 +924,19 @@ export const IndividualDPRCreation: React.FC = () => {
                         ))}
                       </select>
                     </label>
+                    {isAdmin && devMode && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void handleApplySampleData()}
+                        isLoading={applyingSample}
+                        className="gap-2 border-amber-400 bg-amber-50 text-amber-950 hover:bg-amber-100"
+                        title="Dev mode: fills every step of this scheme with sample answers. You can edit them afterwards."
+                      >
+                        <FlaskConical className="h-4 w-4" />
+                        Apply sample data
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2" title={tf('Saves your answers and current step so you can resume later. Also runs every 30 seconds.')}>
                       <Save className="h-4 w-4" />
                       {t('individualDpr.saveDraft')}
