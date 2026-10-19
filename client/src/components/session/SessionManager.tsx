@@ -12,7 +12,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { formatClock, refreshAfterMs, tokenTimes, useSessionClock, warnMs } from '@/lib/sessionClock';
 
-const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'] as const;
+// Only things a person does count as activity. A `scroll` event is left out on purpose: the browser fires it by itself when a
+// page reloads and restores its scroll position, and when the app scrolls (new screen, step strip, smooth scrolling), and
+// that would silently restart the 15 minutes. Scrolling by hand is still caught by wheel, touch, keys and pointer.
+const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 
 /**
  * Keeps the session alive while someone works, warns a minute before it ends, and when it does end shows a
@@ -66,7 +69,8 @@ export const SessionManager: React.FC = () => {
   // Any activity keeps the session going. The token is renewed at most about once a minute.
   useEffect(() => {
     if (!signedIn) return undefined;
-    const onActivity = () => {
+    const onActivity = (event: Event) => {
+      if (!event.isTrusted) return; // a script, not a person
       lastActive.current = Date.now();
       const { issuedAt: issued, phase: current, durationMs: span } = useSessionClock.getState();
       if (current !== 'expired' && issued && Date.now() - issued > refreshAfterMs(span)) void renew();

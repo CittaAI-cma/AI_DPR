@@ -1223,26 +1223,20 @@ export function StyleEditor({
           {imageError ? <p className="text-xs font-medium text-red-700">{tf(imageError)}</p> : null}
         </StyleGroup>
       </div>
+      {canSaveSchemeDefault ? (
+        <div className="shrink-0 border-t bg-slate-50 p-3">
+          <p className="mb-2 text-xs text-slate-500">{tf('Admin: makes this look the starting style for new DPRs of this scheme.')}</p>
+          <Button type="button" variant="outline" size="sm" className="w-full" onClick={onSaveSchemeDefault} disabled={saving || blocking}>
+            {tf('Save as the scheme default')}
+          </Button>
+        </div>
+      ) : null}
     </aside>
   );
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-slate-100">
-      <div className="flex flex-wrap items-center gap-2 border-b bg-white px-3 py-2">
-        <div className="order-2 w-full min-w-0 sm:order-1 sm:w-auto sm:flex-1">{stepsBar}</div>
-        <div className="order-1 ml-auto flex max-w-full flex-wrap items-center justify-end gap-1 sm:order-2 sm:shrink-0">
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:ml-1">
-          {canSaveSchemeDefault ? (
-            <Button type="button" variant="outline" size="sm" title={tf('Admin: makes this look the starting style for new DPRs of this scheme.')} onClick={onSaveSchemeDefault} disabled={saving || blocking}>
-              {tf('Save as the scheme default')}
-            </Button>
-          ) : null}
-          <Button type="button" size="sm" title={tf('Keeps this look (fonts, layout, sections) on this DPR only.')} onClick={onSave} disabled={saving || blocking}>
-            {saving ? tf('Saving') : tf('Save on this DPR')}
-          </Button>
-        </div>
-        </div>
-      </div>
+      <div className="border-b bg-white px-3 py-2">{stepsBar}</div>
       <div className="flex items-center gap-2 border-b bg-white px-3 py-2 lg:hidden">
         {renderEditor ? (
           <Button
@@ -1317,6 +1311,9 @@ export function StyleEditor({
                 <option value="english">{tf('English')}</option>
                 <option value="telugu" disabled={hasTelugu === false}>{tf('Telugu')}</option>
               </select>
+              <Button type="button" size="sm" className="h-8 whitespace-nowrap" title={tf('Keeps this look (fonts, layout, sections) on this DPR only.')} onClick={onSave} disabled={saving || blocking}>
+                {saving ? tf('Saving') : tf('Save on this DPR')}
+              </Button>
               </div>
             </div>
             <div ref={centerRef} data-dpr-scroll className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3">

@@ -889,14 +889,6 @@ export const IndividualDPRCreation: React.FC = () => {
                       ? t('individualDpr.editTitle', { defaultValue: 'Edit DPR' })
                       : t('individualDpr.title')}
                   </h1>
-                  {setupPhase === 'form' ? (
-                    <p className="text-sm font-semibold text-foreground mt-0.5">
-                      {t('individualDpr.schemeSelected', {
-                        defaultValue: 'Scheme: {{name}}',
-                        name: selectedSchemeLabel,
-                      })}
-                    </p>
-                  ) : null}
                   <p className="text-sm text-muted-foreground">{headerSubtitle}</p>
                 </div>
               </div>
@@ -915,7 +907,8 @@ export const IndividualDPRCreation: React.FC = () => {
                         {t('individualDpr.schemeLabel', { defaultValue: 'Scheme' })}
                       </span>
                       <select
-                        className="max-w-[min(100vw-8rem,22rem)] rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                        className="w-52 min-w-0 truncate rounded-md border border-input bg-background px-2 py-1.5 text-sm sm:w-80 xl:w-[26rem] 2xl:w-[32rem]"
+                        title={SCHEME_OPTIONS.find((opt) => opt.code === (data.matchedSchemeCode || '')) ? tf(SCHEME_OPTIONS.find((opt) => opt.code === (data.matchedSchemeCode || '')).label) : undefined}
                         value={data.matchedSchemeCode || ''}
                         onChange={(e) => handleSchemeDropdownChange(e.target.value)}
                         aria-label={t('individualDpr.schemeLabel', { defaultValue: 'Scheme' })}
@@ -940,14 +933,15 @@ export const IndividualDPRCreation: React.FC = () => {
                         {tf('Apply sample data')}
                       </Button>
                     )}
-                    <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2" title={tf('Saves your answers and current step so you can resume later. Also runs every 30 seconds.')}>
+                    {/* Below a wide screen these two show only their icon (the name is the tooltip), so the row never wraps. */}
+                    <Button variant="outline" size="sm" onClick={handleSaveDraft} className="gap-2" aria-label={t('individualDpr.saveDraft')} title={tf('Saves your answers and current step so you can resume later. Also runs every 30 seconds.')}>
                       <Save className="h-4 w-4" />
-                      {t('individualDpr.saveDraft')}
+                      <span className="hidden xl:inline">{t('individualDpr.saveDraft')}</span>
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)} className="gap-2" title={tf('Looks for missing, unclear or unusual answers across the whole form.')}>
+                    <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)} className="relative gap-2" aria-label={tf('Check my answers')} title={tf('Looks for missing, unclear or unusual answers across the whole form.')}>
                       <ClipboardCheck className="h-4 w-4" />
-                      {tf('Check my answers')}
-                      {allFindings.length ? <span className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white">{allFindings.length}</span> : null}
+                      <span className="hidden xl:inline">{tf('Check my answers')}</span>
+                      {allFindings.length ? <span className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white max-xl:absolute max-xl:-right-1.5 max-xl:-top-1.5">{allFindings.length}</span> : null}
                     </Button>
                     <Button
                       variant="primary"
