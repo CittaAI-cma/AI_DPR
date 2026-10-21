@@ -131,7 +131,7 @@ Click **Create account**. Expected: success toast, redirect to the Dashboard.
 |---|---|---|---|
 | 1 | Open `/login` | email `ravi.kommineni@example.com`, password `Msme@Test2026!` | Dashboard loads |
 | 2 | Wrong password `Wrong@1234` | | Error, no session |
-| 3 | Idle for the session warning period | | Idle prompt appears; staying active refreshes silently (access token 15 min, 12 h cap) |
+| 3 | Idle for the session warning period | | Idle prompt appears; staying active refreshes silently (access token 5 min, sign-out to the login screen after 5 idle minutes, 8 h absolute cap) |
 | 4 | Sign out while a draft is open | | Draft saves first. If the save fails you are asked before logging out |
 | 5 | Sign in as a different user on the same browser | | None of the previous user's draft, chat or DPR list is visible |
 

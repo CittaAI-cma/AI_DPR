@@ -39,7 +39,7 @@ Sizing: PDF generation is the heaviest task (about 300–500 MB per concurrent e
 | `MONGODB_MAX_POOL_SIZE` (20), `MONGODB_MIN_POOL_SIZE` (2), `MONGODB_MAX_IDLE_MS`, `MONGODB_WAIT_QUEUE_MS` | | Connection pool per server |
 | `ACCOUNT_STATUS_TTL_MS` | | Default 10 s, max 25 s: upper limit for a deactivation to take effect |
 | `RETENTION_IDLE_DAYS` (365), `RETENTION_WARNING_DAYS` (15), `AUDIT_RETENTION_DAYS` (730) | | Retention job |
-| `SESSION_MAX_HOURS` | | Absolute session cap, default 12. Never set `SESSION_ACCESS_SECONDS` (tests only) |
+| `SESSION_MAX_HOURS` | | Absolute session cap, default 8 hours. Never set `SESSION_ACCESS_SECONDS` (tests only) |
 | `AP_MSME_API_URL`, `AP_MSME_API_KEY`, `APMSME_RATE_PER_MINUTE`, `APMSME_CACHE_TTL_MS`, `APMSME_TIMEOUT_MS` | | Registry integration; without it, sample data is served |
 | `CLOUDINARY_*`, `TWILIO_*` | | Optional image hosting / SMS retention warnings |
 | `ENABLE_API_DOCS=true` | | Shows Swagger in production (off by default) |

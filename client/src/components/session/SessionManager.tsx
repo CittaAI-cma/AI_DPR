@@ -101,7 +101,7 @@ export const SessionManager: React.FC = () => {
     }
   }, [now, expiresAt, phase, signedIn, user?.userId, durationMs]);
 
-  // The session is over (5 minutes without activity, or the 12 hour limit, or the account was switched off): save what can be
+  // The session is over (5 minutes without activity, or the 8 hour limit, or the account was switched off): save what can be
   // saved, keep a copy of any unsaved draft on this device for the next sign-in, sign out, and go to the login screen.
   const leaving = useRef(false);
   useEffect(() => {

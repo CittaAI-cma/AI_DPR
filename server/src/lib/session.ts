@@ -18,7 +18,7 @@ export const ACCESS_TOKEN_SECONDS = IN_PRODUCTION
   ? DEFAULT_ACCESS_SECONDS
   : Math.max(10, Number(process.env.SESSION_ACCESS_SECONDS) || DEFAULT_ACCESS_SECONDS);
 export const IDLE_MS = ACCESS_TOKEN_SECONDS * 1000;
-export const ABSOLUTE_MS = Math.max(1, Number(process.env.SESSION_MAX_HOURS) || 12) * 60 * 60 * 1000;
+export const ABSOLUTE_MS = Math.max(1, Number(process.env.SESSION_MAX_HOURS) || 8) * 60 * 60 * 1000;
 const COOKIE = 'dpr_refresh';
 
 export function signAccessToken(user: { _id: unknown; email: string; role: string }): string {

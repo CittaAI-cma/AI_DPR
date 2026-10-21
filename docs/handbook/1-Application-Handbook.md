@@ -71,7 +71,7 @@ API docs: http://localhost:5000/api/docs
 | Data checks | Flags missing, ambiguous and outlier answers | `lib/individualDpr/dataChecks.ts`, `docs/data-checks.md` |
 | Plain language | Short note under each field, tooltips, glossary calculators (DSCR, CapEx) | `docs/plain-language.md` |
 | i18n | English/Telugu screens; exports stay English. `npm run audit:i18n` must pass | `client/src/i18n`, `lib/i18n/te`, `docs/bilingual.md` |
-| Sessions | 5-min token, silent refresh while active, idle prompt, sign-out to the login screen after 5 idle minutes, 12 h cap, draft backup on expiry | `docs/session.md` |
+| Sessions | 5-min token, silent refresh while active, idle prompt, sign-out to the login screen after 5 idle minutes, 8 h cap, draft backup on expiry | `docs/session.md` |
 | RBAC | Entrepreneur, District Reviewer, Admin; district-scoped reviewers | `docs/rbac.md` |
 | Audit trail | Append-only, hash-chained events (logins, admin edits, template changes) with IP and payload; verify and CSV export | `docs/audit-and-access.md` |
 | Access control | Invite onboarding, deactivate/reactivate, sign out everywhere; deactivation ends access in ≤10 s | same |
