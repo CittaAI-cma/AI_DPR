@@ -101,7 +101,7 @@ export const SideMenu: React.FC = () => {
         <button
           type="button"
           aria-label={t('common.close', { defaultValue: 'Close' })}
-          className="fixed inset-0 top-16 z-40 bg-black/20"
+          className="fixed inset-0 top-16 z-[60] bg-black/20"
           onClick={() => setPinned(false)}
         />
       )}
@@ -122,7 +122,7 @@ export const SideMenu: React.FC = () => {
             setHover(false);
           }
         }}
-        className={`max-md:hidden fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col overflow-hidden border-r border-border bg-background/95 shadow-lg backdrop-blur transition-[width] duration-200 ease-out ${
+        className={`max-md:hidden fixed left-0 top-16 z-[60] flex h-[calc(100vh-4rem)] flex-col overflow-hidden border-r border-border bg-background/95 shadow-lg backdrop-blur transition-[width] duration-200 ease-out ${
           open ? EXPANDED : COLLAPSED
         }`}
       >

@@ -91,9 +91,13 @@ export const OWNER_EXCLUSIVE_TAGS: OwnerTag[] = ['notDecided', 'noMajority', 'no
 
 /**
  * Groups where only one tag can be chosen (picking another in the group replaces it).
- * Tags in no group (woman, PwD, transgender, ex-serviceman) combine freely with anything else.
+ * A tag can sit in two groups (general male is in both), so choosing it replaces a pick from either one.
+ * Persons with disability is in no group and combines freely with anything else.
  */
-export const OWNER_PICK_ONE_GROUPS: OwnerTag[][] = [['sc', 'st', 'bc', 'generalMale']];
+export const OWNER_PICK_ONE_GROUPS: OwnerTag[][] = [
+  ['female', 'transgender', 'generalMale', 'exServiceman'],
+  ['sc', 'st', 'bc', 'generalMale'],
+];
 
 export interface VentureMatchAnswers {
   activity?: Activity;

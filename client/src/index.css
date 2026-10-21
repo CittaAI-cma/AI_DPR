@@ -201,38 +201,62 @@
 }
 
 .dpr-inline-edit {
-  display: inline;
-  min-width: 1.25em;
+  /* An answer typed straight into the report looks like a proper text box: visible border and fill, padding, a clear focus ring. */
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: 10rem;
+  max-width: 100%;
+  min-height: 2.1rem;
+  padding: 5px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+  line-height: 1.45;
+  vertical-align: middle;
   cursor: text;
   white-space: pre-wrap;
-  border-radius: 2px;
+  overflow-wrap: anywhere;
   outline: none;
-  box-decoration-break: clone;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
-.dpr-inline-edit:hover,
+.dpr-inline-edit:hover {
+  border-color: #94a3b8;
+}
 .dpr-inline-edit:focus {
-  background: rgba(15, 118, 110, 0.08);
-  box-shadow: inset 0 -1px 0 #0f766e;
+  border-color: #0f766e;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
 }
 .dpr-inline-edit:empty:before {
   content: attr(data-placeholder);
-  color: #9ca3af;
+  color: #94a3b8;
   font-style: italic;
 }
+/* Long answers (the question-and-answer blocks) get a taller, full-width box, like a text area. */
 .individual-qa-a .dpr-inline-edit {
   display: block;
-  min-height: 1.4em;
+  width: 100%;
+  min-height: 5.5rem;
+}
+/* In a table cell the box fills the cell. */
+.individual-particulars td .dpr-inline-edit {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 .dpr-inline-select,
 .dpr-inline-input {
   max-width: 100%;
   min-width: 6rem;
+  min-height: 2.1rem;
+  box-sizing: border-box;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border-radius: 6px;
   background: #fff;
   color: inherit;
   font: inherit;
-  padding: 1px 6px;
+  padding: 4px 10px;
 }
 .dpr-inline-input[type='number'] {
   width: 9rem;
@@ -245,7 +269,7 @@
   box-sizing: border-box;
   width: 100%;
   min-width: 3.25rem;
-  padding: 1px 4px;
+  padding: 3px 6px;
   font-size: 0.95em;
 }
 .individual-particulars td .dpr-inline-input[type='date'] {
@@ -271,12 +295,14 @@
   min-width: 0;
 }
 .dpr-inline-select:hover,
+.dpr-inline-input:hover {
+  border-color: #94a3b8;
+}
 .dpr-inline-select:focus,
-.dpr-inline-input:hover,
 .dpr-inline-input:focus {
   border-color: #0f766e;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
 }
 .dpr-inline-select:disabled {
   background: #f1f5f9;
@@ -1174,3 +1200,56 @@ html { scrollbar-gutter: stable; }
 }
 .mic-listening { animation: mic-pulse 1.4s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) { .mic-listening { animation: none; } }
+
+
+/* "Open in form" button on each section of the report in Document mode: out of the flow, so layout and page breaks do not change. */
+.individual-sec.has-open-form { position: relative; }
+.dpr-open-in-form {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 3;
+  padding: 2px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f766e;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+.individual-sec.has-open-form:hover > .dpr-open-in-form,
+.individual-sec.has-open-form:focus-within > .dpr-open-in-form,
+.dpr-open-in-form:focus-visible { opacity: 1; }
+.dpr-open-in-form:hover { background: #f0fdfa; }
+@media (hover: none) { .dpr-open-in-form { opacity: 1; } }
+@media print { .dpr-open-in-form { display: none !important; } }
+
+
+/* Sections / Style slide-over: slides in from the left, and back out when minimised. */
+@keyframes motion-panel-in {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes motion-panel-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-16px); }
+}
+.motion-panel { animation: motion-panel-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.motion-panel.is-closing { animation: motion-panel-out 0.2s ease-in forwards; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .motion-panel, .motion-panel.is-closing { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .motion-mode { transition: none !important; } }
+
+/* Side-by-side fields: when the labels and hints above the boxes wrap to different heights, the boxes still sit on one line. */
+@media (min-width: 768px) {
+  .grid:is([class*='sm:grid-cols-'], [class*='md:grid-cols-']) > div:has(> div.w-full:last-child) {
+    display: flex;
+    flex-direction: column;
+  }
+  .grid:is([class*='sm:grid-cols-'], [class*='md:grid-cols-']) > div:has(> div.w-full:last-child) > div.w-full:last-child {
+    margin-top: auto;
+  }
+}

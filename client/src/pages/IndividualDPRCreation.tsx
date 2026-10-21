@@ -30,6 +30,9 @@ import { toast } from 'react-hot-toast';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { useDevModeStore } from '@/store/devModeStore';
+import { useEditModeStore } from '@/store/editModeStore';
+import { EditModeToggle } from '@/components/individual-dpr/EditModeToggle';
+import { DocFieldGuide } from '@/components/individual-dpr/DocFieldGuide';
 import { loadSampleData } from '@/lib/individualDpr/sampleData';
 import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
@@ -123,6 +126,12 @@ export const IndividualDPRCreation: React.FC = () => {
   const viewLanguage: 'english' | 'telugu' = i18n.language.startsWith('te') ? 'telugu' : 'english';
 
   const currentStep = data.currentStep || 1;
+  // Where the person fills in: the form (report is a read-only preview) or the report itself (form folded away).
+  const editMode = useEditModeStore((s) => s.mode);
+  const setEditMode = useEditModeStore((s) => s.setMode);
+  const docMode = editMode === 'document';
+  // Document-mode guide: the answer that has the cursor, and which required answers are still empty (shown as UI only, never in the report).
+  const [focusedPath, setFocusedPath] = useState<string | null>(null);
   // Which way the person moved between steps, so the new step slides in from that side.
   const lastStepRef = useRef(data.currentStep || 1);
   const stepSlide = useRef('motion-step-forward');
@@ -193,6 +202,14 @@ export const IndividualDPRCreation: React.FC = () => {
   const [reviewOpen, setReviewOpen] = useState(false);
   const dismissFinding = (finding: Finding) =>
     setSchemeExtras({ ...(data.schemeExtras || {}), dismissedChecks: [...dismissedChecks, dismissalKey(finding)] });
+  /** Document mode: bring this step's section of the report into view. */
+  const scrollDocToStep = (step: number) => {
+    const def = getSchemeDocSteps(schemeCode).find((item) => item.n === step);
+    if (!def) return;
+    window.setTimeout(() => {
+      document.querySelector(`[data-dpr-section="${def.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  };
   const goToFinding = (finding: Finding) => {
     const local = selectionSteps.find((step) => contentOf(step) === finding.step);
     setReviewOpen(false);
@@ -201,6 +218,7 @@ export const IndividualDPRCreation: React.FC = () => {
     setCurrentStep(local);
     setEditStepN(local);
     setEditNonce((n) => n + 1);
+    if (docMode) scrollDocToStep(local);
     // Bring the field into view once its step has rendered.
     if (finding.field) {
       window.setTimeout(() => {
@@ -215,6 +233,31 @@ export const IndividualDPRCreation: React.FC = () => {
   // Progress reads the answers as typed (the store), not the outgoing payload, which adds defaults such as the unit name.
   const sections = computeSections(data, schemeCode, sectionDefs, selectionSteps);
   const overall = overallProgress(sections);
+  const missingRequired = blockers
+    .filter((finding) => String(finding.id).startsWith('required.'))
+    .map((finding) => ({ path: `step${finding.step}.${finding.field}`, label: String(finding.vars?.a || finding.field), step: finding.step }));
+  const jumpToField = (path: string) => {
+    const el = document.querySelector(`[data-dpr-field="${path}"]`) as HTMLElement | null;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.setTimeout(() => el.focus?.(), 250);
+  };
+  // Document mode: the guide floats beside the answer being typed (it is not part of the report).
+  const guideLayer = docMode ? (
+    <DocFieldGuide
+      schemeCode={schemeCode}
+      focusedPath={focusedPath}
+      onDismiss={() => setFocusedPath(null)}
+      missing={missingRequired}
+      findings={allFindings}
+      data={data}
+      setStepData={useIndividualDPRStore.getState().setStepData}
+      getStepData={useIndividualDPRStore.getState().getStepData}
+      setSchemeExtras={setSchemeExtras}
+      onApplyText={(path, text) => onEditField(path, text)}
+      onJump={jumpToField}
+    />
+  ) : null;
   const [savedPayload, setSavedPayload] = useState<any>(null);
   const savedSections = savedPayload ? computeSections(savedPayload, schemeCode, sectionDefs, selectionSteps) : null;
   const savedPercent = savedSections ? overallProgress(savedSections).percent : 0;
@@ -847,8 +890,8 @@ export const IndividualDPRCreation: React.FC = () => {
       ) : null}
       <div className={styling && docStyle ? 'flex min-h-0 flex-1 flex-col overflow-hidden bg-background' : 'min-h-screen bg-background'}>
         <div className={styling && docStyle
-          ? 'shrink-0 border-b border-border bg-background px-4 pb-4 pt-2'
-          : 'sm:sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}>
+          ? 'relative z-[55] shrink-0 border-b border-border bg-background px-4 pb-4 pt-2'
+          : 'sm:sticky top-16 z-[55] border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}>
           <div className={styling && docStyle ? '' : 'max-w-[1920px] mx-auto px-4 py-4 sm:px-6 lg:px-8'}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
@@ -950,7 +993,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       isLoading={isGenerating}
                       className="gap-2"
                       title={tf('Creates the final DPR from your answers. Available on the last step.')}
-                      disabled={currentStep !== lastVisible}
+                      disabled={currentStep !== lastVisible && !(docMode && overall.readyToGenerate)}
                     >
                       {t('individualDpr.generateDpr')}
                     </Button>
@@ -996,7 +1039,7 @@ export const IndividualDPRCreation: React.FC = () => {
         {setupPhase === 'form' && (
           <>
         {!styling && (
-        <div className="sm:sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
+        <div className="sm:sticky top-[8.75rem] z-[55] bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <AuthoringStepper
               variant="full"
@@ -1009,6 +1052,12 @@ export const IndividualDPRCreation: React.FC = () => {
               lastSavedAt={lastSavedAt}
               currentStep={currentStep}
               onSelect={(step) => {
+                if (docMode) {
+                  // In Document mode every section is open to edit: go straight there, no required-answer gate.
+                  setCurrentStep(step);
+                  scrollDocToStep(step);
+                  return;
+                }
                 if (step === currentStep) return;
                 if (!guardForward(step)) return;
                 setInvalidFields([]);
@@ -1092,6 +1141,8 @@ export const IndividualDPRCreation: React.FC = () => {
               }))}
               activeSectionId={hotSectionId}
               onActiveSection={setHotSectionId}
+              editMode={editMode}
+              onEditMode={setEditMode}
               onEditSection={(step) => {
                 if (step?.n && visibleSteps.includes(step.n)) setCurrentStep(step.n);
               }}
@@ -1233,17 +1284,26 @@ export const IndividualDPRCreation: React.FC = () => {
               <IndividualDPRDocumentView
                 trackFieldHits
                 showEmpty
-                onEditField={onEditField}
+                onEditField={docMode ? onEditField : undefined}
+                onFieldFocus={docMode ? (path: string) => setFocusedPath(path) : undefined}
+                guideMissing={docMode ? missingRequired.map((item) => item.path) : undefined}
+                onOpenInForm={docMode ? (stepNumber: number) => {
+                  if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                  setEditStepN(stepNumber);
+                  setEditNonce((n) => n + 1);
+                  setStyleTab('form');
+                  setEditMode('form');
+                } : undefined}
                 documentStyle={docStyle}
                 activeSectionId={hotSectionId}
                 dpr={liveDpr}
                 project={liveProject}
                 viewLanguage={viewLanguage}
-                onEditBlock={(sectionId, blockId, text) => {
+                onEditBlock={docMode ? (sectionId, blockId, text) => {
                   const raw = docStyleRef.current;
                   if (!raw) return;
                   onStyleChange(setBlockText(raw, sectionId, blockId, text));
-                }}
+                } : undefined}
                 onImageFrame={(slot, box) => {
                   if (!docStyleRef.current) return;
                   onStyleChange(parseBlockFrameSlot(slot)
@@ -1269,8 +1329,25 @@ export const IndividualDPRCreation: React.FC = () => {
               />
             </StyleEditor>
           ) : (
-          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-              <div id="individual-dpr-form" className="space-y-6">
+          <>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <EditModeToggle mode={editMode} onChange={setEditMode} />
+            <p className="min-w-0 flex-1 text-xs text-muted-foreground sm:text-right">
+              {docMode
+                ? tf('Document mode: type straight into the report. File uploads and calculators are filled in on the form.')
+                : tf('Form mode: answer the questions step by step. The report next to it is a read-only preview.')}
+            </p>
+          </div>
+          <div className={`grid grid-cols-1 gap-6 transition-[grid-template-columns,column-gap] duration-300 ease-in-out motion-mode ${docMode ? 'lg:grid-cols-[0fr_1fr] lg:gap-x-0' : 'lg:grid-cols-[1fr_1fr]'}`}>
+              {/* Document mode folds this column away (the grid animates it to zero width) and Form mode opens it again. */}
+              <div
+                id="individual-dpr-form"
+                className={`motion-mode min-w-0 space-y-6 transition-opacity duration-300 ease-in-out ${docMode ? 'max-lg:hidden pointer-events-none overflow-hidden opacity-0' : 'opacity-100'}`}
+                aria-hidden={docMode}
+                {...(docMode ? { inert: '' } : {})}
+              >
+                {(
+                <>
                 {isLoadingData ? (
                   <Card>
                     <CardContent className="py-12">
@@ -1349,12 +1426,19 @@ export const IndividualDPRCreation: React.FC = () => {
                     </Button>
                   )}
                 </div>
+                </>
+                )}
               </div>
 
               <div className="space-y-6">
                 <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
                   <CardHeader className="flex-shrink-0 space-y-3 border-b border-border">
-                    <CardTitle>{t('individualDpr.livePreview')}</CardTitle>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <CardTitle>{t('individualDpr.livePreview')}</CardTitle>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${docMode ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        {docMode ? tf('Editing here') : tf('Preview · read only')}
+                      </span>
+                    </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="flex shrink-0 items-center gap-1 rounded-lg border p-1">
                         <Button variant="ghost" size="sm" onClick={() => setPreviewZoom(Math.max(0.5, previewZoom - 0.1))} className="h-7 w-7 p-0">
@@ -1432,12 +1516,24 @@ export const IndividualDPRCreation: React.FC = () => {
                           const doc = (
                             <IndividualDPRDocumentView
                               trackFieldHits
-                              onEditField={onEditField}
-                              onEditBlock={(sectionId, blockId, text) => {
+                              showEmpty={docMode}
+                              onEditField={docMode ? onEditField : undefined}
+                              onFieldFocus={docMode ? (path: string) => setFocusedPath(path) : undefined}
+                              guideMissing={docMode ? missingRequired.map((item) => item.path) : undefined}
+                              onSectionFocus={docMode ? (stepNumber: number) => {
+                                // The step strip follows where you are typing in the report.
+                                if (visibleSteps.includes(stepNumber) && stepNumber !== currentStep) setCurrentStep(stepNumber);
+                              } : undefined}
+                              onOpenInForm={docMode ? (stepNumber: number) => {
+                                if (visibleSteps.includes(stepNumber)) setCurrentStep(stepNumber);
+                                setEditMode('form');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              } : undefined}
+                              onEditBlock={docMode ? (sectionId, blockId, text) => {
                                 const raw = docStyleRef.current || data.schemeExtras?.documentStyle;
                                 if (!raw) return;
                                 onStyleChange(setBlockText(resolveDocumentStyle(raw, schemeCode), sectionId, blockId, text));
-                              }}
+                              } : undefined}
                               onImageFrame={(slot, box) => {
                                 const raw = docStyleRef.current || data.schemeExtras?.documentStyle;
                                 if (!raw) return;
@@ -1499,11 +1595,13 @@ export const IndividualDPRCreation: React.FC = () => {
                 </Card>
               </div>
           </div>
+          </>
           )}
         </div>
           </>
         )}
       </div>
+      {guideLayer}
     </Layout>
   );
 };

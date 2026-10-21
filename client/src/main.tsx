@@ -5,6 +5,9 @@ import App from './App';
 import './index.css';
 import './styles/dpr-print.css';
 import { i18nReady } from './i18n/config';
+import { installPositiveNumbers } from './lib/positiveNumbers';
+
+installPositiveNumbers();
 
 i18nReady.finally(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(

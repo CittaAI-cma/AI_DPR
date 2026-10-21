@@ -319,14 +319,20 @@ describe('owner selection groups', () => {
     assert.deepEqual(toggleOwner(tags, 'generalMale'), []);
   });
 
-  it('combines woman, disability, transgender and ex-serviceman with a group choice', () => {
+  it('lets one of woman, transgender, ex-serviceman and General category man be chosen, next to one of SC, ST and BC', () => {
     let tags = toggleOwner([], 'sc');
     tags = toggleOwner(tags, 'female');
     tags = toggleOwner(tags, 'pwd');
+    assert.deepEqual(new Set(tags), new Set(['sc', 'female', 'pwd']));
     tags = toggleOwner(tags, 'exServiceman');
-    assert.deepEqual(new Set(tags), new Set(['sc', 'female', 'pwd', 'exServiceman']));
+    assert.deepEqual(new Set(tags), new Set(['sc', 'exServiceman', 'pwd']));
     tags = toggleOwner(tags, 'st');
-    assert.deepEqual(new Set(tags), new Set(['st', 'female', 'pwd', 'exServiceman']));
+    assert.deepEqual(new Set(tags), new Set(['st', 'exServiceman', 'pwd']));
+    // General category man is in both groups, so he replaces a pick from each.
+    tags = toggleOwner(tags, 'generalMale');
+    assert.deepEqual(new Set(tags), new Set(['generalMale', 'pwd']));
+    assert.deepEqual(sanitizeOwnerTags(['female', 'transgender', 'sc', 'bc', 'pwd']), ['female', 'sc', 'pwd']);
+    assert.deepEqual(sanitizeOwnerTags(['sc', 'generalMale']), ['sc']);
   });
 
   it('keeps not decided, no 51% and not sure on their own', () => {

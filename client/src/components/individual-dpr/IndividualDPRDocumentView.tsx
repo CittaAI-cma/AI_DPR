@@ -71,6 +71,12 @@ export interface IndividualDPRDocumentViewProps {
   onSectionClick?: (localStep: number) => void;
   /** The user put the cursor in a field of this section (step number and section id). */
   onSectionFocus?: (localStep: number, sectionId: string) => void;
+  /** Adds an "Open in form" button to each section (Document mode), for what only the form can fill in. */
+  onOpenInForm?: (localStep: number) => void;
+  /** Document mode guide: the field that has the cursor (its path, e.g. step1.district) and the section it is in. */
+  onFieldFocus?: (path: string, localStep: number) => void;
+  /** Document mode guide: paths of required answers still empty. Their input box turns red on screen until something is entered (never printed). */
+  guideMissing?: string[];
   /** When set, this DPR wears the saved style and section order. */
   documentStyle?: DocumentStyle | null;
   activeSectionId?: string | null;
@@ -356,6 +362,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   trackFieldHits = false,
   onSectionClick,
   onSectionFocus,
+  onOpenInForm,
+  onFieldFocus,
+  guideMissing,
   documentStyle,
   activeSectionId = null,
   onImageFrame,
@@ -384,11 +393,20 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const uploadStore = data.step18 || data.uploads || {};
 
   const typeHere = tf('Type here');
-  const focusIn = (n: number, id: string) => onSectionFocus
+  // Out of the page flow (absolute), so it never changes the layout or the page breaks; hidden when printed.
+  const openInFormButton = (n: number) =>
+    onOpenInForm ? (
+      <button type="button" className="dpr-open-in-form no-print" onClick={() => onOpenInForm(n)} title={tf('Open this section in the form (file uploads and calculators are filled in there)')}>
+        {tf('Open in form')}
+      </button>
+    ) : null;
+  const focusIn = (n: number, id: string) => onSectionFocus || onFieldFocus
     ? (event: React.FocusEvent<HTMLElement>) => {
-        if ((event.target as HTMLElement).matches?.('input, select, textarea, [contenteditable="true"]')) {
-          onSectionFocus(n, id);
-        }
+        const target = event.target as HTMLElement;
+        if (!target.matches?.('input, select, textarea, [contenteditable="true"]')) return;
+        onSectionFocus?.(n, id);
+        const path = (target.closest?.('[data-dpr-field]') as HTMLElement | null)?.getAttribute('data-dpr-field');
+        if (path) onFieldFocus?.(path, n);
       }
     : undefined;
   const coverDef = catalogSteps.find((step) => step.contentStep === 1);
@@ -850,6 +868,12 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
       data-page-print-before={style?.pageNumberStyle === 'of' ? tf('Page ') : undefined}
       data-page-print-mid={style?.pageNumberStyle === 'of' ? tf(' of ') : undefined}
     >
+      {guideMissing?.length ? (
+        <style data-doc-guide>{`@media screen{${guideMissing
+          .filter((path) => /^[A-Za-z0-9_.\[\]]+$/.test(path))
+          .map((path) => `.individual-dpr-document [data-dpr-field="${path}"]{border-color:#dc2626!important;background-color:#fef2f2!important}.individual-dpr-document [data-dpr-field="${path}"]:focus{box-shadow:0 0 0 3px rgba(220,38,38,.22)!important}`)
+          .join('')}}`}</style>
+      ) : null}
       {markStyleSpots ? <div data-style-spot="page" className="h-1" aria-hidden /> : null}
       {style?.watermark ? (
         <div className="dpr-watermark" aria-hidden="true" data-style-spot={markStyleSpots ? 'watermark' : undefined}>
@@ -978,7 +1002,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
             ? uploads
             : uploads.filter((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label]));
           return (
-            <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+            <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}${onOpenInForm ? ' has-open-form' : ''}`}>
+              {openInFormButton(def.n)}
               <h2 className="individual-sec-title">
                 <span className="individual-sec-num">{num}</span>
                 {title}
@@ -999,7 +1024,8 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         }
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget, kind);
         return (
-          <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}`}>
+          <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}${onOpenInForm ? ' has-open-form' : ''}`}>
+            {openInFormButton(def.n)}
             <h2 className="individual-sec-title">
               <span className="individual-sec-num">{num}</span>
               {title}

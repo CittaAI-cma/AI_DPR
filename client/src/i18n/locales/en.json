@@ -794,7 +794,7 @@
     "progress": "Question {{current}} of {{total}}",
     "remaining": "{{count}} schemes still possible",
     "selectAll": "Select all that apply, then tap Next.",
-    "ownerPickOne": "SC, ST, BC and General category man go together: pick only one of them. Woman, disability, transgender and ex-serviceman can be added to any choice.",
+    "ownerPickOne": "Pick only one from each group: Woman, Transgender, Ex-serviceman or General category man; and SC, ST, BC or General category man. Disability can be added to any choice.",
     "resultsTitle": "Schemes that may suit your answers",
     "resultsSubtitle": "{{count}} schemes may match what you told us.",
     "noMatches": "No schemes match these answers.",

@@ -26,8 +26,10 @@ export function sanitizeOwnerTags<T extends string>(ids: readonly T[]): T[] {
   const out: T[] = [];
   for (const id of ids) {
     if (out.includes(id)) continue;
-    const group = OWNER_PICK_ONE_GROUPS.find((g) => (g as string[]).includes(id));
-    if (group && out.some((kept) => (group as string[]).includes(kept))) continue;
+    const clash = OWNER_PICK_ONE_GROUPS.some(
+      (group) => (group as string[]).includes(id) && out.some((kept) => (group as string[]).includes(kept))
+    );
+    if (clash) continue;
     out.push(id);
   }
   return out;

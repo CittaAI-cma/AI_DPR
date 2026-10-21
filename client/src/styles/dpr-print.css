@@ -1666,6 +1666,10 @@
   .dpr-inline-edit {
     background: none !important;
     box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
   }
   .dpr-inline-edit:empty:before {
     content: none;
@@ -1675,6 +1679,7 @@
     border: none;
     background: none;
     padding: 0;
+    min-height: 0;
     appearance: none;
   }
 }

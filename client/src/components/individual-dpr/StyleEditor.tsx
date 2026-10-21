@@ -8,6 +8,7 @@ import { IndividualDPRDocumentView } from '@/components/individual-dpr/Individua
 import { templateSpecimenDpr, templateSpecimenStyle } from '@/lib/individualDpr/templateSpecimen';
 import { TemplateThumb } from '@/components/individual-dpr/TemplateThumb';
 import { useDialogFocus, useDialogPresence } from '@/lib/useDialog';
+import { EditModeToggle } from '@/components/individual-dpr/EditModeToggle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
   FONT_CHOICES,
@@ -121,6 +122,8 @@ export function StyleEditor({
   steps,
   activeSectionId,
   onActiveSection,
+  editMode = 'form',
+  onEditMode,
   onChange,
   onSave,
   onClose,
@@ -128,8 +131,6 @@ export function StyleEditor({
   canSaveSchemeDefault,
   onSaveSchemeDefault,
   language,
-  onLanguage,
-  hasTelugu,
   renderEditor,
   editNonce,
   editStepN,
@@ -141,12 +142,77 @@ export function StyleEditor({
   children,
 }) {
   const tf = useClusterFormText();
+  // Document mode: the report is edited in place and the form pane is folded away (Sections and Style open as slide-overs).
+  const docMode = editMode === 'document';
   const past = useRef<DocumentStyle[]>([]);
   const future = useRef<DocumentStyle[]>([]);
   const [historyTick, setHistoryTick] = useState(0);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropHint, setDropHint] = useState(null);
   const [panel, setPanel] = useState(null);
+  // The Sections / Style slide-over: slides in and out, and closes on a click outside it or Esc.
+  const panelOpen = panel === 'sections' || panel === 'style';
+  const panelPresence = useDialogPresence(panelOpen, 200);
+  const lastPanel = useRef('sections');
+  if (panelOpen) lastPanel.current = panel;
+  const shownPanel = panelOpen ? panel : lastPanel.current;
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Document mode: the side pane is closed until Sections or Style is chosen, then it opens next to the report (pushing it right) with only those two tabs.
+  // One set of buttons in the same place in both modes: [Form | Document] [Sections] [Style].
+  //  - The first button is the "home" view: the form in Form mode, the report alone in Document mode.
+  //  - Sections and Style open the side pane beside the report; pressing the open one again goes back to the home view.
+  //  - There is no separate Minimise button: pressing the open button again goes back to the home view. Below 1024 px there is no room for a pane, so they open as a slide-over (outside click or Esc closes it).
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 1024px)');
+    const update = () => setWide(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  const [formPaneOpen, setFormPaneOpen] = useState(true);
+  useEffect(() => {
+    if (!docMode) setFormPaneOpen(true);
+  }, [docMode]);
+  const paneOpen = docMode ? panelOpen : formPaneOpen;
+  const paneTab = docMode ? (panel === 'style' ? 'style' : 'sections') : tab;
+  const homeActive = wide ? (docMode ? !panelOpen : formPaneOpen && tab === 'form') : docMode ? !panelOpen : panel === 'edit';
+  const goHome = () => {
+    if (docMode) setPanel(null);
+    else if (wide) {
+      onTab?.('form');
+      setFormPaneOpen(true);
+    } else openEdit(editStep || steps[0]);
+  };
+  const tabActive = (id: string) => (wide ? (docMode ? panel === id : formPaneOpen && tab === id) : panel === id);
+  const chooseTab = (id: string) => {
+    if (!wide || docMode) setPanel(panel === id ? null : id);
+    else if (formPaneOpen && tab === id) onTab?.('form');
+    else {
+      onTab?.(id);
+      setFormPaneOpen(true);
+    }
+  };
+  useEffect(() => {
+    if (!panelOpen) return undefined;
+    const onDown = (event: PointerEvent) => {
+      // On a wide screen the panel is a side pane next to the report (so changes show while you work); only the narrow-screen overlay minimises on an outside click.
+      if (window.matchMedia('(min-width: 1024px)').matches) return;
+      const target = event.target as Element | null;
+      if (!target || panelRef.current?.contains(target)) return;
+      // The buttons that open and close the panel, and any pop-up opened from inside it, handle themselves.
+      if (target.closest?.('[data-panel-toggle], [role="dialog"], [role="alertdialog"], .motion-overlay')) return;
+      setPanel(null);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPanel(null);
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [panelOpen]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(0.8);
   const [templatePreview, setTemplatePreview] = useState(null);
@@ -1236,32 +1302,31 @@ export function StyleEditor({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-slate-100">
-      <div className="border-b bg-white px-3 py-2">{stepsBar}</div>
-      <div className="flex items-center gap-2 border-b bg-white px-3 py-2 lg:hidden">
-        {renderEditor ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="shrink-0 whitespace-nowrap"
-            onClick={() => openEdit(editStep || steps[0])}
-          >
-            {tf('Fill & edit')}
-          </Button>
-        ) : null}
-        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel('sections')}>
-          {tf('Sections')}
-        </Button>
-        <Button type="button" variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setPanel('style')}>
-          {tf('Style')}
-        </Button>
-      </div>
-      <div className="relative min-h-0 flex-1">
-        <div className="flex h-full min-h-0">
-          <div className="relative flex h-full min-h-0 min-w-0 flex-1 lg:flex-row-reverse">
-            <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-white/80 px-3 py-1.5">
+      <div className="relative z-[55] border-b bg-white px-3 py-2">{stepsBar}</div>
+            <div className="relative z-[55] flex flex-wrap items-center justify-between gap-2 border-b bg-white px-3 py-1.5">
               <div className="flex items-center gap-1">
+                {/* The same three tabs, in the same place and the same fixed width, in both modes (so nothing shifts when the first one changes between Form and Document). */}
+                <div role="tablist" aria-label={tf('Panels')} className="-my-1.5 mr-1 flex shrink-0 self-stretch">
+                  {([
+                    [docMode ? tf('Document') : tf('Form'), homeActive, goHome],
+                    [tf('Sections'), tabActive('sections'), () => chooseTab('sections')],
+                    [tf('Style'), tabActive('style'), () => chooseTab('style')],
+                  ] as const).map(([label, active, onClick]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      data-panel-toggle
+                      onClick={onClick}
+                      className={`w-28 truncate border-b-2 px-2 text-center text-sm font-semibold transition-colors ${
+                        active ? 'border-teal-800 text-teal-900' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Undo')} aria-label={tf('Undo')} onClick={undo} disabled={historyTick < 0 || !past.current.length}><Undo2 className="h-4 w-4" /></Button>
                 <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Redo')} aria-label={tf('Redo')} onClick={redo} disabled={historyTick < 0 || !future.current.length}><Redo2 className="h-4 w-4" /></Button>
                 <Button
@@ -1303,59 +1368,51 @@ export function StyleEditor({
                   {tf('Preview')}
                 </Button>
               </div>
-              <select
-                className="h-8 rounded-md border px-2 text-xs"
-                value={language}
-                onChange={(event) => onLanguage?.(event.target.value)}
-              >
-                <option value="english">{tf('English')}</option>
-                <option value="telugu" disabled={hasTelugu === false}>{tf('Telugu')}</option>
-              </select>
+              {onEditMode ? (
+                <EditModeToggle
+                  mode={editMode}
+                  onChange={(mode) => {
+                    setPanel(null);
+                    setFormPaneOpen(true);
+                    onEditMode(mode);
+                  }}
+                />
+              ) : null}
               <Button type="button" size="sm" className="h-8 whitespace-nowrap" title={tf('Keeps this look (fonts, layout, sections) on this DPR only.')} onClick={onSave} disabled={saving || blocking}>
                 {saving ? tf('Saving') : tf('Save on this DPR')}
               </Button>
               </div>
             </div>
-            <div ref={centerRef} data-dpr-scroll className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3">
+      <div className="relative min-h-0 flex-1">
+        <div className="flex h-full min-h-0">
+          <div className="relative flex h-full min-h-0 min-w-0 flex-1 lg:flex-row-reverse">
+            <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+            <div ref={centerRef} data-dpr-scroll className="relative z-10 min-h-0 flex-1 overflow-auto bg-slate-100 p-3">
               <div style={{ zoom }}>{sheet}</div>
             </div>
             </div>
-          {paneHandle('edit')}
+          {paneOpen && paneHandle('edit')}
           <div
             ref={editPaneRef}
-            style={{
-              width: Math.max(paneWidths.edit, editFloor.current),
-              minWidth: editFloor.current,
-              maxWidth: 720,
-              flex: `0 0 ${Math.max(paneWidths.edit, editFloor.current)}px`,
-            }}
-            className="hidden h-full min-h-0 flex-col overflow-hidden border-r bg-white lg:flex"
+            style={!paneOpen
+              ? { width: 0, minWidth: 0, maxWidth: 0, flex: '0 0 0px' }
+              : {
+                  width: Math.max(paneWidths.edit, editFloor.current),
+                  minWidth: editFloor.current,
+                  maxWidth: 720,
+                  flex: `0 0 ${Math.max(paneWidths.edit, editFloor.current)}px`,
+                }}
+            // Document mode folds this pane to nothing and Form mode opens it again, sliding; the content keeps its width so it does not re-flow meanwhile.
+            className={`hidden h-full min-h-0 flex-col overflow-hidden bg-white transition-[width,min-width,max-width,flex-basis,opacity] duration-300 ease-in-out lg:flex ${!paneOpen ? 'pointer-events-none border-r-0 opacity-0' : 'border-r opacity-100'}`}
+            aria-hidden={!paneOpen}
+            {...(!paneOpen ? { inert: '' } : {})}
           >
-            <div className="flex shrink-0 border-b" role="tablist">
-              {[
-                ['form', 'Form'],
-                ['sections', 'Sections'],
-                ['style', 'Style'],
-              ].map(([id, label]) => {
-                const selected = tab === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    onClick={() => onTab?.(id)}
-                    className={`flex-1 border-b-2 px-2 py-2.5 text-sm font-semibold transition-colors ${
-                      selected ? 'border-teal-800 text-teal-900' : 'border-transparent text-slate-500 hover:bg-slate-50'
-                    }`}
-                  >
-                    {tf(label)}
-                  </button>
-                );
-              })}
+            <div className="flex h-full min-h-0 flex-col" style={{ width: Math.max(paneWidths.edit, editFloor.current), maxWidth: 720 }}>
+            <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
+              <p className="min-w-0 truncate text-sm font-semibold">{tf(paneTab === 'form' ? 'Form' : paneTab === 'sections' ? 'Sections' : 'Style')}</p>
             </div>
-            <div key={tab} className="motion-tab min-h-0 flex-1 overflow-hidden flex flex-col">
-            {tab === 'sections' || (tab === 'form' && !renderEditor) ? sectionsPanel : tab === 'style' ? stylePanel : (
+            <div key={paneTab} className="motion-tab min-h-0 flex-1 overflow-hidden flex flex-col">
+            {paneTab === 'sections' || (paneTab === 'form' && !renderEditor) ? sectionsPanel : paneTab === 'style' ? stylePanel : (
               <>
                 <div className="fill-edit-scroll min-h-0 flex-1 overflow-y-auto p-3">
                   {(editStep || steps[0]) ? renderEditor(editStep || steps[0]) : null}
@@ -1363,18 +1420,19 @@ export function StyleEditor({
               </>
             )}
             </div>
+            </div>
           </div>
           </div>
         </div>
-        {(panel === 'sections' || panel === 'style') ? (
-          <div className="absolute inset-y-0 left-0 z-30 flex w-[min(40rem,92%)] max-w-full flex-col border-r bg-white shadow-xl lg:hidden">
+        {panelPresence.render ? (
+          <div
+            ref={panelRef}
+            className={`motion-panel${panelPresence.closing ? ' is-closing' : ''} absolute inset-y-0 left-0 z-30 flex w-[min(40rem,92%)] max-w-full flex-col border-r bg-white shadow-xl lg:hidden`}
+          >
             <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
-              <p className="min-w-0 truncate text-sm font-semibold">{tf(panel === 'sections' ? 'Sections' : 'Style')}</p>
-              <button type="button" className="shrink-0 text-xs font-medium text-slate-600" onClick={() => setPanel(null)}>
-                {tf('Close')}
-              </button>
+              <p className="min-w-0 truncate text-sm font-semibold">{tf(shownPanel === 'sections' ? 'Sections' : 'Style')}</p>
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden">{panel === 'sections' ? sectionsPanel : stylePanel}</div>
+            <div className="min-h-0 flex-1 overflow-hidden">{shownPanel === 'sections' ? sectionsPanel : stylePanel}</div>
           </div>
         ) : null}
         {panel === 'edit' && editStep && renderEditor ? (
@@ -1441,7 +1499,7 @@ export function StyleEditor({
         </div>
       )}
       {pendingPictures[0] ? (
-        <div className="motion-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+        <div className="motion-overlay fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 p-4">
           <form
             className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl"
             onSubmit={(event) => {
@@ -1490,7 +1548,7 @@ export function StyleEditor({
         </div>
       ) : null}
       {deletePictureId ? (
-        <div className="motion-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+        <div className="motion-overlay fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl">
             <p className="text-sm font-semibold">{tf('Delete this image?')}</p>
             <p className="mt-1 text-xs text-slate-500">
