@@ -8,15 +8,15 @@ import { backUpOpenDraft, clearBackup, takeBackup } from '@/lib/sessionBackup';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { Button } from '@/components/ui/Button';
-import { formatClock, refreshAfterMs, tokenTimes, useSessionClock, warnMs } from '@/lib/sessionClock';
+import { ACTIVITY_KEY, formatClock, idleLeftMs, readSavedActivity, refreshAfterMs, tokenTimes, useSessionClock, warnMs } from '@/lib/sessionClock';
 
 // Only things a person does count as activity. A `scroll` event is left out on purpose: the browser fires it by itself when a
 // page reloads and restores its scroll position, and when the app scrolls (new screen, step strip, smooth scrolling), and
-// that would silently restart the 5 minutes. Scrolling by hand is still caught by wheel, touch, keys and pointer.
+// that would silently restart the 6 minutes. Scrolling by hand is still caught by wheel, touch, keys and pointer.
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 
 /**
- * Keeps the session alive while someone works and warns a minute before it ends. After 5 minutes without activity (or at
+ * Keeps the session alive while someone works and warns a minute before it ends. After 6 minutes without activity (or at
  * the session limit) it signs the person out and opens the login screen with a note saying why. A draft with unsaved
  * changes is saved if possible, otherwise kept on this device and put back at the next sign-in by the same person.
  */
@@ -28,17 +28,19 @@ export const SessionManager: React.FC = () => {
   const reason = useSessionClock((s) => s.reason);
   const expiresAt = useSessionClock((s) => s.expiresAt);
   const durationMs = useSessionClock((s) => s.durationMs);
+  const lastActivityAt = useSessionClock((s) => s.lastActivityAt);
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const lastActive = useRef(Date.now());
   const flushedForToken = useRef<number | null>(null);
   const signedIn = Boolean(isAuthenticated && token && user);
 
-  // Start the clock from a token that was saved before a reload. If that token has already run out,
-  // the server decides whether the session is still within its idle window.
+  // Start the clock from a token that was saved before a reload, carrying on from the last real input (not starting over).
+  // If that token has already run out, the server decides whether the session is still within its idle window.
   useEffect(() => {
     if (!token || useSessionClock.getState().expiresAt) return;
     const times = tokenTimes(token);
+    useSessionClock.setState({ lastActivityAt: Math.max(readSavedActivity() ?? 0, times?.issuedAt ?? 0) || Date.now() });
     if (times && times.expiresAt <= Date.now()) {
       void api.refreshSession();
     } else {
@@ -52,6 +54,11 @@ export const SessionManager: React.FC = () => {
       if (event.key === 'token' && event.newValue) {
         useAuthStore.setState({ token: event.newValue });
         useSessionClock.getState().setToken(event.newValue);
+      }
+      // Input in another tab counts as activity here too.
+      if (event.key === ACTIVITY_KEY && event.newValue) {
+        const at = Number(event.newValue);
+        if (Number.isFinite(at)) useSessionClock.setState((state) => ({ lastActivityAt: Math.max(state.lastActivityAt, at) }));
       }
     };
     window.addEventListener('storage', onStorage);
@@ -69,7 +76,9 @@ export const SessionManager: React.FC = () => {
     const onActivity = (event: Event) => {
       if (!event.isTrusted) return; // a script, not a person
       lastActive.current = Date.now();
+      useSessionClock.getState().touch(); // the countdown starts over at once
       const { issuedAt: issued, phase: current, durationMs: span } = useSessionClock.getState();
+      // The token is renewed in the background so the server's own idle check keeps up (at most every few seconds).
       if (current !== 'expired' && issued && Date.now() - issued > refreshAfterMs(span)) void renew();
     };
     ACTIVITY_EVENTS.forEach((name) => window.addEventListener(name, onActivity, { passive: true, capture: true }));
@@ -85,23 +94,23 @@ export const SessionManager: React.FC = () => {
   // Warn a minute before the end (saving the draft while the token still works), then end the session.
   useEffect(() => {
     if (!signedIn || !expiresAt || phase === 'expired') return;
-    const left = expiresAt - now;
+    const left = idleLeftMs(lastActivityAt, durationMs, now);
     if (left <= 0) {
       useSessionClock.getState().markExpired('idle');
       return;
     }
     if (left <= warnMs(durationMs)) {
       if (phase !== 'warning') useSessionClock.getState().setPhase('warning');
-      if (flushedForToken.current !== expiresAt) {
-        flushedForToken.current = expiresAt;
+      if (flushedForToken.current !== lastActivityAt) {
+        flushedForToken.current = lastActivityAt;
         void flushPendingDraft();
       }
     } else if (phase === 'warning') {
       useSessionClock.getState().setPhase('active');
     }
-  }, [now, expiresAt, phase, signedIn, user?.userId, durationMs]);
+  }, [now, expiresAt, lastActivityAt, phase, signedIn, user?.userId, durationMs]);
 
-  // The session is over (5 minutes without activity, or the 8 hour limit, or the account was switched off): save what can be
+  // The session is over (6 minutes without activity, or the 8 hour limit, or the account was switched off): save what can be
   // saved, keep a copy of any unsaved draft on this device for the next sign-in, sign out, and go to the login screen.
   const leaving = useRef(false);
   useEffect(() => {
@@ -151,7 +160,7 @@ export const SessionManager: React.FC = () => {
   };
 
   if (!signedIn) return null;
-  const left = expiresAt ? expiresAt - now : 0;
+  const left = expiresAt ? Math.max(0, idleLeftMs(lastActivityAt, durationMs, now)) : 0;
 
   // When the session ends the effect above signs out and opens the login screen, so there is nothing to draw here.
   if (phase === 'expired') return null;

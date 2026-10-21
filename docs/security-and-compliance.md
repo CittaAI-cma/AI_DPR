@@ -46,7 +46,7 @@ This is an engineering draft for the cyber-security cell to review. It is **not*
 | DPDP – purpose limitation, minimisation | Only listed fields collected; AI gateway removes personal data before any LLM call | Written data inventory |
 | DPDP – data principal rights | Access/export, correction, nominee, erasure (`accountErase`), complaints (`PrivacyComplaint`) | Named grievance officer and response process |
 | DPDP – retention | Retention job warns then purges idle accounts; audit retention separate | Retention periods agreed in writing |
-| DPDP – security safeguards | AES-256-GCM fields and files, TLS, hashed passwords (bcrypt), hash-chained audit trail, RBAC, 15-min tokens, instant revocation | Disk encryption, key custody, pen test |
+| DPDP – security safeguards | AES-256-GCM fields and files, TLS, hashed passwords (bcrypt), hash-chained audit trail, RBAC, 6-minute idle timeout, instant revocation | Disk encryption, key custody, pen test |
 | DPDP – breach notification | Audit trail and `support_ticket` P1 path exist | Incident response runbook and Data Protection Board reporting process |
 | ISO 27001 A.5/A.8 access control | Three roles, least privilege, invite-only staff, deactivation, session control | Access review procedure |
 | ISO 27001 A.8.15 logging | Append-only hash-chained audit log with IP and payload, verification endpoint | Database user without delete rights; log shipping to a SIEM |

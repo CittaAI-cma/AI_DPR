@@ -18,7 +18,7 @@ export const Login: React.FC = () => {
   const tf = useClusterFormText();
   const navigate = useNavigate();
   const location = useLocation();
-  // Set by the session manager when it signs someone out (idle for 5 minutes, session limit, account switched off).
+  // Set by the session manager when it signs someone out (idle for 6 minutes, session limit, account switched off).
   const sessionEnded = (location.state as { sessionEnded?: string } | null)?.sessionEnded;
   const handleLinkClick = useLinkHandler();
   const { login } = useAuthStore();
@@ -100,7 +100,7 @@ export const Login: React.FC = () => {
                 <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <p>
                   {sessionEnded === 'idle'
-                    ? tf('You were signed out after 5 minutes of inactivity. Please sign in again.')
+                    ? tf('You were signed out after 6 minutes of inactivity. Please sign in again.')
                     : sessionEnded === 'deactivated'
                       ? tf('Your account has been deactivated. Please contact the APMSMEDC Admin if you think this is a mistake.')
                       : tf('Your session has ended. Please sign in again.')}

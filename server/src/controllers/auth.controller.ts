@@ -357,7 +357,7 @@ export class AuthController {
     }
   }
 
-  /** New 5 minute access token for a session that has been used within the last 5 minutes. */
+  /** New access token for a session that has been used within the last 6 minutes. */
   static async refresh(req: Request, res: Response): Promise<void> {
     try {
       const outcome = await refreshSession(req, res);
@@ -365,7 +365,7 @@ export class AuthController {
         res.status(401).json({
           success: false,
           code: outcome.code,
-          message: outcome.code === 'SESSION_IDLE' ? 'Signed out after 5 minutes without activity' : outcome.code === 'ACCOUNT_DEACTIVATED' ? 'This account has been deactivated' : 'Please sign in again',
+          message: outcome.code === 'SESSION_IDLE' ? 'Signed out after 6 minutes without activity' : outcome.code === 'ACCOUNT_DEACTIVATED' ? 'This account has been deactivated' : 'Please sign in again',
         });
         return;
       }

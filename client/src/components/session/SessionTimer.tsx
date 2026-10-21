@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Timer } from 'lucide-react';
-import { formatClock, useSessionClock, warnMs } from '@/lib/sessionClock';
+import { formatClock, idleLeftMs, useSessionClock, warnMs } from '@/lib/sessionClock';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 
-/** Time left in the signed-in session, shown in the header. It counts down while idle and resets with activity. */
+/** Time left before the idle logout, shown in the header. It counts down only while idle and starts over with every input. */
 export const SessionTimer: React.FC<{ className?: string }> = ({ className = '' }) => {
   const tf = useClusterFormText();
   const expiresAt = useSessionClock((s) => s.expiresAt);
   const phase = useSessionClock((s) => s.phase);
   const durationMs = useSessionClock((s) => s.durationMs);
+  const lastActivityAt = useSessionClock((s) => s.lastActivityAt);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -17,7 +18,8 @@ export const SessionTimer: React.FC<{ className?: string }> = ({ className = '' 
   }, []);
 
   if (!expiresAt) return null;
-  const left = phase === 'expired' ? 0 : expiresAt - now;
+  // The time left before the idle logout: it starts over at once with every click or key press and only runs down while idle.
+  const left = phase === 'expired' ? 0 : Math.max(0, idleLeftMs(lastActivityAt, durationMs, now));
   const tone =
     left <= warnMs(durationMs)
       ? 'border-red-300 bg-red-50 text-red-700'
@@ -28,7 +30,7 @@ export const SessionTimer: React.FC<{ className?: string }> = ({ className = '' 
   return (
     <span
       role="timer"
-      title={tf('Time left in this session. You are signed out after 5 minutes without activity. Working in the app keeps it going.')}
+      title={tf('Time left in this session. You are signed out after 6 minutes without activity. Working in the app keeps it going.')}
       aria-label={`${tf('Session time left')}: ${formatClock(left)}`}
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium tabular-nums ${tone} ${className}`}
     >

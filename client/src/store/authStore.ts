@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
       login: (user, token) => {
         localStorage.setItem('token', token);
         set({ user, token, isAuthenticated: true });
-        useSessionClock.getState().setToken(token);
+        useSessionClock.getState().startSession(token);
       },
       logout: () => {
         localStorage.removeItem('token');
