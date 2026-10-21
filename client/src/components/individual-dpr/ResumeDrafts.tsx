@@ -15,12 +15,12 @@ export const ResumeDrafts: React.FC = () => {
   const tf = useClusterFormText();
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState<any[]>([]);
-  // Open or closed is remembered on this browser.
+  // Closed until someone opens it; what they choose is remembered on this browser.
   const [open, setOpen] = useState(() => {
     try {
-      return window.localStorage.getItem('resume-drafts-open') !== '0';
+      return window.localStorage.getItem('resume-drafts-open') === '1';
     } catch {
-      return true;
+      return false;
     }
   });
   const toggle = () => {
