@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 
-/** Access tokens last 15 minutes; the server also ends a session after 15 minutes without activity. */
-export const SESSION_MS = 15 * 60 * 1000;
+/** Access tokens last 5 minutes; the server also ends a session after 5 minutes without activity. */
+export const SESSION_MS = 5 * 60 * 1000;
 /** The "still there?" prompt opens this long before the end (a quarter of a short test session). */
 export const warnMs = (durationMs: number) => Math.min(60 * 1000, durationMs / 4);
-/** While someone is active the token is renewed at most this often, so the clock stays close to a full 15:00. */
+/** While someone is active the token is renewed at most this often, so the clock stays close to a full 5:00. */
 export const refreshAfterMs = (durationMs: number) => Math.min(60 * 1000, durationMs / 4);
 
 export function tokenTimes(token: string | null | undefined): { issuedAt: number; expiresAt: number } | null {

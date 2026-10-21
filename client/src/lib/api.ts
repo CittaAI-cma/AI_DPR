@@ -282,7 +282,7 @@ class APIClient {
   private refreshing: Promise<string | null> | null = null;
 
   /**
-   * Swap the refresh cookie for a new 15 minute token. One call at a time, shared by everyone waiting.
+   * Swap the refresh cookie for a new 5 minute token. One call at a time, shared by everyone waiting.
    * Returns the new token, or null when the session has ended (then the re-sign-in screen opens).
    */
   refreshSession(): Promise<string | null> {

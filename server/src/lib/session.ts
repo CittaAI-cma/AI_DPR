@@ -6,13 +6,13 @@ import { getJwtSecret } from './jwtSecret';
 import { RefreshSession } from '../models/RefreshSession.model';
 import { User } from '../models/User.model';
 
-/** Access tokens live 15 minutes; a session is dropped after 15 idle minutes. */
+/** Access tokens live 5 minutes; a session is dropped after 5 idle minutes (activity renews it). */
 // SESSION_ACCESS_SECONDS exists so tests can run the whole lifecycle in under a minute. It is ignored in production,
-// so a stray value in a hosting dashboard can never lengthen (or shorten) the real 15 minute session.
-const DEFAULT_ACCESS_SECONDS = 15 * 60;
+// so a stray value in a hosting dashboard can never lengthen (or shorten) the real 5 minute session.
+const DEFAULT_ACCESS_SECONDS = 5 * 60;
 const IN_PRODUCTION = process.env.NODE_ENV === 'production';
 if (IN_PRODUCTION && process.env.SESSION_ACCESS_SECONDS) {
-  console.warn('SESSION_ACCESS_SECONDS is set but ignored in production; access tokens last 15 minutes.');
+  console.warn('SESSION_ACCESS_SECONDS is set but ignored in production; access tokens last 5 minutes.');
 }
 export const ACCESS_TOKEN_SECONDS = IN_PRODUCTION
   ? DEFAULT_ACCESS_SECONDS
@@ -74,7 +74,7 @@ export type RefreshOutcome =
   | { ok: true; token: string; user: any; expiresInSeconds: number }
   | { ok: false; code: 'NO_SESSION' | 'SESSION_IDLE' | 'SESSION_EXPIRED' | 'SESSION_REVOKED' | 'ACCOUNT_DEACTIVATED' };
 
-/** Swaps a live session for a fresh 15 minute access token and slides the idle window. */
+/** Swaps a live session for a fresh 5 minute access token and slides the idle window. */
 export async function refreshSession(req: Request, res: Response): Promise<RefreshOutcome> {
   const secret = readCookie(req, COOKIE);
   if (!secret) return { ok: false, code: 'NO_SESSION' };

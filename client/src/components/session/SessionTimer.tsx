@@ -28,7 +28,7 @@ export const SessionTimer: React.FC<{ className?: string }> = ({ className = '' 
   return (
     <span
       role="timer"
-      title={tf('Time left in this session. You are signed out after 15 minutes without activity. Working in the app keeps it going.')}
+      title={tf('Time left in this session. You are signed out after 5 minutes without activity. Working in the app keeps it going.')}
       aria-label={`${tf('Session time left')}: ${formatClock(left)}`}
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium tabular-nums ${tone} ${className}`}
     >

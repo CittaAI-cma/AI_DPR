@@ -64,7 +64,7 @@ after(async () => {
 describe('session lifetime', () => {
   it('login sets a 15 minute access token and an httpOnly refresh cookie', async () => {
     const c = claims(accessToken);
-    assert.equal(c.exp - c.iat, 15 * 60);
+    assert.equal(c.exp - c.iat, 5 * 60);
     assert.match(cookie, /^dpr_refresh=/);
     const login = await call('POST', '/auth/login', { body: { email, password } });
     assert.match(login.setCookie, /HttpOnly/i);
@@ -85,11 +85,11 @@ describe('session lifetime', () => {
     const refreshed = await call('POST', '/auth/refresh', { cookie });
     assert.equal(refreshed.status, 200);
     assert.ok(refreshed.body.data.token);
-    assert.equal(refreshed.body.data.expiresInSeconds, 900);
+    assert.equal(refreshed.body.data.expiresInSeconds, 300);
     assert.equal((await call('GET', '/auth/profile', { token: refreshed.body.data.token })).status, 200);
   });
 
-  it('15 minutes idle ends the session', async () => {
+  it('5 minutes idle ends the session', async () => {
     const database = await db();
     await database.collection('refreshsessions').updateMany({ userId }, { $set: { lastUsedAt: new Date(Date.now() - 16 * 60 * 1000) } });
     const idle = await call('POST', '/auth/refresh', { cookie });

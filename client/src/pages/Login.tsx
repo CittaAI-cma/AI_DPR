@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLinkHandler } from '@/lib/linkUtils';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -10,13 +10,16 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
-import { Sparkles, ArrowRight, LogIn, CheckCircle, Shield } from 'lucide-react';
+import { Sparkles, ArrowRight, LogIn, CheckCircle, Shield, Clock } from 'lucide-react';
 
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 export const Login: React.FC = () => {
   const { t } = useTranslation();
   const tf = useClusterFormText();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Set by the session manager when it signs someone out (idle for 5 minutes, session limit, account switched off).
+  const sessionEnded = (location.state as { sessionEnded?: string } | null)?.sessionEnded;
   const handleLinkClick = useLinkHandler();
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -92,6 +95,18 @@ export const Login: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {sessionEnded ? (
+              <div role="status" className="mb-5 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p>
+                  {sessionEnded === 'idle'
+                    ? tf('You were signed out after 5 minutes of inactivity. Please sign in again.')
+                    : sessionEnded === 'deactivated'
+                      ? tf('Your account has been deactivated. Please contact the APMSMEDC Admin if you think this is a mistake.')
+                      : tf('Your session has ended. Please sign in again.')}
+                </p>
+              </div>
+            ) : null}
             <form onSubmit={handleSubmit} className="space-y-5">
               <Input
                 label={t('auth.email')}

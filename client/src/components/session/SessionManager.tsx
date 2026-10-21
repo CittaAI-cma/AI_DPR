@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Clock, LogOut } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { flushPendingDraft } from '@/lib/draftFlush';
@@ -9,30 +8,28 @@ import { backUpOpenDraft, clearBackup, takeBackup } from '@/lib/sessionBackup';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { formatClock, refreshAfterMs, tokenTimes, useSessionClock, warnMs } from '@/lib/sessionClock';
 
 // Only things a person does count as activity. A `scroll` event is left out on purpose: the browser fires it by itself when a
 // page reloads and restores its scroll position, and when the app scrolls (new screen, step strip, smooth scrolling), and
-// that would silently restart the 15 minutes. Scrolling by hand is still caught by wheel, touch, keys and pointer.
+// that would silently restart the 5 minutes. Scrolling by hand is still caught by wheel, touch, keys and pointer.
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 
 /**
- * Keeps the session alive while someone works, warns a minute before it ends, and when it does end shows a
- * sign-in prompt over the page (so what is on screen is kept) instead of throwing the person away.
+ * Keeps the session alive while someone works and warns a minute before it ends. After 5 minutes without activity (or at
+ * the session limit) it signs the person out and opens the login screen with a note saying why. A draft with unsaved
+ * changes is saved if possible, otherwise kept on this device and put back at the next sign-in by the same person.
  */
 export const SessionManager: React.FC = () => {
   const tf = useClusterFormText();
   const navigate = useNavigate();
-  const { user, token, isAuthenticated, login, logout } = useAuthStore();
+  const { user, token, isAuthenticated, logout } = useAuthStore();
   const phase = useSessionClock((s) => s.phase);
   const reason = useSessionClock((s) => s.reason);
   const expiresAt = useSessionClock((s) => s.expiresAt);
   const durationMs = useSessionClock((s) => s.durationMs);
   const [now, setNow] = useState(() => Date.now());
-  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const lastActive = useRef(Date.now());
   const flushedForToken = useRef<number | null>(null);
   const signedIn = Boolean(isAuthenticated && token && user);
@@ -104,13 +101,31 @@ export const SessionManager: React.FC = () => {
     }
   }, [now, expiresAt, phase, signedIn, user?.userId, durationMs]);
 
-  // The session is over: if the open draft has changes the server never got, keep a copy on this device.
+  // The session is over (5 minutes without activity, or the 12 hour limit, or the account was switched off): save what can be
+  // saved, keep a copy of any unsaved draft on this device for the next sign-in, sign out, and go to the login screen.
+  const leaving = useRef(false);
   useEffect(() => {
-    if (phase !== 'expired' || !signedIn) return;
-    void flushPendingDraft().then((result) => {
-      if (result.dirty && !result.ok) backUpOpenDraft(user?.userId);
-    });
-  }, [phase, signedIn, user?.userId]);
+    if (phase !== 'expired' || !signedIn || leaving.current) return;
+    leaving.current = true;
+    const ended = reason;
+    const who = user?.userId;
+    void (async () => {
+      try {
+        const result = await flushPendingDraft();
+        if (result.dirty && !result.ok) backUpOpenDraft(who);
+      } catch {
+        backUpOpenDraft(who);
+      }
+      try {
+        await api.logout(); // works without a valid token: it only needs the session cookie
+      } catch {
+        /* the server end is revoked by expiry anyway */
+      }
+      logout();
+      navigate('/login', { replace: true, state: { sessionEnded: ended || 'expired' } });
+      leaving.current = false;
+    })();
+  }, [phase, reason, signedIn, user?.userId, logout, navigate]);
 
   // After signing in again, put back a draft that could not be saved when the last session ended.
   useEffect(() => {
@@ -135,100 +150,11 @@ export const SessionManager: React.FC = () => {
     setBusy(false);
   };
 
-  const signInAgain = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!user) return;
-    setBusy(true);
-    setError('');
-    try {
-      const response = await api.login(user.email, password);
-      const data = response?.data;
-      if (!data?.token) throw new Error('Sign-in failed');
-      if (String(data.userId) !== String(user.userId)) {
-        // Someone else signed in: they must not see the previous person's screen.
-        logout();
-        navigate('/dashboard');
-        return;
-      }
-      login(data, data.token);
-      setPassword('');
-      const saved = await flushPendingDraft();
-      if (saved.ok) clearBackup();
-      toast.success(tf(saved.ok ? 'Signed in again. Your work is saved.' : 'Signed in again.'));
-    } catch (err: any) {
-      setError(err?.response?.data?.message || tf('That password did not work.'));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const signOut = async () => {
-    backUpOpenDraft(user?.userId);
-    await api.logout();
-    logout();
-    navigate('/login');
-  };
-
   if (!signedIn) return null;
   const left = expiresAt ? expiresAt - now : 0;
 
-  if (phase === 'expired' && reason === 'deactivated') {
-    return (
-      <div className="motion-overlay fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="alertdialog" aria-modal="true" aria-labelledby="session-title">
-        <div className="w-full max-w-md space-y-4 rounded-xl border border-border bg-background p-6 shadow-xl">
-          <div className="flex items-center gap-3">
-            <Clock className="h-6 w-6 text-red-600" aria-hidden />
-            <h2 id="session-title" className="text-lg font-semibold">{tf('Your account has been deactivated')}</h2>
-          </div>
-          <p className="text-sm text-muted-foreground">{tf('You have been signed out. Please contact the APMSMEDC Admin if you think this is a mistake.')}</p>
-          <div className="flex justify-end">
-            <Button type="button" variant="primary" onClick={() => void signOut()}>
-              <LogOut className="mr-2 h-4 w-4" />
-              {tf('Sign out')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === 'expired') {
-    return (
-      <div className="motion-overlay fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="session-title">
-        <form onSubmit={signInAgain} className="w-full max-w-md space-y-4 rounded-xl border border-border bg-background p-6 shadow-xl">
-          <div className="flex items-center gap-3">
-            <Clock className="h-6 w-6 text-amber-600" aria-hidden />
-            <h2 id="session-title" className="text-lg font-semibold">
-              {reason === 'idle' ? tf('Signed out after 15 minutes of inactivity') : tf('Your session has expired')}
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {tf('Sign in again to carry on. What you were working on is still on this screen and will be saved.')}
-          </p>
-          <p className="text-sm font-medium">{user?.email}</p>
-          <Input
-            type="password"
-            label={tf('Password')}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-            autoFocus
-            required
-          />
-          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-          <div className="flex justify-between gap-2">
-            <Button type="button" variant="outline" onClick={() => void signOut()}>
-              <LogOut className="mr-2 h-4 w-4" />
-              {tf('Sign out')}
-            </Button>
-            <Button type="submit" variant="primary" disabled={busy || !password}>
-              {tf('Sign in again')}
-            </Button>
-          </div>
-        </form>
-      </div>
-    );
-  }
+  // When the session ends the effect above signs out and opens the login screen, so there is nothing to draw here.
+  if (phase === 'expired') return null;
 
   if (phase === 'warning') {
     return (
