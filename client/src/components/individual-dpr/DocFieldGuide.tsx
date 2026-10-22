@@ -54,7 +54,11 @@ function useLiveRect(path: string | null, active: boolean): { rect: Rect | null;
     const tick = () => {
       const el = document.querySelector(selectorFor(path));
       const rect = rectOf(el);
-      const box = rectOf(scrollerOf(el));
+      const scroller = scrollerOf(el);
+      const raw = rectOf(scroller);
+      // A toolbar can float over the top of the report; the guide keeps clear of that strip too.
+      const inset = Number(scroller?.getAttribute('data-dpr-inset')) || 0;
+      const box = raw ? { ...raw, top: raw.top + inset, height: raw.height - inset } : raw;
       const visible = !!rect && (!box || (rect.bottom > box.top + 4 && rect.top < box.bottom - 4 && rect.right > box.left && rect.left < box.right));
       const key = rect ? `${Math.round(rect.top)}|${Math.round(rect.left)}|${Math.round(rect.right)}|${Math.round(rect.bottom)}|${visible}|${box ? `${Math.round(box.top)}|${Math.round(box.bottom)}|${Math.round(box.left)}|${Math.round(box.right)}` : ''}` : 'none';
       if (key !== last) {
@@ -644,7 +648,7 @@ function NextRequiredChip({ missing, focusedPath, onJump }: { missing: Array<{ p
       data-doc-guide
       onMouseDown={(event) => event.preventDefault()}
       onClick={() => onJump(next)}
-      className="no-print fixed z-50 inline-flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-lg transition-colors hover:bg-red-700"
+      className="no-print fixed z-[25] inline-flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-lg transition-colors hover:bg-red-700"
       style={{ left: anchor.left, top: anchor.top, transform: 'translate(-50%, -100%)' }}
     >
       {tf('{n} required left').replace('{n}', String(missing.length))}

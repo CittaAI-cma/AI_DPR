@@ -478,7 +478,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
               {tf('Suggest title')}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1.5">
             {tf(
               'Short cover name from Nature of Business + Major Products (not a full paragraph).'
             )}
@@ -610,7 +610,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
                 )}
                 {matchingSkill ? tf('Matching…') : tf('Match me')}
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] leading-snug text-muted-foreground">
                 {tf('Describe your work in a line, then Match me to map it to one skill.')}
               </p>
             </div>
@@ -630,7 +630,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isVishwakarma && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PM Vishwakarma — craft & eligibility')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/VISHWAKARMA/vishwakarma.md — 18 trades; toolkit ₹15,000; loan ₹1 L then ₹2 L at 5%'
               )}
@@ -758,7 +758,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isSvanidhi && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PM SVANidhi — vending & eligibility')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/SVANIDHI/svanidhi.md — WC tranches ₹15k / ₹25k / ₹50k; 7% interest subsidy; UPI mandatory'
               )}
@@ -883,7 +883,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isPmfme && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PMFME — formalisation & eligibility')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/PMFME/pmfme.md — NIFTEM model DPRs; 35% grant capped ₹10 L; own ≥10%'
               )}
@@ -971,7 +971,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isApEdp && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('AP MSME-EDP 4.0 — new-unit eligibility')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/AP_EDP/apEdp.md — greenfield FCI capital subsidy; mutually exclusive with tech-upgrade'
               )}
@@ -1097,7 +1097,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isEclgs && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('ECLGS 5.0 — existing WC facility')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf('Spec: docs/schemes/ECLGS/eclgs.md — additional WC up to 20% of peak Q4 outstanding')}
             </p>
             <div className="form-field-grid">
@@ -1141,7 +1141,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isZed && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('ZED — certification levels')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/ZED/zed.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/ZED/zed.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Current ZED level" /></label>
@@ -1176,7 +1176,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isLean && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('LEAN — process bottleneck')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/LEAN/lean.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/LEAN/lean.md')}</p>
             <div>
               <label className="block text-sm font-medium mb-2"><FieldPrompt label="Main process bottleneck" /></label>
               <ExpandableTextarea className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={extras.processBottleneck || ''} onChange={(e) => updateExtras({ processBottleneck: e.target.value })} placeholder={tf('e.g. changeover time, scrap, inventory')} />
@@ -1201,7 +1201,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isMsmeIpr && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('MSME Innovative — IPR')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/MSME_IPR/msmeIpr.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/MSME_IPR/msmeIpr.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="IP type" /></label>
@@ -1236,7 +1236,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isPms && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PMS — fair / marketing')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/PMS/pms.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/PMS/pms.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Event / fair name" /></label>
@@ -1265,7 +1265,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isScstHub && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('SC/ST Hub — procurement readiness')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/SCST_HUB/scstHub.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/SCST_HUB/scstHub.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Category" /></label>
@@ -1300,7 +1300,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isAspire && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('ASPIRE — incubator & livelihood')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/ASPIRE/aspire.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/ASPIRE/aspire.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Incubator / LBI name" /></label>
@@ -1334,7 +1334,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isNhdp && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('NHDP — loom & weaver')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/NHDP/nhdp.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/NHDP/nhdp.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Loom type" /></label>
@@ -1378,7 +1378,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isCvy && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('CVY — coir unit')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/CVY/cvy.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/CVY/cvy.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Coir product line" /></label>
@@ -1413,7 +1413,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isMseGift && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('MSE-GIFT — green / EE')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/MSE_GIFT/mseGift.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/MSE_GIFT/mseGift.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Energy baseline (kWh / month)" /></label>
@@ -1438,7 +1438,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isPtuas && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PTUAS — pharma upgrade')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/PTUAS/ptuas.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/PTUAS/ptuas.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="GMP status" /></label>
@@ -1472,7 +1472,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isPmpds && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PMPDS — promotion')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/PMPDS/pmpds.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/PMPDS/pmpds.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Focus" /></label>
@@ -1498,7 +1498,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isCgtmse && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('CGTMSE — credit guarantee (MUDRA-adjacent)')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/CGTMSE/cgtmse.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/CGTMSE/cgtmse.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Loan purpose" /></label>
@@ -1533,7 +1533,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isApFpp && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('AP FPP 4.0 — food processing')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/AP_FPP/apFpp.md — do not double-claim with AP_EDP')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/AP_FPP/apFpp.md — do not double-claim with AP_EDP')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Enterprise size" /></label>
@@ -1667,7 +1667,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isObmms && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('OBMMS — welfare self-employment')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/OBMMS/obmms.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/OBMMS/obmms.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Welfare corporation" /></label>
@@ -1706,7 +1706,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isMseSpice && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('MSE-SPICE — circular economy')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/MSE_SPICE/mseSpice.md — 25% P&M cap ₹12.5 L')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/MSE_SPICE/mseSpice.md — 25% P&M cap ₹12.5 L')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Circular sector" /></label>
@@ -1736,7 +1736,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isApParks && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('AP MSME-PARKS — land rebate')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/AP_PARKS/apParks.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/AP_PARKS/apParks.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="APIIC / park name" /></label>
@@ -1775,7 +1775,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isRampTeam && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('RAMP TEAM — ONDC')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/RAMP_TEAM/rampTeam.md')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/RAMP_TEAM/rampTeam.md')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="ONDC readiness" /></label>
@@ -1805,7 +1805,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isEpmNiryat && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('EPM Niryat — export credit')}</h3>
-            <p className="text-xs text-muted-foreground">{tf('Spec: docs/schemes/EPM_NIRYAT/epmNiryat.md — 2.75% interest subvention')}</p>
+            <p className="text-[11px] leading-snug text-muted-foreground">{tf('Spec: docs/schemes/EPM_NIRYAT/epmNiryat.md — 2.75% interest subvention')}</p>
             <div className="form-field-grid">
               <div>
                 <label className="block text-sm font-medium mb-2"><FieldPrompt label="Export markets" /></label>
@@ -1839,7 +1839,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {schemeCode === 'PMEGP' && (
           <div className="border border-teal-200 rounded-lg p-4 space-y-4 bg-teal-50/50">
             <h3 className="text-lg font-semibold text-teal-950">{tf('PMEGP — entrepreneur & subsidy inputs')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'These fields drive margin-money % (category × rural/urban). Spec: docs/schemes/PMEGP/pmegp.md'
               )}
@@ -1953,7 +1953,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isPmegp2nd && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('PMEGP 2nd loan — prior assistance')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/PMEGP_2ND/pmegp2nd.md — brownfield only; uniform 15% MM (20% NER/Hill); own 10%'
               )}
@@ -2122,7 +2122,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isSclcss && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('SCLCSS — SC/ST capital subsidy')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/SCLCSS/sclcss.md — 25% on new P&M, cap ₹25 L; SC/ST ≥51%; not general CLCSS'
               )}
@@ -2206,7 +2206,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isApTech && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('AP Technology Upgradation — eligibility')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/AP_TECH_UPGRADE/apTechUpgrade.md — brownfield FCI; mutually exclusive with new-unit EDP capital subsidy'
               )}
@@ -2312,7 +2312,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isMudra && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('MUDRA — PMMY category & applicant')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf('Spec: docs/schemes/MUDRA/mudra.md — Shishu / Kishore / Tarun / Tarun Plus')}
             </p>
             <div className="form-field-grid">
@@ -2381,7 +2381,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
         {isStandup && (
           <div className="border rounded-lg p-4 space-y-4 bg-amber-50/50">
             <h3 className="text-lg font-semibold">{tf('Stand-Up India — eligibility')}</h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Spec: docs/schemes/STANDUP/standup.md — woman / SC / ST, greenfield, ≥10% own, ₹10 L–₹1 Cr'
               )}
@@ -2520,7 +2520,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             <label className="block text-sm font-semibold text-foreground">
               <FieldPrompt label="Executive summary" />
             </label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               {tf(
                 'Write a short bank-style overview: unit, location, products, project cost, own + bank + subsidy, and jobs.'
               )}
@@ -3001,7 +3001,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('stakeholders', e.target.value)}
             placeholder={tf("Enter stakeholders separated by commas (e.g., Stakeholder 1, Stakeholder 2, Stakeholder 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple stakeholders with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple stakeholders with commas")}</p>
         </div>
           </>
         )}
@@ -3071,7 +3071,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('intermediateProducts', e.target.value)}
             placeholder={tf("Enter intermediate products separated by commas (e.g., Semi-finished Product 1, Semi-finished Product 2)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple products with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple products with commas")}</p>
         </div>
 
         <div>
@@ -3159,7 +3159,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('majorBuyers', e.target.value)}
             placeholder={tf("Enter major buyers separated by commas (e.g., Buyer 1, Buyer 2, Buyer 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple buyers with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple buyers with commas")}</p>
         </div>
       </div>
     );
@@ -3362,7 +3362,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('strengths', e.target.value)}
             placeholder={tf("Enter strengths separated by commas (e.g., Strong market presence, Skilled workforce, Good infrastructure)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple strengths with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple strengths with commas")}</p>
         </div>
         <div>
           {renderLabel('weaknesses', 'Weaknesses')}
@@ -3372,7 +3372,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('weaknesses', e.target.value)}
             placeholder={tf("Enter weaknesses separated by commas (e.g., Limited technology, Lack of skilled workers, Poor infrastructure)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple weaknesses with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple weaknesses with commas")}</p>
         </div>
         <div>
           {renderLabel('opportunities', 'Opportunities')}
@@ -3382,7 +3382,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('opportunities', e.target.value)}
             placeholder={tf("Enter opportunities separated by commas (e.g., Growing market demand, Government support, Export potential)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple opportunities with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple opportunities with commas")}</p>
         </div>
         <div>
           {renderLabel('threats', 'Threats')}
@@ -3392,7 +3392,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('threats', e.target.value)}
             placeholder={tf("Enter threats separated by commas (e.g., Market competition, Price fluctuations, Regulatory changes)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple threats with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple threats with commas")}</p>
         </div>
       </div>
     );
@@ -3443,7 +3443,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('objectives', e.target.value)}
             placeholder={tf("Enter objectives separated by commas (e.g., Objective 1, Objective 2, Objective 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple objectives with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple objectives with commas")}</p>
         </div>
         <div>
           {renderLabel('expectedBenefits', 'Expected Benefits')}
@@ -3453,7 +3453,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
             onChange={(e) => handleCommaSeparatedChange('expectedBenefits', e.target.value)}
             placeholder={tf("Enter expected benefits separated by commas (e.g., Benefit 1, Benefit 2, Benefit 3)")}
           />
-          <p className="text-xs text-muted-foreground mt-1">{tf("Separate multiple benefits with commas")}</p>
+          <p className="text-[11px] leading-snug text-muted-foreground mt-1">{tf("Separate multiple benefits with commas")}</p>
         </div>
       </div>
     );

@@ -1,9 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { Check, CheckCircle2, Save } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
-  MILESTONES,
-  nextMilestone,
   type OverallProgress,
   type SectionProgress,
 } from '@/lib/individualDpr/authoringProgress';
@@ -28,142 +26,19 @@ type Props = {
   lang: 'en' | 'te';
 };
 
-const RADIUS = 9;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-const CIRCUMFERENCE_STR = String(CIRCUMFERENCE);
-
-/** Small ring that fills as the section's questions are answered. */
-function Ring({ percent, tone }: { percent: number; tone: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6 -rotate-90" aria-hidden="true">
-      <circle cx="12" cy="12" r={RADIUS} fill="none" strokeWidth="3" className="stroke-current opacity-20" />
-      <circle
-        cx="12"
-        cy="12"
-        r={RADIUS}
-        fill="none"
-        strokeWidth="3"
-        strokeLinecap="round"
-        className={`${tone} stroke-current transition-[stroke-dashoffset] duration-500 ease-out`}
-        strokeDasharray={CIRCUMFERENCE_STR}
-        strokeDashoffset={CIRCUMFERENCE * (1 - percent / 100)}
-      />
-    </svg>
-  );
-}
+const RING_R = 13.5;
+const RING_LENGTH = 2 * Math.PI * RING_R;
 
 export const AuthoringStepper: React.FC<Props> = ({
   sections,
   overall,
-  savedPercent,
   unsaved,
-  dirty: draftDirty,
-  saveStatus,
-  lastSavedAt,
   currentStep,
   onSelect,
-  variant = 'full',
-  activeClass,
-  idleClass,
   stepLabel,
-  lang,
 }) => {
   const tf = useClusterFormText();
-  const compact = variant === 'compact';
-  const upcoming = nextMilestone(overall.percent);
-  const dirty = draftDirty || unsaved.size > 0;
-  const time = lastSavedAt
-    ? lastSavedAt.toLocaleTimeString(lang === 'te' ? 'te-IN' : 'en-IN', { hour: '2-digit', minute: '2-digit' })
-    : '';
-  const statusText =
-    saveStatus === 'saving'
-      ? tf('Saving…')
-      : saveStatus === 'error'
-        ? tf('Could not save. Will retry.')
-        : dirty
-          ? tf('Unsaved changes. Auto-saves every 30 seconds.')
-          : time
-            ? `${tf('Saved')} ${time}`
-            : tf('Saved');
-  const statusTone = saveStatus === 'error' ? 'text-destructive' : dirty || saveStatus === 'saving' ? 'text-amber-600' : 'text-success';
   const livePercent = overall.percent;
-  const savedShown = Math.min(savedPercent, livePercent);
-
-  const summary = (
-    <div className={compact ? 'mb-1.5' : 'mb-3'}>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <p className="text-sm text-foreground" aria-live="polite">
-          <span className="text-lg font-bold tabular-nums">{livePercent}%</span>{' '}
-          <span className="text-muted-foreground">
-            {tf('complete')} · {overall.sectionsComplete} / {overall.sectionsTotal} {tf('sections done')}
-          </span>
-        </p>
-        <p className="flex items-center gap-3 text-xs text-muted-foreground">
-          {upcoming ? (
-            <span>
-              {tf('Next milestone')}: <strong className="text-foreground">{upcoming.label[lang]}</strong> ({upcoming.at}%)
-            </span>
-          ) : (
-            <span className="font-semibold text-success">{MILESTONES[3].label[lang]}</span>
-          )}
-          <span
-            className={`inline-flex items-center gap-1 font-medium ${statusTone}`}
-            title={dirty ? tf('Changes since the last save') : tf('Everything on screen is saved')}
-            role="status"
-          >
-            {dirty || saveStatus !== 'idle' ? <Save className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-            {statusText}
-          </span>
-        </p>
-      </div>
-      <div className="relative mx-2 mt-2 h-2.5 rounded-full bg-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={livePercent} aria-label={tf('DPR progress')}>
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-primary/35 transition-[width] duration-500 ease-out"
-          style={{ width: `${livePercent}%` }}
-        />
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-500 ease-out"
-          style={{ width: `${savedShown}%` }}
-        />
-        {MILESTONES.map((milestone) => {
-          const reached = livePercent >= milestone.at;
-          return (
-            <span
-              key={milestone.id}
-              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${Math.min(milestone.at, 99)}%` }}
-              title={`${milestone.label[lang]} · ${milestone.at}%`}
-            >
-              <span
-                className={`flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors ${
-                  reached ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-transparent'
-                }`}
-              >
-                <Check className="h-2.5 w-2.5" strokeWidth={4} />
-              </span>
-            </span>
-          );
-        })}
-      </div>
-      {!compact && (
-        <div className="mt-2 hidden justify-between text-[11px] text-muted-foreground sm:flex" aria-hidden="true">
-          {MILESTONES.map((milestone) => (
-            <span key={milestone.id} className={livePercent >= milestone.at ? 'font-semibold text-primary' : ''}>
-              {milestone.at}% {milestone.label[lang]}
-            </span>
-          ))}
-        </div>
-      )}
-      {!compact && !overall.readyToGenerate && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          {overall.requiredMissing} {tf('required answers still missing before you can generate')}
-        </p>
-      )}
-      {!compact && overall.readyToGenerate && (
-        <p className="mt-1 text-xs font-medium text-success">{tf('All required answers are in. You can generate the DPR.')}</p>
-      )}
-    </div>
-  );
 
   // Keep the current step in view when the strip is wider than the screen, scrolling only the strip (not the page).
   const stripRef = useRef<HTMLDivElement>(null);
@@ -171,55 +46,123 @@ export const AuthoringStepper: React.FC<Props> = ({
     const strip = stripRef.current;
     const button = strip?.querySelector<HTMLElement>('[aria-current="step"]');
     if (!strip || !button) return;
-    const target = button.offsetLeft - (strip.clientWidth - button.offsetWidth) / 2;
+    const item = (button.parentElement as HTMLElement) || button;
+    const target = item.offsetLeft - (strip.clientWidth - item.offsetWidth) / 2;
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     strip.scrollTo({ left: Math.max(0, target), behavior: reduced ? 'auto' : 'smooth' });
   }, [currentStep]);
 
+  // Arrow keys move between the dots; Enter or Space opens one (they are buttons).
+  const onStripKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const keys: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, Home: -Infinity, End: Infinity };
+    if (!(event.key in keys)) return;
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[data-step-dot]'));
+    const at = items.indexOf(document.activeElement as HTMLElement);
+    if (at < 0) return;
+    event.preventDefault();
+    const step = keys[event.key];
+    const next = Math.max(0, Math.min(items.length - 1, Number.isFinite(step) ? at + step : step < 0 ? 0 : items.length - 1));
+    items[next]?.focus();
+  };
+
   return (
     <div>
-      {summary}
-      <div ref={stripRef} className="relative flex items-center gap-2 overflow-x-auto pb-1" role="list">
-        {sections.map((section) => {
+      <div
+        ref={stripRef}
+        onKeyDown={onStripKey}
+        className="group/strip relative flex items-start overflow-x-auto py-[26px] [scrollbar-width:thin]"
+        role="list"
+        aria-label={tf('DPR steps')}
+      >
+        {/* Centred in the row while it fits; when it is wider than the screen it scrolls from the left instead. */}
+        <div className="mx-auto flex w-max items-start">
+        {sections.map((section, index) => {
           const current = section.step === currentStep;
           const done = section.status === 'complete';
           const isUnsaved = unsaved.has(section.step);
-          const tone = done ? 'text-success' : section.status === 'ready' ? 'text-success' : 'text-primary';
+          const needed = section.requiredMissing || 0;
+          const neededText = needed ? tf('{n} required answers missing').replace('{n}', String(needed)) : '';
+          const first = index === 0;
+          const last = index === sections.length - 1;
+          const label = tf(section.title).replace(/^\s*(Step|దశ)\s*\d+\s*[:.\-–]\s*/i, "");
+          // The name's bubble sits under the dot; at either end of the strip it is held to that side so it is never cut off.
+          const bubbleSide = first ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2';
+          const arrowSide = first ? 'left-3' : last ? 'right-3' : 'left-1/2 -translate-x-1/2';
           return (
-            <button
-              key={section.step}
-              type="button"
-              role="listitem"
-              onClick={() => onSelect(section.step)}
-              aria-current={current ? 'step' : undefined}
-              title={`${tf(section.title)} · ${section.answered}/${section.total} ${tf('answered')} (${section.percent}%)${isUnsaved ? ` · ${tf('unsaved')}` : ''}`}
-              className={`relative flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all ${
-                current
-                  ? activeClass || 'bg-primary text-primary-foreground shadow-sm'
-                  : done
-                    ? 'border border-success/20 bg-success/10 text-success hover:bg-success/20'
-                    : idleClass || 'bg-muted/50 text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              <span className="relative flex h-6 w-6 items-center justify-center">
-                <Ring percent={section.percent} tone={current ? 'text-primary-foreground' : tone} />
-                <span className="absolute text-[10px] font-bold">
+            <div key={section.step} role="listitem" className="relative flex w-9 shrink-0 justify-center sm:w-10">
+              {!last ? (
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-1/2 top-[15px] h-0.5 w-full -translate-y-1/2 ${done ? 'bg-success/60' : 'bg-border'}`}
+                />
+              ) : null}
+              <button
+                type="button"
+                data-step-dot
+                onClick={() => onSelect(section.step)}
+                aria-current={current ? 'step' : undefined}
+                aria-label={`${stepLabel(section.step)}: ${label}, ${section.percent}%${neededText ? `, ${neededText}` : ''}`}
+                className="group/dot relative z-10 flex h-[30px] w-[30px] items-center justify-center rounded-full outline-none transition-transform duration-150 hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <svg viewBox="0 0 30 30" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
+                  <circle cx="15" cy="15" r={RING_R} fill="none" strokeWidth="3" className="stroke-border" />
+                  <circle
+                    cx="15"
+                    cy="15"
+                    r={RING_R}
+                    fill="none"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    className={`${done ? 'stroke-success' : 'stroke-primary'} transition-[stroke-dashoffset] duration-500 ease-out`}
+                    strokeDasharray={RING_LENGTH}
+                    strokeDashoffset={RING_LENGTH * (1 - Math.max(0, Math.min(100, section.percent)) / 100)}
+                  />
+                </svg>
+                <span
+                  className={`relative flex h-[20px] w-[20px] items-center justify-center rounded-full text-[10px] font-bold tabular-nums transition-colors ${
+                    current
+                      ? 'bg-primary text-primary-foreground shadow-[0_0_0_4px_hsl(var(--primary)/0.16),0_2px_6px_rgba(16,24,40,0.25)]'
+                      : done
+                        ? 'bg-success text-white'
+                        : 'bg-background text-muted-foreground group-hover/dot:text-foreground'
+                  }`}
+                >
                   {done && !current ? <Check className="h-3 w-3" strokeWidth={4} /> : section.step}
                 </span>
-              </span>
-              <span className="flex flex-col items-start leading-tight">
-                <span className="hidden sm:inline">{stepLabel(section.step)}</span>
-                <span className={`text-[10px] font-semibold tabular-nums ${current ? 'opacity-90' : 'opacity-80'}`}>{section.percent}%</span>
-              </span>
-              {isUnsaved && (
+                {needed ? (
+                  <span className="absolute -left-1.5 -top-1.5 flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-full border-2 border-background bg-red-600 px-0.5 text-[8px] font-bold leading-none text-white" aria-hidden="true">
+                    {needed > 9 ? '9+' : needed}
+                  </span>
+                ) : null}
+                {isUnsaved ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-amber-500" aria-hidden="true" /> : null}
+                {/* The name of the step you are on stays in view; pointing at (or tabbing to) any dot shows that dot's name instead. */}
                 <span
-                  className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-amber-500"
-                  aria-label={tf('unsaved')}
-                />
-              )}
-            </button>
+                  role="presentation"
+                  className={`pointer-events-none absolute top-full z-20 mt-1 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium leading-none text-white shadow-md transition-opacity duration-150 ${bubbleSide} ${
+                    current
+                      ? 'opacity-100 group-hover/strip:opacity-0 group-hover/dot:!opacity-100 group-focus-visible/dot:!opacity-100'
+                      : 'opacity-0 group-hover/dot:opacity-100 group-focus-visible/dot:opacity-100'
+                  }`}
+                >
+                  <span aria-hidden="true" className={`absolute -top-1 h-2 w-2 rotate-45 bg-slate-900 ${arrowSide}`} />
+                  <span className="relative">{label}</span>
+                </span>
+              </button>
+            </div>
           );
         })}
+        </div>
+      </div>
+      {/* The bottom edge of the whole stepper is the progress bar: it fills along the border as the report is filled in. */}
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={livePercent}
+        aria-label={tf('DPR progress')}
+        className="pointer-events-none absolute inset-x-0 -bottom-px h-[3px] bg-border"
+      >
+        <div className="h-full rounded-r-full bg-primary transition-[width] duration-500 ease-out" style={{ width: `${livePercent}%` }} />
       </div>
     </div>
   );

@@ -61,6 +61,7 @@ export const TE: Record<string, string> = {
   'Last edited': 'చివరిగా సవరించినది',
   Saved: 'సేవ్ అయింది',
   'DPR progress': 'DPR పురోగతి',
+  'DPR steps': 'DPR దశలు',
   'required answers still missing before you can generate': 'ఉత్పత్తి చేయడానికి ముందు ఇంకా అవసరమైన సమాధానాలు లేవు',
   'All required answers are in. You can generate the DPR.': 'అవసరమైన సమాధానాలన్నీ ఉన్నాయి. మీరు DPR రూపొందించవచ్చు.',
   answered: 'సమాధానమిచ్చినవి',

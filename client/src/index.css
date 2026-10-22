@@ -1253,3 +1253,57 @@ html { scrollbar-gutter: stable; }
     margin-top: auto;
   }
 }
+
+/* Form-mode report: a section that appears (its step got its first answer) fades in instead of popping in. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  #dpr-preview .individual-sec {
+    animation: dpr-sec-in 0.28s ease-out both;
+  }
+}
+@keyframes dpr-sec-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Form mode: soft depth and gentle motion on the questions. */
+#individual-dpr-form input:not([type='checkbox']):not([type='radio']),
+#individual-dpr-form select,
+#individual-dpr-form textarea {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.03);
+}
+#individual-dpr-form input:not([type='checkbox']):not([type='radio']):hover,
+#individual-dpr-form select:hover,
+#individual-dpr-form textarea:hover {
+  border-color: hsl(var(--primary) / 0.45);
+}
+#individual-dpr-form input:not([type='checkbox']):not([type='radio']):focus-visible,
+#individual-dpr-form select:focus-visible,
+#individual-dpr-form textarea:focus-visible {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.14), 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+#individual-dpr-form .fill-edit-scroll {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+}
+#individual-dpr-form button:not(:disabled) {
+  transition: transform 0.15s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+#individual-dpr-form button:not(:disabled):hover {
+  box-shadow: 0 4px 10px -4px rgba(16, 24, 40, 0.22);
+}
+@media (prefers-reduced-motion: reduce) {
+  #individual-dpr-form * { transition: none !important; }
+}
+
+/* Form <-> Document: the incoming screen fades and rises into place. */
+@media (prefers-reduced-motion: no-preference) {
+  .dpr-layout-in {
+    animation: dpr-layout-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+}
+@keyframes dpr-layout-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}

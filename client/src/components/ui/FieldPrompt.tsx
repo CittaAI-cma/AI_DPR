@@ -37,7 +37,7 @@ export const FieldHelp: React.FC<{ label: string }> = ({ label }) => {
   const copy = useMemo(() => describeField(label, PLAIN_PROMPTS), [label]);
   if (!copy.help && !copy.example && !copy.units.length && !copy.terms.length) return null;
   return (
-    <span className="mt-1 block text-xs font-normal leading-snug text-muted-foreground" data-plain-help>
+    <span className="mt-0.5 block text-[11px] font-normal leading-snug text-muted-foreground" data-plain-help>
       {copy.help ? <span className="block">{tf(copy.help)}</span> : null}
       {copy.example ? (
         <span className="block">

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { Sparkles, Loader2, ChevronDown, ChevronUp, Check, RefreshCw, X } from 'lucide-react';
 import { AISuggestionsService, AISuggestion } from '@/services/aiSuggestions.service';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
@@ -840,8 +841,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
 
   if (!aiAllowed) {
     return (
-      <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-lg">
-        <p className="text-xs font-medium text-red-700">{t('privacy.aiOffWarning')}</p>
+      <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+        <Sparkles className="h-4 w-4 flex-shrink-0 text-amber-700" aria-hidden="true" />
+        <p className="min-w-[14rem] flex-1 text-xs font-medium text-amber-900">{t('privacy.aiOffWarning')}</p>
+        <Link to="/account/privacy" className="whitespace-nowrap text-xs font-semibold text-primary underline-offset-2 hover:underline">
+          {tf('Turn on AI assist in Privacy settings')}
+        </Link>
       </div>
     );
   }
@@ -951,12 +956,12 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     if (!hasGenerated && !loading) {
       return (
         <>
-          <div className="mb-4 p-4 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
+          <div className="mb-4 px-3 py-2.5 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2 min-w-0">
                 <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">{tf('Fill this step with AI')}</p>
+                  <p className="text-sm font-semibold text-gray-900">{tf('AI Assist')}</p>
                   <p className="text-xs text-muted-foreground">
                     {tf('Suggests answers only for this step’s questions ({n}). Apply the ones you like.')
                       .replace('{n}', String(stepCatalogFields.length))}
@@ -972,14 +977,17 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                 {tf('Fill this step')}
               </button>
             </div>
-            <ul className="mt-3 text-xs text-muted-foreground list-disc pl-5 space-y-0.5">
-              {stepCatalogFields.slice(0, 12).map((f) => (
-                <li key={f.name}>{f.label}</li>
-              ))}
-              {stepCatalogFields.length > 12 && (
-                <li>{tf('+{n} more').replace('{n}', String(stepCatalogFields.length - 12))}</li>
-              )}
-            </ul>
+            <details className="mt-2 text-xs text-muted-foreground">
+              <summary className="cursor-pointer select-none font-medium text-primary">{tf('Questions covered')}</summary>
+              <ul className="mt-1.5 list-disc pl-5 space-y-0.5">
+                {stepCatalogFields.slice(0, 12).map((f) => (
+                  <li key={f.name}>{f.label}</li>
+                ))}
+                {stepCatalogFields.length > 12 && (
+                  <li>{tf('+{n} more').replace('{n}', String(stepCatalogFields.length - 12))}</li>
+                )}
+              </ul>
+            </details>
           </div>
           {regenModal}
         </>

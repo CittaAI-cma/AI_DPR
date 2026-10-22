@@ -88,6 +88,8 @@ export interface IndividualDPRDocumentViewProps {
   onEditBlock?: (sectionId: string, blockId: string, text: string) => void;
   /** Live editing view: list every section and field, filled or not. Preview and PDF leave this off. */
   showEmpty?: boolean;
+  /** Form-mode report: every section up to this step is always drawn (this step's empty answers as dashes), so the section numbers and places line up with the steps. */
+  focusStep?: number;
   /** Mark the first cover, paragraph, table, header, and watermark for the setup guide preview. */
   markStyleSpots?: boolean;
 }
@@ -370,10 +372,13 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   onImageFrame,
   onEditField,
   onEditBlock,
-  showEmpty = false,
+  showEmpty: showEmptyProp = false,
+  focusStep,
   markStyleSpots = false,
 }) => {
   const tf = useClusterFormText();
+  // Shown for every section when asked; the focused step's section also shows its empty answers (switched on only while that section is drawn).
+  let showEmpty = showEmptyProp;
   const data = extractIndividualDocData(dpr, project);
   const schemeCode = extractSchemeCode(dpr, project, data);
   const schemeUi = getSchemeUiTemplate(schemeCode);
@@ -827,6 +832,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const sectionHasAnswers = (def: (typeof catalogSteps)[number]) => {
     if (style?.hiddenSectionIds.includes(def.id)) return false;
     if (showEmpty) return true;
+    if (focusStep !== undefined && def.n <= focusStep) return true;
     if (def.id === 'uploads' || def.contentStep === 18) {
       return uploads.some((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label])) || blockVisible(def.id);
     }
@@ -998,7 +1004,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         const num = reportEntries.findIndex((entry) => entry.id === def.id) + 1;
         const hot = activeSectionId === def.id;
         if (def.id === 'uploads' || def.contentStep === 18) {
-          const uploaded = showEmpty
+          const uploaded = showEmptyProp || def.n === focusStep
             ? uploads
             : uploads.filter((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label]));
           return (
@@ -1023,6 +1029,11 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           );
         }
         const fields = getIndividualDocFields(def.contentStep, schemeCode, budget, kind);
+        showEmpty = showEmptyProp || (focusStep !== undefined && def.n === focusStep);
+        const fieldRows = renderSectionFields(fields);
+        const parties = def.contentStep === 12 || def.contentStep === 13 ? <ScheduleDocParties data={data} showEmpty={showEmpty} /> : null;
+        const finance = def.contentStep === 15 ? <FinanceDocSummary data={data} showEmpty={showEmpty} /> : null;
+        showEmpty = showEmptyProp;
         return (
           <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}${onOpenInForm ? ' has-open-form' : ''}`}>
             {openInFormButton(def.n)}
@@ -1030,9 +1041,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               <span className="individual-sec-num">{num}</span>
               {title}
             </h2>
-            {def.contentStep === 12 || def.contentStep === 13 ? <ScheduleDocParties data={data} showEmpty={showEmpty} /> : null}
-            {def.contentStep === 15 ? <FinanceDocSummary data={data} showEmpty={showEmpty} /> : null}
-            {renderSectionFields(fields)}
+            {parties}
+            {finance}
+            {fieldRows}
             {renderBlocks(def.id)}
           </section>
         );

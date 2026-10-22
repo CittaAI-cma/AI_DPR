@@ -1,14 +1,13 @@
 // @ts-nocheck
 import { checkUploadFile } from '@/lib/security/fileGuard';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronDown, Eye, EyeOff, GripVertical, ImagePlus, Maximize2, Plus, Redo2, Type, Undo2, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, ClipboardList, Eye, EyeOff, FileText, GripVertical, ImagePlus, ListOrdered, Maximize2, Palette, Plus, Redo2, RotateCcw, Type, Undo2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { templateSpecimenDpr, templateSpecimenStyle } from '@/lib/individualDpr/templateSpecimen';
 import { TemplateThumb } from '@/components/individual-dpr/TemplateThumb';
 import { useDialogFocus, useDialogPresence } from '@/lib/useDialog';
-import { EditModeToggle } from '@/components/individual-dpr/EditModeToggle';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
   FONT_CHOICES,
@@ -75,11 +74,16 @@ async function readImageFile(file: File): Promise<string> {
 function StyleGroup({ title, open, onToggle, children }) {
   // The content is built the first time the group opens and then kept, so reopening is instant and nothing re-renders.
   const [seen, setSeen] = useState(!!open);
+  const box = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (open) setSeen(true);
+    if (!open) return undefined;
+    setSeen(true);
+    // The group above may be closing, which moves this one: keep it in view once things have settled.
+    const timer = window.setTimeout(() => box.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 230);
+    return () => window.clearTimeout(timer);
   }, [open]);
   return (
-    <section className="rounded-md border border-slate-200 bg-white">
+    <section ref={box} className="rounded-md border border-slate-200 bg-white">
       <button
         type="button"
         aria-expanded={open}
@@ -126,6 +130,11 @@ export function StyleEditor({
   onEditMode,
   onChange,
   onSave,
+  saveButton,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onClose,
   saving,
   canSaveSchemeDefault,
@@ -228,7 +237,8 @@ export function StyleEditor({
   useDialogFocus(previewOpen, previewDialogRef);
   useDialogFocus(!!templatePreview, templateDialogRef);
   const [openGroups, setOpenGroups] = useState({});
-  const toggleGroup = (id) => setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
+  // One group open at a time: opening one closes the rest.
+  const toggleGroup = (id) => setOpenGroups((current) => (current[id] ? {} : { [id]: true }));
   const [editStep, setEditStep] = useState(null);
   const [zoom, setZoom] = useState(0.55);
   const [fitWidth, setFitWidth] = useState(true);
@@ -367,7 +377,11 @@ export function StyleEditor({
     scrollLiveToSection(step);
   };
 
+  // Only a request made while this editor is on screen counts (it is mounted again when the page switches back from the form layout).
+  const seenNonce = useRef(editNonce);
   useEffect(() => {
+    if (seenNonce.current === editNonce) return;
+    seenNonce.current = editNonce;
     if (!editNonce || editStepN == null) return;
     const step = steps.find((item) => item.n === editStepN);
     if (step) {
@@ -616,10 +630,9 @@ export function StyleEditor({
   );
 
   const sectionsPanel = (
-    <aside className="flex h-full min-h-0 flex-col border-border bg-white lg:border-r">
+    <aside className="flex h-full min-h-0 flex-col border-border bg-white lg:border-r lg:pt-12">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
-        <p className="text-sm font-semibold">{tf('Sections')}</p>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between gap-2">
           <button
             type="button"
             className="inline-flex items-center gap-1 text-xs font-medium text-primary"
@@ -846,13 +859,10 @@ export function StyleEditor({
   );
 
   const stylePanel = (
-    <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l">
+    <aside className="flex h-full min-h-0 flex-col bg-white lg:border-l lg:pt-12">
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
         <div className="flex items-center justify-between px-1 pb-1">
           <p className="text-xs text-slate-500">{tf('Changes apply to this report only.')}</p>
-          <button type="button" onClick={() => setAllGroups(!anyGroupOpen)} className="text-xs font-medium text-teal-700 hover:underline">
-            {anyGroupOpen ? tf('Collapse all') : tf('Expand all')}
-          </button>
         </div>
         <StyleGroup title={tf('Templates')} open={!!openGroups.presets} onToggle={() => toggleGroup('presets')}>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-3">
@@ -1302,16 +1312,17 @@ export function StyleEditor({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-slate-100">
-      <div className="relative z-[55] border-b bg-white px-3 py-2">{stepsBar}</div>
-            <div className="relative z-[55] flex flex-wrap items-center justify-between gap-2 border-b bg-white px-3 py-1.5">
-              <div className="flex items-center gap-1">
+      <div className="relative z-[55] border-b bg-white"><div className="mx-auto w-full max-w-7xl px-4 py-2">{stepsBar}</div></div>
+            <div className="relative z-[55] lg:pointer-events-none lg:-mb-12">
+            <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2">
+              <div className="flex flex-wrap items-center gap-3 lg:pointer-events-auto">
                 {/* The same three tabs, in the same place and the same fixed width, in both modes (so nothing shifts when the first one changes between Form and Document). */}
-                <div role="tablist" aria-label={tf('Panels')} className="-my-1.5 mr-1 flex shrink-0 self-stretch">
+                <div role="tablist" aria-label={tf('Panels')} className="flex shrink-0 gap-0.5 rounded-xl border border-white/70 bg-white/40 p-1 shadow-sm backdrop-blur-md">
                   {([
-                    [docMode ? tf('Document') : tf('Form'), homeActive, goHome],
-                    [tf('Sections'), tabActive('sections'), () => chooseTab('sections')],
-                    [tf('Style'), tabActive('style'), () => chooseTab('style')],
-                  ] as const).map(([label, active, onClick]) => (
+                    [docMode ? tf('Document') : tf('Form'), homeActive, goHome, docMode ? FileText : ClipboardList],
+                    [tf('Sections'), tabActive('sections'), () => chooseTab('sections'), ListOrdered],
+                    [tf('Style'), tabActive('style'), () => chooseTab('style'), Palette],
+                  ] as const).map(([label, active, onClick, Icon]) => (
                     <button
                       key={label}
                       type="button"
@@ -1319,75 +1330,81 @@ export function StyleEditor({
                       aria-selected={active}
                       data-panel-toggle
                       onClick={onClick}
-                      className={`w-28 truncate border-b-2 px-2 text-center text-sm font-semibold transition-colors ${
-                        active ? 'border-teal-800 text-teal-900' : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                      className={`inline-flex h-8 w-9 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-all duration-200 sm:w-28 ${
+                        active ? 'bg-white/90 text-teal-900 shadow-sm ring-1 ring-slate-300/70' : 'text-slate-500 hover:bg-white/40 hover:text-slate-800'
                       }`}
+                      title={label}
+                      aria-label={label}
                     >
-                      {label}
+                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span className="max-sm:hidden">{label}</span>
                     </button>
                   ))}
                 </div>
-                <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Undo')} aria-label={tf('Undo')} onClick={undo} disabled={historyTick < 0 || !past.current.length}><Undo2 className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title={tf('Redo')} aria-label={tf('Redo')} onClick={redo} disabled={historyTick < 0 || !future.current.length}><Redo2 className="h-4 w-4" /></Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  title={tf("Restore the scheme's original look.")}
-                  onClick={() => {
-                    past.current = [];
-                    future.current = [];
-                    setHistoryTick((n) => n + 1);
-                    onChange(defaultStyleForScheme(schemeCode));
-                  }}
-                >
-                  {tf('Reset')}
-                </Button>
+                <span aria-hidden="true" className="hidden h-6 w-px bg-slate-300/60 sm:block" />
+                <div className="flex items-center gap-0.5 rounded-lg border border-white/70 bg-white/40 p-0.5 shadow-sm backdrop-blur-md">
+                  <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Undo')} aria-label={tf('Undo')} onClick={onUndo || undo} disabled={onUndo ? !canUndo : historyTick < 0 || !past.current.length}><Undo2 className="h-4 w-4" /></Button>
+                  <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Redo')} aria-label={tf('Redo')} onClick={onRedo || redo} disabled={onRedo ? !canRedo : historyTick < 0 || !future.current.length}><Redo2 className="h-4 w-4" /></Button>
+                  <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-slate-300/60" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-xs max-sm:w-7 max-sm:px-0"
+                    title={tf("Restore the scheme's original look.")}
+                    aria-label={tf('Reset')}
+                    onClick={() => {
+                      past.current = [];
+                      future.current = [];
+                      setHistoryTick((n) => n + 1);
+                      onChange(defaultStyleForScheme(schemeCode));
+                    }}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="max-sm:hidden">{tf('Reset')}</span>
+                  </Button>
+                </div>
               </div>
-              <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-              <div className="flex items-center gap-1">
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-2 lg:pointer-events-auto">
+              <div className="flex items-center gap-0.5 rounded-lg border border-white/70 bg-white/40 p-0.5 shadow-sm backdrop-blur-md">
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Zoom out')} aria-label={tf('Zoom out')} onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
                   <ZoomOut className="h-4 w-4" />
                 </Button>
-                <span className="w-10 text-center text-xs">{Math.round(zoom * 100)}%</span>
+                <span className="w-10 text-center text-xs tabular-nums">{Math.round(zoom * 100)}%</span>
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Zoom in')} aria-label={tf('Zoom in')} onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.min(1.35, Math.round((z + 0.05) * 100) / 100)); }}>
                   <ZoomIn className="h-4 w-4" />
                 </Button>
+                <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-slate-300/60" />
                 <Button type="button" variant="ghost" size="sm" className="h-7 whitespace-nowrap px-2 text-xs" title={tf('Fit the page to the available width.')} onClick={() => { fitWidthRef.current = true; setFitWidth(true); }}>
                   {tf('Fit page')}
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 shrink-0 gap-1 whitespace-nowrap px-2 text-xs"
-                  title={tf('See the final document, read-only.')}
-                  onClick={() => setPreviewOpen(true)}
-                >
-                  <Maximize2 className="h-4 w-4" />
-                  {tf('Preview')}
-                </Button>
               </div>
-              {onEditMode ? (
-                <EditModeToggle
-                  mode={editMode}
-                  onChange={(mode) => {
-                    setPanel(null);
-                    setFormPaneOpen(true);
-                    onEditMode(mode);
-                  }}
-                />
-              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 shrink-0 gap-1.5 whitespace-nowrap border-white/70 bg-white/40 text-xs shadow-sm backdrop-blur-md hover:bg-white/60"
+                title={tf('See the final document, read-only.')}
+                onClick={() => setPreviewOpen(true)}
+              >
+                <Eye className="h-4 w-4" aria-hidden="true" />
+                <span className="max-sm:hidden">{tf('Preview')}</span>
+              </Button>
+              {saveButton ? (
+                saveButton({ disabled: !!saving || !!blocking })
+              ) : (
               <Button type="button" size="sm" className="h-8 whitespace-nowrap" title={tf('Keeps this look (fonts, layout, sections) on this DPR only.')} onClick={onSave} disabled={saving || blocking}>
                 {saving ? tf('Saving') : tf('Save on this DPR')}
               </Button>
+              )}
               </div>
             </div>
-      <div className="relative min-h-0 flex-1">
+            </div>
+      <div className="relative mx-auto min-h-0 w-full max-w-7xl flex-1 px-4 pb-3">
         <div className="flex h-full min-h-0">
           <div className="relative flex h-full min-h-0 min-w-0 flex-1 lg:flex-row-reverse">
             <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
-            <div ref={centerRef} data-dpr-scroll className="relative z-10 min-h-0 flex-1 overflow-auto bg-slate-100 p-3">
+            <div ref={centerRef} data-dpr-scroll data-dpr-inset={wide ? 48 : 0} className="relative z-10 min-h-0 flex-1 overflow-auto bg-slate-100 p-3 lg:pt-16">
               <div style={{ zoom }}>{sheet}</div>
             </div>
             </div>
@@ -1408,9 +1425,6 @@ export function StyleEditor({
             {...(!paneOpen ? { inert: '' } : {})}
           >
             <div className="flex h-full min-h-0 flex-col" style={{ width: Math.max(paneWidths.edit, editFloor.current), maxWidth: 720 }}>
-            <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
-              <p className="min-w-0 truncate text-sm font-semibold">{tf(paneTab === 'form' ? 'Form' : paneTab === 'sections' ? 'Sections' : 'Style')}</p>
-            </div>
             <div key={paneTab} className="motion-tab min-h-0 flex-1 overflow-hidden flex flex-col">
             {paneTab === 'sections' || (paneTab === 'form' && !renderEditor) ? sectionsPanel : paneTab === 'style' ? stylePanel : (
               <>
