@@ -301,8 +301,8 @@ export function ReportGuide() {
         <h1 className="mt-3 text-3xl font-bold">{t('reportGuide.title')}</h1>
         <p className="mt-2 text-muted-foreground">{t('reportGuide.intro')}</p>
 
-        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
-        <div className="order-2 rounded-2xl border bg-white p-5 shadow-sm sm:p-6 lg:order-1">
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+        <div className="order-2 min-w-0 rounded-2xl border bg-white p-5 shadow-sm sm:p-6 lg:order-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
             {t('reportGuide.stepOf', { current: step + 1, total: steps.length })}
           </p>
@@ -329,7 +329,7 @@ export function ReportGuide() {
           {step === 0 ? <p className="mt-2 text-right text-xs text-slate-500">{t('reportGuide.skipHint')}</p> : null}
         </div>
 
-        <div className="order-1 lg:sticky lg:top-4 lg:order-2">
+        <div className="order-1 min-w-0 lg:sticky lg:top-4 lg:order-2">
           <p className="text-sm font-semibold text-slate-900">{t('reportGuide.sample')}</p>
           <p className="mt-1 text-xs text-slate-500">{t('reportGuide.sampleHint')}</p>
           {step === 0 ? <p className="mt-1 text-xs text-slate-500">{t('reportGuide.lookAlso')}</p> : null}

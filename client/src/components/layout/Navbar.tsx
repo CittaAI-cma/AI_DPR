@@ -94,28 +94,30 @@ export const Navbar: React.FC = () => {
 
             {isAuthenticated ? (
               <>
-                <div className="hidden sm:flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-1 lg:gap-3">
                   <a href="/profile" onClick={(e) => handleLinkClick(e, '/profile')}>
-                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2" aria-label={user?.name || tf('Profile')} title={user?.name}>
                       <User className="h-4 w-4" />
-                      <span className="font-medium">{user?.name}</span>
-                      <RoleBadge role={user?.role} />
+                      <span className="hidden max-w-[10rem] truncate font-medium xl:inline">{user?.name}</span>
+                      <span className="hidden xl:inline"><RoleBadge role={user?.role} /></span>
                     </Button>
                   </a>
                   <a href="/account/privacy" onClick={(e) => handleLinkClick(e, '/account/privacy')}>
-                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2" aria-label={t('nav.privacy')} title={t('nav.privacy')}>
                       <ShieldCheck className="h-4 w-4" />
-                      <span className="font-medium">{t('nav.privacy')}</span>
+                      <span className="hidden font-medium lg:inline">{t('nav.privacy')}</span>
                     </Button>
                   </a>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
+                    aria-label={t('common.logout')}
+                    title={t('common.logout')}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t('common.logout')}
+                    <LogOut className="h-4 w-4 lg:mr-2" aria-hidden="true" />
+                    <span className="hidden lg:inline">{t('common.logout')}</span>
                   </Button>
                 </div>
                 <Button

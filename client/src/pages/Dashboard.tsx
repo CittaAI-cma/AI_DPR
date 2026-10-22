@@ -310,9 +310,9 @@ export const Dashboard: React.FC = () => {
     <Layout>
       <div className="space-y-8 pb-8">
         {/* Hero Section */}
-        <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
+        <div className="mb-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">
                 {t('dashboard.welcomeBack', { name: user?.name })}
               </h1>
@@ -322,7 +322,7 @@ export const Dashboard: React.FC = () => {
               {t(ROLE_META[toAppRole(user?.role)].descriptionKey)}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full lg:w-auto">
             {canCreateDpr(user?.role) && (
               <>
                 <Button

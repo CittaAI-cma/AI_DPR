@@ -759,11 +759,11 @@ export const ClusterDPRCreation: React.FC = () => {
             {/* Right Panel: Preview */}
             {(previewMode === 'preview' || previewMode === 'split') && (
               <div className="space-y-6">
-                <Card className="sticky top-[13.25rem] max-h-[calc(100vh-14rem)] overflow-hidden flex flex-col">
+                <Card className="max-h-[70vh] overflow-hidden flex flex-col lg:sticky lg:top-[13.25rem] lg:max-h-[calc(100vh-14rem)]">
                   <CardHeader className="flex-shrink-0 border-b border-border">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <CardTitle>{t('clusterDpr.livePreview')}</CardTitle>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {/* Zoom Controls */}
                         <div className="flex items-center gap-1 border rounded-lg p-1">
                           <Button
