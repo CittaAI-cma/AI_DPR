@@ -148,9 +148,9 @@ export const Projects: React.FC = () => {
               <div className="h-20 w-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
                 <Building2 className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h2 className="text-xl font-semibold mb-2">
                 {searchTerm ? t('projects.noProjectsFound') : t('projects.noProjectsYet')}
-              </h3>
+              </h2>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 {searchTerm 
                   ? t('projects.tryAdjusting') 

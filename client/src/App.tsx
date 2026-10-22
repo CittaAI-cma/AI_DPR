@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { Suspense, lazy } from 'react';
 import { RouteTracker, ScrollToTop } from '@/lib/navHistory';
+import { RouteAnnouncer } from '@/lib/routeA11y';
 import { PageLoading } from '@/components/ui/PageLoading';
 import { SessionManager } from '@/components/session/SessionManager';
 import { ConfirmProvider } from '@/components/ui/ConfirmProvider';
@@ -9,6 +10,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Landing } from './pages/Landing';
+import { Accessibility } from './pages/Accessibility';
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
 const Register = lazy(() => import('./pages/Register').then((m) => ({ default: m.Register })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -77,6 +79,7 @@ function App() {
       />
       <RouteTracker />
       <ScrollToTop />
+      <RouteAnnouncer />
       <SessionManager />
       <ThemeApplier />
       <Suspense fallback={<PageLoading />}>
@@ -85,6 +88,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
         
         <Route

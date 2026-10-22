@@ -65,7 +65,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <main id="main-content" tabIndex={-1} className="outline-none min-h-screen flex items-center justify-center bg-background p-4">
       <div className="fixed right-4 top-4 z-50">
         <ThemeToggle />
       </div>
@@ -111,6 +111,7 @@ export const Login: React.FC = () => {
               <Input
                 label={t('auth.email')}
                 type="email"
+                autoComplete="username"
                 placeholder="your@email.com"
                 value={formData.email}
                 onChange={(e) =>
@@ -122,6 +123,7 @@ export const Login: React.FC = () => {
               <Input
                 label={t('auth.password')}
                 type="password"
+                autoComplete="current-password"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) =>
@@ -188,6 +190,6 @@ export const Login: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

@@ -1178,7 +1178,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)} className="relative gap-2" aria-label={tf('Check my answers')} title={tf('Looks for missing, unclear or unusual answers across the whole form.')}>
                       <ClipboardCheck className="h-4 w-4" />
                       <span className="hidden xl:inline">{tf('Check my answers')}</span>
-                      {allFindings.length ? <span className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white max-xl:absolute max-xl:-right-1.5 max-xl:-top-1.5">{allFindings.length}</span> : null}
+                      {allFindings.length ? <span className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-slate-900 max-xl:absolute max-xl:-right-1.5 max-xl:-top-1.5">{allFindings.length}</span> : null}
                     </Button>
                     <Button
                       variant="primary"
@@ -1678,7 +1678,10 @@ export const IndividualDPRCreation: React.FC = () => {
                     */}
                     <div
                       id="dpr-preview-scroll"
-                      className="w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+                      role="region"
+                      aria-label={tf('Live DPR Preview (Read only)')}
+                      tabIndex={0}
+                      className="w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
                     >
                       <div
                         id="dpr-preview-container"

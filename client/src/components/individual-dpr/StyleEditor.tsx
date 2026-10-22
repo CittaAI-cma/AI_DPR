@@ -511,6 +511,58 @@ export function StyleEditor({
     onActiveSection?.(null);
   };
 
+  // Moving a section without dragging: focus the handle and press the Up or Down arrow (the same move the drag makes).
+  const moveBy = (id: string, delta: number) => {
+    const order = layoutOrder(steps, style);
+    const at = order.indexOf(id);
+    const target = order[at + delta];
+    if (at < 0 || !target) return;
+    commit({ ...style, sectionOrder: moveSection(order, steps, id, target, delta < 0 ? 'before' : 'after') });
+  };
+  const grip = (id: string, name: string) => (
+    <span className="inline-flex shrink-0 items-center gap-0.5">
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={`${tf('Move')}: ${name}. ${tf('Use the Up and Down arrow keys')}`}
+        title={tf('Drag, or press the Up and Down arrow keys to move')}
+        onMouseDown={(event) => event.stopPropagation()}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            moveBy(id, event.key === 'ArrowUp' ? -1 : 1);
+          }
+        }}
+        className="inline-flex shrink-0 cursor-grab rounded text-slate-400 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <GripVertical className="h-4 w-4" aria-hidden />
+      </span>
+      {/* A click alternative to dragging (shown when the row is pointed at, focused, or on a touch screen). */}
+      <span className="a11y-move inline-flex items-center">
+        <button
+          type="button"
+          className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-500 hover:bg-white focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={`${tf('Move up')}: ${name}`}
+          title={tf('Move up')}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => moveBy(id, -1)}
+        >
+          <ChevronDown className="h-4 w-4 rotate-180" aria-hidden />
+        </button>
+        <button
+          type="button"
+          className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-500 hover:bg-white focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={`${tf('Move down')}: ${name}`}
+          title={tf('Move down')}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => moveBy(id, 1)}
+        >
+          <ChevronDown className="h-4 w-4" aria-hidden />
+        </button>
+      </span>
+    </span>
+  );
+
   const onDrop = (targetId, event) => {
     event.preventDefault();
     if (!dragId || dragId === targetId) {
@@ -731,7 +783,7 @@ export function StyleEditor({
               >
                 {dropLine(token, 'before')}
                 {dropLine(token, 'after')}
-                <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
+                {grip(token, picture.name)}
                 <span className="min-w-0 flex-1 truncate text-left">{picture.name}</span>
                 <button
                   type="button"
@@ -778,7 +830,7 @@ export function StyleEditor({
               >
                 {dropLine(section.id, 'before')}
                 {dropLine(section.id, 'after')}
-                <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
+                {grip(section.id, section.title)}
                 <span className="w-5 shrink-0 text-xs text-slate-500">{num}</span>
                 <input
                   className="min-w-0 flex-1 bg-transparent text-sm"
@@ -831,7 +883,7 @@ export function StyleEditor({
             >
               {dropLine(step.id, 'before')}
               {dropLine(step.id, 'after')}
-              <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-slate-400" aria-hidden />
+              {grip(step.id, tf(step.title))}
               <span className="w-5 shrink-0 text-xs text-slate-500">{num}</span>
               <button
                 type="button"
@@ -1317,7 +1369,7 @@ export function StyleEditor({
             <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2">
               <div className="flex flex-wrap items-center gap-3 lg:pointer-events-auto">
                 {/* The same three tabs, in the same place and the same fixed width, in both modes (so nothing shifts when the first one changes between Form and Document). */}
-                <div role="tablist" aria-label={tf('Panels')} className="flex shrink-0 gap-0.5 rounded-xl border border-white/70 bg-white/40 p-1 shadow-sm backdrop-blur-md">
+                <div role="tablist" aria-label={tf('Panels')} className="flex shrink-0 gap-0.5 rounded-xl border border-white/70 bg-white/40 p-1 shadow-sm backdrop-blur-md dark:border-white/15 dark:bg-white/5">
                   {([
                     [docMode ? tf('Document') : tf('Form'), homeActive, goHome, docMode ? FileText : ClipboardList],
                     [tf('Sections'), tabActive('sections'), () => chooseTab('sections'), ListOrdered],
@@ -1331,7 +1383,7 @@ export function StyleEditor({
                       data-panel-toggle
                       onClick={onClick}
                       className={`inline-flex h-8 w-9 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-all duration-200 sm:w-28 ${
-                        active ? 'bg-white/90 text-teal-900 shadow-sm ring-1 ring-slate-300/70' : 'text-slate-500 hover:bg-white/40 hover:text-slate-800'
+                        active ? 'bg-white/90 text-teal-900 shadow-sm ring-1 ring-slate-300/70 dark:bg-slate-700 dark:text-white dark:ring-white/20' : 'text-slate-600 hover:bg-white/40 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white'
                       }`}
                       title={label}
                       aria-label={label}
@@ -1341,11 +1393,11 @@ export function StyleEditor({
                     </button>
                   ))}
                 </div>
-                <span aria-hidden="true" className="hidden h-6 w-px bg-slate-300/60 sm:block" />
-                <div className="flex items-center gap-0.5 rounded-lg border border-white/70 bg-white/40 p-0.5 shadow-sm backdrop-blur-md">
+                <span aria-hidden="true" className="hidden h-6 w-px bg-slate-300/60 dark:bg-white/20 sm:block" />
+                <div className="flex items-center gap-0.5 rounded-lg border border-white/70 bg-white/40 p-0.5 shadow-sm backdrop-blur-md dark:border-white/15 dark:bg-white/5">
                   <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Undo')} aria-label={tf('Undo')} onClick={onUndo || undo} disabled={onUndo ? !canUndo : historyTick < 0 || !past.current.length}><Undo2 className="h-4 w-4" /></Button>
                   <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Redo')} aria-label={tf('Redo')} onClick={onRedo || redo} disabled={onRedo ? !canRedo : historyTick < 0 || !future.current.length}><Redo2 className="h-4 w-4" /></Button>
-                  <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-slate-300/60" />
+                  <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-slate-300/60 dark:bg-white/20" />
                   <Button
                     type="button"
                     variant="ghost"
@@ -1366,7 +1418,7 @@ export function StyleEditor({
                 </div>
               </div>
               <div className="ml-auto flex flex-wrap items-center justify-end gap-2 lg:pointer-events-auto">
-              <div className="flex items-center gap-0.5 rounded-lg border border-white/70 bg-white/40 p-0.5 shadow-sm backdrop-blur-md">
+              <div className="flex items-center gap-0.5 rounded-lg border border-white/70 bg-white/40 p-0.5 shadow-sm backdrop-blur-md dark:border-white/15 dark:bg-white/5">
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Zoom out')} aria-label={tf('Zoom out')} onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.max(0.22, Math.round((z - 0.05) * 100) / 100)); }}>
                   <ZoomOut className="h-4 w-4" />
                 </Button>
@@ -1374,7 +1426,7 @@ export function StyleEditor({
                 <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0" title={tf('Zoom in')} aria-label={tf('Zoom in')} onClick={() => { fitWidthRef.current = false; setFitWidth(false); setZoom((z) => Math.min(1.35, Math.round((z + 0.05) * 100) / 100)); }}>
                   <ZoomIn className="h-4 w-4" />
                 </Button>
-                <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-slate-300/60" />
+                <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-slate-300/60 dark:bg-white/20" />
                 <Button type="button" variant="ghost" size="sm" className="h-7 whitespace-nowrap px-2 text-xs" title={tf('Fit the page to the available width.')} onClick={() => { fitWidthRef.current = true; setFitWidth(true); }}>
                   {tf('Fit page')}
                 </Button>
@@ -1383,7 +1435,7 @@ export function StyleEditor({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 shrink-0 gap-1.5 whitespace-nowrap border-white/70 bg-white/40 text-xs shadow-sm backdrop-blur-md hover:bg-white/60"
+                className="h-8 shrink-0 gap-1.5 whitespace-nowrap border-white/70 bg-white/40 text-xs shadow-sm backdrop-blur-md hover:bg-white/60 dark:border-white/15 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10"
                 title={tf('See the final document, read-only.')}
                 onClick={() => setPreviewOpen(true)}
               >

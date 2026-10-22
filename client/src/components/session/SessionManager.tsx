@@ -1,3 +1,4 @@
+import { ModalFocus } from '@/components/ui/ModalFocus';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -167,6 +168,7 @@ export const SessionManager: React.FC = () => {
 
   if (phase === 'warning') {
     return (
+      <ModalFocus>
       <div className="motion-overlay fixed inset-0 z-[190] flex items-center justify-center bg-black/40 p-4" role="alertdialog" aria-modal="true" aria-labelledby="warn-title">
         <div className="w-full max-w-sm space-y-4 rounded-xl border border-amber-300 bg-background p-6 shadow-xl">
           <h2 id="warn-title" className="text-lg font-semibold">{tf('Are you still there?')}</h2>
@@ -180,6 +182,7 @@ export const SessionManager: React.FC = () => {
           </div>
         </div>
       </div>
+      </ModalFocus>
     );
   }
 

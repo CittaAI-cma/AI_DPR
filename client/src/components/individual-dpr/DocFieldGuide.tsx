@@ -17,6 +17,7 @@ import { regenerateStepFieldSuggestion, applyCatalogSuggestionToForm } from '@/l
 import { BUSINESS_SKILLS, matchBusinessSkillLocal } from '@/lib/individualDpr/businessSkills';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { MicButton } from '@/components/ui/MicButton';
+import { ModalFocus } from '@/components/ui/ModalFocus';
 import { appendSpoken } from '@/lib/voice/spokenValue';
 import { applyFieldValue } from '@/lib/individualDpr/applyFieldValue';
 import { missingIndividualRequired } from '@/lib/requiredStepFields';
@@ -493,6 +494,7 @@ export function DocFieldGuide({
         : null}
       {sectionAi
         ? createPortal(
+            <ModalFocus onEscape={() => setSectionAi(false)}>
             <div className="motion-overlay fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/50 p-4 no-print" data-doc-guide-modal onMouseDown={(event) => { if (event.target === event.currentTarget) setSectionAi(false); }}>
               <div role="dialog" aria-modal="true" aria-label={tf('AI help for this section')} className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-4 shadow-2xl">
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -515,7 +517,8 @@ export function DocFieldGuide({
                   onApplySuggestion={(name, content) => write(sectionStep, name, content)}
                 />
               </div>
-            </div>,
+            </div>
+            </ModalFocus>,
             document.body
           )
         : null}
@@ -652,7 +655,7 @@ function NextRequiredChip({ missing, focusedPath, onJump }: { missing: Array<{ p
       style={{ left: anchor.left, top: anchor.top, transform: 'translate(-50%, -100%)' }}
     >
       {tf('{n} required left').replace('{n}', String(missing.length))}
-      <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5">
+      <span className="inline-flex items-center gap-1 rounded-full bg-black/25 px-2 py-0.5">
         {tf('Jump to next')}
         <ArrowRight className="h-3 w-3" aria-hidden="true" />
       </span>

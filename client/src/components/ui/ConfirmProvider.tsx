@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
+import { useDialogFocus } from '@/lib/useDialog';
 import { Button } from '@/components/ui/Button';
 
 export interface ConfirmOptions {
@@ -81,6 +82,9 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => document.removeEventListener('click', onClick, true);
   }, [confirm]);
 
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(!!options, panelRef);
+
   useEffect(() => {
     if (!options) return;
     document.getElementById('confirm-cancel')?.focus();
@@ -102,7 +106,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
           aria-labelledby="confirm-title"
           onClick={() => settle(false)}
         >
-          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div ref={panelRef} className="w-full max-w-md rounded-xl bg-background p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
                 <AlertTriangle className="h-5 w-5 text-red-700" />

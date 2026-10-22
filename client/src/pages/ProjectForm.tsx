@@ -128,10 +128,11 @@ export const ProjectForm: React.FC = () => {
               />
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="project-type" className="block text-sm font-medium mb-2">
                   {t('projects.projectType')}
                 </label>
                 <select
+                  id="project-type"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={formData.projectType}
                   onChange={(e) =>
@@ -148,10 +149,11 @@ export const ProjectForm: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="project-sector" className="block text-sm font-medium mb-2">
                   {t('projects.industrySector')} *
                 </label>
                 <select
+                  id="project-sector"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={formData.industrySector}
                   onChange={(e) =>

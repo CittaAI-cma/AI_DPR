@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
+import { ModalFocus } from '@/components/ui/ModalFocus';
 import { Sparkles, Loader2, ChevronDown, ChevronUp, Check, RefreshCw, X } from 'lucide-react';
 import { AISuggestionsService, AISuggestion } from '@/services/aiSuggestions.service';
 import { useClusterDPRStore } from '@/store/clusterDPRStore';
@@ -876,6 +877,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     const regenModal =
       regenTarget &&
       createPortal(
+        <ModalFocus onEscape={closeRegenerateModal}>
         <div
           className="motion-overlay fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6"
           role="dialog"
@@ -949,7 +951,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
               </button>
             </div>
           </div>
-        </div>,
+        </div>
+        </ModalFocus>,
         document.body
       );
 

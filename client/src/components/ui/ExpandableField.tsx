@@ -17,6 +17,7 @@ import { AISuggestionsService } from '@/services/aiSuggestions.service';
 import { getUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { BUSINESS_SKILLS, matchBusinessSkillLocal } from '@/lib/individualDpr/businessSkills';
 import { useTranslation } from 'react-i18next';
+import { useDialogFocus } from '@/lib/useDialog';
 
 type EditorKind = 'input' | 'textarea' | 'select';
 
@@ -83,6 +84,8 @@ function FieldExpandModal({
   const { t } = useTranslation();
   const voiceOn = useVoiceEnabled();
   const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(open, panelRef);
   const editorRef = useRef<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement | null>(null);
   const [improving, setImproving] = useState(false);
   const [matching, setMatching] = useState(false);
@@ -219,7 +222,7 @@ function FieldExpandModal({
         aria-label={tf('Cancel')}
         onClick={onCancel}
       />
-      <div className="relative z-10 flex w-full max-w-3xl max-h-[90vh] flex-col rounded-xl border border-border bg-background shadow-2xl">
+      <div ref={panelRef} className="relative z-10 flex w-full max-w-3xl max-h-[90vh] flex-col rounded-xl border border-border bg-background shadow-2xl">
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
           <p id={titleId} className="min-w-0 flex-1 text-base font-semibold text-foreground truncate">
             {title || tf('Edit field')}

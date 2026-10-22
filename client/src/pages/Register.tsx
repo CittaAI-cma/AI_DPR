@@ -119,7 +119,7 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 py-12">
+    <main id="main-content" tabIndex={-1} className="outline-none min-h-screen flex items-center justify-center bg-background p-4 py-12">
       <div className="fixed right-4 top-4 z-50">
         <ThemeToggle />
       </div>
@@ -154,6 +154,7 @@ export const Register: React.FC = () => {
                 <Input
                   label={t('auth.name')}
                   type="text"
+                  autoComplete="name"
                   placeholder={tf('John Doe')}
                   value={formData.name}
                   onChange={(e) =>
@@ -188,6 +189,7 @@ export const Register: React.FC = () => {
               <Input
                 label={t('auth.email')}
                 type="email"
+                autoComplete="email"
                 placeholder="your@email.com"
                 value={formData.email}
                 onChange={(e) =>
@@ -199,6 +201,7 @@ export const Register: React.FC = () => {
               <Input
                 label={t('auth.password')}
                 type="password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) =>
@@ -232,6 +235,7 @@ export const Register: React.FC = () => {
               <Input
                 label={t('auth.dateOfBirth')}
                 type="date"
+                autoComplete="bday"
                 value={formData.dateOfBirth}
                 onChange={(e) =>
                   setFormData({ ...formData, dateOfBirth: e.target.value })
@@ -281,6 +285,6 @@ export const Register: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

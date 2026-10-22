@@ -75,7 +75,7 @@ export const AcceptInvite: React.FC = () => {
       <div className="mx-auto max-w-lg px-4 py-10">
         <Card>
           <CardHeader>
-            <CardTitle>{tf('Set up your account')}</CardTitle>
+            <CardTitle as="h1">{tf('Set up your account')}</CardTitle>
           </CardHeader>
           <CardContent>
             {state === 'checking' ? <p className="text-sm text-muted-foreground">{tf('Checking your invitation...')}</p> : null}

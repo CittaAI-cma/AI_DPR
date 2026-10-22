@@ -27,7 +27,7 @@
     --primary-foreground: 0 0% 98%;
     /* Secondary: Orange - #fd7933 - Matching export-flow theme */
     --secondary: 18 98% 60%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary-foreground: 0 0% 9%;
     /* Success: Professional Green - #059669 (Emerald 600) - Growth, Success */
     --success: 160 84% 30%;
     --success-foreground: 0 0% 100%;
@@ -38,7 +38,7 @@
     --destructive: 354 100% 45%;
     --destructive-foreground: 0 0% 100%;
     --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted-foreground: 0 0% 38%;
     --accent: 18 98% 60%;
     --accent-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
@@ -78,12 +78,12 @@
     --primary: 172 42% 52%;
     --primary-foreground: 195 30% 8%;
     --secondary: 18 90% 58%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 0 0% 9%;
     --success: 160 70% 42%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 55%;
     --warning-foreground: 30 40% 10%;
-    --destructive: 0 72% 58%;
+    --destructive: 0 78% 64%;
     --destructive-foreground: 0 0% 100%;
     --muted: 195 18% 16%;
     --muted-foreground: 190 10% 66%;
@@ -1307,6 +1307,28 @@ html { scrollbar-gutter: stable; }
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
+
+
+/* Accessibility: keep a focused answer clear of the bars that float over the scrolling areas, and keep key cues in forced-colors mode. */
+#individual-dpr-form .fill-edit-scroll { scroll-padding-block: 1rem 5rem; }
+[data-dpr-scroll] { scroll-padding-top: 4.5rem; }
+@media (forced-colors: active) {
+  [data-step-dot]:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  [role='progressbar'] > div { forced-color-adjust: none; background: Highlight; }
+  .dpr-layout-in { animation: none; }
+}
+
+/* Move up / down buttons in the Sections list: out of the way until the row is pointed at or focused (always shown without a mouse). */
+.a11y-move { opacity: 0; width: 0; overflow: hidden; transition: opacity 0.15s ease; }
+li:hover .a11y-move, li:focus-within .a11y-move { opacity: 1; width: auto; overflow: visible; }
+@media (hover: none) { .a11y-move { opacity: 1; width: auto; overflow: visible; } }
+
+/* Dark theme: hard-coded white text on the (lighter, in dark mode) primary colour fails contrast; use the theme's own foreground instead. */
+.dark .bg-primary.text-white,
+.dark .bg-primary .text-white,
+.dark .bg-primary\/90.text-white,
+.dark button.bg-primary { color: hsl(var(--primary-foreground)); }
+.dark .bg-blue-50\/50 { background-color: hsl(210 35% 15%); }
 
 /* A step in the Form-mode list opening: its questions fade and slide down a little. */
 @media (prefers-reduced-motion: no-preference) {

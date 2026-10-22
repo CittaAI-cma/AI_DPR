@@ -1707,7 +1707,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
                     }
                   }}
                   disabled={Object.values(generatingImages).some(v => v)}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 text-base font-semibold rounded-lg transition-all"
+                  className="w-full bg-green-700 hover:bg-green-800 text-white px-6 py-3 text-base font-semibold rounded-lg transition-all"
                 >
                   {Object.values(generatingImages).some(v => v) ? (
                     <>

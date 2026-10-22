@@ -175,7 +175,7 @@ export const Landing: React.FC = () => {
         </nav>
       </header>
 
-      <main id="main">
+      <main id="main" className="theme-light text-foreground">
         {/* Hero Section */}
         <section id="hero" aria-labelledby="hero-title" className="relative scroll-mt-24 overflow-hidden bg-white">
           <div className="page-container pt-12 sm:pt-14 lg:pt-16 lg:[@media(max-height:820px)]:pt-10">
@@ -192,7 +192,7 @@ export const Landing: React.FC = () => {
                 <span className="whitespace-nowrap">{c.hero.nowrap}</span>
                 <span className="mt-1 block text-brand">{c.hero.accent}</span>
               </h1>
-              <p className="type-lead mx-auto mt-4 max-w-[44rem] text-[#7d888e] md:mt-5">
+              <p className="type-lead mx-auto mt-4 max-w-[44rem] text-[#5c676d] md:mt-5">
                 {c.hero.sub}
               </p>
               <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center md:mt-8">
@@ -235,7 +235,7 @@ export const Landing: React.FC = () => {
               <h2 id="benefits-title" className="type-section max-w-xl text-ink">
                 {c.benefits.title}
               </h2>
-              <p className="type-sub max-w-md text-[#7d888e] lg:text-right">
+              <p className="type-sub max-w-md text-[#5c676d] lg:text-right">
                 <span>{c.benefits.sub[0]}</span>
                 <span className="sm:block">{c.benefits.sub[1]}</span>
               </p>
@@ -256,7 +256,7 @@ export const Landing: React.FC = () => {
                 {c.features.title}
                 <span className="text-brand">{c.features.accent}</span>
               </h2>
-              <p className="type-sub mx-auto mt-4 max-w-xl text-[#7d888e]">
+              <p className="type-sub mx-auto mt-4 max-w-xl text-[#5c676d]">
                 {c.features.sub}
               </p>
             </>
@@ -271,7 +271,7 @@ export const Landing: React.FC = () => {
               <h2 id="how-title" className="type-section max-w-xl text-ink">
                 {c.how.title}
               </h2>
-              <p className="type-sub max-w-md text-[#7d888e] lg:text-right">
+              <p className="type-sub max-w-md text-[#5c676d] lg:text-right">
                 <span>{c.how.sub[0]}</span>
                 <span className="sm:block">{c.how.sub[1]}</span>
               </p>

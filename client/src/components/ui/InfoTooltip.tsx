@@ -77,10 +77,12 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({ content, className = '
         onFocus={() => setIsOpen(true)}
         onBlur={() => setIsOpen(false)}
         onClick={() => setIsOpen((open) => !open)}
-        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-help"
+        className="group/info -m-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-primary transition-colors cursor-help align-middle"
         aria-label={tf("Information")}
       >
-        <Info className="h-3 w-3" />
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 group-hover/info:bg-primary/20">
+          <Info className="h-3 w-3" aria-hidden="true" />
+        </span>
       </button>
 
       {isOpen &&

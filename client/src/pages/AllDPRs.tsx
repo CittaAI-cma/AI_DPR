@@ -572,7 +572,7 @@ export const AllDPRs: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-success" />
-                  <h3 className="font-semibold text-lg">{tf('DPR Uploaded Successfully!')}</h3>
+                  <h2 className="font-semibold text-lg">{tf('DPR Uploaded Successfully!')}</h2>
                 </div>
                 
                 {uploadResult.qualityAnalysis && (
@@ -640,6 +640,7 @@ export const AllDPRs: React.FC = () => {
             </div>
             <div className="flex flex-wrap items-center gap-2">
                 <select
+                  aria-label={tf('Status')}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
                   className="px-3 py-2 border-2 border-primary/20 rounded-lg focus:outline-none focus:border-primary bg-white text-sm"
@@ -652,6 +653,7 @@ export const AllDPRs: React.FC = () => {
                   <option value="rejected">{tf('Rejected')}</option>
                 </select>
                 <select
+                  aria-label={tf('Sort by')}
                   value={`${sortField}-${sortOrder}`}
                   onChange={(e) => {
                     const [field, order] = e.target.value.split('-');
@@ -710,9 +712,9 @@ export const AllDPRs: React.FC = () => {
                 <div className="h-20 w-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
                   <FileText className="h-10 w-10 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">
+                <h2 className="text-xl font-semibold mb-2">
                   {filtersActive ? tf('No DPRs found') : tf('No DPRs yet')}
-                </h3>
+                </h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {filtersActive
                     ? tf('Try adjusting your search, keyword, or filter criteria')
@@ -757,9 +759,9 @@ export const AllDPRs: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="font-semibold text-xl">
+                          <h2 className="font-semibold text-xl">
                             {dpr.projectId?.projectName || tf('Untitled Project')}
-                          </h3>
+                          </h2>
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(getEffectiveStatus(dpr))}`}>
                             {getStatusIcon(getEffectiveStatus(dpr))}
                             {(() => {
