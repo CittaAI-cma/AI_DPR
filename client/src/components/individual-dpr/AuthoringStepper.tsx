@@ -101,7 +101,7 @@ export const AuthoringStepper: React.FC<Props> = ({
                 data-step-dot
                 onClick={() => onSelect(section.step)}
                 aria-current={current ? 'step' : undefined}
-                aria-label={`${stepLabel(section.step)}: ${label}, ${section.percent}%${neededText ? `, ${neededText}` : ''}`}
+                aria-label={`${stepLabel(index + 1)}: ${label}, ${section.percent}%${neededText ? `, ${neededText}` : ''}`}
                 className="group/dot relative z-10 flex h-[30px] w-[30px] items-center justify-center rounded-full outline-none transition-transform duration-150 hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <svg viewBox="0 0 30 30" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
@@ -127,7 +127,7 @@ export const AuthoringStepper: React.FC<Props> = ({
                         : 'bg-background text-muted-foreground group-hover/dot:text-foreground'
                   }`}
                 >
-                  {done && !current ? <Check className="h-3 w-3" strokeWidth={4} /> : section.step}
+                  {done && !current ? <Check className="h-3 w-3" strokeWidth={4} /> : index + 1}
                 </span>
                 {needed ? (
                   <span className="absolute -left-1.5 -top-1.5 flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-full border-2 border-background bg-red-600 px-0.5 text-[8px] font-bold leading-none text-white" aria-hidden="true">

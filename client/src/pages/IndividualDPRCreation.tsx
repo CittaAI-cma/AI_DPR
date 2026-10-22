@@ -23,7 +23,7 @@ import { IndividualDPRForm } from '@/components/individual-dpr/IndividualDPRForm
 import { IndividualDPRDocumentView } from '@/components/individual-dpr/IndividualDPRDocumentView';
 import { StyleEditor } from '@/components/individual-dpr/StyleEditor';
 import { getSchemeDocSteps, sectionTitleFromStep } from '@/lib/individualDpr/individualDocModel';
-import { applyPreset, defaultStyleForScheme, pageEdgeMm, parseBlockFrameSlot, resolveDocumentStyle, selectionStepOrder, setBlockFrame, setBlockText, setPictureFrame } from '@/lib/individualDpr/documentStyle';
+import { applyPreset, defaultStyleForScheme, layoutOrder, moveSection, pageEdgeMm, parseBlockFrameSlot, resolveDocumentStyle, selectionStepOrder, setBlockFrame, setBlockText, setPictureFrame } from '@/lib/individualDpr/documentStyle';
 import { styleFromGuide } from '@/lib/individualDpr/reportGuide';
 import { useReportGuideStore } from '@/store/reportGuideStore';
 import { PageSheet } from '@/components/individual-dpr/PageSheet';
@@ -33,6 +33,8 @@ import { useTranslation } from 'react-i18next';
 import { useDevModeStore } from '@/store/devModeStore';
 import { useEditModeStore } from '@/store/editModeStore';
 import { TemplatePickerDialog } from '@/components/individual-dpr/TemplatePickerDialog';
+import { STEP_INTROS } from '@/lib/plainLanguage';
+import { StepAccordion } from '@/components/individual-dpr/StepAccordion';
 import { SaveDraftButton } from '@/components/individual-dpr/SaveDraftButton';
 import { FinalPreviewDialog } from '@/components/individual-dpr/FinalPreviewDialog';
 import { EditModeToggle } from '@/components/individual-dpr/EditModeToggle';
@@ -259,6 +261,42 @@ export const IndividualDPRCreation: React.FC = () => {
     return () => observer.disconnect();
   }, [setupPhase, styling, docMode]);
   // The toolbar editor (Sections, Style, and Document mode) or the guided two-card Form layout.
+  // Form mode's step list: the open row is the current step; pressing the open row closes it, and choosing any row opens it.
+  const [stepOpen, setStepOpen] = useState(true);
+  useEffect(() => {
+    setStepOpen(true);
+  }, [currentStep]);
+  // The step list shares the report's section settings with Document mode: hiding a step leaves its section out of the report, and moving a
+  // step moves its section (the answers are kept either way).
+  const docSteps = getSchemeDocSteps(schemeCode);
+  const stepToId = (step: number) => docSteps.find((item) => item.n === step)?.id;
+  const hiddenSteps = new Set(
+    docSteps.filter((item) => docStyle?.hiddenSectionIds?.includes(item.id)).map((item) => item.n)
+  );
+  const toggleStepHidden = (step: number) => {
+    const id = stepToId(step);
+    if (!id || !docStyle) return;
+    const hidden = docStyle.hiddenSectionIds || [];
+    onStyleChange({ ...docStyle, hiddenSectionIds: hidden.includes(id) ? hidden.filter((item) => item !== id) : [...hidden, id] });
+  };
+  const moveStep = (from: number, to: number, place: 'before' | 'after') => {
+    const fromId = stepToId(from);
+    const toId = stepToId(to);
+    if (!fromId || !toId || !docStyle) return;
+    const order = layoutOrder(docSteps, docStyle);
+    onStyleChange({ ...docStyle, sectionOrder: moveSection(order, docSteps, fromId, toId, place) });
+  };
+  const selectFormStep = (step: number) => {
+    if (step === currentStep) {
+      setStepOpen((open) => !open);
+      return;
+    }
+    if (!guardForward(step)) return;
+    setInvalidFields([]);
+    setRequiredNotice('');
+    setStepOpen(true);
+    setCurrentStep(step);
+  };
   const stylingLayout = Boolean(styling && docStyle && (docMode || styleTab !== 'form'));
 
   // Changing between the guided form and the report editor: the screen fades out, the new one is put in, and it fades and rises in.
@@ -1484,16 +1522,20 @@ export const IndividualDPRCreation: React.FC = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="flex min-h-0 flex-1 flex-col">
-                    <div className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-border/70 bg-gradient-to-b from-muted/50 to-card px-5 py-3.5">
-                      <div className="min-w-0 flex-1 basis-60">
-                        <h2 className="text-xl font-semibold leading-tight">{tf(getStepTitle(currentStep, data.matchedSchemeCode))}</h2>
-                        <StepIntro title={getStepTitle(currentStep, data.matchedSchemeCode)} />
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                      </div>
-                    </div>
-                    <div className="fill-edit-scroll min-h-0 flex-1 overflow-y-auto p-4">
+                  <StepAccordion
+                    sections={sections}
+                    current={currentStep}
+                    open={stepOpen}
+                    onSelect={selectFormStep}
+                    hiddenSteps={hiddenSteps}
+                    onToggleHidden={docStyle ? toggleStepHidden : undefined}
+                    onMove={docStyle ? moveStep : undefined}
+                    describe={(step) => {
+                      const key = getStepTitle(step, data.matchedSchemeCode).replace(/^Step \d+:\s*/, '');
+                      const text = STEP_INTROS[key];
+                      return text ? tf(text) : undefined;
+                    }}
+                  >
                       {requiredNotice ? (
                         <div
                           id="required-fields-notice"
@@ -1521,8 +1563,7 @@ export const IndividualDPRCreation: React.FC = () => {
                           onPrevious={() => goAdjacent(-1)}
                         />
                       </div>
-                    </div>
-                  </div>
+                  </StepAccordion>
                 )}
 
                 <div className="relative z-10 flex shrink-0 items-center justify-between gap-2 border-t border-border/70 bg-card/95 px-5 py-3 shadow-[0_-10px_18px_-14px_rgba(16,24,40,0.25)] backdrop-blur max-lg:sticky max-lg:bottom-0">

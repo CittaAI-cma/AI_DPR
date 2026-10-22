@@ -1307,3 +1307,12 @@ html { scrollbar-gutter: stable; }
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
+
+/* A step in the Form-mode list opening: its questions fade and slide down a little. */
+@media (prefers-reduced-motion: no-preference) {
+  .dpr-step-open { animation: dpr-step-open 0.26s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+}
+@keyframes dpr-step-open {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
