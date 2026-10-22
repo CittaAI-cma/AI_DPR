@@ -350,8 +350,9 @@ export const AccountPrivacy: React.FC = () => {
                 required
               />
               <div>
-                <label className="block text-sm font-medium mb-2">{t('privacy.complaintMessage')}</label>
+                <label htmlFor="complaint-message" className="block text-sm font-medium mb-2">{t('privacy.complaintMessage')}</label>
                 <textarea
+                  id="complaint-message"
                   className="flex min-h-[120px] w-full rounded-[10px] border border-input bg-background px-3 py-2 text-sm"
                   value={complaint.message}
                   onChange={(e) => setComplaint((prev) => ({ ...prev, message: e.target.value }))}

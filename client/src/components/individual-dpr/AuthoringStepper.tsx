@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import {
@@ -53,7 +53,13 @@ export const AuthoringStepper: React.FC<Props> = ({
   }, [currentStep]);
 
   // Arrow keys move between the dots; Enter or Space opens one (they are buttons).
+  // Esc puts the name bubbles away until the pointer or focus moves again (WCAG 1.4.13: content on hover or focus can be dismissed).
+  const [hush, setHush] = useState(false);
   const onStripKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      setHush(true);
+      return;
+    }
     const keys: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, Home: -Infinity, End: Infinity };
     if (!(event.key in keys)) return;
     const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[data-step-dot]'));
@@ -70,6 +76,8 @@ export const AuthoringStepper: React.FC<Props> = ({
       <div
         ref={stripRef}
         onKeyDown={onStripKey}
+        onPointerMove={() => hush && setHush(false)}
+        onFocusCapture={() => hush && setHush(false)}
         className="group/strip relative flex items-start overflow-x-auto py-[26px] [scrollbar-width:thin]"
         role="list"
         aria-label={tf('DPR steps')}
@@ -138,7 +146,7 @@ export const AuthoringStepper: React.FC<Props> = ({
                 {/* The name of the step you are on stays in view; pointing at (or tabbing to) any dot shows that dot's name instead. */}
                 <span
                   role="presentation"
-                  className={`pointer-events-none absolute top-full z-20 mt-1 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium leading-none text-white shadow-md transition-opacity duration-150 ${bubbleSide} ${
+                  className={`pointer-events-none absolute top-full z-20 mt-1 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium leading-none text-white shadow-md transition-opacity duration-150 ${hush ? 'invisible' : ''} ${bubbleSide} ${
                     current
                       ? 'opacity-100 group-hover/strip:opacity-0 group-hover/dot:!opacity-100 group-focus-visible/dot:!opacity-100'
                       : 'opacity-0 group-hover/dot:opacity-100 group-focus-visible/dot:opacity-100'

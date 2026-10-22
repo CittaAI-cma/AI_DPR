@@ -160,7 +160,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full" ref={rootRef}>
         {label && (
-          <label className="block text-sm font-medium mb-2">
+          <label htmlFor={(props as any).id ?? `${uid}-input`} className="block text-sm font-medium mb-2">
             {label}
           </label>
         )}
@@ -239,6 +239,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               setTouched(true);
               onBlur?.(event);
             }}
+            id={`${uid}-input`}
             {...props}
           />
             <span className="absolute right-1.5 top-1/2 -translate-y-1/2">
@@ -325,6 +326,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               setTouched(true);
               onBlur?.(event);
             }}
+            id={`${uid}-input`}
             {...props}
           />
         )}

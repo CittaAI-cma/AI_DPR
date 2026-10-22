@@ -491,6 +491,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
               <FieldPrompt label="District *" extra={stepDescriptions.district} />
             </label>
             <ExpandableSelect
+              aria-label={tf('District')}
               data-required-field="district"
               className={fieldRing('district', 'w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm')}
               value={stepData.district || ''}
@@ -517,6 +518,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
               <FieldPrompt label="Location *" extra={stepDescriptions.location} />
             </label>
             <ExpandableSelect
+              aria-label={tf('Location')}
               data-required-field="location"
               className={fieldRing('location', 'w-full h-10 rounded-[10px] border border-input bg-background px-3 py-2 text-sm')}
             value={stepData.location || ''}

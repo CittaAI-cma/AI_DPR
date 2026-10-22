@@ -1,3 +1,4 @@
+import { ModalFocus } from '@/components/ui/ModalFocus';
 import React, { useState } from 'react';
 import { Calculator, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -177,6 +178,7 @@ const CalcModal: React.FC<{ which: Which; data: AnyData; onApply: Apply; onClose
   }
 
   return (
+    <ModalFocus onEscape={onClose}>
     <div className="motion-overlay fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="calc-title">
       <div className="flex max-h-[88vh] w-full max-w-lg flex-col rounded-xl border border-border bg-background shadow-xl" data-calc={which}>
         <div className="flex items-start justify-between gap-3 border-b p-4">
@@ -208,5 +210,6 @@ const CalcModal: React.FC<{ which: Which; data: AnyData; onApply: Apply; onClose
         </div>
       </div>
     </div>
+    </ModalFocus>
   );
 };

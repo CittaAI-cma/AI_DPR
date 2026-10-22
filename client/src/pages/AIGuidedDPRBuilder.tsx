@@ -1534,7 +1534,7 @@ Return ready-to-use content that can be directly filled into form fields. The us
             </div>
 
             {/* Step Indicators */}
-            <div className="flex items-center justify-between mb-8 overflow-x-auto pb-4 scrollbar-hide">
+            <div role="region" aria-label={t('dprBuilder.title')} tabIndex={0} className="flex items-center justify-between mb-8 overflow-x-auto pb-4 scrollbar-hide focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
               {STEPS.map((step, index) => {
                 const StepIcon = step.icon;
                 const isActive = index === currentStep;
@@ -1676,7 +1676,7 @@ const ApplicantInfoStep: React.FC<{ data: any; onChange: (data: any) => void; su
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.applicantInfo.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.applicantInfo.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.applicantInfo.description')}</p>
           </div>
           {!suggestions && (
@@ -1953,7 +1953,7 @@ const BuildingDetailsStep: React.FC<{ data: any; onChange: (data: any) => void; 
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.buildingDetails.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.buildingDetails.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.buildingDetails.description')}</p>
           </div>
           {!suggestions && (
@@ -2163,7 +2163,7 @@ const MachineryDetailsStep: React.FC<{ data: any; onChange: (data: any) => void;
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.machineryDetails.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.machineryDetails.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.machineryDetails.description')}</p>
           </div>
           {!suggestions && (
@@ -2352,7 +2352,7 @@ const OtherCapitalCostsStep: React.FC<{ data: any; onChange: (data: any) => void
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.otherCapitalCosts.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.otherCapitalCosts.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.otherCapitalCosts.description')}</p>
           </div>
           {!suggestions && (
@@ -2553,7 +2553,7 @@ const FinancingStep: React.FC<{ data: any; onChange: (data: any) => void; projec
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.financing.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.financing.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.financing.description')}</p>
           </div>
           {!suggestions && (
@@ -2756,7 +2756,7 @@ const SalesDetailsStep: React.FC<{ data: any; onChange: (data: any) => void; sug
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.salesDetails.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.salesDetails.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.salesDetails.description')}</p>
           </div>
           {!suggestions && (
@@ -2966,7 +2966,7 @@ const RawMaterialsStep: React.FC<{ data: any; onChange: (data: any) => void; sug
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.rawMaterials.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.rawMaterials.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.rawMaterials.description')}</p>
           </div>
           {!suggestions && (
@@ -3188,7 +3188,7 @@ const WagesStep: React.FC<{ data: any; onChange: (data: any) => void; suggestion
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.wages.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.wages.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.wages.description')}</p>
           </div>
           {!suggestions && (
@@ -3404,7 +3404,7 @@ const SalaryDetailsStep: React.FC<{ data: any; onChange: (data: any) => void; su
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.salaryDetails.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.salaryDetails.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.salaryDetails.description')}</p>
           </div>
           {!suggestions && (
@@ -3597,7 +3597,7 @@ const WorkingCapitalEstimateStep: React.FC<{ data: any; onChange: (data: any) =>
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.workingCapitalEstimate.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.workingCapitalEstimate.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.workingCapitalEstimate.description')}</p>
           </div>
           {!suggestions && (
@@ -3761,7 +3761,7 @@ const PowerEstimateStep: React.FC<{ data: any; onChange: (data: any) => void; su
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.powerEstimate.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.powerEstimate.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.powerEstimate.description')}</p>
           </div>
           {!suggestions && (
@@ -3907,7 +3907,7 @@ const EnergyEfficiencyStep: React.FC<{ data: any; onChange: (data: any) => void;
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.energyEfficiency.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.energyEfficiency.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.energyEfficiency.description')}</p>
           </div>
           {!suggestions && (
@@ -4009,7 +4009,7 @@ const WaterEfficiencyStep: React.FC<{ data: any; onChange: (data: any) => void; 
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.waterEfficiency.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.waterEfficiency.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.waterEfficiency.description')}</p>
           </div>
           {!suggestions && (
@@ -4112,7 +4112,7 @@ const OverheadExpensesStep: React.FC<{ data: any; onChange: (data: any) => void;
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.overheadExpenses.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.overheadExpenses.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.overheadExpenses.description')}</p>
           </div>
           {!suggestions && (
@@ -4361,7 +4361,7 @@ const FinancialParametersStep: React.FC<{ data: any; onChange: (data: any) => vo
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.financialParameters.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.financialParameters.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.financialParameters.description')}</p>
           </div>
           {!suggestions && (
@@ -4525,7 +4525,7 @@ const BeneficiaryInfoStep: React.FC<{ data: any; onChange: (data: any) => void; 
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.beneficiaryInfo.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.beneficiaryInfo.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.beneficiaryInfo.description')}</p>
           </div>
           {!suggestions && (
@@ -4767,7 +4767,7 @@ const ProjectAtGlanceStep: React.FC<{ data: any; onChange: (data: any) => void; 
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.projectAtGlance.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.projectAtGlance.title')}</h2>
             <p className="text-sm text-muted-foreground">{t('dprBuilder.projectAtGlance.description')}</p>
           </div>
           {!suggestions && (
@@ -5015,7 +5015,7 @@ const BusinessOverviewStep: React.FC<{ data: any; onChange: (data: any) => void;
   return (
     <div className="space-y-6">
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
-        <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.businessOverview.title')}</h3>
+        <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.businessOverview.title')}</h2>
         <p className="text-sm text-muted-foreground">
           {t('dprBuilder.businessOverview.description')}
         </p>
@@ -5134,7 +5134,7 @@ const MarketAnalysisStep: React.FC<any> = ({ data, onChange, suggestions, loadin
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.marketAnalysis.title')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t('dprBuilder.marketAnalysis.title')}</h2>
             <p className="text-sm text-muted-foreground">
               {t('dprBuilder.marketAnalysis.description')}
             </p>
@@ -5362,7 +5362,7 @@ const CostStructureStep: React.FC<{ data: any; onChange: (data: any) => void; pr
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{tf('Cost Structure')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{tf('Cost Structure')}</h2>
             <p className="text-sm text-muted-foreground">
               {tf('Define your CAPEX (Capital Expenditure) and OPEX (Operating Expenditure) requirements. Use AI to generate sample values.')}
             </p>
@@ -5761,7 +5761,7 @@ const FinancialProjectionsStep: React.FC<{ data: any; onChange: (data: any) => v
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{tf('Financial Projections')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{tf('Financial Projections')}</h2>
             <p className="text-sm text-muted-foreground">
               {tf('Project your revenue, costs, and cash flow for the next 3-5 years. AI-generated projections are pre-filled based on your project details. You can edit any values as needed.')}
             </p>
@@ -6326,7 +6326,7 @@ const EligibleSchemesStep: React.FC<any> = ({ data, onChange, project, suggestio
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground mb-2">{tf('Eligible Schemes')}</h3>
+            <h2 className="text-xl font-bold text-foreground mb-2">{tf('Eligible Schemes')}</h2>
             <p className="text-sm text-muted-foreground">
               {tf('Review and select applicable government schemes for your project. These will be included in your DPR.')}
             </p>
@@ -6710,7 +6710,7 @@ const AIReviewStep: React.FC<any> = () => {
   return (
     <div className="space-y-6">
       <div className="bg-primary/5 border-l-4 border-l-primary p-4 rounded-r-lg">
-        <h3 className="text-xl font-bold text-foreground mb-2">{tf('AI Review & Quality Check')}</h3>
+        <h2 className="text-xl font-bold text-foreground mb-2">{tf('AI Review & Quality Check')}</h2>
         <p className="text-sm text-muted-foreground">
           {tf('Review your DPR completeness and quality before generation. Our AI analyzes all sections for accuracy.')}
         </p>

@@ -182,9 +182,11 @@ function EditableDocText({
   onEdit,
   multiline,
   track,
+  label,
 }: {
   path: string;
   display: string;
+  label?: string;
   placeholder: string;
   onEdit: (path: string, text: string) => void;
   multiline?: boolean;
@@ -204,6 +206,8 @@ function EditableDocText({
       contentEditable
       suppressContentEditableWarning
       role="textbox"
+      aria-label={label}
+      aria-multiline={multiline ? true : undefined}
       spellCheck
       data-dpr-field={track ? path : undefined}
       data-placeholder={placeholder}
@@ -257,9 +261,11 @@ function DocControl({
   track,
   tf,
   rangeCheck,
+  label,
 }: {
   path: string;
   display: string;
+  label?: string;
   raw: unknown;
   input: DocFieldInput;
   placeholder: string;
@@ -280,6 +286,7 @@ function DocControl({
     return (
       <select
         className="dpr-inline-select"
+        aria-label={label}
         data-dpr-field={track ? path : undefined}
         value={value}
         disabled={input.disabled}
@@ -304,6 +311,7 @@ function DocControl({
         inputMode="decimal"
         step="any"
         className="dpr-inline-input"
+        aria-label={label}
         data-dpr-field={track ? path : undefined}
         value={draft}
         placeholder={placeholder}
@@ -324,6 +332,7 @@ function DocControl({
       <input
         type="date"
         className="dpr-inline-input"
+        aria-label={label}
         data-dpr-field={track ? path : undefined}
         value={toDateInputValue(raw)}
         onMouseDown={(event) => event.stopPropagation()}
@@ -349,6 +358,7 @@ function DocControl({
     <EditableDocText
       path={path}
       display={display}
+      label={label}
       placeholder={placeholder}
       onEdit={onEdit}
       multiline={multiline || input.kind === 'textarea'}
@@ -427,6 +437,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               <EditableDocText
                 path={`block:${sectionId}:${block.id}`}
                 display={block.text || '—'}
+                label={tf('Add text')}
                 placeholder={typeHere}
                 multiline
                 onEdit={(_path, text) => onEditBlock(sectionId, block.id, text)}
@@ -461,6 +472,25 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     }
     return null;
   };
+  // The name a screen reader gives an answer typed straight into the report: the question's own label, with the row number for table cells.
+  const labelCache = new Map<string, string>();
+  const humanize = (word: string) => word.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+  const answerLabel = (path: string): string => {
+    const cached = labelCache.get(path);
+    if (cached) return cached;
+    const step = /^step(\d+)\./.exec(path);
+    const names = [...path.matchAll(/([A-Za-z0-9_]+)(?:\[(\d+)\])?/g)].map((m) => ({ name: m[1], row: m[2] }));
+    const start = step ? 1 : 1;
+    const head = names[start];
+    const found = step && head ? getIndividualDocFields(Number(step[1]), schemeCode, budget, kind).find((f) => f.name === head.name) : undefined;
+    const base = found ? tf(found.label) : head ? tf(humanize(head.name)) : path;
+    const tail = names.slice(start + 1);
+    const text = tail.length
+      ? `${base}${head?.row != null ? ` ${Number(head.row) + 1}` : ''}: ${tail.map((n) => tf(humanize(n.name))).join(' ')}`
+      : base;
+    labelCache.set(path, text);
+    return text;
+  };
   const editableValue = (path: string, display: string, raw: unknown, multiline = false) => {
     if (onEditField && isPlainValue(raw)) {
       return (
@@ -469,6 +499,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           display={display}
           raw={raw}
           input={getDocFieldInput(fieldName(path), { path, schemeCode, lean, data, current: raw })}
+          label={answerLabel(path)}
           placeholder={typeHere}
           onEdit={onEditField}
           multiline={multiline}
@@ -563,6 +594,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
                         display={cell || '—'}
                         raw={cell}
                         input={getDocCellInput(fieldName(cellPath), cell)}
+                        label={`${tf(title)} ${index + 1}: ${tf(headers[cellIndex] || fieldName(cellPath))}`}
                         placeholder={typeHere}
                         onEdit={onEditField}
                         track={trackFieldHits}

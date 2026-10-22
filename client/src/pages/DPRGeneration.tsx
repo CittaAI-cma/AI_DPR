@@ -160,7 +160,7 @@ export const DPRGeneration: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('dpr.title')}</CardTitle>
+            <CardTitle as="h1">{t('dpr.title')}</CardTitle>
             <p className="text-muted-foreground">{project.projectName}</p>
           </CardHeader>
           <CardContent className="space-y-6">

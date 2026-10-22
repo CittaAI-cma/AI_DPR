@@ -366,7 +366,7 @@ export const Dashboard: React.FC = () => {
                   {showPlaceholders ? (
                     <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
                   ) : (
-                    <h3 className="text-3xl font-bold text-foreground">{stats.total}</h3>
+                    <p className="text-3xl font-bold text-foreground">{stats.total}</p>
                   )}
                   {!showPlaceholders && (
                     <p className="text-sm text-muted-foreground mt-1">{stats.total} {t('dashboard.dprs')}</p>
@@ -389,7 +389,7 @@ export const Dashboard: React.FC = () => {
                   {showPlaceholders ? (
                     <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
                   ) : (
-                    <h3 className="text-3xl font-bold text-foreground">{stats.draft}</h3>
+                    <p className="text-3xl font-bold text-foreground">{stats.draft}</p>
                   )}
                   {!showPlaceholders && (
                     <p className="text-sm text-muted-foreground mt-1">{stats.draft} {t('dashboard.drafts')}</p>
@@ -412,7 +412,7 @@ export const Dashboard: React.FC = () => {
                   {showPlaceholders ? (
                     <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
                   ) : (
-                    <h3 className="text-3xl font-bold text-foreground">{stats.submitted}</h3>
+                    <p className="text-3xl font-bold text-foreground">{stats.submitted}</p>
                   )}
                   {!showPlaceholders && (
                     <p className="text-sm text-muted-foreground mt-1">{stats.submitted} {t('dashboard.submitted')}</p>
@@ -435,7 +435,7 @@ export const Dashboard: React.FC = () => {
                   {showPlaceholders ? (
                     <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
                   ) : (
-                    <h3 className="text-3xl font-bold text-foreground">{stats.analyzed}</h3>
+                    <p className="text-3xl font-bold text-foreground">{stats.analyzed}</p>
                   )}
                   {!showPlaceholders && (
                     <p className="text-sm text-muted-foreground mt-1">{stats.analyzed} {tf('Analyzed DPRs')}</p>
@@ -458,9 +458,9 @@ export const Dashboard: React.FC = () => {
                   {showPlaceholders ? (
                     <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
                   ) : (
-                    <h3 className={`text-3xl font-bold ${getQualityColor(stats.avgQualityScore)}`}>
+                    <p className={`text-3xl font-bold ${getQualityColor(stats.avgQualityScore)}`}>
                       {stats.avgQualityScore || 'N/A'}
-                    </h3>
+                    </p>
                   )}
                   {!showPlaceholders && (
                     <p className="text-sm text-muted-foreground mt-1">{getQualityLabel(stats.avgQualityScore)}</p>
@@ -545,7 +545,7 @@ export const Dashboard: React.FC = () => {
                 <div className="h-20 w-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
                   <FileText className="h-10 w-10 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{t('dashboard.noDPRsYet')}</h3>
+                <h2 className="text-xl font-semibold mb-2">{t('dashboard.noDPRsYet')}</h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {t('dashboard.createFirstDPR')}
                 </p>

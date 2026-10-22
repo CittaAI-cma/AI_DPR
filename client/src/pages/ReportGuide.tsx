@@ -54,7 +54,7 @@ function ChoiceCard({ selected, title, hint, onSelect, swatch }) {
         ) : null}
         <span className="min-w-0">
           <span className="block text-sm font-semibold text-slate-900">{title}</span>
-          {hint ? <span className="mt-0.5 block text-xs text-slate-500">{hint}</span> : null}
+          {hint ? <span className="mt-0.5 block text-xs text-slate-600">{hint}</span> : null}
         </span>
       </span>
     </button>
@@ -156,7 +156,7 @@ export function ReportGuide() {
             />
             <span>
               <span className="block text-sm font-semibold">{t('reportGuide.paper.wide')}</span>
-              <span className="mt-0.5 block text-xs text-slate-500">{t('reportGuide.paper.wideHint')}</span>
+              <span className="mt-0.5 block text-xs text-slate-600">{t('reportGuide.paper.wideHint')}</span>
             </span>
           </label>
         </div>
@@ -240,7 +240,7 @@ export function ReportGuide() {
           </div>
           <label className="block">
             <span className="text-sm font-semibold">{t('reportGuide.chrome.agency')}</span>
-            <span className="mt-0.5 block text-xs text-slate-500">{t('reportGuide.chrome.agencyHint')}</span>
+            <span className="mt-0.5 block text-xs text-slate-600">{t('reportGuide.chrome.agencyHint')}</span>
             <input
               className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               value={choices.agencyName}
@@ -272,7 +272,7 @@ export function ReportGuide() {
             />
             <span>
               <span className="block text-sm font-semibold">{t('reportGuide.chrome.watermark')}</span>
-              <span className="mt-0.5 block text-xs text-slate-500">{t('reportGuide.chrome.watermarkHint')}</span>
+              <span className="mt-0.5 block text-xs text-slate-600">{t('reportGuide.chrome.watermarkHint')}</span>
             </span>
           </label>
           <p className="text-sm text-slate-600">{t('reportGuide.photosLater')}</p>
@@ -296,7 +296,7 @@ export function ReportGuide() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-7xl">
+      <div className="theme-light mx-auto max-w-7xl rounded-xl bg-background p-4 text-foreground">
         <BackButton label={back.label} onClick={back.go} />
         <h1 className="mt-3 text-3xl font-bold">{t('reportGuide.title')}</h1>
         <p className="mt-2 text-muted-foreground">{t('reportGuide.intro')}</p>
@@ -307,9 +307,9 @@ export function ReportGuide() {
             {t('reportGuide.stepOf', { current: step + 1, total: steps.length })}
           </p>
           <h2 className="mt-1 text-xl font-semibold">{current.title}</h2>
-          <p className="mt-1 text-sm text-slate-500">{current.hint}</p>
+          <p className="mt-1 text-sm text-slate-600">{current.hint}</p>
           <div className="mt-4">{current.body}</div>
-          <p className="mt-4 text-xs text-slate-500">{t('reportGuide.later')}</p>
+          <p className="mt-4 text-xs text-slate-600">{t('reportGuide.later')}</p>
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <Button type="button" variant="outline" disabled={step === 0} onClick={() => setStep((n) => n - 1)}>
@@ -326,15 +326,18 @@ export function ReportGuide() {
               </Button>
             </div>
           </div>
-          {step === 0 ? <p className="mt-2 text-right text-xs text-slate-500">{t('reportGuide.skipHint')}</p> : null}
+          {step === 0 ? <p className="mt-2 text-right text-xs text-slate-600">{t('reportGuide.skipHint')}</p> : null}
         </div>
 
         <div className="order-1 lg:sticky lg:top-4 lg:order-2">
           <p className="text-sm font-semibold text-slate-900">{t('reportGuide.sample')}</p>
-          <p className="mt-1 text-xs text-slate-500">{t('reportGuide.sampleHint')}</p>
-          {step === 0 ? <p className="mt-1 text-xs text-slate-500">{t('reportGuide.lookAlso')}</p> : null}
+          <p className="mt-1 text-xs text-slate-600">{t('reportGuide.sampleHint')}</p>
+          {step === 0 ? <p className="mt-1 text-xs text-slate-600">{t('reportGuide.lookAlso')}</p> : null}
           <div
             ref={previewRef}
+            role="region"
+            aria-label={t('individualDpr.livePreview')}
+            tabIndex={0}
             className="sticky top-16 mt-3 max-h-[42vh] overflow-auto rounded-xl border border-slate-200 bg-slate-100 p-3 lg:static lg:max-h-[calc(100dvh-9rem)]"
           >
             <div style={{ zoom: 0.55 }}>

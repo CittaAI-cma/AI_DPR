@@ -31,11 +31,11 @@ export const CardHeader: React.FC<CardProps> = ({ children, className }) => {
   );
 };
 
-export const CardTitle: React.FC<CardProps> = ({ children, className }) => {
+export const CardTitle: React.FC<CardProps & { as?: 'h1' | 'h2' | 'h3' }> = ({ children, className, as: Tag = 'h2' }) => {
   return (
-    <h3 className={cn('text-2xl font-semibold leading-none tracking-tight', className)}>
+    <Tag className={cn('text-2xl font-semibold leading-none tracking-tight', className)}>
       {children}
-    </h3>
+    </Tag>
   );
 };
 

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useDialogFocus } from '@/lib/useDialog';
 import { AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -74,10 +75,19 @@ export const ReviewDialog: React.FC<{
   onGenerate?: () => void;
 }> = ({ findings, stepTitle, onClose, onGo, onDismiss, onGenerate }) => {
   const tf = useClusterFormText();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(true, panelRef);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
   const groups = KIND_ORDER.map((kind) => ({ kind, items: findings.filter((f) => f.kind === kind) })).filter((g) => g.items.length);
   return (
     <div className="motion-overlay fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="review-title">
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-border bg-background shadow-xl">
+      <div ref={panelRef} className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-border bg-background shadow-xl">
         <div className="flex items-start justify-between gap-3 border-b p-4">
           <div>
             <h2 id="review-title" className="text-lg font-semibold">{tf('Check my answers')}</h2>

@@ -80,7 +80,7 @@ export function SaveDraftButton({
     error: 'border-red-500 bg-red-50 text-red-700 hover:bg-red-100',
     saving: 'border-amber-300 bg-amber-50 text-amber-800',
     dirty: 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100',
-    saved: 'border-success bg-transparent text-success hover:bg-success/10',
+    saved: 'border-success bg-transparent text-emerald-800 hover:bg-success/10 dark:text-emerald-300',
   }[state];
   const title = {
     error: tf('Could not save. Will retry.'),
@@ -120,6 +120,8 @@ export function SaveDraftButton({
         <Save className="h-4 w-4" aria-hidden="true" />
       )}
       <span className="max-sm:hidden">{text}</span>
+      {/* Said once when the state changes (unsaved, saving, saved, failed) for people using a screen reader. */}
+      <span className="sr-only" role="status" aria-live="polite">{title}</span>
     </button>
   );
 }

@@ -57,7 +57,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-    <nav className="sticky top-0 z-[60] bg-background border-b border-border shadow-sm">
+    <nav aria-label={tf('Main navigation')} className="sticky top-0 z-[60] bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <a
