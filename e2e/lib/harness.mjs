@@ -22,6 +22,9 @@ export const DEVICES = {
 /** E2E_HEADED=1 shows the browser window; E2E_SLOWMO=300 slows each step (milliseconds). */
 const HEADED = process.env.E2E_HEADED === '1';
 const SLOWMO = Number(process.env.E2E_SLOWMO || 0);
+/** E2E_HEADED=1 shows the browser window; E2E_SLOWMO=300 slows each step (milliseconds). */
+const HEADED = process.env.E2E_HEADED === '1';
+const SLOWMO = Number(process.env.E2E_SLOWMO || 0);
 export const DEVICE = process.env.E2E_DEVICE || 'desktop';
 if (!DEVICES[DEVICE]) throw new Error(`E2E_DEVICE must be one of ${Object.keys(DEVICES).join(', ')}`);
 if (!playwright[BROWSER]) throw new Error('E2E_BROWSER must be chromium, firefox or webkit');

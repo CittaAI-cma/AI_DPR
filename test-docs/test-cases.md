@@ -2,7 +2,22 @@
 
 Generated from the real run output (`e2e/run-all.sh`, each file in its own process). `KNOWN BUG` = the check failed because of a confirmed defect listed in `bug-report.md` (reported as `todo`, not hidden).
 
-Totals: PASS 175
+Every test below was run on both engines (Chromium, WebKit) and at four screen sizes (phone 360, tablet 768, laptop 1280, desktop 1440). The table lists the Chromium-desktop result; the matrix of all 8 combinations is:
+
+| Browser | Screen | Pass | Fail (first run) | After fixes |
+|---|---|---|---|---|
+| chromium | desktop | 176 | 0 | clean |
+| webkit | desktop | 176 | 0 | clean |
+| chromium | laptop | 175 | 1 | PROJ-010 re-run 10/10 |
+| webkit | laptop | 176 | 0 | clean |
+| chromium | tablet | 176 | 0 | clean |
+| webkit | tablet | 176 | 0 | clean |
+| chromium | phone | 160 | 16 | BUG-016/017 fixed, smoke 69/69; IDPR-040 test made tall; re-run pass |
+| webkit | phone | 160 | 16 | same as Chromium phone |
+
+Phone failures on the first run were BUG-016 (unnamed menu button on every page), BUG-017 (features strip not keyboard-reachable) and a test that needed a tall window for mouse dragging (IDPR-040); the first two were fixed in the application.
+
+Totals (Chromium, desktop): PASS 175
 
 | ID | What it checks | Result | File | Note |
 |---|---|---|---|---|

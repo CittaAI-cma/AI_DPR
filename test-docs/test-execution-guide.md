@@ -23,12 +23,17 @@ cd e2e
 ./run-all.sh            # each file in its own process; prints pass/fail/todo per file (results in /tmp/qa-e2e-results)
 E2E_BROWSER=webkit E2E_DEVICE=phone ./run-all.sh /tmp/out   # pick the engine (chromium|webkit|firefox) and screen (phone 360 | tablet 768 | laptop 1280 | desktop 1440)
 ./run-matrix.sh         # every engine x every screen size (about an hour); results in /tmp/qa-matrix/<engine>-<screen>/
+E2E_HEADED=1 E2E_SLOWMO=300 node --test --test-concurrency=1 tests/02-auth.test.mjs      # watch it in a visible window, slowed down (ms per step)
+E2E_HEADED=1 E2E_BROWSER=webkit E2E_DEVICE=phone node --test tests/05-individual-dpr-ui.test.mjs
+PWDEBUG=1 E2E_HEADED=1 node --test --test-name-pattern="AUTH-002" tests/02-auth.test.mjs  # Playwright Inspector: pause and step
 npm test                # all files in one process (faster, but one browser crash can cascade)
 npm run test:smoke      # only route / accessibility / overflow checks
 node --test --test-concurrency=1 --test-name-pattern="SESS-003" tests/09-cluster-session-keyboard.test.mjs   # one test
 python3 make-test-cases.py /tmp/qa-e2e-results     # rebuilds test-docs/test-cases.md from the results
 ```
 Notes: screenshots of failures go to `e2e/artifacts/`. Tests use unique names (`QA …-<timestamp>`), so re-runs never clash. `todo` in the output means "a confirmed bug is the cause" and links to `bug-report.md`.
+
+Environment switches: `E2E_BROWSER` (chromium | webkit | firefox), `E2E_DEVICE` (phone 360x740 | tablet 768x1024 | laptop 1280x800 | desktop 1440x900, default desktop), `E2E_HEADED=1`, `E2E_SLOWMO=<ms>`. Phone and tablet runs use touch. Firefox would not launch on the Mac used for the audit (graphics crash at start-up), so it is untested. Playwright's own UI mode (`playwright test --ui`) is not available: the tests use Node's `node:test` runner, not `@playwright/test`.
 
 ## 3. Server tests (server/)
 ```bash

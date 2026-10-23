@@ -6,7 +6,7 @@ Roles: **Entrepreneur** (`consultant`) · **Admin** (`super_admin`) · **Distric
 
 ## 1. Screens (client routes)
 
-| Route | Who | What it does | Covered by |
+| Route | Who | What it does | Covered by (browser tests run on Chromium + WebKit at 4 screen sizes) |
 |---|---|---|---|
 | `/` | all | Landing page, language switch, sign-in/register links | SMOKE-001, LANG-001 |
 | `/login` | signed out | Sign in (demo credentials shown), keyboard-only use | AUTH-001..004, KEY-002, SMOKE-002 |

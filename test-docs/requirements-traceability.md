@@ -10,14 +10,14 @@ The application has no written requirements document, so each requirement below 
 | R4 | Roles only open their own areas (entrepreneur / admin / reviewer) | AUTH-02x, `rbac.live` | Covered |
 | R5 | Sign-out clears the session; a 6-minute idle session warns, then ends with a message; "Stay signed in" keeps it | AUTH-030, SESS-001..003, `session.live` | Covered |
 | R6 | A project can be created, listed, opened, edited, deleted (with confirmation) | PROJ-001..005, 010..012 | Covered |
-| R7 | Deleting a project also removes its DPRs | PROJ-013 | **Fails — BUG-010** |
-| R8 | One person cannot read, change or delete another's project/DPR | PROJ-020, DPR-010, DPR-011 | DPR-011 **fails — BUG-009** |
+| R7 | Deleting a project also removes its DPRs | PROJ-013 | Passes (BUG-010 fixed) |
+| R8 | One person cannot read, change or delete another's project/DPR | PROJ-020, DPR-010, DPR-011 | Passes (BUG-009 fixed) |
 | R9 | Saving a DPR draft creates one project + one draft and later saves update them | DPR-001, IDPR-020..023 | Covered |
 | R10 | Individual DPR: scheme choice, step list, required count, check answers, autosave, failure message, Basic/Advanced, drag/hide steps, template, preview, number inputs | IDPR-001..044 | Covered |
 | R11 | Cluster DPR opens with 18 steps, saves a cluster draft, views switch without losing input | CLUS-001..003 | Covered (generation/AI helpers not) |
 | R12 | Under-18 applicants are refused server-side and nothing is stored | DPR-004, IDPR-024, `api.live` | Covered |
-| R13 | Money fields: zero/negative handled cleanly | PROJ-005, IDPR-044 | **Negative cost — BUG-007** if it returns 5xx |
-| R14 | Boundary input (very long names, large payload, special characters) is stored safely | DPR-005, PROJ-004 | Covered; long names break the layout — **BUG-013** |
+| R13 | Money fields: zero/negative handled cleanly | PROJ-005, IDPR-044 | Passes (BUG-007 fixed) |
+| R14 | Boundary input (very long names, large payload, special characters) is stored safely | DPR-005, PROJ-004 | Covered; long names are now capped and wrap (BUG-013 fixed) |
 | R15 | Download PDF/Word/spreadsheet of own draft; PDF is a real PDF | DPR-020, `pdf.smoke` | Covered |
 | R16 | Submitting records who/when/to whom and cannot duplicate | DPR-021 | Covered |
 | R17 | Reviewers see only their district; decisions need remarks, are final, and the status follows | DPR-022, REV-001..003, INT-002 | Covered |
@@ -29,8 +29,9 @@ The application has no written requirements document, so each requirement below 
 | R23 | Deactivation ends access at once across modules | INT-004, `admin.live` | Covered |
 | R24 | Finance guard and encryption of stored data | `finance.live`, `financeGuard.parity`, `encryption.live` | Covered |
 | R25 | Support desk tickets | `support.live` (API) | API only; no UI test |
-| R26 | Every screen opens, shows content, has no console errors, passes an automated accessibility scan | SMOKE-001..018 | Fails for the known bugs (BUG-002..006, 008, 011, 012) |
-| R27 | No sideways scrolling at 360/768/1280 px | SMOKE-xxx-W360/W768/W1280 | Fails only for BUG-013 (long name) |
+| R26 | Every screen opens (Chromium and WebKit, phone / tablet / laptop / desktop), shows content, has no console errors, passes an automated accessibility scan | SMOKE-001..018 | Passes after the fixes (BUG-002..008, 011, 012, 016, 017) |
+| R27 | No sideways scrolling at 360/768/1280 px | SMOKE-nnn-W360/W768/W1280 | Passes after BUG-013 and BUG-015 were fixed |
 | R28 | English ↔ Telugu switch | LANG-001 | Covered (page chrome only) |
 | R29 | Keyboard: skip link, focus order | KEY-001, IDPR-043 (focus return) | Covered |
+| R31 | The pages work with touch screens and on Safari's engine | whole suite on WebKit; phone/tablet use touch | Covered (touch drag-and-drop to reorder steps is not tested) |
 | R30 | AI guided builder, document/RAG upload, image/annexure upload, APMSME submit, accept-invite UI, All-DPRs filters | — | **Not covered** |

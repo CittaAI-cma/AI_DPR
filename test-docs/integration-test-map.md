@@ -1,6 +1,6 @@
 # Integration test map
 
-How modules depend on each other, and which test proves each hand-off. All are run against the real API and database (only the AI is stubbed).
+How modules depend on each other, and which test proves each hand-off. All are run (Chromium and WebKit, at phone, tablet, laptop and desktop sizes) against the real API and database (only the AI is stubbed).
 
 ```
  Entrepreneur UI ──► Projects ──► DPR (individual / cluster) ──► Submit ──► Reviewer queue ──► Decision
@@ -24,8 +24,8 @@ How modules depend on each other, and which test proves each hand-off. All are r
 | 6 | Privacy "AI help off" → chat API refuses | PRIV-002, CHAT-004 | `07` |
 | 7 | Complaint → support desk | PRIV-004 | `07` |
 | 8 | Delete account → user and records removed | PRIV-006 | `07` |
-| 9 | Project delete → DPR versions removed | PROJ-013 | **fails (BUG-010)** |
-| 10 | Draft save with another user's `projectId` → refused | DPR-011 | **fails (BUG-009)** |
+| 9 | Project delete → DPR versions removed | PROJ-013 | passes (BUG-010 fixed) |
+| 10 | Draft save with another user's `projectId` → refused (404) | DPR-011 | passes (BUG-009 fixed) |
 | 11 | Session expiry → redirect to sign-in with a message; refresh keeps the session while active | SESS-001..003, `session.live` | `09`, server |
 | 12 | Admin invites reviewer (district required) → reviewer sets password once → right access | ADM-004, `admin.live` | `08`, server |
 | 13 | Scheme finder → DPR creation | VM-020 ends with schemes the person can act on; IDPR-001 starts from a scheme | `05`, `06` |
