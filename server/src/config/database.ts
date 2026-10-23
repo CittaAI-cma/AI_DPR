@@ -58,15 +58,12 @@ export const connectDatabase = async (): Promise<void> => {
     console.error('MongoDB connection error:', err);
   });
 
+  // The driver reconnects by itself (and re-uses its pool). Starting another mongoose.connect() here opened a fresh pool on every
+  // 'disconnected' event without closing the old one, which leaked tens of thousands of sockets (BUG-001), so this only logs.
   mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected');
-    const rawUri = process.env.MONGODB_URI;
-    if (rawUri) {
-      console.log('Attempting MongoDB reconnect...');
-      mongoose.connect(uriWithTimeoutOptions(rawUri), options).catch((err: Error) => {
-        console.error('MongoDB reconnect failed:', err.message);
-      });
-    }
+    console.log('MongoDB disconnected (the driver will reconnect on its own)');
+  });
+  mongoose.connection.on('reconnected', () => {
+    console.log('MongoDB reconnected');
   });
 };
-

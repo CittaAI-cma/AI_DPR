@@ -320,11 +320,17 @@ export class AdminController {
    */
   static async getAllUsers(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 20, role } = req.query;
+      const { page = 1, limit = 20, role, q } = req.query;
 
       const filter: any = {};
       if (role) {
         filter.role = role;
+      }
+      // Search by name or email (typed text is matched literally, never as a pattern).
+      const text = typeof q === 'string' ? q.trim().slice(0, 100) : '';
+      if (text) {
+        const literal = new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        filter.$or = [{ name: literal }, { email: literal }];
       }
 
       const users = await User.find(filter)

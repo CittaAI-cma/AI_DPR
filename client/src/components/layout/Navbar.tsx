@@ -125,6 +125,8 @@ export const Navbar: React.FC = () => {
                   size="sm"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="md:hidden"
+                  aria-label={mobileMenuOpen ? t('common.closeMenu', { defaultValue: 'Close menu' }) : t('common.openMenu', { defaultValue: 'Open menu' })}
+                  aria-expanded={mobileMenuOpen}
                 >
                   {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>

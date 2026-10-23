@@ -458,7 +458,7 @@ export const Chat: React.FC = () => {
                     className="sr-only"
                   />
                   <span>{store.name}</span>
-                  <span className="opacity-70">({store.fileCount})</span>
+                  <span>({store.fileCount})</span>
                     </label>
                   ))}
                 </div>
@@ -591,7 +591,7 @@ export const Chat: React.FC = () => {
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                     {message.role === 'assistant' && useRAG && selectedVectorStores.length > 0 && message.ragContext === 'RAG used' && (
-                      <span className="text-xs bg-success/10 text-success px-2 py-0.5 rounded-md font-medium">
+                      <span className="text-xs bg-success/10 text-success-text px-2 py-0.5 rounded-md font-medium">
                         {t('chat.enhanced')}
                           </span>
                     )}

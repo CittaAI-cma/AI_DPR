@@ -749,6 +749,11 @@ export class ClusterDPRController {
         return;
       }
 
+      if (String(unitName).length > 200) {
+        res.status(400).json({ success: false, message: 'The unit / project name must be 200 characters or fewer' });
+        return;
+      }
+
       if (payloadHasUnder18Applicant(clusterData)) {
         res.status(403).json(under18Response());
         return;
@@ -760,13 +765,19 @@ export class ClusterDPRController {
       const projectType = isIndividual ? 'individual' : 'cluster';
 
       // Find or create project for this draft
+      // A project id sent by the caller is honoured only for the caller's own project (BUG-009); otherwise it is "not found".
       let project = clusterData.projectId
-        ? await Project.findById(clusterData.projectId)
+        ? await Project.findOne({ _id: clusterData.projectId, userId })
         : await Project.findOne({
             userId,
             projectName: unitName,
             projectType,
           });
+
+      if (clusterData.projectId && !project) {
+        res.status(404).json({ success: false, message: 'Project not found' });
+        return;
+      }
 
       // Calculate total cost from step 12 if available
       const totalCost = clusterData.step12

@@ -279,7 +279,7 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
               <div className="flex items-start justify-between gap-3">
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                    card.isVanilla ? 'bg-secondary/15 text-secondary' : 'bg-primary/10 text-primary'
+                    card.isVanilla ? 'bg-secondary/15 text-secondary-text' : 'bg-primary/10 text-primary'
                   }`}
                 >
                   {card.isVanilla ? <Landmark className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}

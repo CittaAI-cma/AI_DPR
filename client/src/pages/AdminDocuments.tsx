@@ -303,6 +303,8 @@ export const AdminDocuments: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteVectorStore(store)}
+                          aria-label={`${tf('Delete')} ${store.name}`}
+                          title={tf('Delete')}
                           data-confirm-title={tf('Delete this vector store?')}
                           data-confirm-body={tf('“{name}” and all its documents will be removed. This cannot be undone.').replace('{name}', store.name)}
                         >
@@ -486,6 +488,7 @@ export const AdminDocuments: React.FC = () => {
               </div>
               <select
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                aria-label={tf('Filter by status')}
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -497,6 +500,7 @@ export const AdminDocuments: React.FC = () => {
               </select>
               <select
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                aria-label={tf('Filter by category')}
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
               >

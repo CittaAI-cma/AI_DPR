@@ -260,15 +260,15 @@ export const Dashboard: React.FC = () => {
     if (!status) return 'bg-muted/50 text-muted-foreground border border-border';
     switch (status) {
       case 'approved':
-        return 'bg-success/10 text-success border border-success/20';
+        return 'bg-success/10 text-success-text border border-success/20';
       case 'submitted':
-        return 'bg-secondary/10 text-secondary border border-secondary/20';
+        return 'bg-secondary/10 text-secondary-text border border-secondary/20';
       case 'draft':
-        return 'bg-warning/10 text-warning border border-warning/20';
+        return 'bg-warning/10 text-warning-text border border-warning/20';
       case 'analyzed':
         return 'bg-primary/10 text-primary border border-primary/20';
       case 'rejected':
-        return 'bg-destructive/10 text-destructive border border-destructive/20';
+        return 'bg-destructive/10 text-destructive-text border border-destructive/20';
       default:
         return 'bg-muted/50 text-muted-foreground border border-border';
     }
@@ -579,14 +579,14 @@ export const Dashboard: React.FC = () => {
                     return paginatedDPRs.map((dpr: DPR) => (
                   <div
                     key={dpr._id}
-                    className="group flex items-center justify-between p-4 border rounded-lg hover:border-primary/50 hover:shadow-md transition-all bg-card"
+                    className="group flex flex-wrap items-center justify-between gap-3 p-4 border rounded-lg hover:border-primary/50 hover:shadow-md transition-all bg-card"
                   >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                         <FileText className="h-5 w-5 text-primary" />
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-base">
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-base break-words [overflow-wrap:anywhere]">
                           {dpr.projectId?.projectName || t('dashboard.untitledProject')}
                         </h4>
                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border mt-1 ${getStatusColor(getEffectiveStatus(dpr))}`}>
@@ -601,7 +601,7 @@ export const Dashboard: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
                       {dpr.qualityScore !== undefined && (
                         <div className="text-right">
                           <p className={`text-sm font-semibold ${getQualityColor(dpr.qualityScore)}`}>
@@ -612,7 +612,7 @@ export const Dashboard: React.FC = () => {
                           </p>
                         </div>
                       )}
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
