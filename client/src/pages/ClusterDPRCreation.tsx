@@ -654,7 +654,7 @@ export const ClusterDPRCreation: React.FC = () => {
                       ${isCurrent 
                         ? 'bg-primary text-primary-foreground shadow-sm' 
                         : isCompleted
-                        ? 'bg-success/10 text-success border border-success/20 hover:bg-success/20'
+                        ? 'bg-success/10 text-success-text border border-success/20 hover:bg-success/20'
                         : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                       }
                     `}

@@ -208,6 +208,10 @@ export const FeaturesScroller: React.FC<{ features: BentoFeature[]; heading: Rea
         <div
           ref={trackRef}
           onScroll={onSwipeScroll}
+          // A scrolling strip must be reachable from the keyboard (arrow keys scroll it once it has focus).
+          tabIndex={0}
+          role="region"
+          aria-label={tf('Features')}
           className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide"
         >
           {features.map((f, i) => (

@@ -183,16 +183,16 @@ export const Projects: React.FC = () => {
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium border ${
                         project.status === 'completed'
-                          ? 'bg-success/10 text-success border-success/20'
+                          ? 'bg-success/10 text-success-text border-success/20'
                           : project.status === 'in-progress'
-                          ? 'bg-warning/10 text-warning border-warning/20'
+                          ? 'bg-warning/10 text-warning-text border-warning/20'
                           : 'bg-muted text-muted-foreground border-border'
                       }`}
                     >
                       {t(`projects.${project.status}`)}
                     </span>
                   </div>
-                  <CardTitle className="text-xl mb-1">{project.projectName}</CardTitle>
+                  <CardTitle className="text-xl mb-1 break-words [overflow-wrap:anywhere]">{project.projectName}</CardTitle>
                   <CardDescription className="text-base">
                     {tf(String(project.industrySector ?? ''))}
                   </CardDescription>
@@ -216,7 +216,7 @@ export const Projects: React.FC = () => {
                     </div>
                     <div className="p-3 rounded-lg bg-secondary/5 border border-secondary/10">
                       <p className="text-xs text-muted-foreground mb-1">{t('projects.location')}</p>
-                      <p className="font-semibold text-secondary text-sm">{project.location}</p>
+                      <p className="font-semibold text-secondary-text text-sm">{project.location}</p>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -256,6 +256,8 @@ export const Projects: React.FC = () => {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(project._id)}
+                      aria-label={`${t('common.delete', { defaultValue: 'Delete' })} ${project.projectName}`}
+                      title={t('common.delete', { defaultValue: 'Delete' })}
                       data-confirm-title={t('confirmDelete.projectTitle', { defaultValue: 'Delete this project?' })}
                       data-confirm-body={t('confirmDelete.projectBody', { name: project.projectName, defaultValue: '“{{name}}” and its reports will be removed. This cannot be undone.' })}
                       className="border-2"

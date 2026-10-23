@@ -88,6 +88,34 @@ export const AdminDashboard: React.FC = () => {
     loadData();
   }, [activeTab, statusFilter]);
 
+  // On the Users tab the search runs on the server (the screen shows 50 at a time), so people beyond the first 50 can be found.
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
+  useEffect(() => {
+    if (activeTab !== 'users') return undefined;
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await api.getAllUsers({ limit: 50, q: searchQuery.trim() || undefined });
+        setUsers(response.data.users || []);
+        setUsersTotal(response.data.pagination?.total ?? (response.data.users || []).length);
+      } catch {
+        /* the list that is already shown stays */
+      }
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery, activeTab]);
+
+  const loadMoreUsers = async () => {
+    setLoadingMoreUsers(true);
+    try {
+      const response = await api.getAllUsers({ limit: 50, page: Math.floor(users.length / 50) + 1, q: searchQuery.trim() || undefined });
+      const more = response.data.users || [];
+      setUsers((prev) => [...prev, ...more.filter((m: any) => !prev.some((p) => p._id === m._id))]);
+    } finally {
+      setLoadingMoreUsers(false);
+    }
+  };
+
   const loadData = async () => {
     setIsLoading(true);
     try {
@@ -98,8 +126,9 @@ export const AdminDashboard: React.FC = () => {
         const response = await api.getAnalytics();
         setAnalytics(response.data);
       } else if (activeTab === 'users') {
-        const response = await api.getAllUsers({ limit: 50 });
+        const response = await api.getAllUsers({ limit: 50, q: searchQuery.trim() || undefined });
         setUsers(response.data.users || []);
+        setUsersTotal(response.data.pagination?.total ?? (response.data.users || []).length);
       } else if (activeTab === 'dprs') {
         const response = await api.getAllDPRsAdmin({ limit: 50, status: statusFilter !== 'all' ? statusFilter : undefined });
         setDprs(response.data.dprs || []);
@@ -390,6 +419,8 @@ export const AdminDashboard: React.FC = () => {
               return (
                 <button
                   key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-3 font-medium border-b-2 transition-all sm:px-6 ${
                     activeTab === tab.id
@@ -469,6 +500,10 @@ export const AdminDashboard: React.FC = () => {
                       <CardTitle>{tf('Projects by Sector')}</CardTitle>
                     </CardHeader>
                     <CardContent>
+                      <div
+                        role="img"
+                        aria-label={`${tf('Projects by Sector')}: ${(analytics?.projectsBySector || []).map((entry: any) => `${entry._id} ${entry.count}`).join(', ')}`}
+                      >
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -479,15 +514,17 @@ export const AdminDashboard: React.FC = () => {
                             cy="50%"
                             outerRadius={100}
                             label
+                            labelLine={false}
                           >
                             {(analytics?.projectsBySector || []).map((entry: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} aria-label={`${entry._id}: ${entry.count}`} />
                             ))}
                           </Pie>
                           <Tooltip />
                           <Legend />
                         </PieChart>
                       </ResponsiveContainer>
+                      </div>
                     </CardContent>
                   </Card>
 
@@ -615,6 +652,14 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
                     ))}
+                    <div className="flex flex-col items-center gap-2 pt-2 text-sm text-muted-foreground sm:flex-row sm:justify-between">
+                      <span role="status">{tf('Showing')} {users.length} {tf('of')} {usersTotal}</span>
+                      {users.length < usersTotal && (
+                        <Button variant="outline" size="sm" onClick={loadMoreUsers} disabled={loadingMoreUsers}>
+                          {tf('Load more')}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -715,11 +760,11 @@ export const AdminDashboard: React.FC = () => {
                             <span
                               className={`text-xs px-2 py-1 rounded ${
                                 dpr.status === 'approved'
-                                  ? 'bg-success/10 text-success'
+                                  ? 'bg-success/10 text-success-text'
                                   : dpr.status === 'rejected'
-                                  ? 'bg-destructive/10 text-destructive'
+                                  ? 'bg-destructive/10 text-destructive-text'
                                   : dpr.status === 'submitted'
-                                  ? 'bg-warning/10 text-warning'
+                                  ? 'bg-warning/10 text-warning-text'
                                   : 'bg-muted text-muted-foreground'
                               }`}
                             >
@@ -955,10 +1000,10 @@ export const AdminDashboard: React.FC = () => {
                             <span
                               className={`text-xs px-2 py-1 rounded ${
                                 policy.status === 'active'
-                                  ? 'bg-success/10 text-success'
+                                  ? 'bg-success/10 text-success-text'
                                   : policy.status === 'archived'
                                   ? 'bg-muted text-muted-foreground'
-                                  : 'bg-warning/10 text-warning'
+                                  : 'bg-warning/10 text-warning-text'
                               }`}
                             >
                               {tf(policy.status)}

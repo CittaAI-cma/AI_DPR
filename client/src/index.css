@@ -32,7 +32,11 @@
     --success: 160 84% 30%;
     --success-foreground: 0 0% 100%;
     /* Warning: Professional Amber - #D97706 (Amber 600) - Caution, Attention */
+    --success-text: 160 90% 20%;
     --warning: 32 95% 44%;
+    --warning-text: 30 95% 26%;
+    --secondary-text: 18 90% 36%;
+    --destructive-text: 354 100% 34%;
     --warning-foreground: 0 0% 100%;
     /* Error: Red - #e40014 - Matching export-flow theme */
     --destructive: 354 100% 45%;
@@ -81,7 +85,11 @@
     --secondary-foreground: 0 0% 9%;
     --success: 160 70% 42%;
     --success-foreground: 0 0% 100%;
+    --success-text: 160 70% 58%;
     --warning: 38 92% 55%;
+    --warning-text: 38 92% 62%;
+    --secondary-text: 18 90% 64%;
+    --destructive-text: 0 85% 72%;
     --warning-foreground: 30 40% 10%;
     --destructive: 0 78% 64%;
     --destructive-foreground: 0 0% 100%;

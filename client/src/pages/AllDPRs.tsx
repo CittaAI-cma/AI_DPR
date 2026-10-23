@@ -254,15 +254,15 @@ export const AllDPRs: React.FC = () => {
     if (!status) return 'bg-muted/50 text-muted-foreground';
     switch (status) {
       case 'approved':
-        return 'bg-success/10 text-success border border-success/20';
+        return 'bg-success/10 text-success-text border border-success/20';
       case 'submitted':
-        return 'bg-secondary/10 text-secondary border border-secondary/20';
+        return 'bg-secondary/10 text-secondary-text border border-secondary/20';
       case 'draft':
-        return 'bg-warning/10 text-warning border border-warning/20';
+        return 'bg-warning/10 text-warning-text border border-warning/20';
       case 'analyzed':
         return 'bg-primary/10 text-primary border border-primary/20';
       case 'rejected':
-        return 'bg-destructive/10 text-destructive border border-destructive/20';
+        return 'bg-destructive/10 text-destructive-text border border-destructive/20';
       default:
         return 'bg-muted/50 text-muted-foreground border border-border';
     }
@@ -753,13 +753,13 @@ export const AllDPRs: React.FC = () => {
               >
                 <CardContent className="pt-6">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div className="flex-1 flex items-start gap-4">
-                      <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <div className="min-w-0 flex-1 flex items-start gap-4">
+                      <div className="h-14 w-14 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                         <FileText className="h-7 w-7 text-primary" />
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h2 className="font-semibold text-xl">
+                          <h2 className="min-w-0 font-semibold text-xl break-words [overflow-wrap:anywhere]">
                             {dpr.projectId?.projectName || tf('Untitled Project')}
                           </h2>
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(getEffectiveStatus(dpr))}`}>

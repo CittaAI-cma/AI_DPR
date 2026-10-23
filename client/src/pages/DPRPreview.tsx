@@ -484,13 +484,13 @@ export const DPRPreview: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-success/10 text-success border border-success/20';
+        return 'bg-success/10 text-success-text border border-success/20';
       case 'submitted':
-        return 'bg-secondary/10 text-secondary border border-secondary/20';
+        return 'bg-secondary/10 text-secondary-text border border-secondary/20';
       case 'draft':
-        return 'bg-warning/10 text-warning border border-warning/20';
+        return 'bg-warning/10 text-warning-text border border-warning/20';
       case 'rejected':
-        return 'bg-destructive/10 text-destructive border border-destructive/20';
+        return 'bg-destructive/10 text-destructive-text border border-destructive/20';
       default:
         return 'bg-muted/50 text-muted-foreground border border-border';
     }
@@ -926,7 +926,7 @@ export const DPRPreview: React.FC = () => {
                     <p className="text-sm font-semibold mb-3 text-muted-foreground">{t('dpr.preview.sectionsNeedingImprovement')}:</p>
                     <div className="flex flex-wrap gap-2">
                       {qualityFeedback.weakSections.map((section: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1.5 bg-warning/10 text-warning border border-warning/20 rounded-lg text-sm font-medium">
+                        <span key={idx} className="px-3 py-1.5 bg-warning/10 text-warning-text border border-warning/20 rounded-lg text-sm font-medium">
                           {section}
                         </span>
                       ))}

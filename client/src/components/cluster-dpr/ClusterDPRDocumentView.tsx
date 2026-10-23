@@ -1870,7 +1870,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
 
       {/* Table of Contents - Page 1 - Matching PDF Format */}
       {renderPageWrapper(
-        <div classname="">
+        <div className="">
           {renderSectionTitle('CONTENTS')}
           {(() => {
             // Check which sections have data
@@ -2342,7 +2342,7 @@ export const ClusterDPRDocumentView: React.FC<ClusterDPRDocumentViewProps> = ({
 
       {/* Project Snapshot - Page 1: Basic Details */}
       {renderPageWrapper(
-        <div classname="">
+        <div className="">
           {renderSectionTitle('PROJECT SNAPSHOT')}
           {/* {renderEnhancedContent('projectSnapshot', 'Project Snapshot')} */}
           {renderTable(
