@@ -14,7 +14,7 @@ type AnyData = Record<string, any>;
 const pct = (value: number | null) => (value === null ? '—' : `${Math.round(value * 10000) / 100}%`);
 
 /** Check marks for the headline integrity tests of the model. */
-export function modelChecks(data: AnyData, model: Model) {
+function modelChecks(data: AnyData, model: Model) {
   const cost = composeProjectCost(data);
   const fin = composeFinancing(data);
   const recon = reconcileFinancing(data);
@@ -87,7 +87,7 @@ function Statement({ heading, years, rows, open: startOpen = false }: { heading:
   );
 }
 
-export const FINANCE_ROWS = {
+const FINANCE_ROWS = {
   pl: [
     { label: 'Revenue', get: (r: YearRow) => r.revenue },
     { label: 'Variable costs', get: (r: YearRow) => r.variableCosts },

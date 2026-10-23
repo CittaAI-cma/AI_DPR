@@ -1,6 +1,6 @@
 import { checkFormat, isIndividualPan, type FormatKind } from './formats';
 
-export type FormatProblem = { key: string; label: string; message: { en: string; te: string } };
+type FormatProblem = { key: string; label: string; message: { en: string; te: string } };
 
 const FIELDS: { key: string; label: string; kind: FormatKind; firmPan?: boolean }[] = [
   { key: 'gstin', label: 'GSTIN', kind: 'gstin' },

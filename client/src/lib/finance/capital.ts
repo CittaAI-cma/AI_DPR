@@ -3,7 +3,7 @@ import { type CL, sumCL, toCL, fromCL } from './money.ts';
 type AnyData = Record<string, any>;
 
 /** What the project costs: assets, set-up costs and the money needed to run it. */
-export type CostComposition = {
+type CostComposition = {
   capex: { land: CL; building: CL; utilities: CL; machinery: CL; furniture: CL; deposits: CL; total: CL };
   preOperative: CL;
   /** Initial running expenses paid before sales start. Optional; 0 unless step 12 has `initialOpex`. */
@@ -35,7 +35,7 @@ export function composeProjectCost(data: AnyData | null | undefined): CostCompos
 }
 
 /** How the project is paid for. */
-export type FinancingComposition = {
+type FinancingComposition = {
   promoterEquity: CL;
   subsidy: CL;
   termLoan: CL;
@@ -69,7 +69,7 @@ export function composeFinancing(data: AnyData | null | undefined): FinancingCom
   };
 }
 
-export type Reconciliation = {
+type Reconciliation = {
   cost: CL;
   financing: CL;
   /** financing − cost. Zero means the plan is fully funded and nothing is left over. */

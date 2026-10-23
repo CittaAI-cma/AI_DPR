@@ -13,7 +13,7 @@ import { lendingLimit, reviewFinance, ruleFor } from './rules.ts';
  */
 export const CATALOG_VERSION = '1.0.0';
 
-export type CatalogFormula = {
+type CatalogFormula = {
   id: string;
   version: string;
   name: string;
@@ -71,13 +71,13 @@ export async function sha256Hex(text: string): Promise<string> {
 }
 
 /** What gets hashed for a formula: its identity, its statement and what the real code returns for the example. */
-export function canonicalForm(formula: CatalogFormula): string {
+function canonicalForm(formula: CatalogFormula): string {
   // Numbers are rounded to 9 decimals so that harmless last-digit differences between JavaScript engines never change a hash.
   const round = (_key: string, value: unknown) => (typeof value === 'number' ? Math.round(value * 1e9) / 1e9 : value);
   return JSON.stringify({ id: formula.id, version: formula.version, statement: formula.statement, example: formula.example() }, round);
 }
 
-export type CatalogLock = {
+type CatalogLock = {
   catalogVersion: string;
   formulas: Record<string, { version: string; sha256: string }>;
   catalogSha256: string;
@@ -90,7 +90,7 @@ export async function computeLock(): Promise<CatalogLock> {
   return { catalogVersion: CATALOG_VERSION, formulas, catalogSha256 };
 }
 
-export type CatalogVerdict = { ok: boolean; changed: string[]; added: string[]; removed: string[] };
+type CatalogVerdict = { ok: boolean; changed: string[]; added: string[]; removed: string[] };
 
 /** Compares the code as it is now against the committed lock. */
 export async function verifyCatalog(lock: CatalogLock): Promise<CatalogVerdict> {

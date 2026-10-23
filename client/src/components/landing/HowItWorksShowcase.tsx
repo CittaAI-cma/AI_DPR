@@ -19,7 +19,7 @@ import { useClusterFormText } from '@/lib/clusterDprFormText';
  * pass `image` on a step to show a picture instead).
  */
 
-export interface HowItWorksStep {
+interface HowItWorksStep {
   title: string;
   description: string;
   image?: string; // optional real image to replace the animation later

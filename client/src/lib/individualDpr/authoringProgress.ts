@@ -18,7 +18,7 @@ import type { SchemeStepDef } from './schemeStepCatalog';
 import { hasAnswer, type SectionProgress, type SectionStatus } from './authoringMath';
 export * from './authoringMath';
 
-export function sectionProgress(
+function sectionProgress(
   payload: Record<string, any>,
   schemeCode: string | null,
   def: SchemeStepDef,

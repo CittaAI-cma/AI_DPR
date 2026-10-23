@@ -2,7 +2,7 @@
 import { applyContextReuse } from '../lib/individualDpr/contextReuse.ts';
 import { create } from 'zustand';
 
-export interface IndividualDPRData {
+interface IndividualDPRData {
   // Step 1: Executive Summary
   step1?: {
     /** Preferred unit / project name for Create New Latest DPR */

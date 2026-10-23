@@ -1,5 +1,5 @@
 /** Write-ups that ask for a few hundred words. Everything else on a step shares one call. */
-export const LONG_PROSE_FIELDS = [
+const LONG_PROSE_FIELDS = [
   'executiveSummary',
   'processOfManufacture',
   'sectorDescription',

@@ -12,7 +12,7 @@ import { vishwakarmaTrancheCapLakhs } from '../individualDpr/vishwakarmaQuestion
 
 type AnyData = Record<string, any>;
 
-export type FinanceFinding = {
+type FinanceFinding = {
   id: string;
   /** block: the DPR cannot be generated or submitted until this is fixed. warn: shown, never blocks. */
   severity: 'block' | 'warn';
@@ -24,7 +24,7 @@ export type FinanceFinding = {
   vars?: Record<string, string>;
 };
 
-export type SchemeFinanceRule = {
+type SchemeFinanceRule = {
   /** Smallest promoter equity as a share of the project cost, percent. 0 means no minimum applies. */
   minEquityPct: number;
   /** Largest bank debt ÷ (promoter equity + capital subsidy). null means no ceiling for this scheme. */
@@ -33,7 +33,7 @@ export type SchemeFinanceRule = {
   source: string;
 };
 
-export const DEFAULT_RULE: SchemeFinanceRule = {
+const DEFAULT_RULE: SchemeFinanceRule = {
   minEquityPct: 10,
   maxDebtEquity: 3,
   source: 'Usual bank margin of at least 10% and a debt-equity ceiling of 3:1 for a term-loan project',

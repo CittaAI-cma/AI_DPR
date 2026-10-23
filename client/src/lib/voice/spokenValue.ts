@@ -9,7 +9,7 @@
  *                "double four" -> 44, "at" / "dot" in an e-mail address
  */
 export type SpokenKind = 'text' | 'number' | 'identifier';
-export type SpokenOptions = {
+type SpokenOptions = {
   kind?: SpokenKind;
   /** Identifier shape (see validation/formats): pan, gstin, udyam, ifsc, pincode, mobile, email. */
   format?: string;

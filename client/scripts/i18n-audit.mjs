@@ -114,7 +114,7 @@ const files = [];
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {
     const p = path.join(d, e.name);
     if (e.isDirectory()) walk(p);
-    else if (/\.tsx$/.test(e.name) && !/\.test\./.test(e.name) && e.name !== 'ClusterDPRView.tsx') files.push(p); // ClusterDPRView.tsx is unused, unfinished code
+    else if (/\.tsx$/.test(e.name) && !/\.test\./.test(e.name)) files.push(p);
   }
 })(src);
 const ATTRS = new Set(['placeholder', 'title', 'aria-label', 'alt', 'label']);

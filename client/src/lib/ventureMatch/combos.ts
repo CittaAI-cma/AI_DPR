@@ -254,7 +254,7 @@ export interface PlanItem {
   checks: Loc[];
 }
 
-export interface LeftOut {
+interface LeftOut {
   scheme: SchemeMatch;
   role: SchemeRole;
   /** The scheme in the plan that rules this one out (or makes it redundant). */
@@ -268,7 +268,7 @@ export interface PairView {
   relation: Relation;
 }
 
-export interface ComboAnalysis {
+interface ComboAnalysis {
   /** Money schemes to lead with: subsidy, margin money, loan. */
   core: PlanItem[];
   /** Guarantees and support that sit on top of the core plan. */

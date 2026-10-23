@@ -1,7 +1,7 @@
 import { QuestionId } from './types';
 import { sanitizeOwnerTags } from './ownerSelection';
 
-export type HelpLang = 'en' | 'te';
+type HelpLang = 'en' | 'te';
 
 export interface HelpReply {
   id: string;
@@ -14,7 +14,7 @@ export interface ClarifyingQuestion {
   replies: HelpReply[];
 }
 
-export interface QuestionHelpGuide {
+interface QuestionHelpGuide {
   questionId: QuestionId;
   apRuleNotes: string;
   clarifyingQuestions: ClarifyingQuestion[];
@@ -766,7 +766,7 @@ const marketGuide: QuestionHelpGuide = {
   },
 };
 
-export const HELP_GUIDES: Partial<Record<QuestionId, QuestionHelpGuide>> = {
+const HELP_GUIDES: Partial<Record<QuestionId, QuestionHelpGuide>> = {
   activity: activityGuide,
   stage: stageGuide,
   budget: budgetGuide,
@@ -819,12 +819,3 @@ export function sanitizeOwnerOptionIds(optionIds: string[]): string[] {
   return sanitizeOwnerTags(optionIds);
 }
 
-export function guideScriptForPrompt(questionId: QuestionId): string {
-  const guide = HELP_GUIDES[questionId];
-  if (!guide) return '';
-  const lines = guide.clarifyingQuestions.map((q, i) => {
-    const replies = q.replies.map((r) => `${r.id}=${r.label.en}`).join('; ');
-    return `Q${i + 1} (${q.id}): ${q.prompt.en} | replies: ${replies}`;
-  });
-  return `AP rule notes: ${guide.apRuleNotes}\nClarifying script:\n${lines.join('\n')}`;
-}

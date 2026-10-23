@@ -9,13 +9,13 @@
 export type FormatKind = 'pan' | 'gstin' | 'udyam' | 'mobile' | 'ifsc' | 'pincode' | 'email';
 
 export type Msg = { en: string; te: string };
-export type CheckResult = { ok: true } | { ok: false; message: Msg; incomplete?: boolean };
+type CheckResult = { ok: true } | { ok: false; message: Msg; incomplete?: boolean };
 
 const M = (en: string, te: string): Msg => ({ en, te });
 const OK: CheckResult = { ok: true };
 
 /** Fourth letter of a PAN says who it belongs to. P is an individual; the rest are firms and organisations. */
-export const PAN_ENTITY = 'ABCFGHJKLPT';
+const PAN_ENTITY = 'ABCFGHJKLPT';
 const PAN_RE = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 
 const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -84,9 +84,9 @@ export function maskUdyam(raw: string): string {
   return chars === '' ? '' : out;
 }
 
-export const maskDigits = (max: number) => (raw: string) => String(raw ?? '').replace(/\D/g, '').slice(0, max);
+const maskDigits = (max: number) => (raw: string) => String(raw ?? '').replace(/\D/g, '').slice(0, max);
 
-export function maskIfsc(raw: string): string {
+function maskIfsc(raw: string): string {
   const chars = upperAlnum(raw);
   let out = '';
   for (const ch of chars) {
@@ -97,7 +97,7 @@ export function maskIfsc(raw: string): string {
   return out;
 }
 
-export function maskEmail(raw: string): string {
+function maskEmail(raw: string): string {
   return String(raw ?? '').trim().toLowerCase().replace(/\s+/g, '');
 }
 
@@ -134,7 +134,7 @@ export const FORMAT_EXAMPLE: Record<FormatKind, string> = {
 
 // ---- checks --------------------------------------------------------------------------------------------
 
-export function checkPan(value: string): CheckResult {
+function checkPan(value: string): CheckResult {
   if (!value) return OK;
   if (value.length < 10) {
     return {
@@ -161,7 +161,7 @@ export function checkPan(value: string): CheckResult {
   return OK;
 }
 
-export function checkGstin(value: string): CheckResult {
+function checkGstin(value: string): CheckResult {
   if (!value) return OK;
   if (value.length < 15) {
     return {
@@ -197,7 +197,7 @@ export function checkGstin(value: string): CheckResult {
   return OK;
 }
 
-export function checkUdyam(value: string): CheckResult {
+function checkUdyam(value: string): CheckResult {
   if (!value) return OK;
   if (value.length < 19) {
     return {
@@ -215,7 +215,7 @@ export function checkUdyam(value: string): CheckResult {
   return OK;
 }
 
-export function checkMobile(value: string): CheckResult {
+function checkMobile(value: string): CheckResult {
   if (!value) return OK;
   if (value.length < 10) {
     return { ok: false, incomplete: true, message: M(`Mobile number has 10 digits (${10 - value.length} more).`, `మొబైల్ నంబర్‌లో 10 అంకెలు ఉంటాయి (ఇంకా ${10 - value.length}).`) };
@@ -226,7 +226,7 @@ export function checkMobile(value: string): CheckResult {
   return OK;
 }
 
-export function checkIfsc(value: string): CheckResult {
+function checkIfsc(value: string): CheckResult {
   if (!value) return OK;
   if (value.length < 11) {
     return { ok: false, incomplete: true, message: M(`IFSC has 11 characters, like ${FORMAT_EXAMPLE.ifsc}.`, `IFSC లో 11 అక్షరాలు, ఉదా. ${FORMAT_EXAMPLE.ifsc}.`) };
@@ -236,7 +236,7 @@ export function checkIfsc(value: string): CheckResult {
     : { ok: false, message: M('IFSC is 4 letters, a zero, then 6 letters or digits.', 'IFSC: 4 అక్షరాలు, ఒక సున్నా, తర్వాత 6 అక్షరాలు లేదా అంకెలు.') };
 }
 
-export function checkPincode(value: string): CheckResult {
+function checkPincode(value: string): CheckResult {
   if (!value) return OK;
   if (value.length < 6) {
     return { ok: false, incomplete: true, message: M(`PIN code has 6 digits (${6 - value.length} more).`, `పిన్ కోడ్‌లో 6 అంకెలు (ఇంకా ${6 - value.length}).`) };
@@ -246,7 +246,7 @@ export function checkPincode(value: string): CheckResult {
     : { ok: false, message: M('A PIN code cannot start with 0.', 'పిన్ కోడ్ 0 తో మొదలవదు.') };
 }
 
-export function checkEmail(value: string): CheckResult {
+function checkEmail(value: string): CheckResult {
   if (!value) return OK;
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)
     ? OK

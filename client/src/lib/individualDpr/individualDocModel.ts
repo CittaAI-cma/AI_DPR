@@ -51,7 +51,7 @@ export type IndividualDocField = {
   path: string;
 };
 
-export const LEAN_UNIT_CODES = new Set([
+const LEAN_UNIT_CODES = new Set([
   'PMEGP',
   'PMEGP_2ND',
   'MUDRA',

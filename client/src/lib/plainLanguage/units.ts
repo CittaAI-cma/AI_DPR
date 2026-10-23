@@ -1,5 +1,5 @@
 /** Hints for the unit written in a label, so nobody has to ask what "₹ Lakhs" or "%" means. */
-export type UnitHint = { when: RegExp; hint: string };
+type UnitHint = { when: RegExp; hint: string };
 
 export const UNIT_HINTS: UnitHint[] = [
   { when: /₹\s*Lakhs?|\(Lakhs?\)/i, hint: 'Amount in lakhs. 1 lakh is ₹1,00,000, so type 2.5 for ₹2,50,000 and 0.5 for ₹50,000.' },

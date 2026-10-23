@@ -417,7 +417,7 @@ const CARDS = [
 //   [ AI Chat 4 ][ Fast track export 4 ][ Financial suggestions 4 ]   <- kept together
 const ORDER = [0, 1, 2, 5, 6, 3, 7, 4];
 
-export const FeaturesBento: React.FC<{ features: BentoFeature[] }> = ({ features }) => {
+const FeaturesBento: React.FC<{ features: BentoFeature[] }> = ({ features }) => {
   const ref = useRef<HTMLUListElement>(null);
   const [inView, setInView] = useState(false);
   const [cycle, setCycle] = useState(0);

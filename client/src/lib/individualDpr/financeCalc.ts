@@ -17,7 +17,7 @@ export function monthlyInstalment(loan: number, annualRatePct: number, months: n
   return (principal * rate * growth) / (growth - 1);
 }
 
-export type DscrVerdict = 'comfortable' | 'tight' | 'short' | 'unknown';
+type DscrVerdict = 'comfortable' | 'tight' | 'short' | 'unknown';
 
 /**
  * DSCR = money available each year to pay the loan ÷ the loan instalments due in that year.

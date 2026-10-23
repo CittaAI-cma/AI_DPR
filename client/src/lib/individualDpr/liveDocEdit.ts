@@ -30,7 +30,7 @@ function numericName(name: string): boolean {
   return TABLE_NUMBERS.has(name) || /(cost|lakhs|percent|amount|qty|quantity|count|rate|emi|sales|profit|wage|price|margin)$/i.test(name);
 }
 
-export function storedValueFromDocText(name: string, text: string, previous: unknown): unknown {
+function storedValueFromDocText(name: string, text: string, previous: unknown): unknown {
   const trimmed = text.replace(/\u00a0/g, ' ').trim();
   if (!trimmed || trimmed === '—' || trimmed === 'UNIT NAME') return '';
   if (/^yes$/i.test(trimmed)) return 'yes';

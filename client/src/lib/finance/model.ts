@@ -20,7 +20,7 @@ export type Assumptions = {
   moratoriumMonths: number;
 };
 
-export const DEFAULT_ASSUMPTIONS: Omit<Assumptions, 'years' | 'interestPct' | 'tenureMonths' | 'moratoriumMonths'> = {
+const DEFAULT_ASSUMPTIONS: Omit<Assumptions, 'years' | 'interestPct' | 'tenureMonths' | 'moratoriumMonths'> = {
   revenueGrowthPct: 5,
   costGrowthPct: 5,
   taxPct: 25,

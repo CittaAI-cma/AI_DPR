@@ -138,7 +138,7 @@ export type SchemeDprRoute = 'full' | 'short' | 'cluster' | 'cta' | 'none';
 
 export type CriterionStatus = 'pass' | 'fail' | 'unknown';
 
-export interface SchemeDef {
+interface SchemeDef {
   code: string;
   name: string;
   kind: SchemeKind;

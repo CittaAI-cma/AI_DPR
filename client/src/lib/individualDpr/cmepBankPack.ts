@@ -1,4 +1,4 @@
-import { CMEP_LINE_ITEMS, type CmepYearColumn, normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
+import { type CmepYearColumn, normalizeCmepProjections } from '@/lib/individualDpr/cmepProjections';
 
 export type CmepPromoter = {
   name: string;
@@ -28,7 +28,7 @@ export type ProductMixRow = { name: string; sharePercent: number; sellingPrice: 
 export type RawMaterialRow = { name: string; use: string; basis: string };
 export type StaffRoleRow = { role: string; count: number; monthlyPay: number };
 export type RiskRow = { risk: string; mitigation: string };
-export type UtilisationYear = { label: string; percent: number };
+type UtilisationYear = { label: string; percent: number };
 
 export type CmepCostCell = { incurred: number; proposed: number };
 
@@ -191,7 +191,7 @@ export function totalsFromCostPhasing(phasing: Record<string, CmepCostCell>): Re
   return totals;
 }
 
-export type CmepDerived = {
+type CmepDerived = {
   depreciation: Array<{ asset: string; rate: number; years: Array<{ label: string; opening: number; additions: number; depreciation: number; closing: number }> }>;
   dscr: Array<{ label: string; cashProfit: number; repayment: number; ratio: number }>;
   averageDscr: number;
@@ -278,14 +278,4 @@ export function deriveCmepBankSheets(input: {
   };
 }
 
-export const CMEP_NARRATIVE_FIELDS = new Set([
-  'executiveSummary',
-  'processOfManufacture',
-  'sectorDescription',
-  'presentActivities',
-  'targetMarket',
-  'existingDemand',
-  'geography',
-]);
 
-export const CMEP_AI_LINE_HINT = CMEP_LINE_ITEMS.map((line) => line.key).join(', ');

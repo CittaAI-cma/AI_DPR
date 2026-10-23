@@ -5,7 +5,7 @@ type AnyData = Record<string, any>;
 const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
 /** The applicant details that repeat across sections, gathered from wherever the person entered them. */
-export type Profile = {
+type Profile = {
   promoterName: string;
   unitName: string;
   address: string;
@@ -46,7 +46,7 @@ const LEAN_FIRM = new Set([
 ]);
 
 /** Fields later in the form that start out as a copy of something already entered. */
-export const REUSE_RULES: Rule[] = [
+const REUSE_RULES: Rule[] = [
   {
     // The applicant / firm name is the unit's name; for a proprietor it is the person's name.
     target: 'step11.spvName',

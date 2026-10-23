@@ -3,7 +3,7 @@
  * on the device with a clear message. The server checks again and is the real gate.
  */
 export type UploadKind = 'image' | 'document' | 'text' | 'audio';
-export type FileVerdict = { ok: true; mime: string; kind: UploadKind } | { ok: false; reason: string };
+type FileVerdict = { ok: true; mime: string; kind: UploadKind } | { ok: false; reason: string };
 
 const starts = (b: Uint8Array, bytes: number[], at = 0) => bytes.every((v, i) => b[at + i] === v);
 const ascii = (b: Uint8Array, from: number, to: number) => String.fromCharCode(...Array.from(b.subarray(from, to)));
@@ -46,7 +46,7 @@ export function detectFileType(b: Uint8Array): { mime: string; kind: UploadKind 
   return null;
 }
 
-export const MAX_UPLOAD_BYTES: Record<UploadKind, number> = {
+const MAX_UPLOAD_BYTES: Record<UploadKind, number> = {
   image: 10 * 1024 * 1024,
   document: 50 * 1024 * 1024,
   text: 5 * 1024 * 1024,

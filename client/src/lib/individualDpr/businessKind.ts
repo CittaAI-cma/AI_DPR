@@ -5,7 +5,7 @@
 type AnyData = Record<string, any>;
 
 export type BusinessKind = 'manufacturing' | 'service' | 'trading';
-export type Scale = 'tiny' | 'small' | 'medium' | 'large' | 'unknown';
+type Scale = 'tiny' | 'small' | 'medium' | 'large' | 'unknown';
 
 const KIND_BY_ACTIVITY: Record<string, BusinessKind> = {
   mfg: 'manufacturing',

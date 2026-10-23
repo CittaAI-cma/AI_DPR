@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { create } from 'zustand';
 
-export interface ClusterDPRData {
+interface ClusterDPRData {
   // Step 1: Executive Summary
   step1?: {
     clusterName?: string;

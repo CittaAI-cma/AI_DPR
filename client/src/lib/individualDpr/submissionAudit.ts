@@ -2,7 +2,7 @@ import type { Finding } from './dataChecks.ts';
 import { reviewFinance } from '../finance/rules.ts';
 
 type AnyData = Record<string, any>;
-export type RequiredField = { key: string; label: string };
+type RequiredField = { key: string; label: string };
 
 /**
  * The checks that stop a DPR from being generated or submitted:

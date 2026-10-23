@@ -35,7 +35,6 @@ const LOADERS: Record<string, () => Promise<{ default: SampleData }>> = {
   SCST_HUB: () => import('./SCST_HUB'),
 };
 
-export const SAMPLE_SCHEME_KEYS = Object.keys(LOADERS);
 
 export async function loadSampleData(schemeCode: string | null | undefined): Promise<SampleData | null> {
   const load = LOADERS[schemeCode || 'VANILLA'];

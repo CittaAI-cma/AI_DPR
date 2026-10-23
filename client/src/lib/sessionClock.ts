@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 /** A session ends after this long with no real input. The server's token is a little longer (it adds a short slack). */
 export const IDLE_MS = 6 * 60 * 1000;
-export const SESSION_MS = IDLE_MS;
+const SESSION_MS = IDLE_MS;
 /** What the countdown counts: the shorter of the idle limit and the token's own length (a short test token ends sooner). */
 export const idleWindowMs = (durationMs: number) => Math.min(IDLE_MS, durationMs);
 /** Time left before the idle logout, from the last real input. */
@@ -28,8 +28,8 @@ export function tokenTimes(token: string | null | undefined): { issuedAt: number
   }
 }
 
-export type SessionPhase = 'active' | 'warning' | 'expired';
-export type EndReason = 'idle' | 'expired' | 'deactivated' | null;
+type SessionPhase = 'active' | 'warning' | 'expired';
+type EndReason = 'idle' | 'expired' | 'deactivated' | null;
 
 interface SessionClockState {
   expiresAt: number | null;

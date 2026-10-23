@@ -22,9 +22,6 @@ export const DEVICES = {
 /** E2E_HEADED=1 shows the browser window; E2E_SLOWMO=300 slows each step (milliseconds). */
 const HEADED = process.env.E2E_HEADED === '1';
 const SLOWMO = Number(process.env.E2E_SLOWMO || 0);
-/** E2E_HEADED=1 shows the browser window; E2E_SLOWMO=300 slows each step (milliseconds). */
-const HEADED = process.env.E2E_HEADED === '1';
-const SLOWMO = Number(process.env.E2E_SLOWMO || 0);
 export const DEVICE = process.env.E2E_DEVICE || 'desktop';
 if (!DEVICES[DEVICE]) throw new Error(`E2E_DEVICE must be one of ${Object.keys(DEVICES).join(', ')}`);
 if (!playwright[BROWSER]) throw new Error('E2E_BROWSER must be chromium, firefox or webkit');
@@ -200,10 +197,18 @@ export async function bodyText(page) {
 }
 
 export async function axeScan(page, { impacts = ['serious', 'critical'] } = {}) {
+  // Let fade-in animations finish: a half-transparent label would be measured with a blended (too low) contrast.
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity), { timeout: 5000, polling: 100 }).catch(() => {});
   await page.evaluate(axeSource);
   const found = await page.evaluate(async () => {
     const result = await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } });
-    return result.violations.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length, sample: v.nodes[0]?.target.join(' ').slice(0, 80) }));
+    // Purely decorative illustrations are hidden from assistive technology (aria-hidden); the animated mock-ups on the home page change
+    // colour while they play, so contrast inside them is not judged (it would depend on which frame the scan lands on).
+    const inDecoration = (node) => { try { return !!document.querySelector(node.target.join(' '))?.closest('[aria-hidden="true"]'); } catch { return false; } };
+    return result.violations
+      .map((v) => (v.id === 'color-contrast' ? { ...v, nodes: v.nodes.filter((node) => !inDecoration(node)) } : v))
+      .filter((v) => v.nodes.length)
+      .map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length, sample: v.nodes[0]?.target.join(' ').slice(0, 80) }));
   });
   return found.filter((v) => impacts.includes(v.impact));
 }
@@ -229,5 +234,4 @@ export async function dbFind(collection, filter = {}, projection = {}) {
 }
 export async function dbClose() { if (mongoose.connection.readyState !== 0) await mongoose.disconnect(); }
 
-export { requireStack as ensureStack };
 export const unique = (tag) => `${tag}-${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;

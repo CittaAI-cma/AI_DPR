@@ -63,7 +63,7 @@ import { toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { isReasonableIsoDate } from '@/lib/individualDpr/isoDate';
 import { getDocCellInput, getDocFieldInput, type DocFieldInput } from '@/lib/individualDpr/docFieldInput';
 
-export interface IndividualDPRDocumentViewProps {
+interface IndividualDPRDocumentViewProps {
   dpr: any;
   project?: any;
   viewLanguage?: 'english' | 'telugu';

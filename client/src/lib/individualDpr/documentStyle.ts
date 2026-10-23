@@ -17,7 +17,7 @@ export const PRESET_IDS = ['government', 'bank', 'pmegp', 'apCmep', 'formal', 'm
 export type DocPresetId = (typeof PRESET_IDS)[number];
 
 /** Outline family that draws a preset (cover frame, section titles). The newer looks reuse an existing outline with their own type and colors. */
-export type DocLayoutId = 'government' | 'bank' | 'pmegp' | 'apCmep' | 'formal' | 'minimal';
+type DocLayoutId = 'government' | 'bank' | 'pmegp' | 'apCmep' | 'formal' | 'minimal';
 export const PRESET_LAYOUT: Record<DocPresetId, DocLayoutId> = {
   government: 'government',
   bank: 'bank',
@@ -32,11 +32,11 @@ export const PRESET_LAYOUT: Record<DocPresetId, DocLayoutId> = {
 };
 export const layoutOfPreset = (id: DocPresetId): DocLayoutId => PRESET_LAYOUT[id] || 'government';
 
-export const TABLE_DENSITIES = ['compact', 'normal', 'roomy'] as const;
+const TABLE_DENSITIES = ['compact', 'normal', 'roomy'] as const;
 export type TableDensity = (typeof TABLE_DENSITIES)[number];
-export const TABLE_BORDERS = ['template', 'grid', 'rows', 'none'] as const;
+const TABLE_BORDERS = ['template', 'grid', 'rows', 'none'] as const;
 export type TableBorders = (typeof TABLE_BORDERS)[number];
-export const SECTION_BREAKS = ['flow', 'newPage'] as const;
+const SECTION_BREAKS = ['flow', 'newPage'] as const;
 export type SectionBreak = (typeof SECTION_BREAKS)[number];
 
 export const PAGE_SIZES = ['A4', 'A3', 'Letter', 'Legal'] as const;
@@ -184,7 +184,7 @@ function clampWidth(value: unknown): number | null {
   return Math.min(100, Math.max(20, Math.round(n)));
 }
 
-export function clampImageBox(box: Partial<ImageBox> | null | undefined): ImageBox {
+function clampImageBox(box: Partial<ImageBox> | null | undefined): ImageBox {
   const w = clampWidth(box?.w) ?? 100;
   const hRaw = Number(box?.h);
   const h = !Number.isFinite(hRaw) || hRaw <= 0 ? 0 : Math.min(250, Math.max(8, Math.round(hRaw)));
@@ -682,15 +682,12 @@ function readImageFrames(
   };
 }
 
-export function imageFrameOf(style: DocumentStyle, slot: string): ImageBox {
+function imageFrameOf(style: DocumentStyle, slot: string): ImageBox {
   if (slot === 'cover') return style.imageFrames?.cover || emptyBox();
   if (slot === 'annexure') return style.imageFrames?.annexure || emptyBox();
   return style.imageFrames?.after?.[slot] || { ...emptyBox(), w: style.imageWidths?.after?.[slot] || 100 };
 }
 
-export function imageWidthPct(style: DocumentStyle, slot: string): number {
-  return imageFrameOf(style, slot).w || style.imageWidths?.cover || 100;
-}
 
 function writeFrame(style: DocumentStyle, slot: string, box: ImageBox): DocumentStyle {
   const frames: DocumentStyle['imageFrames'] = {
@@ -716,9 +713,6 @@ function writeFrame(style: DocumentStyle, slot: string, box: ImageBox): Document
   return { ...style, imageFrames: frames, imageWidths: widths };
 }
 
-export function setImageFrame(style: DocumentStyle, slot: string, box: Partial<ImageBox>): DocumentStyle {
-  return writeFrame(style, slot, clampImageBox(box));
-}
 
 export function setImageWidth(style: DocumentStyle, slot: string, pct: number): DocumentStyle {
   const current = imageFrameOf(style, slot);
@@ -887,9 +881,6 @@ export function setBlockText(style: DocumentStyle, sectionId: string, blockId: s
   return { ...style, sectionBlocks };
 }
 
-export function blockFrameSlot(sectionId: string, blockId: string): string {
-  return `block:${sectionId}:${blockId}`;
-}
 
 export function parseBlockFrameSlot(slot: string): { sectionId: string; blockId: string } | null {
   if (!slot.startsWith('block:')) return null;
@@ -934,7 +925,7 @@ function channel(hex: string, index: number): number {
   return n <= 0.03928 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4;
 }
 
-export function contrastRatio(fg: string, bg: string): number {
+function contrastRatio(fg: string, bg: string): number {
   if (!/^#[0-9a-fA-F]{6}$/.test(fg) || !/^#[0-9a-fA-F]{6}$/.test(bg)) return 1;
   const L = (hex: string) => 0.2126 * channel(hex, 1) + 0.7152 * channel(hex, 3) + 0.0722 * channel(hex, 5);
   const a = L(fg);
@@ -1018,7 +1009,7 @@ export function pageBreakBackground(size: PageSize): string {
 }
 
 /** Air at the top and bottom of every page, so a heading does not sit on the edge. */
-export const PAGE_EDGE_FLOOR_MM = 12;
+const PAGE_EDGE_FLOOR_MM = 12;
 
 export function pageEdgeMm(marginMm: number): number {
   const n = Number(marginMm);
@@ -1088,7 +1079,7 @@ export function styleCssVars(style: DocumentStyle): Record<string, string> {
   };
 }
 
-export interface StyleProblem {
+interface StyleProblem {
   key: string;
   message: string;
 }

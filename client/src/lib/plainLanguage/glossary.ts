@@ -3,7 +3,7 @@
  * `pattern` is matched against the label text. Acronyms are case-sensitive so "tl" inside a word never matches.
  * The `means` text is translated through tf(), so every entry needs a Telugu line in lib/i18n/te/plainTe.ts.
  */
-export type GlossaryEntry = { term: string; pattern: RegExp; means: string };
+type GlossaryEntry = { term: string; pattern: RegExp; means: string };
 
 export const GLOSSARY: GlossaryEntry[] = [
   { term: 'WC', pattern: /\bWC\b|working capital/i, means: 'Working capital is the money you need for day-to-day running (raw material, wages, rent) until customers pay you.' },

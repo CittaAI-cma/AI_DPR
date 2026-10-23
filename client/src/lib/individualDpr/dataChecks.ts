@@ -63,7 +63,7 @@ export function projectCost(data: AnyData): number {
   return MONEY_FIELDS[12].reduce((sum, key) => sum + num(s[key]), 0);
 }
 
-export function fundingTotal(data: AnyData): number {
+function fundingTotal(data: AnyData): number {
   const s = stepOf(data, 13);
   return MONEY_FIELDS[13].reduce((sum, key) => sum + num(s[key]), 0);
 }

@@ -17,7 +17,7 @@ const SAFE_TAGS = [
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'span', 'div', 'a',
 ];
 
-export function cleanText(text: string): string {
+function cleanText(text: string): string {
   const stripped = text.replace(CONTROL_CHARS, '');
   if (!TAG_LIKE.test(stripped) && !SCRIPT_URL.test(stripped)) return stripped;
   return DOMPurify.sanitize(stripped, {

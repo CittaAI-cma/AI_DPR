@@ -12,7 +12,7 @@ export type Recording = {
   cancel: () => void;
 };
 
-export type RecordOptions = {
+type RecordOptions = {
   maxMs?: number;
   silenceMs?: number;
   /** Called a few times a second with how loud it is, 0 to 1. */

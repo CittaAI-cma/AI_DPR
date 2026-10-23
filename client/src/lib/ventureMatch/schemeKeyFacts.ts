@@ -4,9 +4,9 @@
  * (docs/schemes, schemeBriefs). Amounts are "up to" / "about" figures and can change, so the card tells people
  * to confirm with the agency; none of this is a promise of eligibility.
  */
-export type Loc = { en: string; te: string };
+type Loc = { en: string; te: string };
 export type FactKind = 'support' | 'who' | 'note';
-export interface KeyFact {
+interface KeyFact {
   kind: FactKind;
   text: Loc;
 }
@@ -22,7 +22,7 @@ export const FACT_LABEL: Record<FactKind, Loc> = {
   note: L('Note', 'గమనిక'),
 };
 
-export const KEY_FACTS: Record<string, KeyFact[]> = {
+const KEY_FACTS: Record<string, KeyFact[]> = {
   PMEGP: [
     support('Subsidy of 15% to 35% of project cost; more for rural areas and special categories.', 'ప్రాజెక్ట్ ఖర్చులో 15% నుండి 35% సబ్సిడీ; గ్రామీణ ప్రాంతాలు, ప్రత్యేక వర్గాలకు ఎక్కువ.'),
     who('New (greenfield) micro business, age 18+, registered firm.', 'కొత్త సూక్ష్మ వ్యాపారం, 18 ఏళ్లు పైబడినవారు, నమోదిత సంస్థ.'),

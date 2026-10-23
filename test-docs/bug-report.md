@@ -73,6 +73,9 @@ See the table; each is a one-line markup/theme fix. BUG-005: give the scroll con
 - The login page shows demo credentials (`Login.tsx`). Fine for a demo; remove before production.
 - Registration needs the privacy notice to be scrolled before the consent box can be ticked (by design; the tests do it).
 
+- `server/src/controllers/dpr.controller.ts` (~line 1509) does `require('exceljs')` for the spreadsheet download, but `exceljs` is neither in `server/package.json` nor installed. The download still works (DPR-020 passes) because the code falls back when the require fails, but the richer workbook path never runs. Decide whether to add the package or delete that path; I left it alone because adding it would change the download's content.
+- The animated product mock-ups on the home page change colour while they play, so an automated contrast scan can land on a pale frame. They are hidden from assistive technology (`aria-hidden`), so the smoke test no longer judges colour contrast inside `aria-hidden` illustrations (the page's real text is still checked).
+
 ## Test-environment problems (not application defects)
 | Problem | Cause | Handling |
 |---|---|---|

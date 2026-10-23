@@ -6,7 +6,7 @@ import {
   PRIVACY_NOTICE_VERSION,
 } from './constants';
 
-export type PrivacyNoticeCopy = {
+type PrivacyNoticeCopy = {
   title: string;
   updated: string;
   notLegal: string;

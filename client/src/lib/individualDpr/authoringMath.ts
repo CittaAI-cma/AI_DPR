@@ -58,13 +58,13 @@ export function overallProgress(sections: SectionProgress[]): OverallProgress {
   };
 }
 
-export interface Milestone {
+interface Milestone {
   id: 'quarter' | 'half' | 'most' | 'done';
   at: number;
   label: { en: string; te: string };
 }
 
-export const MILESTONES: Milestone[] = [
+const MILESTONES: Milestone[] = [
   { id: 'quarter', at: 25, label: { en: 'Getting started', te: 'ప్రారంభం' } },
   { id: 'half', at: 50, label: { en: 'Halfway', te: 'సగం పూర్తి' } },
   { id: 'most', at: 75, label: { en: 'Almost there', te: 'దాదాపు పూర్తి' } },

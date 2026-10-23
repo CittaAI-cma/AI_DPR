@@ -106,7 +106,7 @@ Back is named and routed from where the person came (`lib/navHistory.tsx`, `useB
 
 ### Persist
 
-Drafts save via cluster DPR draft API using `toClusterPayload(data)`:
+Drafts save via cluster DPR draft API using `toIndividualPayload(data)`:
 
 - `isIndividualDPR: true`
 - `matchedSchemeCode` on root + `metadata`

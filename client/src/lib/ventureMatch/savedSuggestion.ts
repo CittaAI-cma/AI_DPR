@@ -5,7 +5,7 @@ import { evaluate } from './evaluate';
 import { STORAGE_KEY, pruneInvisibleAnswers, scopedVentureMatchKey } from './questions';
 import type { VentureMatchAnswers } from './types';
 
-export interface FinderSuggestion {
+interface FinderSuggestion {
   /** Schemes to lead with, from the person's own Scheme Finder answers. */
   suggested: Set<string>;
   /** Every other scheme that still matched those answers. */
@@ -17,7 +17,7 @@ export interface FinderSuggestion {
  * Finder (nothing saved, or stopped part-way), so callers show no suggestion at all.
  * The Finder keeps its answers in this browser, per signed-in user, under `venture-match-progress`.
  */
-export function readFinderSuggestion(userId?: string | null): FinderSuggestion | null {
+function readFinderSuggestion(userId?: string | null): FinderSuggestion | null {
   try {
     const raw = localStorage.getItem(scopedVentureMatchKey(STORAGE_KEY, userId));
     if (!raw) return null;
