@@ -1364,6 +1364,11 @@ li:hover .a11y-move, li:focus-within .a11y-move { opacity: 1; width: auto; overf
   0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45); }
   100% { box-shadow: 0 0 0 14px hsl(var(--primary) / 0); }
 }
+/* Words and the "Click here" label fade over when the tour moves to the next stop; the panel fades in when it opens. */
+.tour-fade { animation: tour-fade-in 0.38s ease both; }
+.tour-panel { animation: tour-appear 0.3s ease both; }
+@keyframes tour-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes tour-appear { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  [data-tour-active='click'], .tour-arrow { animation: none; }
+  [data-tour-active='click'], .tour-arrow, .tour-fade, .tour-panel { animation: none; }
 }

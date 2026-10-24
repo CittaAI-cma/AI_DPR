@@ -185,12 +185,15 @@ describe('guided tour', () => {
     await page.close();
   });
 
-  test('TOUR-003 Exit tour stops at any point, nothing stays marked, and the tour can be started again from the beginning', async () => {
+  test('TOUR-003 Exit tour stops at any point and returns to the dashboard, nothing stays marked, and the tour can be started again from the beginning', async () => {
     const page = await openPage(browser, { as: 'consultant' });
     await go(page, '/dashboard', 2000);
     await clickText(page, '[data-tour=journey] button', /Take a Tour/);
-    await next(page);
+    await next(page); await next(page);
+    await page.click('[data-tour-active="click"]');
+    await waitFor(page, () => location.pathname === '/individual-dpr/create', undefined, 10000);
     await press(page, /^Exit tour/);
+    await waitFor(page, () => location.pathname === '/dashboard', undefined, 8000);
     await sleep(400);
     assert.equal(await page.evaluate(() => !!document.getElementById('tour-title') || !!document.querySelector('.tour-arrow') || !!document.querySelector('[data-tour-active]')), false);
     await page.reload(); await sleep(1800);
