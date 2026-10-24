@@ -271,11 +271,12 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
           {tf('No schemes match this search.')}
         </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div data-tour="scheme-grid" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((card) => (
             <button
               key={card.code || 'vanilla'}
               type="button"
+              data-tour={card.isVanilla ? 'scheme-card' : undefined}
               onClick={() => onSelect(card.code)}
               className="group text-left rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >

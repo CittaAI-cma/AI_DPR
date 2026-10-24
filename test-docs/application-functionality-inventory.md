@@ -13,7 +13,7 @@ Roles: **Entrepreneur** (`consultant`) · **Admin** (`super_admin`) · **Distric
 | `/register` | signed out | Create account with privacy consent (must scroll notice) | AUTH-010..014, SMOKE-003 |
 | `/accept-invite` | invited user | Set a password from an emailed invitation | server `admin.live` (onboarding); no browser test |
 | `/privacy`, `/accessibility` | all | Notices | SMOKE-004, a11y scan |
-| `/dashboard` | entrepreneur (also others) | Totals, recent DPRs, quick actions | SMOKE-005, INT-001..004 |
+| `/dashboard` | entrepreneur (also others) | Journey panel, five summary cards (open the filtered list), recent reports, Scheme Finder card, quick actions, **guided tour** (arrow points at the real buttons across the dashboard, scheme choice and form; fills sample answers; Exit tour any time) | SMOKE-005, INT-001..004, DASH-001..021, TOUR-001..006 |
 | `/projects`, `/projects/create`, `/projects/:id` | entrepreneur | List, create, view, delete projects | PROJ-001..020, SMOKE-006/007 |
 | `/dprs` | entrepreneur | All reports: filters, open, delete, PDF | SMOKE-008, INT; filters/pagination **not** tested |
 | `/individual-dpr/guide` | entrepreneur | Choose Basic/Advanced mode and set up the report | SMOKE-010, IDPR-001..044 |

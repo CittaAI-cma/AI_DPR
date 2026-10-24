@@ -19,7 +19,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onCreate, onGuide, o
     { icon: FolderKanban, title: tf('My Projects'), text: tf('View all your projects'), tint: 'bg-warning/10 text-warning-text', go: onProjects },
   ];
   return (
-    <section data-tour="quick" aria-labelledby="quick-actions-title" className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <section aria-labelledby="quick-actions-title" className="rounded-2xl border border-border bg-card p-4 sm:p-5">
       <header className="flex items-center gap-3">
         <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-warning/10 text-warning-text" aria-hidden="true"><Zap className="h-5 w-5" /></span>
         <div>

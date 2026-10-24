@@ -14,7 +14,7 @@ export const SchemeFinderCard: React.FC<SchemeFinderCardProps> = ({ onSearch, on
   const [words, setWords] = useState('');
   const sectors = [tf('Food Processing'), tf('Manufacturing'), tf('Services')];
   return (
-    <section data-tour="finder" aria-labelledby="finder-title" className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <section aria-labelledby="finder-title" className="rounded-2xl border border-border bg-card p-4 sm:p-5">
       <header className="flex items-center gap-3">
         <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-destructive/10 text-destructive-text" aria-hidden="true"><Target className="h-5 w-5" /></span>
         <div className="min-w-0">

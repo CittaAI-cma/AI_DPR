@@ -21,7 +21,7 @@ import { KpiCards } from '@/components/dashboard/KpiCards';
 import { RecentDprs } from '@/components/dashboard/RecentDprs';
 import { SchemeFinderCard } from '@/components/dashboard/SchemeFinderCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-import { DashboardTour } from '@/components/dashboard/DashboardTour';
+import { useTourStore } from '@/store/tourStore';
 import { Button } from '@/components/ui/Button';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { canCreateDpr, ROLE_META, toAppRole } from '@/lib/rbac';
@@ -57,7 +57,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(cachedDPRs.length === 0);
   const [insights, setInsights] = useState<any>(null);
   const LATEST_COUNT = 5;
-  const [tourOpen, setTourOpen] = useState(false);
+  const startTour = useTourStore((s) => s.start);
 
   useEffect(() => {
     loadData();
@@ -340,7 +340,7 @@ export const Dashboard: React.FC = () => {
 
         <DashboardHero
           onGuide={() => navigate('/individual-dpr/guide')}
-          onTour={() => setTourOpen(true)}
+          onTour={startTour}
         />
 
         <KpiCards stats={stats} loading={showPlaceholders} onOpen={openList} />
@@ -387,7 +387,6 @@ export const Dashboard: React.FC = () => {
           onProjects={() => navigate('/projects')}
         />
       </div>
-      <DashboardTour open={tourOpen} onClose={() => setTourOpen(false)} />
       {deleteDialog}
     </Layout>
   );

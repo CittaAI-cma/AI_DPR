@@ -138,25 +138,138 @@ describe('dashboard navigation', () => {
   });
 });
 
-describe('dashboard tour', () => {
-  test('DASH-016 the Take a Tour button walks through the page, can be stepped back, and Escape closes it', async () => {
+describe('guided tour', () => {
+  const panelTitle = (page) => page.evaluate(() => document.getElementById('tour-title')?.textContent);
+  const press = (page, label) => clickText(page, '[role=dialog][aria-labelledby=tour-title] button', label);
+  const next = async (page) => { await press(page, /^Next/); await sleep(450); };
+
+  test('TOUR-001 Take a Tour starts at the beginning, explains the page, then points an arrow at Create DPR', async () => {
     const page = await openPage(browser, { as: 'consultant' });
     await go(page, '/dashboard', 2000);
     await clickText(page, '[data-tour=journey] button', /Take a Tour/);
-    await waitFor(page, () => !!document.querySelector('[role=dialog][aria-labelledby=tour-title]'));
-    const stopTitle = () => page.evaluate(() => document.getElementById('tour-title')?.textContent);
-    assert.equal(await stopTitle(), 'Start here');
-    assert.equal(await page.evaluate(() => document.querySelector('[data-tour-active]')?.getAttribute('data-tour')), 'actions', 'the top-right buttons are marked');
-    await clickText(page, '[role=dialog] button', /^Next/);
-    await sleep(300);
-    assert.equal(await stopTitle(), 'The four steps of a DPR');
-    await clickText(page, '[role=dialog] button', /^Back/);
-    await sleep(300);
-    assert.equal(await stopTitle(), 'Start here');
-    await page.keyboard.press('Escape');
-    await sleep(300);
-    assert.equal(await page.evaluate(() => !!document.querySelector('[aria-labelledby=tour-title]')), false, 'Escape closes the tour');
-    assert.equal(await page.evaluate(() => document.querySelectorAll('[data-tour-active]').length), 0, 'no part of the page stays marked');
+    await waitFor(page, () => !!document.getElementById('tour-title'));
+    assert.equal(await panelTitle(page), 'Welcome to the tour');
+    await next(page);
+    assert.equal(await panelTitle(page), 'Your reports at a glance');
+    await next(page);
+    assert.equal(await panelTitle(page), 'Start a new DPR');
+    await waitFor(page, () => !!document.querySelector('.tour-arrow'), undefined, 5000);
+    assert.equal(await page.evaluate(() => document.querySelector('[data-tour-active="click"]')?.textContent.trim()), 'Create DPR', 'the arrow marks the real Create DPR button');
+    await page.close();
+  });
+
+  test('TOUR-002 pressing the button the arrow points at moves the tour on, across pages, to the scheme choice', async () => {
+    const page = await openPage(browser, { as: 'consultant' });
+    await go(page, '/dashboard', 2000);
+    await clickText(page, '[data-tour=journey] button', /Take a Tour/);
+    await next(page); await next(page);
+    await page.click('[data-tour-active="click"]');
+    await waitFor(page, () => location.pathname === '/individual-dpr/create', undefined, 10000);
+    await waitFor(page, () => document.getElementById('tour-title')?.textContent === 'Choose how you want to apply', undefined, 10000);
+    await next(page);
+    assert.equal(await panelTitle(page), 'Pick one to try');
+    await waitFor(page, () => document.querySelector('[data-tour-active="click"]')?.textContent.includes('bank term loan') || document.querySelector('[data-tour-active="click"]')?.textContent.includes('Bank term loan'), undefined, 8000);
+    await page.close();
+  });
+
+  test('TOUR-003 Exit tour stops at any point, nothing stays marked, and the tour can be started again from the beginning', async () => {
+    const page = await openPage(browser, { as: 'consultant' });
+    await go(page, '/dashboard', 2000);
+    await clickText(page, '[data-tour=journey] button', /Take a Tour/);
+    await next(page);
+    await press(page, /^Exit tour/);
+    await sleep(400);
+    assert.equal(await page.evaluate(() => !!document.getElementById('tour-title') || !!document.querySelector('.tour-arrow') || !!document.querySelector('[data-tour-active]')), false);
+    await page.reload(); await sleep(1800);
+    assert.equal(await page.evaluate(() => !!document.getElementById('tour-title')), false, 'it stays closed after a reload');
+    await clickText(page, '[data-tour=journey] button', /Take a Tour/);
+    await waitFor(page, () => document.getElementById('tour-title')?.textContent === 'Welcome to the tour');
+    await page.close();
+  });
+
+  test('TOUR-004 the full walk-through: scheme, brief, form explained, sample answers filled in, Save Draft pressed, finished', async () => {
+    const me = await newPerson();
+    const profile = await api('GET', '/auth/profile', undefined, me.token);
+    const page = await openAs(me.token, profile.body.data?.user || profile.body.data, { width: 1440, height: 1000 });
+    await go(page, '/dashboard', 2500);
+    await clickText(page, '[data-tour=journey] button', /Take a Tour/);
+    await next(page); await next(page);
+    await page.click('[data-tour-active="click"]');
+    await waitFor(page, () => document.getElementById('tour-title')?.textContent === 'Choose how you want to apply', undefined, 10000);
+    await next(page);
+    await waitFor(page, () => !!document.querySelector('[data-tour-active="click"]'), undefined, 8000);
+    await page.click('[data-tour-active="click"]');
+    await waitFor(page, () => document.getElementById('tour-title')?.textContent === 'A short brief first', undefined, 10000);
+    await next(page);
+    assert.equal(await panelTitle(page), 'Start the steps');
+    await waitFor(page, () => !!document.querySelector('[data-tour-active="click"]'), undefined, 8000);
+    await page.click('[data-tour-active="click"]');
+    await waitFor(page, () => document.getElementById('tour-title')?.textContent === 'Your progress', undefined, 10000);
+    await next(page);
+    assert.equal(await panelTitle(page), 'Where you answer');
+    await next(page);
+    assert.equal(await panelTitle(page), 'Try it with sample answers');
+    await press(page, /Fill sample answers/);
+    await waitFor(page, () => document.getElementById('tour-title')?.textContent === 'The report writes itself', undefined, 10000);
+    const filled = await page.evaluate(() => document.querySelector('#dpr-preview')?.innerText.includes('Sri Annapurna'));
+    assert.equal(filled, true, 'the sample answers show in the report');
+    await next(page); await next(page); await next(page);
+    assert.equal(await panelTitle(page), 'Save your work');
+    await waitFor(page, () => !!document.querySelector('[data-tour-active="click"]'), undefined, 8000);
+    await page.click('[data-tour-active="click"]');
+    await waitFor(page, () => document.getElementById('tour-title')?.textContent === 'Check my answers', undefined, 10000);
+    await next(page);
+    assert.equal(await panelTitle(page), 'Generate the DPR');
+    await press(page, /^Finish/);
+    await sleep(400);
+    assert.equal(await page.evaluate(() => !!document.getElementById('tour-title')), false, 'Finish ends the tour');
+    await waitFor(page, () => location.pathname === '/dashboard', undefined, 8000);
+    await page.close();
+  });
+});
+
+describe('guided tour rules', () => {
+  test('TOUR-005 on a click step a "Click here" label shows; on every step only the tour panel and the one button to press respond', async () => {
+    const page = await openPage(browser, { as: 'consultant' });
+    await go(page, '/dashboard', 2000);
+    await clickText(page, '[data-tour=journey] button', /Take a Tour/);
+    await waitFor(page, () => !!document.getElementById('tour-title'));
+    // Information step: the page behind is switched off.
+    await page.evaluate(() => [...document.querySelectorAll('main button')].find((b) => /View All DPRs/.test(b.textContent))?.click());
+    await page.mouse.click(10, 10);
+    await sleep(500);
+    assert.equal(new URL(page.url()).pathname, '/dashboard', 'a click on the page does nothing');
+    const view = await page.$('main button:has-text("View All DPRs")');
+    await view.click({ force: true }).catch(() => {});
+    await sleep(500);
+    assert.equal(new URL(page.url()).pathname, '/dashboard', 'View All DPRs is switched off during an information step');
+    assert.equal(await page.evaluate(() => !!document.body.innerText.match(/Click here/)), false, 'no "Click here" label on an information step');
+    await clickText(page, '[role=dialog][aria-labelledby=tour-title] button', /^Next/); await sleep(400);
+    await clickText(page, '[role=dialog][aria-labelledby=tour-title] button', /^Next/); await sleep(800);
+    // Click step: the label shows, and Scheme Finder (not the target) is still switched off.
+    assert.equal(await page.evaluate(() => /CLICK HERE|Click here/i.test(document.body.innerText)), true, 'a "Click here" label shows');
+    await page.evaluate(() => [...document.querySelectorAll('[data-tour=actions] button')].find((b) => /Scheme Finder/.test(b.textContent))?.click());
+    await sleep(500);
+    assert.equal(new URL(page.url()).pathname, '/dashboard', 'other buttons stay off on a click step');
+    await page.click('[data-tour-active="click"]');
+    await waitFor(page, () => location.pathname === '/individual-dpr/create', undefined, 8000);
+    await page.close();
+  });
+
+  test('TOUR-006 the explanation sits next to what it explains and never covers it', async () => {
+    const page = await openPage(browser, { as: 'consultant', width: 1440, height: 1000 });
+    await go(page, '/dashboard', 2000);
+    await clickText(page, '[data-tour=journey] button', /Take a Tour/);
+    await waitFor(page, () => !!document.getElementById('tour-title'));
+    await sleep(900);
+    const near = await page.evaluate(() => {
+      const panel = document.querySelector('[role=dialog][aria-labelledby=tour-title]').getBoundingClientRect();
+      const target = document.querySelector('[data-tour-active]').getBoundingClientRect();
+      const gap = panel.top >= target.bottom ? panel.top - target.bottom : target.top >= panel.bottom ? target.top - panel.bottom : 0;
+      return { gap, overlaps: !(panel.right < target.left || panel.left > target.right || panel.bottom < target.top || panel.top > target.bottom) };
+    });
+    assert.equal(near.overlaps, false, 'the panel does not cover what it explains');
+    assert.ok(near.gap <= 60, `the panel is ${near.gap}px from its target`);
     await page.close();
   });
 });

@@ -30,7 +30,7 @@ export const RecentDprs: React.FC<RecentDprsProps> = ({ dprs, total, loading, ca
   const stamp = (dpr: any) => dpr.updatedAt || dpr.createdAt || dpr.generatedAt;
 
   return (
-    <section data-tour="recent" aria-labelledby="recent-dprs-title" className="min-w-0 rounded-2xl border border-border bg-card">
+    <section aria-labelledby="recent-dprs-title" className="min-w-0 rounded-2xl border border-border bg-card">
       <header className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">

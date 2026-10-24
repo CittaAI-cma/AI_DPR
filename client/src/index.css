@@ -1347,12 +1347,23 @@ li:hover .a11y-move, li:focus-within .a11y-move { opacity: 1; width: auto; overf
   to { opacity: 1; transform: none; }
 }
 
-/* The dashboard tour marks the part of the page it is describing. */
-[data-tour-active='true'] {
+/* The guided tour: an outline on what is being explained, a pulse on the button to press, and a bouncing arrow above it. */
+[data-tour-active] {
   outline: 3px solid hsl(var(--primary));
   outline-offset: 4px;
-  transition: outline-color 0.2s ease;
+  border-radius: 14px;
+}
+[data-tour-active='click'] {
+  animation: tour-pulse 1.4s ease-out infinite;
+}
+.tour-arrow { animation: tour-bounce 0.9s ease-in-out infinite; }
+.tour-arrow-up { animation-name: tour-bounce-up; }
+@keyframes tour-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+@keyframes tour-bounce-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes tour-pulse {
+  0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45); }
+  100% { box-shadow: 0 0 0 14px hsl(var(--primary) / 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-tour-active='true'] { transition: none; }
+  [data-tour-active='click'], .tour-arrow { animation: none; }
 }

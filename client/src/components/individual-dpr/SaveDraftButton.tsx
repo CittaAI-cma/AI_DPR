@@ -92,6 +92,7 @@ export function SaveDraftButton({
   return (
     <button
       type="button"
+      data-tour="save-draft"
       onClick={() => void press()}
       disabled={disabled}
       title={title}

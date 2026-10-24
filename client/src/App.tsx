@@ -4,6 +4,7 @@ import { RouteTracker, ScrollToTop } from '@/lib/navHistory';
 import { RouteAnnouncer } from '@/lib/routeA11y';
 import { PageLoading } from '@/components/ui/PageLoading';
 import { SessionManager } from '@/components/session/SessionManager';
+import { ProductTour } from '@/components/tour/ProductTour';
 import { ConfirmProvider } from '@/components/ui/ConfirmProvider';
 import { ThemeApplier } from '@/components/layout/ThemeToggle';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -81,6 +82,7 @@ function App() {
       <ScrollToTop />
       <RouteAnnouncer />
       <SessionManager />
+      <ProductTour />
       <ThemeApplier />
       <Suspense fallback={<PageLoading />}>
       <Routes>

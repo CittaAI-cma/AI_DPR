@@ -5,6 +5,9 @@ Branch `feature/application_testcases`. Run on the isolated QA stack (API :5055,
 ## Browser engine and screen sizes
 The browser suite now runs on **Playwright** (it was Puppeteer). `E2E_BROWSER` picks Chromium or WebKit (Safari's engine) and `E2E_DEVICE` picks phone 360, tablet 768, laptop 1280 or desktop 1440. The full matrix of 8 combinations was run: desktop, laptop and tablet were clean on both engines; phone found BUG-016 and BUG-017 (fixed) and a test-side issue (drag needs a tall window); after the fixes the phone smoke file is 69/69 on both engines. **Firefox could not be run**: Playwright's Firefox fails to start on this Mac (a graphics crash at launch, the same with every flag I tried), so Firefox is untested. WebKit does not Tab to links by default, so KEY-001 focuses the skip link directly on WebKit.
 
+## Dashboard redesign and guided tour (added later)
+New file `e2e/tests/10-dashboard.test.mjs` (DASH-001..021, TOUR-001..006). Only the new tour tests and DASH-011 were run after the last change (all pass on Chromium desktop); the full matrix has **not** been re-run since the redesign, so the totals below predate it.
+
 ## Results (real runs)
 | Suite | Pass | Fail | Known-bug (todo) |
 |---|---|---|---|

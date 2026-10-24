@@ -13,7 +13,7 @@ import { computeSections, overallProgress, sectionsUnsaved } from '@/lib/individ
 import { useBackTarget } from '@/lib/navHistory';
 import { BackButton } from '@/components/ui/BackButton';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -39,7 +39,7 @@ import { SaveDraftButton } from '@/components/individual-dpr/SaveDraftButton';
 import { FinalPreviewDialog } from '@/components/individual-dpr/FinalPreviewDialog';
 import { EditModeToggle } from '@/components/individual-dpr/EditModeToggle';
 import { DocFieldGuide } from '@/components/individual-dpr/DocFieldGuide';
-import { loadSampleData } from '@/lib/individualDpr/sampleData';
+import { applySampleToStore } from '@/lib/individualDpr/sampleData/apply';
 import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -136,6 +136,20 @@ export const IndividualDPRCreation: React.FC = () => {
   const editMode = useEditModeStore((s) => s.mode);
   const setEditMode = useEditModeStore((s) => s.setMode);
   const docMode = editMode === 'document';
+  // A brand-new DPR always opens in Basic (the form). Editing an existing one opens in the mode that was used last.
+  // The visit is remembered by its history entry, so reloading a new DPR in Advanced does not flip it back to Basic.
+  const visitKey = useLocation().key;
+  useEffect(() => {
+    if (!isNewDraft || isEditing) return;
+    try {
+      if (sessionStorage.getItem('dpr-new-mode-visit') === visitKey) return;
+      sessionStorage.setItem('dpr-new-mode-visit', visitKey);
+    } catch {
+      /* without storage it simply applies on every load */
+    }
+    setEditMode('form');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Document-mode guide: the answer that has the cursor, and which required answers are still empty (shown as UI only, never in the report).
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
   // Which way the person moved between steps, so the new step slides in from that side.
@@ -182,20 +196,9 @@ export const IndividualDPRCreation: React.FC = () => {
   const handleApplySampleData = async () => {
     setApplyingSample(true);
     try {
-      const sample = await loadSampleData(useIndividualDPRStore.getState().data.matchedSchemeCode || null);
-      if (!sample) {
+      if (!(await applySampleToStore())) {
         toast.error('No sample data for this scheme yet.');
         return;
-      }
-      const store = useIndividualDPRStore.getState();
-      Object.entries(sample).forEach(([key, value]) => {
-        const match = /^step(\d+)$/.exec(key);
-        if (match && value) store.setStepData(Number(match[1]), JSON.parse(JSON.stringify(value)));
-      });
-      if (sample.ventureMatchAnswers) store.setVentureMatchAnswers(JSON.parse(JSON.stringify(sample.ventureMatchAnswers)));
-      if (sample.schemeExtras) {
-        const current = useIndividualDPRStore.getState().data.schemeExtras || {};
-        store.setSchemeExtras({ ...current, ...JSON.parse(JSON.stringify(sample.schemeExtras)) });
       }
       setInvalidFields([]);
       setRequiredNotice('');
@@ -1135,14 +1138,14 @@ export const IndividualDPRCreation: React.FC = () => {
 
               <div className="ml-auto flex items-center justify-end gap-2 flex-wrap">
                 {setupPhase === 'brief' && (
-                  <Button variant="primary" onClick={handleBriefNext} className="gap-2">
+                  <Button variant="primary" onClick={handleBriefNext} className="gap-2" data-tour="start-steps">
                     {t('individualDpr.picker.continueToForm', { defaultValue: 'Start DPR steps' })}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 )}
                 {setupPhase === 'form' && (
                   <>
-                    <label className="flex items-center gap-2 text-sm">
+                    <label data-tour="scheme-select" className="flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground whitespace-nowrap">
                         {t('individualDpr.schemeLabel', { defaultValue: 'Scheme' })}
                       </span>
@@ -1160,7 +1163,9 @@ export const IndividualDPRCreation: React.FC = () => {
                         ))}
                       </select>
                     </label>
-                    <EditModeToggle mode={editMode} onChange={(mode) => (mode === editMode ? undefined : fadeThen(() => setEditMode(mode)))} />
+                    <span data-tour="mode-toggle" className="inline-flex">
+                      <EditModeToggle mode={editMode} onChange={(mode) => (mode === editMode ? undefined : fadeThen(() => setEditMode(mode)))} />
+                    </span>
                     {isAdmin && devMode && (
                       <Button
                         variant="outline"
@@ -1175,7 +1180,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       </Button>
                     )}
                     {/* Below a wide screen the Check button shows only its icon (the name is the tooltip), so the row never wraps. */}
-                    <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)} className="relative gap-2" aria-label={tf('Check my answers')} title={tf('Looks for missing, unclear or unusual answers across the whole form.')}>
+                    <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)} className="relative gap-2" data-tour="check-answers" aria-label={tf('Check my answers')} title={tf('Looks for missing, unclear or unusual answers across the whole form.')}>
                       <ClipboardCheck className="h-4 w-4" />
                       <span className="hidden xl:inline">{tf('Check my answers')}</span>
                       {allFindings.length ? <span className="rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-slate-900 max-xl:absolute max-xl:-right-1.5 max-xl:-top-1.5">{allFindings.length}</span> : null}
@@ -1186,6 +1191,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       onClick={() => void handleGenerateDPR()}
                       isLoading={isGenerating}
                       className="gap-2"
+                      data-tour="generate"
                       title={overall.readyToGenerate ? tf('Creates the final DPR from your answers.') : tf('Creates the final DPR. It turns on as soon as every required answer is filled in.')}
                       disabled={!overall.readyToGenerate}
                     >
@@ -1233,7 +1239,7 @@ export const IndividualDPRCreation: React.FC = () => {
         {setupPhase === 'form' && (
           <>
         {!stylingLayout && (
-        <div ref={stepperBarRef} className="relative z-[55] shrink-0 bg-background border-b border-border shadow-[0_8px_16px_-14px_rgba(16,24,40,0.28)]">
+        <div ref={stepperBarRef} data-tour="stepper" className="relative z-[55] shrink-0 bg-background border-b border-border shadow-[0_8px_16px_-14px_rgba(16,24,40,0.28)]">
           <div className="mx-auto w-full max-w-7xl px-4 py-1.5">
             <AuthoringStepper
               variant="full"
@@ -1508,6 +1514,7 @@ export const IndividualDPRCreation: React.FC = () => {
           <div className="grid grid-cols-1 gap-4 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
               <div
                 id="individual-dpr-form"
+                data-tour="form-pane"
                 className="dpr-form-card flex min-w-0 flex-col rounded-2xl border border-border/70 bg-card shadow-[0_1px_2px_rgba(16,24,40,0.05),0_12px_28px_-12px_rgba(16,24,40,0.16)] lg:h-full lg:min-h-0 lg:overflow-hidden"
               >
                 {(

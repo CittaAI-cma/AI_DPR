@@ -170,9 +170,8 @@ describe('Basic and Advanced mode', () => {
   });
 
   test('IDPR-031 typing straight into the report (Advanced) updates the answer used by the form', async () => {
-    const page = await openPage(browser, { as: 'consultant', mode: 'document' });
-    await go(page, '/individual-dpr/create?new=true&scheme=VANILLA', 1500);
-    await clickText(page, 'button', /Start DPR steps/i);
+    const page = await startForm();
+    await page.select('select[aria-label="Where to fill in"]', 'document');
     await waitFor(page, () => !!document.querySelector('[data-dpr-scroll] [data-dpr-field="step1.unitName"]'), undefined, 15000);
     const unit = unique('QA Inline');
     const cell = await page.evaluateHandle(() => document.querySelector('[data-dpr-scroll] [data-dpr-field="step1.unitName"]'));
@@ -180,6 +179,25 @@ describe('Basic and Advanced mode', () => {
     await page.evaluate(() => document.activeElement.blur());
     await page.select('select[aria-label="Where to fill in"]', 'form');
     await waitFor(page, (u) => [...document.querySelectorAll('#individual-dpr-form input')].some((i) => i.value === u), unit, 10000);
+    await page.close();
+  });
+
+  test('IDPR-033 a new DPR always opens in Basic, even if Advanced was used last', async () => {
+    const page = await startForm({ mode: 'document' });
+    assert.equal(await page.evaluate(() => document.querySelector('select[aria-label="Where to fill in"]').value), 'form');
+    assert.equal(await page.evaluate(() => !!document.querySelector('#individual-dpr-form')), true, 'the question form is showing');
+    await page.close();
+  });
+
+  test('IDPR-034 editing an existing DPR opens in the mode used last (Advanced stays Advanced)', async () => {
+    const unit = unique('QA Mode');
+    const first = await startForm();
+    await typeUnit(first, unit); await saveDraft(first); await first.close();
+    const stored = await storedDraft(unit);
+    const page = await openPage(browser, { as: 'consultant', mode: 'document' });
+    await go(page, `/individual-dpr/create?projectId=${stored.projectId}&dprId=${stored._id}`, 2500);
+    await waitFor(page, () => !!document.querySelector('select[aria-label="Where to fill in"]'), undefined, 15000);
+    assert.equal(await page.evaluate(() => document.querySelector('select[aria-label="Where to fill in"]').value), 'document');
     await page.close();
   });
 
