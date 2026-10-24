@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
 import { api } from '@/lib/api';
@@ -72,7 +72,12 @@ export const AllDPRs: React.FC = () => {
   const [filteredDprs, setFilteredDprs] = useState<DPR[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  // The dashboard cards link here with ?status=draft (etc.), so the list opens already filtered.
+  const [urlParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
+    const wanted = urlParams.get('status');
+    return (['draft', 'analyzed', 'submitted', 'approved', 'rejected'] as const).find((s) => s === wanted) ?? 'all';
+  });
   const [activeTag, setActiveTag] = useState('');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');

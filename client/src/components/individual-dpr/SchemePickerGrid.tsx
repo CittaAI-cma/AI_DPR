@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { SCHEME_OPTIONS } from '@/lib/individualDpr/schemeFormConfig';
 import {
   briefLangFromI18n,
@@ -141,7 +142,9 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
   const { t, i18n } = useTranslation();
   const tf = useClusterFormText();
   const lang = briefLangFromI18n(i18n.language);
-  const [query, setQuery] = useState('');
+  // The dashboard's Scheme Finder card opens this list with ?q=<words> already typed into the search box.
+  const [urlParams] = useSearchParams();
+  const [query, setQuery] = useState(() => (urlParams.get('q') || '').slice(0, 80));
   // Only people who finished Scheme Finder get suggestions; everyone else sees plain cards.
   const finder = useFinderSuggestion();
   const [levels, setLevels] = useState<SchemeLevel[]>([]);

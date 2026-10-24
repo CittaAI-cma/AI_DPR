@@ -1346,3 +1346,13 @@ li:hover .a11y-move, li:focus-within .a11y-move { opacity: 1; width: auto; overf
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
 }
+
+/* The dashboard tour marks the part of the page it is describing. */
+[data-tour-active='true'] {
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 4px;
+  transition: outline-color 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-tour-active='true'] { transition: none; }
+}

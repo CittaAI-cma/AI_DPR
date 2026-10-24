@@ -6,27 +6,23 @@ import { useAuthStore } from '@/store/authStore';
 import { useDPRStore } from '@/store/dprStore';
 import { api } from '@/lib/api';
 import { Layout } from '@/components/layout/Layout';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { 
-  FileText, 
-  MessageSquare, 
-  Building, 
+  FileText,
+  Sparkles,
   CheckCircle, 
   Clock,
   AlertCircle,
-  Sparkles,
   BarChart3,
-  Eye,
-  Pencil,
-  Trash2,
-  Loader2,
-  ArrowRight,
-  Wand2,
 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { useDprActions } from '@/lib/dprActions';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { KpiCards } from '@/components/dashboard/KpiCards';
+import { RecentDprs } from '@/components/dashboard/RecentDprs';
+import { SchemeFinderCard } from '@/components/dashboard/SchemeFinderCard';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { DashboardTour } from '@/components/dashboard/DashboardTour';
+import { Button } from '@/components/ui/Button';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { canCreateDpr, ROLE_META, toAppRole } from '@/lib/rbac';
 
@@ -61,6 +57,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(cachedDPRs.length === 0);
   const [insights, setInsights] = useState<any>(null);
   const LATEST_COUNT = 5;
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -305,439 +302,92 @@ export const Dashboard: React.FC = () => {
   };
 
   const showPlaceholders = loading && dprs.length === 0;
+  const stamp = (d: DPR) => new Date(d.updatedAt || d.createdAt || d.generatedAt || 0).getTime();
+
+  const latest = [...dprs]
+    .sort((x: DPR, y: DPR) => stamp(y) - stamp(x))
+    .slice(0, LATEST_COUNT);
+  const canCreate = canCreateDpr(user?.role);
+  const createDpr = () => navigate('/individual-dpr/create?new=true');
+  const openList = (status?: string) => navigate(status ? `/dprs?status=${status}` : '/dprs');
+  const findSchemes = (words?: string) =>
+    navigate(words ? `/individual-dpr/create?new=true&q=${encodeURIComponent(words)}` : '/individual-dpr/create?new=true');
 
   return (
     <Layout>
-      <div className="space-y-8 pb-8">
-        {/* Hero Section */}
-        <div className="mb-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="space-y-5 pb-8 lg:space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold">
-                {t('dashboard.welcomeBack', { name: user?.name })}
-              </h1>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="text-xl font-bold sm:text-2xl">{t('dashboard.welcomeBack', { name: user?.name })}</h1>
               <RoleBadge role={user?.role} />
             </div>
-            <p className="text-muted-foreground">
-              {t(ROLE_META[toAppRole(user?.role)].descriptionKey)}
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{t(ROLE_META[toAppRole(user?.role)].descriptionKey)}</p>
           </div>
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full lg:w-auto">
-            {canCreateDpr(user?.role) && (
-              <>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate('/individual-dpr/create?new=true')}
-                  className="gap-2 whitespace-nowrap"
-                >
-                  <FileText className="h-4 w-4" />
-                  {tf('Create DPR')}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/individual-dpr/guide')}
-                  className="gap-2 whitespace-nowrap border-2"
-                >
-                  <Wand2 className="h-4 w-4" />
-                  {t('reportGuide.open')}
-                </Button>
-              </>
+          <div data-tour="actions" className="flex w-full flex-col gap-3 rounded-xl sm:w-auto sm:flex-row sm:flex-wrap">
+            {canCreate && (
+              <Button variant="primary" onClick={createDpr} className="gap-2 whitespace-nowrap">
+                <FileText className="h-4 w-4" aria-hidden="true" />
+                {tf('Create DPR')}
+              </Button>
             )}
-            <Button
-              variant="outline"
-              onClick={() => navigate('/venture-match')}
-              className="gap-2 whitespace-nowrap border-2"
-            >
-              <Sparkles className="h-4 w-4" />
-              {t('dashboard.ventureMatch')}
+            <Button variant="outline" onClick={() => navigate('/venture-match')} className="gap-2 whitespace-nowrap border-2">
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              {tf('Scheme Finder')}
             </Button>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {t('dashboard.totalDPRs')}
-                  </p>
-                  {showPlaceholders ? (
-                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
-                  ) : (
-                    <p className="text-3xl font-bold text-foreground">{stats.total}</p>
-                  )}
-                  {!showPlaceholders && (
-                    <p className="text-sm text-muted-foreground mt-1">{stats.total} {t('dashboard.dprs')}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <DashboardHero
+          onGuide={() => navigate('/individual-dpr/guide')}
+          onTour={() => setTourOpen(true)}
+        />
 
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {t('dashboard.draft')}
-                  </p>
-                  {showPlaceholders ? (
-                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
-                  ) : (
-                    <p className="text-3xl font-bold text-foreground">{stats.draft}</p>
-                  )}
-                  {!showPlaceholders && (
-                    <p className="text-sm text-muted-foreground mt-1">{stats.draft} {t('dashboard.drafts')}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-warning" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {t('dashboard.submitted')}
-                  </p>
-                  {showPlaceholders ? (
-                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
-                  ) : (
-                    <p className="text-3xl font-bold text-foreground">{stats.submitted}</p>
-                  )}
-                  {!showPlaceholders && (
-                    <p className="text-sm text-muted-foreground mt-1">{stats.submitted} {t('dashboard.submitted')}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 rounded-lg bg-secondary/10 flex items-center justify-center">
-                  <AlertCircle className="h-6 w-6 text-secondary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {tf('Analyzed')}
-                  </p>
-                  {showPlaceholders ? (
-                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
-                  ) : (
-                    <p className="text-3xl font-bold text-foreground">{stats.analyzed}</p>
-                  )}
-                  {!showPlaceholders && (
-                    <p className="text-sm text-muted-foreground mt-1">{stats.analyzed} {tf('Analyzed DPRs')}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {t('dashboard.avgQuality')}
-                  </p>
-                  {showPlaceholders ? (
-                    <div className="mt-1 h-9 w-16 animate-pulse rounded bg-muted" />
-                  ) : (
-                    <p className={`text-3xl font-bold ${getQualityColor(stats.avgQualityScore)}`}>
-                      {stats.avgQualityScore || 'N/A'}
-                    </p>
-                  )}
-                  {!showPlaceholders && (
-                    <p className="text-sm text-muted-foreground mt-1">{getQualityLabel(stats.avgQualityScore)}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 rounded-lg bg-success/10 flex items-center justify-center">
-                  <BarChart3 className="h-6 w-6 text-success" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* AI Insights */}
-        {insights && (
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>{t('dashboard.aiPoweredInsights')}</CardTitle>
-                  <CardDescription>{t('dashboard.personalizedRecommendations')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                {insights.topSector && (
-                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground mb-1">{t('dashboard.topBusinessSector')}</p>
-                    <p className="text-xl font-bold text-foreground">{insights.topSector.name}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {insights.topSector.count} {insights.topSector.count === 1 ? t('dashboard.project') : t('dashboard.projects')}
-                    </p>
-                  </div>
-                )}
-                <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-sm text-muted-foreground mb-1">{t('dashboard.averageDPRQuality')}</p>
-                  <p className={`text-xl font-bold ${getQualityColor(insights.avgQuality)}`}>
-                    {insights.avgQuality !== null && insights.avgQuality !== undefined ? `${insights.avgQuality}/100` : 'N/A'}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {getQualityLabel(insights.avgQuality)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <KpiCards stats={stats} loading={showPlaceholders} onOpen={openList} />
+        {insights?.topSector && (
+          <p className="-mt-2 text-sm text-muted-foreground">
+            {t('dashboard.topBusinessSector')}: <span className="font-medium text-foreground">{insights.topSector.name}</span>
+            {' · '}{insights.topSector.count} {insights.topSector.count === 1 ? t('dashboard.project') : t('dashboard.projects')}
+          </p>
         )}
 
-        {/* Recent DPRs */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle>{t('dashboard.yourDPRs')}</CardTitle>
-                <CardDescription>{t('dashboard.manageDPRs')}</CardDescription>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => navigate('/dprs')}>
-                  {t('dashboard.viewAllDPRs')}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/projects')}>
-                  {t('dashboard.viewProjects')}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {showPlaceholders ? (
-              <div className="space-y-3" aria-busy="true">
-                {[0, 1, 2].map((row) => (
-                  <div key={row} className="h-16 animate-pulse rounded-lg bg-muted" />
-                ))}
-              </div>
-            ) : dprs.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="h-20 w-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-                  <FileText className="h-10 w-10 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold mb-2">{t('dashboard.noDPRsYet')}</h2>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  {t('dashboard.createFirstDPR')}
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate('/individual-dpr/create?new=true')}
-                    size="lg"
-                  >
-                    <FileText className="h-5 w-5 mr-2" />
-                    {tf('Create DPR')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate('/individual-dpr/guide')}
-                    size="lg"
-                  >
-                    <Wand2 className="h-5 w-5 mr-2" />
-                    {t('reportGuide.open')}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="motion-stagger space-y-3">
-                  {(() => {
-                    // Only the latest few; the rest are under "View all DPRs".
-                    const stamp = (d: DPR) => new Date(d.updatedAt || d.createdAt || d.generatedAt || 0).getTime();
-                    const paginatedDPRs = [...dprs].sort((a, b) => stamp(b) - stamp(a)).slice(0, LATEST_COUNT);
-                    
-                    return paginatedDPRs.map((dpr: DPR) => (
-                  <div
-                    key={dpr._id}
-                    className="group flex flex-wrap items-center justify-between gap-3 p-4 border rounded-lg hover:border-primary/50 hover:shadow-md transition-all bg-card"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <div className="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                        <FileText className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-base break-words [overflow-wrap:anywhere]">
-                          {dpr.projectId?.projectName || t('dashboard.untitledProject')}
-                        </h4>
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border mt-1 ${getStatusColor(getEffectiveStatus(dpr))}`}>
-                          {getStatusIcon(getEffectiveStatus(dpr))}
-                          {(() => {
-                            const effectiveStatus = getEffectiveStatus(dpr);
-                            if (effectiveStatus === 'analyzed') {
-                              return `${tf('Analyzed')} (${dpr.qualityScore}/100)`;
-                            }
-                            return effectiveStatus ? (effectiveStatus.charAt(0).toUpperCase() + effectiveStatus.slice(1)) : 'Draft';
-                          })()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-4">
-                      {dpr.qualityScore !== undefined && (
-                        <div className="text-right">
-                          <p className={`text-sm font-semibold ${getQualityColor(dpr.qualityScore)}`}>
-                            {dpr.qualityScore}/100
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {getQualityLabel(dpr.qualityScore)}
-                          </p>
-                        </div>
-                      )}
-                      <div className="flex flex-wrap items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/dpr/view/${dpr._id}`, { state: { updatedAt: dpr.updatedAt } });
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          {t('dashboard.view')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            editDpr(dpr);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4 mr-2" />
-                          {t('dashboard.edit')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          data-no-auto-confirm
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            askDelete(dpr);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {t('dashboard.delete')}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                    ));
-                  })()}
-                </div>
-                
-                {dprs.length > LATEST_COUNT && (
-                  <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-border pt-4 sm:flex-row">
-                    <p className="text-sm text-muted-foreground">
-                      {t('dashboard.showingLatest', { count: LATEST_COUNT, total: dprs.length, defaultValue: 'Showing your latest {{count}} of {{total}} reports' })}
-                    </p>
-                    <Button variant="outline" size="sm" onClick={() => navigate('/dprs')}>
-                      {t('dashboard.viewAllDPRs')}
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
-                )}
-              </>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,13fr)_minmax(0,7fr)] lg:gap-6">
+          <RecentDprs
+            dprs={latest}
+            total={dprs.length}
+            loading={showPlaceholders}
+            canCreate={canCreate}
+            renderStatus={(dpr: DPR) => (
+              <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(getEffectiveStatus(dpr))}`}>
+                {getStatusIcon(getEffectiveStatus(dpr))}
+                {(() => {
+                  const status = getEffectiveStatus(dpr);
+                  if (status === 'analyzed') return `${tf('Analyzed')} (${dpr.qualityScore}/100)`;
+                  return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Draft';
+                })()}
+              </span>
             )}
-          </CardContent>
-        </Card>
+            onView={(dpr: DPR) => navigate(`/dpr/view/${dpr._id}`, { state: { updatedAt: dpr.updatedAt } })}
+            onEdit={editDpr}
+            onDelete={askDelete}
+            onViewAll={() => openList()}
+            onViewProjects={() => navigate('/projects')}
+            onCreate={createDpr}
+            onGuide={() => navigate('/individual-dpr/guide')}
+          />
+          <div className="min-w-0 space-y-5 lg:space-y-6">
+            <SchemeFinderCard onSearch={findSchemes} onViewAll={() => findSchemes()} />
+          </div>
+        </div>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.quickActions')}</CardTitle>
-            <CardDescription>{t('dashboard.accessFrequentlyUsed')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button
-                variant="primary"
-                onClick={() => navigate('/individual-dpr/create?new=true')}
-                className="h-28 flex-col gap-3 bg-gradient-to-br from-primary to-primary/80"
-              >
-                <div className="h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <span className="font-semibold">{tf('Create DPR')}</span>
-                <span className="text-sm opacity-90">{tf('Individual / scheme-aware')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/individual-dpr/guide')}
-                className="h-28 flex-col gap-3 border-2 hover:border-primary hover:bg-primary/5"
-              >
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Wand2 className="h-6 w-6 text-primary" />
-                </div>
-                <span className="font-semibold">{t('reportGuide.open')}</span>
-                <span className="text-sm text-muted-foreground">{t('reportGuide.openHint')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/venture-match')}
-                className="h-28 flex-col gap-3 border-2 hover:border-primary hover:bg-primary/5"
-              >
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-6 w-6 text-primary" />
-                </div>
-                <span className="font-semibold">{t('dashboard.ventureMatch')}</span>
-                <span className="text-sm text-muted-foreground">{t('dashboard.ventureMatchHint')}</span>
-              </Button>
-              <Button
-                onClick={() => navigate('/chat')}
-                variant="outline"
-                className="h-28 flex-col gap-3 border-2 hover:border-secondary hover:bg-secondary/5"
-              >
-                <div className="h-12 w-12 rounded-lg bg-secondary/10 flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-secondary" />
-                </div>
-                <span className="font-semibold">{t('nav.chat')}</span>
-                <span className="text-sm text-muted-foreground">{t('dashboard.getInstantHelp')}</span>
-              </Button>
-              <Button
-                onClick={() => navigate('/projects')}
-                variant="outline"
-                className="h-28 flex-col gap-3 border-2 hover:border-primary hover:bg-primary/5"
-              >
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Building className="h-6 w-6 text-primary" />
-                </div>
-                <span className="font-semibold">{t('dashboard.myProjects')}</span>
-                <span className="text-sm text-muted-foreground">{t('dashboard.viewAllProjects')}</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <QuickActions
+          onCreate={createDpr}
+          onGuide={() => navigate('/individual-dpr/guide')}
+          onSchemes={() => navigate('/venture-match')}
+          onProjects={() => navigate('/projects')}
+        />
       </div>
+      <DashboardTour open={tourOpen} onClose={() => setTourOpen(false)} />
       {deleteDialog}
     </Layout>
   );
