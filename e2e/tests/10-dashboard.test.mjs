@@ -31,7 +31,7 @@ describe('dashboard layout and numbers', () => {
     const page = await openPage(browser, { as: 'consultant' });
     await go(page, '/dashboard', 2000);
     const order = await page.evaluate(() => [...document.querySelectorAll('main h1, main h2')].map((h) => h.textContent.trim()));
-    const expected = ['Welcome back', 'Create a DPR in simple steps', 'My Recent DPRs', 'Scheme Finder', 'Quick Actions'];
+    const expected = ['Welcome back', 'Create a DPR in simple steps', 'My Recent DPRs', 'Search Scheme', 'Quick Actions'];
     let at = -1;
     for (const title of expected) {
       const next = order.findIndex((text, i) => i > at && text.startsWith(title));
@@ -120,6 +120,19 @@ describe('dashboard navigation', () => {
     await waitFor(page, () => location.pathname === '/individual-dpr/create');
     await sleep(1500);
     assert.equal(await page.evaluate(() => [...document.querySelectorAll('input')].some((i) => i.value === 'food')), true, 'the search box holds "food"');
+    await page.close();
+  });
+
+  test('DASH-022 the Search Scheme card lists real schemes, narrows them as you type, and a scheme starts a DPR for it', async () => {
+    const page = await openPage(browser, { as: 'consultant' });
+    await go(page, '/dashboard', 2000);
+    const count = () => page.evaluate(() => document.querySelectorAll('[aria-labelledby=finder-list-title] li').length);
+    assert.ok((await count()) >= 5, 'popular schemes are listed');
+    await page.fill('input[type=search]', 'mudra');
+    await sleep(400);
+    assert.equal(await count(), 1, 'typing narrows the list');
+    await clickText(page, '[aria-labelledby=finder-list-title] button', /MUDRA/i);
+    await waitFor(page, () => location.pathname === '/individual-dpr/create' && location.search.includes('scheme=MUDRA'), undefined, 8000);
     await page.close();
   });
 

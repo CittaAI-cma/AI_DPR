@@ -375,8 +375,14 @@ export const Dashboard: React.FC = () => {
             onCreate={createDpr}
             onGuide={() => navigate('/individual-dpr/guide')}
           />
-          <div className="min-w-0 space-y-5 lg:space-y-6">
-            <SchemeFinderCard onSearch={findSchemes} onViewAll={() => findSchemes()} />
+          {/* The card fills the column beside the report list without making that row taller; its scheme list scrolls. */}
+          <div className="min-w-0 lg:relative">
+            <SchemeFinderCard
+              onSearch={findSchemes}
+              onPick={(code: string) => navigate(`/individual-dpr/create?new=true&scheme=${encodeURIComponent(code)}`)}
+              onQuiz={() => navigate('/venture-match')}
+              onViewAll={() => findSchemes()}
+            />
           </div>
         </div>
 

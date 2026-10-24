@@ -114,4 +114,50 @@ describe('results', () => {
     assert.deepEqual(page.problems, []);
     await page.close();
   });
+
+  async function reachResults() {
+    const page = await openPage(browser, { as: 'consultant' });
+    await go(page, '/venture-match', 2000);
+    for (let i = 0; i < 30; i++) {
+      if (!/Question \d+ of/.test(await bodyText(page))) break;
+      await choose(page, 'A');
+      await page.evaluate(() => [...document.querySelectorAll('main button')].find((b) => /^(Next|See|Continue|Finish)/i.test(b.textContent.trim()) && !b.disabled)?.click());
+      await sleep(350);
+    }
+    await sleep(1200);
+    return page;
+  }
+
+  test('VM-021 every scheme card has a Compare button that opens a large comparison with three drop-downs of the other schemes', async () => {
+    const page = await reachResults();
+    const cards = await page.evaluate(() => document.querySelectorAll('main button[aria-label^="Compare:"]').length);
+    assert.ok(cards >= 2, `Compare buttons on the cards (${cards})`);
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll('[role=tab]')].some((tab) => /Compare|Suggested/.test(tab.textContent))), false, 'the old Suggested / Compare tabs are gone');
+    await page.evaluate(() => document.querySelector('main button[aria-label^="Compare:"]').click());
+    await waitFor(page, () => !!document.querySelector('[role=dialog] select'));
+    const first = await page.evaluate(() => document.querySelector('[role=dialog] select[aria-label="Your scheme"]').selectedOptions[0].textContent);
+    assert.ok(first.length > 3, 'the scheme whose card was pressed is the first column');
+    assert.equal(await page.evaluate(() => document.querySelectorAll('[role=dialog] select').length), 4, 'one list for the scheme and three to compare with');
+    // Choosing from the first list fills the table; the same scheme is no longer offered in the other lists.
+    const picked = await page.evaluate(() => { const s = document.querySelector('[role=dialog] select[aria-label="Scheme to compare 1"]'); return s.options[1]?.value; });
+    await page.selectOption('[role=dialog] select[aria-label="Scheme to compare 1"]', picked);
+    await waitFor(page, () => document.querySelectorAll('[role=dialog] table thead th').length >= 3);
+    const offered = await page.evaluate((code) => [...document.querySelectorAll('[role=dialog] select[aria-label="Scheme to compare 2"] option')].map((o) => o.value).includes(code), picked);
+    assert.equal(offered, false, 'a scheme already chosen is not offered again');
+    await page.keyboard.press('Escape');
+    await sleep(300);
+    assert.equal(await page.evaluate(() => !!document.querySelector('[role=dialog]')), false, 'Escape closes it');
+    await page.close();
+  });
+
+  test('VM-022 the Suggested plan button opens the plan as a large window instead of a side panel', async () => {
+    const page = await reachResults();
+    await clickText(page, 'main button', /^Suggested plan/);
+    await waitFor(page, () => !!document.querySelector('[role=dialog]'));
+    assert.match(await page.evaluate(() => document.querySelector('[role=dialog]').innerText), /A suggested plan/);
+    await clickText(page, '[role=dialog] button', /^(Close|Minimi)/i);
+    await sleep(300);
+    assert.equal(await page.evaluate(() => !!document.querySelector('[role=dialog]')), false);
+    await page.close();
+  });
 });

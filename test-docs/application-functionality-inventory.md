@@ -21,7 +21,7 @@ Roles: **Entrepreneur** (`consultant`) · **Admin** (`super_admin`) · **Distric
 | `/cluster-dpr/create` | entrepreneur | Cluster DPR (18 steps), Form/Split/Preview, drafts | CLUS-001..003 |
 | `/dpr/builder`, `/dpr/builder/:projectId` | entrepreneur | AI guided builder | SMOKE only (opens); **conversation not tested** |
 | `/dpr/:projectId`, `/dpr/view/:dprId` | entrepreneur | View/preview a report | opened via INT; download paths partly |
-| `/venture-match` | entrepreneur | Scheme finder questionnaire and results | VM-001..020 |
+| `/venture-match` | entrepreneur | Scheme finder questionnaire and results: a Compare button on every scheme card opens a large comparison (this scheme plus up to three chosen from drop-downs); a Suggested plan button opens the plan as a large window | VM-001..022 |
 | `/chat` | entrepreneur | AI assistant (AI stubbed in tests) | CHAT-001..004 |
 | `/profile`, `/account/privacy` | signed in | Profile, consent, export, nominee, complaint, delete account | PROF-001/002, PRIV-001..006 |
 | `/admin` | admin | Analytics, users, invitations, policies, audit, status | ADM-001..004, SMOKE-016 |

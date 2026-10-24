@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Award,
@@ -8,6 +8,7 @@ import {
   ExternalLink,
   HelpCircle,
   FolderPlus,
+  GitCompareArrows,
   Info,
   Sparkles,
   X,
@@ -17,6 +18,8 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { CriterionStatus, EvaluateResult, SchemeCriterion, SchemeMatch } from '@/lib/ventureMatch/types';
 import { cn } from '@/lib/utils';
 import { VentureMatchCombos } from './VentureMatchCombos';
+import { VentureMatchCompare } from './VentureMatchCompare';
+import { ExpandedOverlay } from './ExpandedOverlay';
 import { analyzeCombinations } from '@/lib/ventureMatch/combos';
 import { briefLangFromI18n, getSchemeBrief, loc } from '@/lib/individualDpr/schemeBriefs';
 import { FACT_LABEL, keyFactsFor } from '@/lib/ventureMatch/schemeKeyFacts';
@@ -88,7 +91,12 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [showExcluded, setShowExcluded] = useState(false);
-  const [panelExpanded, setPanelExpanded] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  // The scheme whose Compare button was pressed; the comparison opens as a large window.
+  const [compareFor, setCompareFor] = useState<string | null>(null);
+  const closePlan = useCallback(() => setPlanOpen(false), []);
+  const closeCompare = useCallback(() => setCompareFor(null), []);
+  const lang = i18n.language?.startsWith('te') ? 'te' : 'en';
   const inPlan = new Set(
     analyzeCombinations(result.matches).core.map((item) => item.scheme.code)
   );
@@ -97,7 +105,15 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
   return (
     <div className="vm-rise w-full max-w-6xl mx-auto space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">{t('ventureMatch.resultsTitle')}</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h2 className="text-3xl font-bold text-foreground mb-2">{t('ventureMatch.resultsTitle')}</h2>
+          {result.matches.length > 0 && (
+            <Button onClick={() => setPlanOpen(true)} className="gap-2" data-tour="suggested-plan">
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              {t('ventureMatch.suggestedPlan', { defaultValue: lang === 'te' ? 'సూచిత ప్రణాళిక' : 'Suggested plan' })}
+            </Button>
+          )}
+        </div>
         <p className="text-muted-foreground">
           {t('ventureMatch.resultsSubtitle', { count: result.matches.length })}
         </p>
@@ -131,7 +147,7 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
         </Card>
       )}
 
-      <div className={cn('grid items-start gap-6', result.matches.length > 0 && 'lg:grid-cols-2')}>
+      <div className="space-y-6">
         <div className="min-w-0 space-y-6">
           {result.matches.length === 0 ? (
             <Card>
@@ -140,15 +156,15 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <div className="grid items-stretch gap-3 md:grid-cols-2">
               {result.matches.map((scheme, index) => (
                 <Card
                   key={scheme.code}
                   style={{ ['--vm-delay' as any]: `${120 + Math.min(index, 10) * 70}ms` }}
-                  className="vm-rise vm-lift border-2 border-primary/15"
+                  className="vm-rise vm-lift h-full border-2 border-primary/15"
                 >
-                  <CardContent className="pt-5 pb-5">
-                    <div className="flex flex-col gap-4">
+                  <CardContent className="h-full pt-5 pb-5">
+                    <div className="flex h-full flex-col gap-4">
                       <div className="flex min-w-0 flex-1 items-start gap-3">
                         <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                           {scheme.dprRoute === 'cluster' ? (
@@ -210,7 +226,19 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
                           )}
                         </div>
                       </div>
-                      <div className="flex justify-end">
+                      <div className="mt-auto flex flex-wrap justify-end gap-2">
+                        {result.matches.length > 1 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full gap-2 sm:w-auto"
+                            onClick={() => setCompareFor(scheme.code)}
+                            aria-label={`${t('ventureMatch.compare', { defaultValue: lang === 'te' ? 'పోల్చండి' : 'Compare' })}: ${t(`ventureMatch.schemes.${scheme.code}.name`, { defaultValue: scheme.name })}`}
+                          >
+                            <GitCompareArrows className="h-4 w-4" aria-hidden="true" />
+                            {t('ventureMatch.compare', { defaultValue: lang === 'te' ? 'పోల్చండి' : 'Compare' })}
+                          </Button>
+                        )}
                         <CreateButton
                           scheme={scheme}
                           onCreateDprForScheme={onCreateDprForScheme}
@@ -257,23 +285,28 @@ export const VentureMatchResults: React.FC<VentureMatchResultsProps> = ({
             </div>
           )}
         </div>
-        {result.matches.length > 0 && (
-          <div
-            style={{ ['--vm-delay' as any]: '250ms' }}
-            className={cn(
-              'vm-rise min-w-0',
-              !panelExpanded && 'lg:sticky lg:top-40 lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto'
-            )}
-          >
-            <VentureMatchCombos
-              onExpandedChange={setPanelExpanded}
-              matches={result.matches}
-              disableCreate={disableCreate}
-              onCreate={onCreateDprForScheme}
-            />
-          </div>
-        )}
       </div>
+
+      {result.matches.length > 0 && <VentureMatchCombos matches={result.matches} open={planOpen} onClose={closePlan} />}
+      <ExpandedOverlay
+        open={compareFor !== null}
+        onClose={closeCompare}
+        title={lang === 'te' ? 'పథకాలను పోల్చండి' : 'Compare schemes'}
+        closeLabel={lang === 'te' ? 'మూసివేయి' : 'Close'}
+      >
+        {compareFor && (
+          <VentureMatchCompare
+            matches={result.matches}
+            baseCode={compareFor}
+            lang={lang}
+            disableCreate={disableCreate}
+            onCreate={(code) => {
+              setCompareFor(null);
+              onCreateDprForScheme(code);
+            }}
+          />
+        )}
+      </ExpandedOverlay>
 
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         {!disableCreate && (

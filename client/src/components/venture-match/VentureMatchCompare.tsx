@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Info, X } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import type { SchemeMatch } from '@/lib/ventureMatch/types';
@@ -10,7 +10,6 @@ import { getSchemeBrief } from '@/lib/individualDpr/schemeBriefs';
 
 type Lang = 'en' | 'te';
 const pick = (loc: Loc, lang: Lang) => (lang === 'te' ? loc.te : loc.en) || loc.en;
-const MAX_OTHERS = 3;
 
 const ROLE_LABEL: Record<SchemeRole, Loc> = {
   margin: { en: 'Subsidy on project cost', te: 'ప్రాజెక్ట్ ఖర్చుపై సబ్సిడీ' },
@@ -25,14 +24,15 @@ const ROLE_LABEL: Record<SchemeRole, Loc> = {
 const TEXT = {
   heading: { en: 'Compare schemes', te: 'పథకాలను పోల్చండి' },
   intro: {
-    en: 'Pick the scheme you are leaning towards, then add up to three to set beside it. Read across a row to see how they differ, then decide for yourself.',
-    te: 'మీరు మొగ్గు చూపే పథకాన్ని ఎంచుకోండి, దానితో పోల్చడానికి గరిష్ఠంగా మూడు జోడించండి. వరుసల వెంట చదివి తేడాలు చూసి మీరే నిర్ణయించుకోండి.',
+    en: 'Choose up to three other schemes from the lists to set beside this one. Read across a row to see how they differ, then decide for yourself.',
+    te: 'దీని పక్కన పెట్టడానికి జాబితాల నుండి గరిష్ఠంగా మూడు ఇతర పథకాలను ఎంచుకోండి. వరుసల వెంట చదివి తేడాలు చూసి మీరే నిర్ణయించుకోండి.',
   },
-  step1: { en: '1. Your scheme', te: '1. మీ పథకం' },
-  step2: { en: '2. Compare it with', te: '2. దీనితో పోల్చండి' },
+  step1: { en: 'Your scheme', te: 'మీ పథకం' },
+  step2: { en: 'Compare it with', te: 'దీనితో పోల్చండి' },
   limit: { en: 'Up to 3', te: 'గరిష్ఠం 3' },
-  pickFirst: { en: 'Choose your scheme first.', te: 'ముందుగా మీ పథకాన్ని ఎంచుకోండి.' },
-  pickMore: { en: 'Now tick at least one scheme to compare with.', te: 'ఇప్పుడు పోల్చడానికి కనీసం ఒక పథకాన్ని టిక్ చేయండి.' },
+  choose: { en: 'Choose a scheme', te: 'పథకాన్ని ఎంచుకోండి' },
+  slot: { en: 'Scheme to compare', te: 'పోల్చడానికి పథకం' },
+  pickMore: { en: 'Choose at least one scheme from the lists above to see the comparison.', te: 'పోలికను చూడటానికి పైన ఉన్న జాబితాల నుండి కనీసం ఒక పథకాన్ని ఎంచుకోండి.' },
   noOthers: { en: 'There is no other matched scheme to compare with.', te: 'పోల్చడానికి ఇతర సరిపోయే పథకాలు లేవు.' },
   clear: { en: 'Start over', te: 'మళ్లీ మొదలుపెట్టండి' },
   yourPick: { en: 'Your scheme', te: 'మీ పథకం' },
@@ -94,35 +94,29 @@ function briefFor(code: string) {
 
 export const VentureMatchCompare: React.FC<{
   matches: SchemeMatch[];
+  /** The scheme whose card the person pressed Compare on. It can be changed from the first list. */
+  baseCode: string;
   lang: Lang;
   disableCreate?: boolean;
   onCreate: (code: string) => void;
-  /** Enlarged view: wider columns and more room to read. */
-  expanded?: boolean;
-}> = ({ matches, lang, disableCreate, onCreate, expanded }) => {
+}> = ({ matches, baseCode, lang, disableCreate, onCreate }) => {
   const { t } = useTranslation();
-  const [first, setFirst] = useState<string | null>(null);
-  const [others, setOthers] = useState<string[]>([]);
+  const [first, setFirst] = useState<string>(baseCode);
+  // Three lists, one per column to compare with. '' = nothing chosen yet.
+  const [slots, setSlots] = useState<string[]>(['', '', '']);
 
   const known = useMemo(() => new Set(matches.map((m) => m.code)), [matches]);
   useEffect(() => {
-    if (first && !known.has(first)) setFirst(null);
-    setOthers((current) => current.filter((code) => known.has(code) && code !== first));
-  }, [known, first]);
+    setFirst((current) => (known.has(current) ? current : baseCode));
+    setSlots((current) => current.map((code) => (known.has(code) && code !== first ? code : '')));
+  }, [known, first, baseCode]);
 
   const name = (scheme: SchemeMatch) => t(`ventureMatch.schemes.${scheme.code}.name`, { defaultValue: scheme.name });
   const byCode = (code: string) => matches.find((m) => m.code === code)!;
-  const columns = first ? [byCode(first), ...others.map(byCode)] : [];
-  const choices = matches.filter((m) => m.code !== first);
-
-  const toggleOther = (code: string) =>
-    setOthers((current) =>
-      current.includes(code)
-        ? current.filter((c) => c !== code)
-        : current.length >= MAX_OTHERS
-          ? current
-          : [...current, code]
-    );
+  const others = slots.filter(Boolean);
+  const columns = [byCode(first), ...others.map(byCode)];
+  /** What a list may offer: every matched scheme except this one's own, the first scheme, and those picked in the other lists. */
+  const optionsFor = (index: number) => matches.filter((m) => m.code !== first && !slots.some((code, i) => i !== index && code === m.code));
 
   const cell = (scheme: SchemeMatch, row: string): React.ReactNode => {
     const code = scheme.code;
@@ -190,101 +184,67 @@ export const VentureMatchCompare: React.FC<{
   };
 
   const rowOrder = ['type', 'level', 'support', 'forYou', 'who', 'bank', 'limits', 'fit', 'together', 'how', 'docs'];
+  const selectClass = 'h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
         <h3 className="text-xl font-bold text-foreground">{pick(TEXT.heading, lang)}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{pick(TEXT.intro, lang)}</p>
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-semibold text-foreground">{pick(TEXT.step1, lang)}</p>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={pick(TEXT.step1, lang)}>
-          {matches.map((scheme) => {
-            const active = first === scheme.code;
-            return (
-              <button
-                key={scheme.code}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => {
-                  setFirst(active ? null : scheme.code);
-                  setOthers((current) => current.filter((c) => c !== scheme.code));
-                }}
-                className={cn(
-                  'rounded-full border px-3 py-1.5 text-left text-sm transition-colors',
-                  active
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background hover:border-primary/50 hover:bg-muted'
-                )}
-              >
-                {name(scheme)}
-              </button>
-            );
-          })}
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="block min-w-0">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">{pick(TEXT.step1, lang)}</span>
+          <select
+            value={first}
+            onChange={(event) => setFirst(event.target.value)}
+            className={cn(selectClass, 'border-primary bg-primary/5 font-medium')}
+            aria-label={pick(TEXT.step1, lang)}
+          >
+            {matches.map((scheme) => (
+              <option key={scheme.code} value={scheme.code}>{name(scheme)}</option>
+            ))}
+          </select>
+        </label>
+        {slots.map((value, index) => (
+          <label key={index} className="block min-w-0">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {pick(TEXT.step2, lang)} {index + 1}
+              {index === 0 && <span className="ml-1 font-normal normal-case">({pick(TEXT.limit, lang)})</span>}
+            </span>
+            <select
+              value={value}
+              onChange={(event) => setSlots((current) => current.map((code, i) => (i === index ? event.target.value : code)))}
+              className={selectClass}
+              aria-label={`${pick(TEXT.slot, lang)} ${index + 1}`}
+            >
+              <option value="">{pick(TEXT.choose, lang)}</option>
+              {optionsFor(index).map((scheme) => (
+                <option key={scheme.code} value={scheme.code}>{name(scheme)}</option>
+              ))}
+            </select>
+          </label>
+        ))}
       </div>
 
-      {first && (
-        <div>
-          <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-            {pick(TEXT.step2, lang)}
-            <span className="text-xs font-normal text-muted-foreground">({pick(TEXT.limit, lang)})</span>
-          </p>
-          {choices.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{pick(TEXT.noOthers, lang)}</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {choices.map((scheme) => {
-                const active = others.includes(scheme.code);
-                const full = !active && others.length >= MAX_OTHERS;
-                return (
-                  <button
-                    key={scheme.code}
-                    type="button"
-                    role="checkbox"
-                    aria-checked={active}
-                    disabled={full}
-                    onClick={() => toggleOther(scheme.code)}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-left text-sm transition-colors disabled:opacity-40',
-                      active
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-background hover:border-primary/50 hover:bg-muted'
-                    )}
-                  >
-                    {active ? <Check className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5 rounded-sm border border-current opacity-50" />}
-                    {name(scheme)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+      {others.length === 0 && <p className="text-sm text-muted-foreground">{pick(TEXT.pickMore, lang)}</p>}
 
-      {!first && <p className="text-sm text-muted-foreground">{pick(TEXT.pickFirst, lang)}</p>}
-      {first && others.length === 0 && choices.length > 0 && (
-        <p className="text-sm text-muted-foreground">{pick(TEXT.pickMore, lang)}</p>
-      )}
-
-      {first && others.length > 0 && (
+      {others.length > 0 && (
         <p className="text-xs text-muted-foreground">
           {lang === 'te' ? 'మరిన్ని పథకాలను చూడటానికి పట్టికను పక్కకు జరపండి.' : 'Slide the table sideways to see every scheme.'}
         </p>
       )}
-      {first && others.length > 0 && (
+      {others.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-border bg-background">
-          <table className={cn('w-full border-collapse text-left', expanded ? 'text-sm leading-6' : 'min-w-max text-[13px] leading-5')}>
+          <table className="w-full border-collapse text-left text-sm leading-6">
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 w-24 min-w-[6rem] bg-muted px-2 py-3 align-bottom text-xs font-semibold uppercase tracking-wide text-muted-foreground" />
                 {columns.map((scheme) => (
                   <th
                     key={scheme.code}
-                    className={cn(expanded ? 'w-56 min-w-[14rem]' : 'w-44 min-w-[11rem]', 'px-2.5 py-3 align-bottom', scheme.code === first ? 'bg-primary/10' : 'bg-muted/60')}
+                    className={cn('w-56 min-w-[14rem] px-2.5 py-3 align-bottom', scheme.code === first ? 'bg-primary/10' : 'bg-muted/60')}
                   >
                     {scheme.code === first && (
                       <span className="mb-1 inline-block rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
@@ -292,17 +252,6 @@ export const VentureMatchCompare: React.FC<{
                       </span>
                     )}
                     <span className="block text-sm font-semibold text-foreground">{name(scheme)}</span>
-                    {scheme.code !== first && (
-                      <button
-                        type="button"
-                        onClick={() => toggleOther(scheme.code)}
-                        className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                        aria-label={`Remove ${name(scheme)}`}
-                      >
-                        <X className="h-3 w-3" />
-                        {lang === 'te' ? 'తొలగించు' : 'Remove'}
-                      </button>
-                    )}
                   </th>
                 ))}
               </tr>
@@ -310,17 +259,11 @@ export const VentureMatchCompare: React.FC<{
             <tbody>
               {rowOrder.map((row) => (
                 <tr key={row} className="border-t border-border align-top">
-                  <th
-                    scope="row"
-                    className="sticky left-0 z-10 bg-muted px-2 py-3 text-xs font-semibold text-muted-foreground"
-                  >
+                  <th scope="row" className="sticky left-0 z-10 bg-muted px-2 py-3 text-xs font-semibold text-muted-foreground">
                     {pick(ROWS[row], lang)}
                   </th>
                   {columns.map((scheme) => (
-                    <td
-                      key={scheme.code}
-                      className={cn('px-2.5 py-3 text-foreground/90', scheme.code === first && 'bg-primary/5')}
-                    >
+                    <td key={scheme.code} className={cn('px-2.5 py-3 text-foreground/90', scheme.code === first && 'bg-primary/5')}>
                       {cell(scheme, row)}
                     </td>
                   ))}
@@ -353,20 +296,13 @@ export const VentureMatchCompare: React.FC<{
         </div>
       )}
 
-      {first && others.length > 0 && (
+      {others.length > 0 && (
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-start gap-2 text-xs text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             {pick(TEXT.note, lang)}
           </p>
-          <button
-            type="button"
-            className="shrink-0 text-xs font-medium text-primary hover:underline"
-            onClick={() => {
-              setFirst(null);
-              setOthers([]);
-            }}
-          >
+          <button type="button" className="shrink-0 text-xs font-medium text-primary hover:underline" onClick={() => setSlots(['', '', ''])}>
             {pick(TEXT.clear, lang)}
           </button>
         </div>
