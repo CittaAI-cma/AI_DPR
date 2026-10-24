@@ -316,6 +316,148 @@ export class AdminController {
   }
 
   /**
+   * The Analytics tab: every number, chart and the recent-activity list from ONE set of filters (dates, district, sector),
+   * so the cards, charts and table can never disagree. Read-only. Dates apply to when a record was created; users have no
+   * district or sector, so those two filters leave the user counts alone.
+   */
+  static async getOverview(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const text = (value: unknown) => (typeof value === 'string' ? value.trim().slice(0, 120) : '');
+      const day = (value: unknown, end = false) => {
+        const raw = text(value);
+        if (!/^\d{4}-\d{2}-\d{2}/.test(raw)) return null;
+        const d = new Date(raw.length === 10 ? `${raw}${end ? 'T23:59:59.999Z' : 'T00:00:00.000Z'}` : raw);
+        return Number.isNaN(d.getTime()) ? null : d;
+      };
+      const from = day(req.query.from);
+      const to = day(req.query.to, true);
+      const district = text(req.query.district);
+      const sector = text(req.query.sector);
+      const NONE = 'Not specified';
+
+      const range = (field: string) => (from || to ? { [field]: { ...(from ? { $gte: from } : {}), ...(to ? { $lte: to } : {}) } } : {});
+      const districtExpr = { $cond: [{ $gt: [{ $strLenCP: { $trim: { input: { $ifNull: ['$district', ''] } } } }, 0] }, { $trim: { input: '$district' } }, NONE] };
+      const projectMatch: any = { ...range('createdAt') };
+      if (sector) projectMatch.industrySector = sector;
+
+      const projectRows = await Project.aggregate([
+        { $addFields: { _district: districtExpr } },
+        { $match: { ...projectMatch, ...(district ? { _district: district } : {}) } },
+        {
+          $facet: {
+            total: [{ $count: 'n' }],
+            completed: [{ $match: { status: 'completed' } }, { $count: 'n' }],
+            sectors: [{ $group: { _id: '$industrySector', count: { $sum: 1 } } }, { $sort: { count: -1, _id: 1 } }],
+            districts: [{ $group: { _id: '$_district', count: { $sum: 1 } } }, { $sort: { count: -1, _id: 1 } }],
+            ids: [{ $project: { _id: 1 } }],
+          },
+        },
+      ]);
+      const facet = projectRows[0] || {};
+
+      // DPRs follow the same district / sector choice through their project.
+      const dprMatch: any = { ...range('createdAt') };
+      if (district || sector) {
+        const ids = await Project.aggregate([
+          { $addFields: { _district: districtExpr } },
+          { $match: { ...(sector ? { industrySector: sector } : {}), ...(district ? { _district: district } : {}) } },
+          { $project: { _id: 1 } },
+        ]);
+        dprMatch.projectId = { $in: ids.map((row: any) => String(row._id)) };
+      }
+      const dprRows = await DPRVersion.aggregate([
+        { $match: dprMatch },
+        {
+          $addFields: {
+            _status: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ['$status', 'approved'] }, then: 'completed' },
+                  { case: { $eq: ['$status', 'submitted'] }, then: 'submitted' },
+                  { case: { $eq: ['$status', 'rejected'] }, then: 'rejected' },
+                ],
+                default: { $cond: [{ $isNumber: '$qualityScore' }, 'analyzed', 'draft'] },
+              },
+            },
+          },
+        },
+        {
+          $facet: {
+            byStatus: [{ $group: { _id: '$_status', count: { $sum: 1 } } }],
+            quality: [{ $match: { qualityScore: { $type: 'number' } } }, { $group: { _id: null, avg: { $avg: '$qualityScore' }, n: { $sum: 1 } } }],
+          },
+        },
+      ]);
+      const dprFacet = dprRows[0] || { byStatus: [], quality: [] };
+      const statusCount = (key: string) => dprFacet.byStatus.find((row: any) => row._id === key)?.count || 0;
+      const dprStatus = ['draft', 'submitted', 'analyzed', 'completed', 'rejected'].map((key) => ({ status: key, count: statusCount(key) }));
+      const dprTotal = dprStatus.reduce((sum, row) => sum + row.count, 0);
+
+      const userMatch = range('createdAt');
+      const [totalUsers, entrepreneurs] = await Promise.all([
+        User.countDocuments(userMatch),
+        User.countDocuments({ ...userMatch, role: 'entrepreneur' }),
+      ]);
+
+      // Choices for the filter lists: everything that exists, not only what the current filters leave.
+      const [districtOptions, sectorOptions] = await Promise.all([
+        Project.aggregate([{ $addFields: { _district: districtExpr } }, { $group: { _id: '$_district' } }, { $sort: { _id: 1 } }]),
+        Project.aggregate([{ $group: { _id: '$industrySector' } }, { $sort: { _id: 1 } }]),
+      ]);
+
+      // Recent activity: real audit events only, newest first. The tamper-evident log itself is not touched.
+      const SHOWN = ['dpr_change', 'dpr_review', 'dpr_download', 'dpr_delete', 'register', 'user_invite', 'invite_accepted', 'user_update', 'role_change', 'user_deactivate', 'user_reactivate', 'account_delete', 'complaint_submitted', 'support_ticket', 'data_export'];
+      const events = await AuditEvent.find({ action: { $in: SHOWN }, ...range('at') })
+        .sort({ at: -1 })
+        .limit(Math.min(Number(req.query.activityLimit) || 10, 50))
+        .lean();
+      const userIds = [...new Set(events.map((e: any) => e.userId && String(e.userId)).filter(Boolean))];
+      const users = userIds.length ? await User.find({ _id: { $in: userIds } }).select('name email').lean() : [];
+      const userName = new Map(users.map((u: any) => [String(u._id), u.name || u.email]));
+      const dprIds = events.filter((e: any) => e.targetType === 'dpr' && /^[a-f0-9]{24}/.test(e.targetId || '')).map((e: any) => String(e.targetId).slice(0, 24));
+      const dprDocs = dprIds.length ? await DPRVersion.find({ _id: { $in: dprIds } }).select('status qualityScore').lean() : [];
+      const dprState = new Map(dprDocs.map((d: any) => [String(d._id), d.status === 'approved' ? 'completed' : d.status === 'draft' && typeof d.qualityScore === 'number' ? 'analyzed' : d.status]));
+
+      res.status(200).json({
+        success: true,
+        data: {
+          filters: { from, to, district, sector },
+          options: {
+            districts: districtOptions.map((row: any) => row._id),
+            sectors: sectorOptions.map((row: any) => row._id).filter(Boolean),
+          },
+          kpis: {
+            users: { total: totalUsers, entrepreneurs },
+            projects: { total: facet.total?.[0]?.n || 0, completed: facet.completed?.[0]?.n || 0 },
+            dprs: {
+              total: dprTotal,
+              completed: statusCount('completed'),
+              avgQuality: dprFacet.quality[0] ? Math.round(dprFacet.quality[0].avg) : null,
+              scored: dprFacet.quality[0]?.n || 0,
+            },
+          },
+          dprStatus,
+          sectors: (facet.sectors || []).map((row: any) => ({ name: row._id || NONE, count: row.count })),
+          districts: (facet.districts || []).map((row: any) => ({ name: row._id, count: row.count })),
+          activity: events.map((e: any) => ({
+            id: String(e._id),
+            at: e.at,
+            action: e.action,
+            user: e.userId ? userName.get(String(e.userId)) || null : null,
+            role: e.role || null,
+            targetType: e.targetType || null,
+            targetId: e.targetId ? String(e.targetId).split(':')[0] : null,
+            status: e.targetType === 'dpr' ? dprState.get(String(e.targetId).slice(0, 24)) || null : null,
+          })),
+        },
+      });
+    } catch (error: any) {
+      console.error('Analytics overview error:', error);
+      res.status(500).json({ success: false, message: 'Failed to load the analytics overview' });
+    }
+  }
+
+  /**
    * Get all users (admin only)
    */
   static async getAllUsers(req: AuthRequest, res: Response): Promise<void> {

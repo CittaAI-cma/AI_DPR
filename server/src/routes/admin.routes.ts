@@ -15,6 +15,7 @@ router.use(authorize('admin'));
 
 // Get analytics
 router.get('/analytics', AdminController.getAnalytics);
+router.get('/analytics/overview', AdminController.getOverview);
 
 // Get all users
 router.get('/users', AdminController.getAllUsers);

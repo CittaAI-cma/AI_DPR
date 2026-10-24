@@ -22,7 +22,6 @@ import {
   Plus,
   Eye,
   Filter,
-  TrendingUp,
   Award,
   X,
   Calendar,
@@ -32,13 +31,11 @@ import {
   ScrollText,
   Download,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import { formatDate, downloadBlob } from '@/lib/utils';
 import { APP_ROLES, ROLE_META, toAppRole, toBackendRole, type AppRole } from '@/lib/rbac';
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { AP_DISTRICTS } from '@/lib/individualDpr/apDistricts';
-
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+import { AnalyticsOverview } from '@/components/admin/AnalyticsOverview';
 
 type TabType = 'analytics' | 'users' | 'dprs' | 'policies' | 'access' | 'audit';
 
@@ -47,7 +44,6 @@ export const AdminDashboard: React.FC = () => {
   const tf = useClusterFormText();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('analytics');
-  const [analytics, setAnalytics] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [dprs, setDprs] = useState<any[]>([]);
   const [policies, setPolicies] = useState<any[]>([]);
@@ -123,8 +119,7 @@ export const AdminDashboard: React.FC = () => {
         return;
       }
       if (activeTab === 'analytics') {
-        const response = await api.getAnalytics();
-        setAnalytics(response.data);
+        return; // the Analytics tab loads its own data (it follows its own filters)
       } else if (activeTab === 'users') {
         const response = await api.getAllUsers({ limit: 50, q: searchQuery.trim() || undefined });
         setUsers(response.data.users || []);
@@ -378,7 +373,6 @@ export const AdminDashboard: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const summary = analytics?.summary || {};
   const filteredUsers = users.filter(u =>
     u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -407,7 +401,7 @@ export const AdminDashboard: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold">{tf('Admin Dashboard')}</h1>
           <p className="text-muted-foreground mt-2">
-            {tf('Manage users, DPRs, policies, and view analytics')}
+            {tf('Monitor platform activity, DPR progress, and district-level performance.')}
           </p>
         </div>
 
@@ -438,116 +432,12 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
-          <div className="space-y-6">
-            {isLoading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">{tf('Loading analytics...')}</p>
-              </div>
-            ) : (
-              <>
-                {/* Stats Grid */}
-                <div className="motion-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">{tf('Total Users')}</p>
-                          <h3 className="text-3xl font-bold mt-2">{summary.totalUsers || 0}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {tf('Entrepreneurs:')} {summary.totalEntrepreneurs || 0}
-                          </p>
-                        </div>
-                        <Users className="h-12 w-12 text-blue-500 opacity-20" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">{tf('Total Projects')}</p>
-                          <h3 className="text-3xl font-bold mt-2">{summary.totalProjects || 0}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {tf('Completed:')} {summary.completedProjects || 0}
-                          </p>
-                        </div>
-                        <FileText className="h-12 w-12 text-green-500 opacity-20" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">{tf('DPRs Generated')}</p>
-                          <h3 className="text-3xl font-bold mt-2">{summary.totalDPRs || 0}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {tf('Avg Quality:')} {summary.avgQualityScore || 0}%
-                          </p>
-                        </div>
-                        <TrendingUp className="h-12 w-12 text-purple-500 opacity-20" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Charts */}
-                <div className="motion-stagger grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{tf('Projects by Sector')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div
-                        role="img"
-                        aria-label={`${tf('Projects by Sector')}: ${(analytics?.projectsBySector || []).map((entry: any) => `${entry._id} ${entry.count}`).join(', ')}`}
-                      >
-                      <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                          <Pie
-                            data={analytics?.projectsBySector || []}
-                            dataKey="count"
-                            nameKey="_id"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={100}
-                            label
-                            labelLine={false}
-                          >
-                            {(analytics?.projectsBySector || []).map((entry: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} aria-label={`${entry._id}: ${entry.count}`} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{tf('Projects by Location')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={analytics?.projectsByLocation || []}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="_id" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="count" fill="#3b82f6" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </div>
-              </>
-            )}
-          </div>
+          <AnalyticsOverview
+            onOpenTab={(tab, status) => {
+              if (tab === 'dprs') setStatusFilter(status ?? 'all');
+              setActiveTab(tab);
+            }}
+          />
         )}
 
         {/* User Management Tab */}

@@ -1336,6 +1336,12 @@ class APIClient {
     );
   }
 
+  /** The Analytics tab: all its numbers, charts and recent activity for one set of filters. Real data only (no offline stand-in). */
+  async getAnalyticsOverview(params?: Record<string, string | number | undefined>) {
+    const response = await this.client.get('/admin/analytics/overview', { params });
+    return response.data;
+  }
+
   async getAllUsers(params?: any) {
     return this.handleRequest(
       async () => {
