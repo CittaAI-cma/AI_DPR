@@ -1,5 +1,7 @@
 # Integration test map
 
+> The journeys below are exercised by `admin-reviewer.spec.ts` ("across people and modules", the reviewer queue and the deactivation test) and, in the older suite, by INT-001..004. New hand-offs: dashboard card → filtered DPR list (`dashboard.responsive.spec.ts`), dashboard Search Scheme → scheme list with the words typed in, analytics chart or legend → filtered page and DPR Management tab (`admin-analytics.responsive.spec.ts`), tour → real creation flow → sample answers → Save Draft → dashboard (`tour.spec.ts`).
+
 How modules depend on each other, and which test proves each hand-off. All are run (Chromium and WebKit, at phone, tablet, laptop and desktop sizes) against the real API and database (only the AI is stubbed).
 
 ```

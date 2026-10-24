@@ -1,5 +1,8 @@
 # Test cases and results
 
+> **Two suites exist.** The table below comes from the older `node:test` suite (`e2e/tests/`, IDs such as AUTH-001, DPR-011). The Playwright Test suite in `client/e2e/` (run with `npx playwright test --ui`) covers the same screens plus the later work (dashboard redesign, guided tour, Search Scheme, Compare, analytics) and runs at desktop, laptop, tablet and phone sizes: 359 tests (354 passed, 2 skipped, 3 failed on the last full run, see `execution-summary.md`). Its tests are named in plain words per file instead of by ID; the mapping is in the table at the end of this file.
+
+
 Generated from the real run output (`e2e/run-all.sh`, each file in its own process). `KNOWN BUG` = the check failed because of a confirmed defect listed in `bug-report.md` (reported as `todo`, not hidden).
 
 Every test below was run on both engines (Chromium, WebKit) and at four screen sizes (phone 360, tablet 768, laptop 1280, desktop 1440). The table lists the Chromium-desktop result; the matrix of all 8 combinations is:
@@ -196,3 +199,19 @@ Totals (Chromium, desktop): PASS 175
 | KEY-001 | the first Tab stop is "Skip to main content", and it moves focus to the page content | PASS | 09-cluster-session-keyboard |  |
 | KEY-002 | the whole sign-in form can be completed and submitted with the keyboard alone | PASS | 09-cluster-session-keyboard |  |
 | LANG-001 | switching to Telugu changes the page text and the document language, and back again | PASS | 09-cluster-session-keyboard |  |
+
+## Playwright Test suite: files and what each proves
+| File (`client/e2e/`) | Sizes | Proves |
+|---|---|---|
+| `routes.responsive.spec.ts` | all 4 | 18 screens open for the right person, no script errors, no serious accessibility problem, no sideways scroll |
+| `auth.spec.ts` | desktop | sign-in, sign-up, weak/duplicate/admin-role registration, who may open which page, sign-out, forged tokens |
+| `projects.responsive.spec.ts` | all 4 | create/open/delete projects, validation, scripts in names, long names, ownership, no orphan DPRs |
+| `individual-dpr.spec.ts` | desktop | steps, required answers, save/autosave/failed save, Basic/Advanced rules, arrange and style, preview focus |
+| `scheme-finder.responsive.spec.ts` | all 4 | questions, Previous, owner-category rules, results, Compare dialog, suggested plan, equal card heights |
+| `assistant-profile-privacy.spec.ts` | desktop | chat with the provider stubbed, profile, export, consent, nominee, complaint, notifications, account erase |
+| `admin-reviewer.spec.ts` | desktop | admin console, user search, audit chain, invitations, reviewer queue and decisions, cross-module journeys, deactivation |
+| `admin-analytics.responsive.spec.ts` | all 4 | analytics numbers equal the records, filters, empty state, chart click-through, CSV export, recent activity, access |
+| `dashboard.responsive.spec.ts` | all 4 | layout order, numbers, empty state, delete asks first, navigation, Search Scheme list |
+| `tour.spec.ts` | desktop | tour start, arrow and "Click here", rest of page switched off, panel beside target, Exit, full walk-through |
+| `cluster-session-keyboard.responsive.spec.ts` | all 4 | cluster form, expired session, idle warning, skip link, Telugu switch |
+| `consultant-dpr-screens.spec.ts` | desktop | style editor: add, name, resize, hide and delete a picture |

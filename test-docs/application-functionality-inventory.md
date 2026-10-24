@@ -58,6 +58,9 @@ Cross-cutting UI: session manager (idle warning, expiry redirect), skip link / k
 - Audit trail is hash-chained and verifiable; CSV export is safe for spreadsheets.
 - Deactivation stops access within seconds; DB-level switch-off enforced within 30 s.
 
+## 3b. Where the tests are
+Two suites: the `node:test` suite in `e2e/tests/` and the Playwright Test suite in `client/e2e/` (run `npx playwright test --ui` from `client/`). The IDs quoted in the tables above (DASH-, TOUR-, ADMA-, VM-021/022 and the older ones) come from the first; the second names its tests in plain words, listed per file at the end of `test-cases.md`.
+
 ## 4. Not covered / limits (honest list)
 - AI answers are **stubbed** (`/ai/chat`) in browser tests; real AI quality and cost are not tested. Server `aiGateway.test` uses a mock gateway.
 - No test for: AI-guided builder conversation, DPR view/download of DOCX/XLS, image generation/upload, annexure upload, document (RAG) upload/search, APMSME submit/status, support-desk UI, accept-invite UI, All-DPRs filters/pagination, voice input, Telugu translation of a whole DPR.

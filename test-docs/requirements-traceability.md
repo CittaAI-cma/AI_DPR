@@ -1,5 +1,7 @@
 # Requirements traceability
 
+> Test IDs below are from the older `node:test` suite (`e2e/tests/`). The same requirements are also covered by the Playwright Test suite in `client/e2e/` (run with `npx playwright test --ui`); the file-by-file list is at the end of `test-cases.md`. Requirements added later: **R32** the dashboard shows real numbers and every card/button opens the right place (`dashboard.responsive.spec.ts`, DASH-001..022); **R33** the guided tour points at real buttons, switches the rest of the page off and ends on the dashboard (`tour.spec.ts`, TOUR-001..006); **R34** the admin Analytics tab agrees with the records, filters, exports and links through (`admin-analytics.responsive.spec.ts`, ADMA-001..008); **R35** Compare and the suggested plan open as large windows with up to three chosen schemes (`scheme-finder.responsive.spec.ts`, VM-021/022).
+
 The application has no written requirements document, so each requirement below was **derived from the code and the screens** (the inventory in `application-functionality-inventory.md`). Test IDs are the real ones in `e2e/tests/` and `server/src/*.test.ts`. A row with "—" in the test column is a gap, not a pass.
 
 | # | Requirement (derived) | Tests | Status |
