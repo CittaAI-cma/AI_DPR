@@ -8,6 +8,9 @@ The browser suite now runs on **Playwright** (it was Puppeteer). `E2E_BROWSER` p
 ## Dashboard redesign and guided tour (added later)
 New file `e2e/tests/10-dashboard.test.mjs` (DASH-001..021, TOUR-001..006). Only the new tour tests and DASH-011 were run after the last change (all pass on Chromium desktop); the full matrix has **not** been re-run since the redesign, so the totals below predate it.
 
+## Playwright Test suite for UI mode (added later)
+`client/e2e/*.spec.ts` ports every screen-level check (routes and accessibility, sign-in, projects, individual DPR, Scheme Finder, assistant/profile/privacy, admin console, reviewer queue, analytics, dashboard, guided tour, cluster form, session and keyboard) to `@playwright/test`, with desktop, laptop, tablet and phone projects, so `npx playwright test --ui` covers the application. First full run: 359 tests, 337 passed, 22 failed; the failures were test-side (ambiguous locators, a hover check on touch screens, a stale lookup) plus **one real defect** found at tablet size: BUG-018 below. See the execution guide section 2b.
+
 ## Results (real runs)
 | Suite | Pass | Fail | Known-bug (todo) |
 |---|---|---|---|

@@ -241,7 +241,7 @@ export const VentureMatch: React.FC = () => {
           <div className={done ? 'lg:absolute lg:left-0 lg:top-0 lg:w-12' : 'lg:absolute lg:right-full lg:top-0 lg:mr-3 lg:w-12'}>
             <Button
               variant="outline"
-              className={`fixed bottom-4 left-4 z-40 h-11 w-11 rounded-full bg-background p-0 shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 disabled:hover:scale-100 lg:bottom-auto lg:left-auto lg:top-1/2 lg:h-12 lg:w-12 lg:-translate-y-1/2`}
+              className={`fixed bottom-4 left-4 z-40 h-11 w-11 rounded-full bg-background p-0 shadow-lg md:left-20 transition-transform duration-200 hover:scale-110 active:scale-95 disabled:hover:scale-100 lg:bottom-auto lg:left-auto lg:top-1/2 lg:h-12 lg:w-12 lg:-translate-y-1/2`}
               onClick={handlePrevious}
               disabled={!canGoPrevious}
               aria-label={t('common.previous')}

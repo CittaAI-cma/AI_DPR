@@ -90,6 +90,11 @@ See the table; each is a one-line markup/theme fix. BUG-005: give the scroll con
 | BUG-016 | Medium (a11y, critical in axe) | At phone width every signed-in page had a menu button with no accessible name (an icon only). Now `aria-label` "Open menu / Close menu" and `aria-expanded` (`Navbar.tsx`). |
 | BUG-017 | Medium (a11y) | The swipeable features strip on the home page scrolled sideways but could not be reached with the keyboard. Now focusable, labelled region (`FeaturesScroller.tsx`). |
 
+## Found by the Playwright tablet-size run (also fixed)
+| ID | Severity | Summary |
+|---|---|---|
+| BUG-018 | Medium (layout) | On a tablet-width screen (768 px) the round "Previous" button on the Scheme Finder questions sat under the side menu's "Expand menu" control, so pressing it did nothing. It now sits clear of the side menu (`VentureMatch.tsx`, `md:left-20`). |
+
 ## What was changed
 - **Server:** `config/database.ts` (BUG-001: no second `connect()`; the driver reconnects itself), `clusterDPR.controller.ts` (BUG-009: project looked up by id *and* owner, 404 otherwise; BUG-013: unit name capped at 200 characters), `project.controller.ts` (BUG-010: deleting a project also deletes its DPR versions; BUG-007: invalid values give 400 not 500), `admin.controller.ts` (BUG-014: `?q=` search by name/email).
 - **Client:** colour tokens `text-warning-text`, `text-destructive-text`, `text-success-text`, `text-secondary-text` (BUG-011/012, ≥ 4.5:1 in light and dark); names wrap and action rows wrap on Dashboard/All DPRs/Projects (BUG-013/015); delete buttons named (BUG-008, BUG-006); admin tabs are real `role="tab"`s and the sector chart has a text label (BUG-005); `<select>`s labelled (BUG-006); chat count no longer faded (BUG-004); `className` typo (BUG-002); `fetchpriority` spelling (BUG-003); Users tab searches on the server, shows "Showing N of total" and "Load more" (BUG-014).
