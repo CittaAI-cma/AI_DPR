@@ -131,7 +131,7 @@ export const AuthoringStepper: React.FC<Props> = ({
                     current
                       ? 'bg-primary text-primary-foreground shadow-[0_0_0_4px_hsl(var(--primary)/0.16),0_2px_6px_rgba(16,24,40,0.25)]'
                       : done
-                        ? 'bg-success text-white'
+                        ? 'bg-white text-success'
                         : 'bg-background text-muted-foreground group-hover/dot:text-foreground'
                   }`}
                 >

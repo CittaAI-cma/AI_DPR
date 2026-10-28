@@ -195,6 +195,32 @@ test.describe('Basic and Advanced mode', () => {
   });
 });
 
+test.describe('the open step stays in view', () => {
+  test('its title stays at the top, solid, while its inputs scroll past, and it is held inside its own step so it moves on after the last input', async ({ page }) => {
+    await startForm(page);
+    await page.locator('[data-step-row="12"] button[aria-expanded]').click();
+    await page.waitForTimeout(800); // the step scrolls itself into view when it opens
+    const scroller = page.locator('.fill-edit-scroll').first();
+    const head = page.locator('#step-head-12').locator('xpath=..'); // the step's title bar
+    const gap = async () => (await head.boundingBox())!.y - (await scroller.boundingBox())!.y;
+    /** Scrolls so that the step's own top edge is `above` px above the top of the scroll area. */
+    const scrollInto = (above: number) =>
+      scroller.evaluate((el, n) => {
+        const row = document.querySelector('[data-step-row="12"]')!.getBoundingClientRect();
+        el.scrollTop += row.top - el.getBoundingClientRect().top + n;
+      }, above);
+    await scrollInto(250);
+    await expect.poll(async () => Math.abs(await gap()), 'held at the top after 250 px of the step has gone past').toBeLessThanOrEqual(6);
+    await scrollInto(600);
+    await expect.poll(async () => Math.abs(await gap()), 'and still at the top after 600 px').toBeLessThanOrEqual(6);
+    // Solid (not see-through), even under the mouse: a transparent bar would let the inputs show through while scrolling.
+    await head.hover();
+    expect(await head.evaluate((el) => getComputedStyle(el).backgroundColor)).toMatch(/^rgb\(/);
+    // It can only move within its own step, so it is released when that step's last input has passed.
+    expect(await head.evaluate((el) => ({ position: getComputedStyle(el).position, parent: getComputedStyle(el.parentElement!).position, overflow: getComputedStyle(el.parentElement!).overflow }))).toEqual({ position: 'sticky', parent: 'relative', overflow: 'visible' });
+  });
+});
+
 test.describe('arranging and styling the report', () => {
   test('dragging a step to a new place renumbers the steps and the report follows', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1800 });

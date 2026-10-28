@@ -101,7 +101,8 @@ export function StepAccordion({
               {drop && drop.step === section.step ? (
                 <span aria-hidden="true" className={`pointer-events-none absolute inset-x-3 z-10 h-0.5 rounded bg-primary ${drop.place === 'before' ? 'top-0' : 'bottom-0'}`} />
               ) : null}
-              <h2 className={`m-0 flex items-stretch border-l-4 transition-colors hover:bg-muted/60 focus-within:bg-muted/40 ${expanded ? 'border-primary' : 'border-transparent'}`}>
+              {/* The open step's title stays at the top while its inputs scroll past (it is held inside its own row, so it moves on once the last input has passed). */}
+              <h2 className={`m-0 flex items-stretch border-l-4 transition-colors ${expanded ? 'sticky top-0 z-20 border-primary bg-card shadow-[0_1px_0_0_hsl(var(--border)),0_6px_10px_-8px_rgba(15,23,42,0.35)] hover:bg-muted focus-within:bg-muted' : 'border-transparent hover:bg-muted/60 focus-within:bg-muted/40'}`}>
                 {onMove ? (
                   <span
                     role="button"
