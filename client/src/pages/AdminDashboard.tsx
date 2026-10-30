@@ -36,8 +36,9 @@ import { APP_ROLES, ROLE_META, toAppRole, toBackendRole, type AppRole } from '@/
 import { RoleBadge } from '@/components/auth/RolePicker';
 import { AP_DISTRICTS } from '@/lib/individualDpr/apDistricts';
 import { AnalyticsOverview } from '@/components/admin/AnalyticsOverview';
+import { PrivacyOps } from '@/components/admin/PrivacyOps';
 
-type TabType = 'analytics' | 'users' | 'dprs' | 'policies' | 'access' | 'audit';
+type TabType = 'analytics' | 'users' | 'dprs' | 'policies' | 'access' | 'audit' | 'privacy';
 
 export const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -393,6 +394,7 @@ export const AdminDashboard: React.FC = () => {
     { id: 'dprs' as TabType, label: tf('DPR Management'), icon: FileText },
     { id: 'policies' as TabType, label: tf('Policies'), icon: Shield },
     { id: 'audit' as TabType, label: tf('Audit log'), icon: ScrollText },
+    { id: 'privacy' as TabType, label: tf('Privacy and incidents'), icon: Shield },
   ];
 
   return (
@@ -812,6 +814,9 @@ export const AdminDashboard: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* Privacy requests, breach register, retention holds */}
+        {activeTab === 'privacy' && <PrivacyOps />}
 
         {/* Policies Tab */}
         {activeTab === 'policies' && (

@@ -43,7 +43,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, fullBleed = false }) =
           {tf('Accessibility statement')}
         </a>
         {' · '}
-        {tf('MSME One Department')}
+        {tf('AP MSME Development Corporation')}
       </footer>
     </div>
   );

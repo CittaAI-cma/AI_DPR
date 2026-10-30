@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
 import { gatewayConfig } from '../lib/aiGateway';
+import { PrivacyOpsController } from '../controllers/privacyOps.controller';
 import { UserAdminController } from '../controllers/userAdmin.controller';
 import { auditOnSuccess, pick } from '../lib/auditMiddleware';
 
@@ -67,6 +68,18 @@ router.get('/infra/status', (_req, res) => {
 });
 router.get('/integrations/status', (_req, res) => res.json({ success: true, data: integrationStatus() }));
 router.post('/retention/run', AdminController.runRetention);
+
+// DPDP operations: privacy requests, breach register, retention holds, readiness
+router.get('/complaints', PrivacyOpsController.listComplaints);
+router.patch('/complaints/:id', PrivacyOpsController.updateComplaint);
+router.get('/incidents', PrivacyOpsController.listIncidents);
+router.post('/incidents', PrivacyOpsController.createIncident);
+router.patch('/incidents/:id', PrivacyOpsController.updateIncident);
+router.post('/incidents/:id/notify-users', PrivacyOpsController.notifyIncidentUsers);
+router.get('/retention/holds', PrivacyOpsController.listRetentionHolds);
+router.post('/dprs/:id/retention-hold', PrivacyOpsController.setRetentionHold);
+router.delete('/dprs/:id/retention-hold', PrivacyOpsController.liftRetentionHold);
+router.get('/compliance/status', PrivacyOpsController.complianceStatus);
 
 export default router;
 

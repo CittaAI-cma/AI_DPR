@@ -22,7 +22,7 @@ const only = process.argv[2] ? process.argv[2].split(',') : null;
 const shotAt = process.argv[3] ? process.argv[3].split(',').map(Number) : [];
 
 const user = { userId: 'u1', name: 'Test User', email: 't@t.test', role: 'super_admin',
-  privacy: { needsNoticeAcceptance: false, accountConsent: true, aiAssist: true, analytics: false, noticeVersion: '2026-09-4' } };
+  privacy: { needsNoticeAcceptance: false, accountConsent: true, aiAssist: true, analytics: false, noticeVersion: '2026-10-1' } };
 const finderDone = JSON.stringify({ answers: { activity: 'mfg', stage: 'greenfield', supportType: 'loanOrSubsidy', sectorFlag: 'none', budget: '10to20L', legal: 'sole', owner: ['female','sc'], domicile: 'ap', location: 'urban', riceCard: 'yes', age: '21to50', education: '8thPlus', udyam: 'yes', priorSubsidy: 'none', govtFamily: 'no', market: 'offline' }, step: 15, done: true });
 
 const ROUTES = [

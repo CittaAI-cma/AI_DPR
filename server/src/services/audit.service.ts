@@ -41,6 +41,12 @@ export type AuditAction =
   | 'dpr_decision'
   | 'audit_export'
   | 'audit_verify'
+  | 'complaint_update'
+  | 'retention_hold_set'
+  | 'retention_hold_lifted'
+  | 'incident_create'
+  | 'incident_update'
+  | 'incident_notify'
   | 'ai_call'
   | 'support_ticket';
 

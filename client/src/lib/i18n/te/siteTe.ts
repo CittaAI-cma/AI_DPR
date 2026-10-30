@@ -87,6 +87,7 @@ const SITE_TE: Record<string, string> = {
   "DPR downloaded as PDF": "DPR PDF గా డౌన్‌లోడ్ అయింది",
   "Privacy notice": "గోప్యతా నోటీసు",
   "MSME One Department": "MSME వన్ విభాగం",
+  "AP MSME Development Corporation": "AP MSME అభివృద్ధి సంస్థ",
   "APMSME Logo": "APMSME లోగో",
   "DPR Creation in Progress": "DPR రూపకల్పన కొనసాగుతోంది",
   "Step {n} of 10 - Keep going! 🚀": "దశ {n} / 10 - కొనసాగించండి! 🚀",

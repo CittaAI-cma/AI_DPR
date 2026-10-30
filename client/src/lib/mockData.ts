@@ -15,7 +15,7 @@ const mockUsers = {
     udyamNumber: 'UDYAM-TG-01-0001234',
     createdAt: new Date('2024-01-15').toISOString(),
     privacy: {
-      noticeVersion: '2026-09-4',
+      noticeVersion: '2026-10-1',
       accountConsent: true,
       aiAssist: false,
       analytics: false,
@@ -32,7 +32,7 @@ const mockUsers = {
     location: 'Amaravati, Andhra Pradesh',
     createdAt: new Date('2023-12-01').toISOString(),
     privacy: {
-      noticeVersion: '2026-09-4',
+      noticeVersion: '2026-10-1',
       accountConsent: true,
       aiAssist: false,
       analytics: false,

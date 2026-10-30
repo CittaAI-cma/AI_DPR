@@ -399,6 +399,11 @@ class APIClient {
     return response.data;
   }
 
+  async getMyPrivacyRequests() {
+    const response = await this.client.get('/privacy/complaints');
+    return response.data;
+  }
+
   async getPrivacyActivity() {
     const response = await this.client.get('/privacy/activity');
     return response.data;
@@ -436,6 +441,57 @@ class APIClient {
       params,
       responseType: 'blob',
     });
+    return response.data;
+  }
+
+  // DPDP operations (admin): privacy requests, breach register, retention holds, readiness
+  async adminListComplaints(status?: string) {
+    const response = await this.client.get('/admin/complaints', { params: status ? { status } : undefined });
+    return response.data;
+  }
+
+  async adminUpdateComplaint(id: string, data: { status?: string; response?: string; assignedTo?: string; internalNote?: string }) {
+    const response = await this.client.patch(`/admin/complaints/${id}`, data);
+    return response.data;
+  }
+
+  async adminListIncidents() {
+    const response = await this.client.get('/admin/incidents');
+    return response.data;
+  }
+
+  async adminCreateIncident(data: Record<string, unknown>) {
+    const response = await this.client.post('/admin/incidents', data);
+    return response.data;
+  }
+
+  async adminUpdateIncident(id: string, data: Record<string, unknown>) {
+    const response = await this.client.patch(`/admin/incidents/${id}`, data);
+    return response.data;
+  }
+
+  async adminNotifyIncidentUsers(id: string, message: string) {
+    const response = await this.client.post(`/admin/incidents/${id}/notify-users`, { message });
+    return response.data;
+  }
+
+  async adminListRetentionHolds() {
+    const response = await this.client.get('/admin/retention/holds');
+    return response.data;
+  }
+
+  async adminSetRetentionHold(dprId: string, data: { reason: string; reference: string; until?: string }) {
+    const response = await this.client.post(`/admin/dprs/${dprId}/retention-hold`, data);
+    return response.data;
+  }
+
+  async adminLiftRetentionHold(dprId: string) {
+    const response = await this.client.delete(`/admin/dprs/${dprId}/retention-hold`);
+    return response.data;
+  }
+
+  async adminComplianceStatus() {
+    const response = await this.client.get('/admin/compliance/status');
     return response.data;
   }
 

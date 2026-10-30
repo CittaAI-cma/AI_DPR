@@ -19,6 +19,7 @@
     "test:encryption": "node --experimental-strip-types --import ./register-tests.mjs --test --test-concurrency=1 src/encryption.live.test.ts",
     "encrypt:existing": "ts-node --transpile-only src/scripts/encryptExisting.ts",
     "test:support": "node --experimental-strip-types --test --test-concurrency=1 src/support.live.test.ts",
+    "test:privacy-ops": "node --experimental-strip-types --test --test-concurrency=1 src/privacyOps.live.test.ts",
     "docs:openapi": "node scripts/generateOpenApi.mjs"
   },
   "keywords": [
