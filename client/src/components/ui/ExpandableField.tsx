@@ -407,8 +407,8 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
       allowImprove = true,
       disabled,
       readOnly,
-      onFocus,
       onClick,
+      onKeyDown,
       ...props
     },
     ref
@@ -439,13 +439,15 @@ export const ExpandableTextarea = React.forwardRef<HTMLTextAreaElement, Textarea
             placeholder={placeholder}
             disabled={disabled}
             readOnly
-            onFocus={(e) => {
-              if (!disabled) openEditor(e, expandTitle || label);
-              onFocus?.(e);
-            }}
+            // Open on click or Enter/Space only. Opening on focus made the editor reopen the moment it closed,
+            // because closing returns focus to this textarea.
             onClick={(e) => {
-              if (!disabled) openEditor(e, expandTitle || label);
+              if (!disabled && !open) openEditor(e, expandTitle || label);
               onClick?.(e);
+            }}
+            onKeyDown={(e) => {
+              if (!disabled && !open && (e.key === 'Enter' || e.key === ' ')) openEditor(e, expandTitle || label);
+              onKeyDown?.(e);
             }}
             {...props}
             aria-label={expandTitle || label || props['aria-label']}

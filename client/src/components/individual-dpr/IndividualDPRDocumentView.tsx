@@ -59,6 +59,9 @@ const NARRATIVE_FIELDS = new Set([
 ]);
 import { isKycUploaded } from '@/lib/privacy/kycField';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/store/authStore';
+import { useUserTextTe } from '@/lib/i18n/useUserTextTe';
 import { toDateInputValue } from '@/lib/dprAiFieldNormalize';
 import { isReasonableIsoDate } from '@/lib/individualDpr/isoDate';
 import { getDocCellInput, getDocFieldInput, type DocFieldInput } from '@/lib/individualDpr/docFieldInput';
@@ -389,8 +392,14 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const tf = useClusterFormText();
   // Shown for every section when asked; the focused step's section also shows its empty answers (switched on only while that section is drawn).
   let showEmpty = showEmptyProp;
-  const data = extractIndividualDocData(dpr, project);
-  const schemeCode = extractSchemeCode(dpr, project, data);
+  const rawData = extractIndividualDocData(dpr, project);
+  const { i18n } = useTranslation();
+  const aiAllowed = !!useAuthStore((state) => state.user?.privacy?.aiAssist);
+  // In Telugu, the read-only report shows the person's own typed answers in Telugu too. The answers themselves stay in
+  // English (exports and the report logic read them); typing into the report (Advanced mode) always shows what was typed.
+  const teView = (viewLanguage === 'telugu' || i18n.language.startsWith('te')) && !onEditField;
+  const { data, status: userTextStatus } = useUserTextTe(rawData, teView, aiAllowed, (text) => tf(text) !== text);
+  const schemeCode = extractSchemeCode(dpr, project, rawData);
   const schemeUi = getSchemeUiTemplate(schemeCode);
   const catalogSteps = getSchemeDocSteps(schemeCode);
   const extras = data.schemeExtras || {};
@@ -403,7 +412,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     viewLanguage === 'telugu' ? 'te' : 'en'
   );
   const budget = data.ventureMatchAnswers?.budget;
-  const kind = businessKind(data);
+  const kind = businessKind(rawData);
   const uploads = getIndividualUploads(schemeCode, data);
   const uploadStore = data.step18 || data.uploads || {};
 
@@ -911,6 +920,13 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
           .filter((path) => /^[A-Za-z0-9_.\[\]]+$/.test(path))
           .map((path) => `.individual-dpr-document [data-dpr-field="${path}"]{border-color:#dc2626!important;background-color:#fef2f2!important}.individual-dpr-document [data-dpr-field="${path}"]:focus{box-shadow:0 0 0 3px rgba(220,38,38,.22)!important}`)
           .join('')}}`}</style>
+      ) : null}
+      {teView && (userTextStatus === 'translating' || userTextStatus === 'unavailable') ? (
+        <p role="status" className="no-print mb-2 rounded-md border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          {userTextStatus === 'translating'
+            ? tf('Translating your entries into Telugu…')
+            : tf('Your own entries are shown as typed. Turn on AI help in Privacy settings to see them in Telugu.')}
+        </p>
       ) : null}
       {markStyleSpots ? <div data-style-spot="page" className="h-1" aria-hidden /> : null}
       {style?.watermark ? (

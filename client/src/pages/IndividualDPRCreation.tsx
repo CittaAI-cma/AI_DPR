@@ -1701,8 +1701,9 @@ export const IndividualDPRCreation: React.FC = () => {
                           const doc = (
                             <IndividualDPRDocumentView
                               trackFieldHits
-                              showEmpty={docMode}
-                              focusStep={docMode ? undefined : currentStep}
+                              // Every step's full set of rows is shown from the first step, so scrolling the live report
+                              // always shows the whole form, not only the steps already opened.
+                              showEmpty
                               onEditField={docMode ? onEditField : undefined}
                               onFieldFocus={docMode ? (path: string) => setFocusedPath(path) : undefined}
                               guideMissing={docMode ? missingRequired.map((item) => item.path) : undefined}

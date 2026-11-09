@@ -307,6 +307,8 @@ const ADMIN_PAGES_TE: Record<string, string> = {
   'until': 'వరకు',
   'until lifted': 'హోల్డ్ తొలగించే వరకు',
   'Lift hold': 'హోల్డ్ తొలగించండి',
+  'Translating your entries into Telugu…': 'మీ నమోదులను తెలుగులోకి అనువదిస్తున్నాము…',
+  'Your own entries are shown as typed. Turn on AI help in Privacy settings to see them in Telugu.': 'మీ స్వంత నమోదులు టైప్ చేసినట్లే చూపబడుతున్నాయి. వాటిని తెలుగులో చూడటానికి గోప్యతా సెట్టింగ్‌లలో AI సహాయాన్ని ఆన్ చేయండి.',
 };
 
 export default ADMIN_PAGES_TE;

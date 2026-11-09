@@ -200,6 +200,7 @@ Rows still store time, userId, role, action, optional targetType/targetId, IP. *
 - **Breach register** (`DataBreachIncident`): nature/scope, data affected, people affected, detection time, declare / not-a-breach with written reasoning, containment, Board intimation and 72-hour detailed-report clock (overdue flag), notice to affected people (`POST /api/admin/incidents/:id/notify-users`), corrective actions, timeline. Routes under `/api/admin/incidents`. Every change is audited (`incident_*`). Never purged by retention.
 - **Retention hold:** `POST/DELETE /api/admin/dprs/:id/retention-hold` (reason + written reference required, optional end date), `GET /api/admin/retention/holds`. The job skips held reports (no warning, no delete); lifting restarts with a fresh 15-day warning. Account erase is not blocked by a hold.
 - **Readiness:** `GET /api/admin/compliance/status` lists each item of the department's document as ready or action-needed. Env flags: `VENDOR_CONTRACTS_CONFIRMED`, `CROSS_BORDER_CONFIRMED`, `OPENAI_ZDR_CONFIRMED`.
+- **Telugu view of typed answers:** in Telugu the live report sends the person's own typed text (not identity files or numbers) to the AI translator, only when AI help is on, through the same scrubbing gateway. `POST /api/ai/translate-texts`.
 - **Tests:** `npm run test:privacy-ops` (needs the API running with `RETENTION_IDLE_DAYS=0 RETENTION_WARNING_DAYS=0`).
 
 ## 5. Key files

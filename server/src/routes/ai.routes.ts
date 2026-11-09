@@ -35,6 +35,13 @@ router.post(
   AIController.textToSpeech
 );
 
+// Telugu view of the person's own typed answers
+router.post(
+  '/translate-texts',
+  validate([body('texts').isArray({ min: 1, max: 60 }).withMessage('texts must be a list of 1 to 60 entries')]),
+  AIController.translateUserTexts
+);
+
 // Scheme Finder option helper
 router.post(
   '/venture-match/help',

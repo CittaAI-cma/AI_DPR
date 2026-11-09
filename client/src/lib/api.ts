@@ -399,6 +399,11 @@ class APIClient {
     return response.data;
   }
 
+  async translateUserTexts(texts: string[]) {
+    const response = await this.client.post('/ai/translate-texts', { texts });
+    return response.data;
+  }
+
   async getMyPrivacyRequests() {
     const response = await this.client.get('/privacy/complaints');
     return response.data;
@@ -708,14 +713,6 @@ class APIClient {
 
   async downloadDOCX(dprId: string, language: string = 'english') {
     const response = await this.client.get(`/dpr/${dprId}/download/docx`, {
-      params: { language },
-      responseType: 'blob',
-    });
-    return response.data;
-  }
-
-  async downloadXLS(dprId: string, language: string = 'english') {
-    const response = await this.client.get(`/dpr/${dprId}/download/xls`, {
       params: { language },
       responseType: 'blob',
     });

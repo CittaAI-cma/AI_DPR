@@ -388,7 +388,7 @@ export const DPRPreview: React.FC = () => {
     setEditedContent('');
   };
 
-  const handleDownload = async (format: 'pdf' | 'docx' | 'xls') => {
+  const handleDownload = async (format: 'pdf' | 'docx') => {
     try {
       // Exports are English only. The on-screen document is what gets printed, so show it in English first.
       const exportLanguage = 'english' as const;
@@ -441,9 +441,6 @@ export const DPRPreview: React.FC = () => {
       } else if (format === 'docx') {
         blob = await api.downloadDOCX(dprId!, exportLanguage);
         downloadBlob(blob, fileName('docx'));
-      } else if (format === 'xls') {
-        blob = await api.downloadXLS(dprId!, exportLanguage);
-        downloadBlob(blob, fileName('xlsx'));
       }
       toast.success(tf('{f} downloaded successfully!').replace('{f}', format.toUpperCase()));
     } catch (error) {
@@ -669,14 +666,6 @@ export const DPRPreview: React.FC = () => {
                 >
                   <Download className="h-4 w-4 mr-2" />
                   DOCX
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleDownload('xls')}
-                  className="border-2 hover:bg-success/5 hover:border-success"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  XLS
                 </Button>
                 {dpr.status === 'draft' && (
                   <Button

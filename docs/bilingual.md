@@ -17,7 +17,16 @@ Two mechanisms, both switched by the language toggle (`i18n.language`, saved in 
 
 ## Intentionally English
 
-Language names ("English" next to "తెలుగు"), acronyms and scheme codes (PMEGP, GSTIN, DSCR), file formats, units such as kWh, format-only placeholders (UDYAM-XX-00-0000000), the `DELETE` confirmation word, text typed by the user, server and AI generated content, and `DPRPreview` which switches the UI to the language the DPR was generated in.
+Language names ("English" next to "తెలుగు"), acronyms and scheme codes (PMEGP, GSTIN, DSCR), file formats, units such as kWh, format-only placeholders (UDYAM-XX-00-0000000), the `DELETE` confirmation word, server and AI generated content, and `DPRPreview` which switches the UI to the language the DPR was generated in.
+
+## The person's own typed answers in Telugu
+
+In Telugu, the read-only live report (Basic mode) also shows what the person typed (names, descriptions, addresses) in Telugu.
+
+- `client/src/lib/i18n/userTextTe.ts` picks the text worth translating (real words only: not numbers, codes, links, contact details, identifiers, files or scheme settings) and swaps in translations on a copy. The stored answers stay English; the report logic and exports read the English.
+- `useUserTextTe` (`lib/i18n/useUserTextTe.ts`) asks `POST /api/ai/translate-texts` (up to 60 texts of 2000 characters per call, behind the AI consent gate, scrubbed by the AI gateway) in batches and remembers results for the session. Texts that already have a Telugu entry in the dictionaries are not sent.
+- Needs AI help to be on. With it off the text stays as typed and the report says why.
+- Advanced mode (typing inside the report) always shows what was typed.
 
 ## Exports are English only
 
