@@ -63,8 +63,13 @@ app.use(helmet({
   },
 })); // Security headers
 app.use(compression()); // Compress responses
+// CORS_ORIGIN accepts one or several frontend URLs separated by commas; a trailing slash is ignored.
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
   credentials: true,
 }));
 app.use(morgan('dev')); // Logging
