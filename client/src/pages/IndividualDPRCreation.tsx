@@ -228,11 +228,15 @@ export const IndividualDPRCreation: React.FC = () => {
   const dismissFinding = (finding: Finding) =>
     setSchemeExtras({ ...(data.schemeExtras || {}), dismissedChecks: [...dismissedChecks, dismissalKey(finding)] });
   /** Document mode: bring this step's section of the report into view. */
-  /** Brings the step's form into view: the page itself on a wide screen, the form's top on a phone (where the page scrolls inside its own frame). */
-  const showFormTop = () => {
+  /** Brings the step's form into view: the page itself on a wide screen; on a phone (where the page scrolls inside its own frame) the opened step's heading. */
+  const showFormTop = (step?: number) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (window.matchMedia?.('(max-width: 1023px)').matches) {
-      window.requestAnimationFrame(() => document.getElementById('individual-dpr-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      // The step opens a moment after the tap, so look for its heading once it is on the page.
+      window.setTimeout(() => {
+        const target = (step ? document.getElementById(`step-head-${step}`) : null) || document.getElementById('individual-dpr-form');
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
     }
   };
   const scrollDocToStep = (step: number) => {
@@ -848,7 +852,7 @@ export const IndividualDPRCreation: React.FC = () => {
             node.scrollTo({ top: 0 });
           });
         } else {
-          showFormTop();
+          showFormTop(next);
         }
       }
     } finally {
@@ -1314,7 +1318,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 setInvalidFields([]);
                 setRequiredNotice('');
                 setCurrentStep(step);
-                showFormTop();
+                showFormTop(step);
               }}
               activeClass={schemeUi?.stepActiveClass}
               idleClass={schemeUi?.stepIdleClass}

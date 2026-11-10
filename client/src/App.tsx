@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { RouteTracker, ScrollToTop } from '@/lib/navHistory';
 import { RouteAnnouncer } from '@/lib/routeA11y';
 import { PageLoading } from '@/components/ui/PageLoading';
@@ -35,7 +35,22 @@ const Privacy = lazy(() => import('./pages/Privacy').then((m) => ({ default: m.P
 const AccountPrivacy = lazy(() => import('./pages/AccountPrivacy').then((m) => ({ default: m.AccountPrivacy })));
 import './i18n/config';
 
+/** Notices sit top-right on a wide screen and top-centre on a phone, never wider than the screen. */
+function useNarrowScreen() {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 639px)').matches);
+  useEffect(() => {
+    const query = window.matchMedia?.('(max-width: 639px)');
+    if (!query) return;
+    const update = () => setNarrow(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  return narrow;
+}
+
 function App() {
+  const narrow = useNarrowScreen();
   return (
     <Router
       future={{
@@ -45,10 +60,13 @@ function App() {
     >
       <ConfirmProvider>
       <Toaster
-        position="top-right"
+        position={narrow ? 'top-center' : 'top-right'}
+        containerStyle={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)', left: '0.75rem', right: '0.75rem' }}
         toastOptions={{
           duration: 3000,
           style: {
+            maxWidth: 'min(28rem, calc(100vw - 1.5rem))',
+            overflowWrap: 'anywhere',
             background: 'hsl(217, 91%, 40%)',
             color: '#fff',
             borderRadius: '0.75rem',
