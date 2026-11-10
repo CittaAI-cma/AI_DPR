@@ -101,8 +101,8 @@ class APIClient {
         }
         
         // Clean every JSON body before it leaves the browser (operator keys, script markup, control characters).
-        // The page-capture HTML for PDF export is cleaned by the server's stricter document sanitiser instead.
-        if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData) && !/\/download\/pdf\/html$/.test(config.url || '')) {
+        // The page-capture HTML for PDF and Word export is cleaned by the server's stricter document sanitiser instead.
+        if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData) && !/\/download\/(pdf|docx)\/html$/.test(config.url || '')) {
           config.data = sanitizeDeep(config.data);
         }
 
@@ -675,7 +675,7 @@ class APIClient {
     return response.data;
   }
 
-  async downloadPDF(dprId: string, language: string = 'english', enhancedParagraphs?: Record<string, string>) {
+  async downloadPDF(dprId: string, language: string = 'english', enhancedParagraphs?: Record<string, string>, signal?: AbortSignal) {
     // Use POST if enhanced paragraphs are provided, otherwise use GET for backward compatibility
     if (enhancedParagraphs && Object.keys(enhancedParagraphs).length > 0) {
       const response = await this.client.post(`/dpr/${dprId}/download/pdf`, 
@@ -690,6 +690,8 @@ class APIClient {
       const response = await this.client.get(`/dpr/${dprId}/download/pdf`, {
         params: { language },
         responseType: 'blob',
+        timeout: 150000,
+        signal,
       });
       return response.data;
     }
@@ -699,22 +701,44 @@ class APIClient {
    * Download PDF generated from client-rendered HTML (exact match with preview).
    * Primarily used for Cluster DPRs rendered by `ClusterDPRDocumentView`.
    */
-  async downloadPDFExactFromHTML(dprId: string, html: string, language: string = 'english') {
+  async downloadPDFExactFromHTML(dprId: string, html: string, language: string = 'english', signal?: AbortSignal) {
     const response = await this.client.post(
       `/dpr/${dprId}/download/pdf/html`,
       { html },
       {
         params: { language },
         responseType: 'blob',
+        timeout: 150000,
+        signal,
       }
     );
     return response.data;
   }
 
-  async downloadDOCX(dprId: string, language: string = 'english') {
+  /**
+   * The Word file built from the same on-screen report HTML the PDF is printed from, so both have the same content
+   * and structure.
+   */
+  async downloadDOCXExactFromHTML(dprId: string, html: string, language: string = 'english', signal?: AbortSignal) {
+    const response = await this.client.post(
+      `/dpr/${dprId}/download/docx/html`,
+      { html },
+      {
+        params: { language },
+        responseType: 'blob',
+        timeout: 90000,
+        signal,
+      }
+    );
+    return response.data;
+  }
+
+  async downloadDOCX(dprId: string, language: string = 'english', signal?: AbortSignal) {
     const response = await this.client.get(`/dpr/${dprId}/download/docx`, {
       params: { language },
       responseType: 'blob',
+      timeout: 90000,
+      signal,
     });
     return response.data;
   }

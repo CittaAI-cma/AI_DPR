@@ -97,8 +97,8 @@ export const SchemeFinderCard: React.FC<SchemeFinderCardProps> = ({ onSearch, on
           </ul>
         )}
       </div>
-      <Button variant="outline" onClick={onQuiz} className="mt-4 w-full gap-2 border-2">
-        <Sparkles className="h-4 w-4" aria-hidden="true" />
+      <Button variant="outline" onClick={onQuiz} className="mt-4 h-auto min-h-10 w-full gap-2 whitespace-normal border-2 py-2 text-center">
+        <Sparkles className="h-4 w-4 flex-none" aria-hidden="true" />
         {tf('Not sure? Answer a few questions')}
       </Button>
     </section>

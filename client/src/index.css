@@ -993,6 +993,13 @@ html.dark .bg-gray-100 { background-color: var(--r-bg-gray-100); }
 html.dark .bg-slate-100 { background-color: var(--r-bg-slate-100); }
 html.dark .bg-gray-200 { background-color: var(--r-bg-gray-200); }
 html.dark .bg-amber-50 { background-color: var(--r-bg-amber-50); }
+/* The same tints written with an opacity (bg-amber-50/50) are light colours laid over dark; they take the dark tint too. */
+html.dark [class*="bg-amber-50/"] { background-color: var(--r-bg-amber-50); }
+html.dark [class*="bg-blue-50/"] { background-color: var(--r-bg-blue-50); }
+html.dark [class*="bg-red-50/"] { background-color: var(--r-bg-red-50); }
+html.dark [class*="bg-teal-50/"] { background-color: var(--r-bg-teal-50); }
+html.dark [class*="bg-indigo-50/"] { background-color: var(--r-bg-indigo-50); }
+html.dark [class*="bg-green-50/"] { background-color: var(--r-bg-green-50); }
 html.dark .bg-yellow-50 { background-color: var(--r-bg-yellow-50); }
 html.dark .bg-amber-100 { background-color: var(--r-bg-amber-100); }
 html.dark .bg-red-50 { background-color: var(--r-bg-red-50); }
@@ -1082,6 +1089,10 @@ html.dark .bg-\[\#f2f6f5\] { background-color: var(--r-bg-f2f6f5); }
 @layer base {
   .theme-light { color: hsl(var(--foreground)); }
 }
+
+/* Home page in dark mode: the greys written as fixed colours follow the theme; the sample screens inside the page stay light on purpose. */
+html.dark .landing-page .text-\[\#5c676d\] { color: hsl(var(--ink-muted)); }
+html.dark .landing-page .bg-\[\#f3f7f6\] { background-color: hsl(var(--surface)); }
 
 
 /* Interaction polish: step changes, collapsing groups, pop-up exit, loading placeholders. */
@@ -1187,7 +1198,10 @@ html { scrollbar-gutter: stable; }
 :where([role='tab']) {
   transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
-:where(button:not(:disabled), [role='button']):active {
+/* Press feedback shrinks what is inside the button, not the button. Scaling the button itself pulled its edges in while it
+   was pressed, so on a wide button the arrow or icon at the edge ended up outside it, the release landed on the parent
+   and the click was lost. Zero specificity, so a child that sets its own transform (a rotated arrow) keeps it. */
+:where(button:not(:disabled):active, [role='button']:active) > * {
   transform: scale(0.97);
 }
 :where(button, [role='button']) {
@@ -1195,8 +1209,11 @@ html { scrollbar-gutter: stable; }
   transition-duration: 0.15s;
   transition-timing-function: ease-out;
 }
+:where(button, [role='button']) > * {
+  transition: transform 0.15s ease-out;
+}
 @media (prefers-reduced-motion: reduce) {
-  :where(button:not(:disabled), [role='button']):active { transform: none; }
+  :where(button:not(:disabled):active, [role='button']:active) > * { transform: none; }
 }
 
 
@@ -1251,13 +1268,15 @@ html { scrollbar-gutter: stable; }
 @media (prefers-reduced-motion: reduce) { .motion-panel, .motion-panel.is-closing { animation: none !important; } }
 @media (prefers-reduced-motion: reduce) { .motion-mode { transition: none !important; } }
 
-/* Side-by-side fields: when the labels and hints above the boxes wrap to different heights, the boxes still sit on one line. */
+/* Side-by-side fields: when the labels and hints above the boxes wrap to different heights, the boxes still sit on one line.
+   A grid that top-aligns its cells (`items-start`) opts out: its fields keep their own height and the normal label spacing,
+   instead of being stretched to a taller neighbour with the box pushed to the bottom (a large gap under the label). */
 @media (min-width: 768px) {
-  .grid:is([class*='sm:grid-cols-'], [class*='md:grid-cols-']) > div:has(> div.w-full:last-child) {
+  .grid:is([class*='sm:grid-cols-'], [class*='md:grid-cols-']):not(.items-start) > div:has(> div.w-full:last-child) {
     display: flex;
     flex-direction: column;
   }
-  .grid:is([class*='sm:grid-cols-'], [class*='md:grid-cols-']) > div:has(> div.w-full:last-child) > div.w-full:last-child {
+  .grid:is([class*='sm:grid-cols-'], [class*='md:grid-cols-']):not(.items-start) > div:has(> div.w-full:last-child) > div.w-full:last-child {
     margin-top: auto;
   }
 }

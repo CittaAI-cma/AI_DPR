@@ -62,7 +62,7 @@ export const DPRPreview: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [hasTelugu, setHasTelugu] = useState(false);
-  const [previewZoom, setPreviewZoom] = useState(0.6); // Default zoom set to 60%
+  const [previewZoom, setPreviewZoom] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? 0.4 : 0.6)); // 60%, or 40% on a phone so the page width fits
   const [styling, setStyling] = useState(false);
   const [draftStyle, setDraftStyle] = useState<any>(null);
   const draftStyleRef = useRef<any>(null);
@@ -392,7 +392,7 @@ export const DPRPreview: React.FC = () => {
     try {
       // Exports are English only. The on-screen document is what gets printed, so show it in English first.
       const exportLanguage = 'english' as const;
-      if (viewLanguage !== exportLanguage) {
+      if (viewLanguage !== exportLanguage && !(isIndividualDPR && dprId)) {
         toast(tf('Exports are English only. Switching the document to English.'));
         setViewLanguage(exportLanguage);
         await new Promise((resolve) => window.setTimeout(resolve, 900));
@@ -416,6 +416,35 @@ export const DPRPreview: React.FC = () => {
           ext,
         });
 
+      // Hands the file to the browser, and puts a plain download link in the notice. The page cannot see whether the
+      // browser accepted an automatic download (it may have downloads blocked for this site), but a click on a real
+      // link is always a download the person started.
+      const deliver = (file: Blob, name: string) => {
+        downloadBlob(file, name);
+        const linkUrl = window.URL.createObjectURL(file);
+        window.setTimeout(() => window.URL.revokeObjectURL(linkUrl), 5 * 60 * 1000);
+        toast.success(
+          (item) => (
+            <span data-testid="download-ready">
+              {tf('Your {f} is ready.').replace('{f}', format.toUpperCase())}{' '}
+              <a href={linkUrl} download={name} onClick={() => toast.dismiss(item.id)} className="font-semibold underline">
+                {tf('If it was not saved, click here.')}
+              </a>
+            </span>
+          ),
+          { duration: 15000 }
+        );
+      };
+
+      // A Latest (individual) report seen in another language is drawn off screen in English for the file, so the language the
+      // person chose stays as it is (nothing is switched, nothing waits for the page to redraw).
+      if (viewLanguage !== exportLanguage && isIndividualDPR && dprId) {
+        const { exportGeneratedDpr } = await import('@/lib/exportGeneratedDpr');
+        const file = await exportGeneratedDpr(dprId, format);
+        deliver(file.blob, file.filename);
+        return;
+      }
+
       let blob;
       if (format === 'pdf') {
         // Latest individual and cluster: print the on-screen document, not the server template.
@@ -429,20 +458,33 @@ export const DPRPreview: React.FC = () => {
               console.warn('HTML PDF failed, using server PDF', htmlErr);
               blob = await api.downloadPDF(dprId!, exportLanguage, enhancedParagraphs);
             }
-            downloadBlob(blob, fileName('pdf'));
+            deliver(blob, fileName('pdf'));
           } else {
             blob = await api.downloadPDF(dprId!, exportLanguage, enhancedParagraphs);
-            downloadBlob(blob, fileName('pdf'));
+            deliver(blob, fileName('pdf'));
           }
         } else {
           blob = await api.downloadPDF(dprId!, exportLanguage, enhancedParagraphs);
-          downloadBlob(blob, fileName('pdf'));
+          deliver(blob, fileName('pdf'));
         }
       } else if (format === 'docx') {
-        blob = await api.downloadDOCX(dprId!, exportLanguage);
-        downloadBlob(blob, fileName('docx'));
+        // Latest individual: the Word file is built in the browser from the on-screen document (the same report the PDF
+        // is printed from), so it has the PDF's content and layout whichever server version is running. If that fails, the
+        // server builds it from the same page HTML. The older server-built layout is deliberately not used: it differs.
+        const root = isIndividualDPR ? document.querySelector('.dpr-document') : null;
+        if (root) {
+          try {
+            const { domToDocxBlob } = await import('@/lib/domToDocx');
+            blob = await domToDocxBlob(root);
+          } catch (localErr) {
+            console.warn('Word file from the page failed in the browser, trying the server', localErr);
+            blob = await api.downloadDOCXExactFromHTML(dprId!, captureElementAsStandaloneHTML(root), exportLanguage);
+          }
+        } else {
+          blob = await api.downloadDOCX(dprId!, exportLanguage);
+        }
+        deliver(blob, fileName('docx'));
       }
-      toast.success(tf('{f} downloaded successfully!').replace('{f}', format.toUpperCase()));
     } catch (error) {
       toast.error(tf('Failed to download {f}').replace('{f}', format.toUpperCase()));
     }
@@ -483,7 +525,7 @@ export const DPRPreview: React.FC = () => {
       case 'approved':
         return 'bg-success/10 text-success-text border border-success/20';
       case 'submitted':
-        return 'bg-secondary/10 text-secondary-text border border-secondary/20';
+        return 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20';
       case 'draft':
         return 'bg-warning/10 text-warning-text border border-warning/20';
       case 'rejected':
@@ -498,7 +540,7 @@ export const DPRPreview: React.FC = () => {
       case 'approved':
         return <CheckCircle className="h-4 w-4" />;
       case 'submitted':
-        return <AlertCircle className="h-4 w-4" />;
+        return <Send className="h-4 w-4" />;
       case 'draft':
         return <FileText className="h-4 w-4" />;
       default:
@@ -931,11 +973,11 @@ export const DPRPreview: React.FC = () => {
         {isIndividualDPR || isClusterDPR ? (
           <Card className="border-2 shadow-lg">
             <CardHeader className="flex-shrink-0 border-b border-border">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                 <CardTitle>{tf('DPR Preview')}</CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {!styling ? (
-                    <Button variant="outline" size="sm" onClick={openEditView}>
+                    <Button variant="outline" size="sm" onClick={openEditView} className="whitespace-nowrap">
                       <Edit2 className="h-4 w-4 mr-2" />
                       {tf('Edit this DPR')}
                     </Button>
@@ -1013,14 +1055,10 @@ export const DPRPreview: React.FC = () => {
                   />
                 </StyleEditor>
               ) : (
-              <div 
+              <div
                 className="w-full overflow-auto"
-                style={{ 
-                  transform: `scale(${previewZoom})`,
-                  transformOrigin: 'top left',
-                  width: `${100 / previewZoom}%`,
-                  height: `${100 / previewZoom}%`,
-                }}
+                // CSS zoom, not a transform: the page then takes only the room it shows, so no empty space is left under it.
+                style={{ zoom: previewZoom } as React.CSSProperties}
               >
                 {(() => {
                   const record = isIndividualDPR ? extractIndividualDocData(dpr, project) : null;

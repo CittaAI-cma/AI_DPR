@@ -40,6 +40,9 @@ import { FinalPreviewDialog } from '@/components/individual-dpr/FinalPreviewDial
 import { EditModeToggle } from '@/components/individual-dpr/EditModeToggle';
 import { DocFieldGuide } from '@/components/individual-dpr/DocFieldGuide';
 import { applySampleToStore } from '@/lib/individualDpr/sampleData/apply';
+import { exportGeneratedDpr, type ExportedFile, type ExportFormat } from '@/lib/exportGeneratedDpr';
+import { GenerateFormatDialog } from '@/components/individual-dpr/GenerateFormatDialog';
+import { downloadBlob } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { isSuperAdmin } from '@/lib/rbac';
 import { useClusterFormText } from '@/lib/clusterDprFormText';
@@ -211,9 +214,27 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   };
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [formatOpen, setFormatOpen] = useState(false);
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [readyFile, setReadyFile] = useState<ExportedFile | null>(null);
+  const lastGenerated = useRef<{ key: string; id: string } | null>(null);
+  const generateAbort = useRef<AbortController | null>(null);
+  /** Closing the chooser while a file is being made stops it: the request is aborted and nothing downloads. */
+  const closeFormatDialog = () => {
+    generateAbort.current?.abort();
+    setFormatOpen(false);
+    setReadyFile(null);
+  };
   const dismissFinding = (finding: Finding) =>
     setSchemeExtras({ ...(data.schemeExtras || {}), dismissedChecks: [...dismissedChecks, dismissalKey(finding)] });
   /** Document mode: bring this step's section of the report into view. */
+  /** Brings the step's form into view: the page itself on a wide screen, the form's top on a phone (where the page scrolls inside its own frame). */
+  const showFormTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.matchMedia?.('(max-width: 1023px)').matches) {
+      window.requestAnimationFrame(() => document.getElementById('individual-dpr-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  };
   const scrollDocToStep = (step: number) => {
     const def = getSchemeDocSteps(schemeCode).find((item) => item.n === step);
     if (!def) return;
@@ -827,7 +848,7 @@ export const IndividualDPRCreation: React.FC = () => {
             node.scrollTo({ top: 0 });
           });
         } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showFormTop();
         }
       }
     } finally {
@@ -929,6 +950,7 @@ export const IndividualDPRCreation: React.FC = () => {
     }
   };
 
+  /** "Generate DPR": check the answers, then ask which file format to make. The person stays on this page. */
   const handleGenerateDPR = async (bypassReview = false) => {
     if (blockers.length && !canBypassBlocks) {
       setReviewOpen(true);
@@ -939,54 +961,80 @@ export const IndividualDPRCreation: React.FC = () => {
       setReviewOpen(true);
       return;
     }
+    setReviewOpen(false);
+    setReadyFile(null);
+    setFormatOpen(true);
+  };
+
+  /** Saves, generates the DPR (once for the same answers), makes the chosen file and offers it for download. */
+  const generateInFormat = async (format: ExportFormat) => {
+    const abort = new AbortController();
+    generateAbort.current = abort;
+    const cancelled = () => abort.signal.aborted;
     setIsGenerating(true);
+    setExporting(format);
     try {
       if (!data.step1 || !getUnitName(data.step1)) {
         toast.error(t('individualDpr.toasts.needUnitNameGenerate'));
-        setIsGenerating(false);
+        setFormatOpen(false);
         return;
       }
       const badFormats = invalidFormats(data.step11);
       if (badFormats.length) {
+        setFormatOpen(false);
         setCurrentStep(11);
         window.setTimeout(() => warnFormats(badFormats), 120);
-        setIsGenerating(false);
         return;
       }
-      const saveSuccess = await saveToDatabase();
-      if (!saveSuccess) {
-        toast.error(t('individualDpr.toasts.saveBeforeGenerateFailed'));
-        setIsGenerating(false);
-        return;
-      }
-
-      toast.loading(t('individualDpr.toasts.generating'), { id: 'generating-dpr' });
-      const response = await individualDprApi.generate(
-        {
-          ...dprPayload,
-          currentStep: undefined,
-          isDraft: undefined,
-          lastSaved: undefined,
-          generatedDPR: undefined,
-        },
-        'bilingual'
-      );
-
-      if (response.success && response.data) {
+      const payload = {
+        ...dprPayload,
+        currentStep: undefined,
+        isDraft: undefined,
+        lastSaved: undefined,
+        generatedDPR: undefined,
+      };
+      // The same answers give the same DPR: picking the other format afterwards does not create a second one.
+      // Ids and timestamps change when the draft is saved, so they are left out of the comparison.
+      const key = JSON.stringify(payload, (name, value) => (/^(_id|id|draftId|projectId|dprId|sessionId|lastSaved|updatedAt|createdAt|savedAt)$/.test(name) ? undefined : value));
+      let dprId: string | null = lastGenerated.current?.key === key ? lastGenerated.current.id : null;
+      if (!dprId) {
+        const saveSuccess = await saveToDatabase();
+        if (cancelled()) return;
+        if (!saveSuccess) {
+          toast.error(t('individualDpr.toasts.saveBeforeGenerateFailed'));
+          return;
+        }
+        toast.loading(t('individualDpr.toasts.generating'), { id: 'generating-dpr' });
+        const response = await individualDprApi.generate(payload, 'bilingual');
+        if (!(response.success && response.data)) throw new Error(response.message || 'Failed to generate DPR');
         setGeneratedDPR(response.data.content);
-        resetData();
-        toast.success(t('individualDpr.toasts.generateSuccess'), { id: 'generating-dpr' });
-        navigate(`/dpr/view/${response.data.dprId}`);
-      } else {
-        throw new Error(response.message || 'Failed to generate DPR');
+        dprId = String(response.data.dprId);
+        lastGenerated.current = { key, id: dprId };
+        if (cancelled()) {
+          toast.dismiss('generating-dpr');
+          return;
+        }
       }
+      toast.loading(tf('Generating your DPR…'), { id: 'generating-dpr' });
+      const file = await exportGeneratedDpr(dprId, format, abort.signal);
+      toast.remove('generating-dpr');
+      // Try the download straight away. A browser may block an automatic download, so the dialog also shows a real
+      // download link: a click on it is always allowed.
+      downloadBlob(file.blob, file.filename);
+      setReadyFile(file);
     } catch (error: any) {
+      if (cancelled() || error?.name === 'CanceledError' || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
+        toast.dismiss('generating-dpr');
+        return;
+      }
       toast.error(
         error.response?.data?.message || error.message || t('individualDpr.toasts.generateFailed'),
         { id: 'generating-dpr' }
       );
     } finally {
+      if (generateAbort.current === abort) generateAbort.current = null;
       setIsGenerating(false);
+      setExporting(null);
     }
   };
 
@@ -1093,8 +1141,8 @@ export const IndividualDPRCreation: React.FC = () => {
           ? 'relative z-[55] shrink-0 border-b border-border bg-background pb-2 pt-1.5'
           : (setupPhase === 'form' ? 'relative z-[56] shrink-0 border-b border-border bg-background shadow-[0_1px_2px_rgba(16,24,40,0.04)]' : 'sm:sticky top-16 z-[55] border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60')}>
           <div className={stylingLayout ? 'mx-auto w-full max-w-7xl px-4' : 'mx-auto w-full max-w-7xl px-4 py-2'}>
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <BackButton
                   label={setupPhase === 'pick'
                     ? back.label
@@ -1126,7 +1174,7 @@ export const IndividualDPRCreation: React.FC = () => {
                     back.go();
                   }}
                 />
-                <div>
+                <div className="min-w-0">
                   <h1 className="text-xl font-bold leading-tight">
                     {isEditing
                       ? t('individualDpr.editTitle', { defaultValue: 'Edit DPR' })
@@ -1136,7 +1184,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 </div>
               </div>
 
-              <div className="ml-auto flex items-center justify-end gap-2 flex-wrap">
+              <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:justify-end">
                 {setupPhase === 'brief' && (
                   <Button variant="primary" onClick={handleBriefNext} className="gap-2" data-tour="start-steps">
                     {t('individualDpr.picker.continueToForm', { defaultValue: 'Start DPR steps' })}
@@ -1145,12 +1193,12 @@ export const IndividualDPRCreation: React.FC = () => {
                 )}
                 {setupPhase === 'form' && (
                   <>
-                    <label data-tour="scheme-select" className="flex items-center gap-2 text-sm">
+                    <label data-tour="scheme-select" className="flex w-full items-center gap-2 text-sm sm:w-auto">
                       <span className="text-muted-foreground whitespace-nowrap">
                         {t('individualDpr.schemeLabel', { defaultValue: 'Scheme' })}
                       </span>
                       <select
-                        className="w-52 min-w-0 truncate rounded-md border border-input bg-background px-2 py-1.5 text-sm sm:w-80 xl:w-[26rem] 2xl:w-[32rem]"
+                        className="min-w-0 flex-1 truncate rounded-md sm:w-80 sm:flex-none border border-input bg-background px-2 py-1.5 text-sm xl:w-[26rem] 2xl:w-[32rem]"
                         title={SCHEME_OPTIONS.find((opt) => opt.code === (data.matchedSchemeCode || '')) ? tf(SCHEME_OPTIONS.find((opt) => opt.code === (data.matchedSchemeCode || '')).label) : undefined}
                         value={data.matchedSchemeCode || ''}
                         onChange={(e) => handleSchemeDropdownChange(e.target.value)}
@@ -1163,7 +1211,7 @@ export const IndividualDPRCreation: React.FC = () => {
                         ))}
                       </select>
                     </label>
-                    <span data-tour="mode-toggle" className="inline-flex">
+                    <span data-tour="mode-toggle" className="inline-flex max-sm:min-w-0 max-sm:flex-1 max-sm:[&>*]:w-full">
                       <EditModeToggle mode={editMode} onChange={(mode) => (mode === editMode ? undefined : fadeThen(() => setEditMode(mode)))} />
                     </span>
                     {isAdmin && devMode && (
@@ -1190,7 +1238,7 @@ export const IndividualDPRCreation: React.FC = () => {
                       size="sm"
                       onClick={() => void handleGenerateDPR()}
                       isLoading={isGenerating}
-                      className="gap-2"
+                      className="gap-2 max-sm:flex-1 max-sm:whitespace-nowrap max-sm:px-2"
                       data-tour="generate"
                       title={overall.readyToGenerate ? tf('Creates the final DPR from your answers.') : tf('Creates the final DPR. It turns on as soon as every required answer is filled in.')}
                       disabled={!overall.readyToGenerate}
@@ -1266,7 +1314,7 @@ export const IndividualDPRCreation: React.FC = () => {
                 setInvalidFields([]);
                 setRequiredNotice('');
                 setCurrentStep(step);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showFormTop();
               }}
               activeClass={schemeUi?.stepActiveClass}
               idleClass={schemeUi?.stepIdleClass}
@@ -1819,6 +1867,7 @@ export const IndividualDPRCreation: React.FC = () => {
           onPick={(id) => onStyleChange(applyPreset(docStyle, id))}
         />
       ) : null}
+      <GenerateFormatDialog open={formatOpen} busy={exporting} ready={readyFile} onChoose={(format) => void generateInFormat(format)} onAnother={() => setReadyFile(null)} onClose={closeFormatDialog} />
       {guideLayer}
     </Layout>
   );

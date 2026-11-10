@@ -14,6 +14,7 @@ import { stampAiDisclaimer } from '../lib/aiDisclaimer';
 import { QualityService } from '../services/quality.service';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { AuthRequest } from '../types';
+import { sanitizeHtmlDocument } from '../lib/security/sanitizeHtmlDoc';
 import { AuditService } from '../services/audit.service';
 import multer from 'multer';
 import path from 'path';
@@ -886,16 +887,26 @@ export class DPRController {
       console.log(`   HTML length: ${html.length} chars`);
 
       let pdfBuffer: Buffer;
+      // If the person cancels (or the connection drops) before the file is sent, stop the PDF engine.
+      const cancel = new AbortController();
+      res.once('close', () => {
+        if (!res.writableEnded) cancel.abort();
+      });
       try {
         const pdfOptions = pdfOptionsFromCapturedHtml(html);
         pdfBuffer = await DPRService.generatePDFFromHTML(
           html,
-          pdfOptions
+          { ...(pdfOptions || {}), abortSignal: cancel.signal }
         );
       } catch (htmlError: any) {
+        if (cancel.signal.aborted) {
+          console.log(`🛑 PDF for DPR ${dprId} cancelled by the client`);
+          return;
+        }
         console.warn('⚠️ Exact HTML PDF failed, falling back to scheme/server PDF:', htmlError?.message);
         pdfBuffer = await DPRService.generatePDF(dprId, language === 'telugu' ? 'telugu' : 'english');
       }
+      if (cancel.signal.aborted) return;
 
       if (Buffer.isBuffer(pdfBuffer) && pdfBuffer.length >= 4) pdfBuffer = await stampAiDisclaimer(pdfBuffer);
 
@@ -940,6 +951,56 @@ export class DPRController {
         message: 'Failed to download PDF',
         error: error.message,
       });
+    }
+  }
+
+  /**
+   * Download DPR as DOCX, built from the same on-screen report HTML the PDF is printed from, so the Word file has the
+   * same content and structure as the PDF. Falls back to the server-built document when the HTML cannot be used.
+   */
+  static async downloadDOCXHtml(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { dprId } = req.params;
+      const html = req.body?.html;
+      if (!html || typeof html !== 'string' || html.trim().length === 0) {
+        res.status(400).json({ success: false, message: 'Missing required field: html' });
+        return;
+      }
+      if (html.length > 20_000_000) {
+        res.status(413).json({ success: false, message: 'HTML payload too large' });
+        return;
+      }
+
+      let docxBuffer: Buffer;
+      try {
+        // The request body is not cleaned by the generic sanitiser (it would strip the markup); the stricter document
+        // sanitiser used for the PDF cleans it here, then it is only parsed, never run.
+        const { htmlToDocxBuffer } = await import('../services/htmlToDocx');
+        docxBuffer = await htmlToDocxBuffer(sanitizeHtmlDocument(html));
+      } catch (htmlError: any) {
+        console.warn('⚠️ DOCX from the on-screen report failed, using the server-built document:', htmlError?.message);
+        docxBuffer = await DPRService.generateDOCX(dprId, 'english');
+      }
+
+      const dpr = await DPRService.getDPR(dprId);
+      const projectName = dpr?.projectId?.projectName || dprId;
+      const safeProjectName = String(projectName).replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="DPR_${safeProjectName}_english.docx"`);
+      res.setHeader('Content-Length', docxBuffer.length.toString());
+      res.setHeader('Cache-Control', 'no-cache');
+      await AuditService.log({
+        action: 'dpr_download',
+        userId: req.user?.userId,
+        role: req.user?.role,
+        targetType: 'dpr',
+        targetId: dprId,
+        req,
+      });
+      res.send(docxBuffer);
+    } catch (error: any) {
+      console.error('Download DOCX (from HTML) error:', error);
+      res.status(500).json({ success: false, message: 'Failed to download DOCX', error: error.message });
     }
   }
 

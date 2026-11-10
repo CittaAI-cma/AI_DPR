@@ -173,7 +173,7 @@ export const FeaturesScroller: React.FC<{ features: BentoFeature[]; heading: Rea
       <div
         role="tablist"
         aria-label={tf('Features')}
-        className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-line bg-white p-1.5 shadow-[0_6px_20px_-14px_rgba(16,52,50,0.4)] scrollbar-hide"
+        className="flex max-w-full items-center gap-1 overflow-x-auto overflow-y-hidden rounded-full border border-line bg-white p-1.5 shadow-[0_6px_20px_-14px_rgba(16,52,50,0.4)] scrollbar-hide"
       >
         {features.map((f, i) => {
           const Icon = f.icon;

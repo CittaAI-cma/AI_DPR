@@ -640,7 +640,7 @@ export const ClusterDPRCreation: React.FC = () => {
         {/* Step Progress Indicator */}
         <div className="sm:sticky top-[8.75rem] z-20 bg-background/95 backdrop-blur border-b border-border">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            <div className="flex items-center gap-2 overflow-x-auto overflow-y-hidden pb-2">
               {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {
                 const isCompleted = getStepCompletion(step);
                 const isCurrent = step === currentStep;

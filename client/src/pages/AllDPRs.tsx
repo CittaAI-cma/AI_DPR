@@ -21,7 +21,7 @@ import {
   Trash2,
   CheckCircle,
   Clock,
-  AlertCircle,
+  Send,
   BarChart3,
   X,
   Sparkles,
@@ -261,7 +261,7 @@ export const AllDPRs: React.FC = () => {
       case 'approved':
         return 'bg-success/10 text-success-text border border-success/20';
       case 'submitted':
-        return 'bg-secondary/10 text-secondary-text border border-secondary/20';
+        return 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20';
       case 'draft':
         return 'bg-warning/10 text-warning-text border border-warning/20';
       case 'analyzed':
@@ -279,7 +279,7 @@ export const AllDPRs: React.FC = () => {
       case 'approved':
         return <CheckCircle className="h-4 w-4" />;
       case 'submitted':
-        return <AlertCircle className="h-4 w-4" />;
+        return <Send className="h-4 w-4" />;
       case 'draft':
         return <Clock className="h-4 w-4" />;
       case 'analyzed':

@@ -397,3 +397,15 @@ Details are entered once and carried forward (`client/src/lib/individualDpr/cont
 - **Service and trading:** an assets list instead (`step12.assetItems`: asset, type, qty, unit cost; the total feeds the equipment line). Labels change too: Equipment & assets, Materials & supplies, Annual service volume, How the service is delivered (traders: cost of goods for resale, annual sales volume, how you buy and sell).
 - **Size.** From the project cost once entered (under ₹5 lakh tiny, under ₹50 lakh small, under ₹2 crore medium, above that large), otherwise from the Scheme Finder budget. For tiny projects without a lean scheme pack the list is optional (collapsed, or hidden for manufacturing vanilla DPRs). Schemes that already hid heavy capex tables (`hideComplexCapex`) are unchanged.
 - The live DPR, preview and export follow the same choice (Assets list or Machinery list table, matching labels).
+
+## One DPR per draft (no copies)
+
+Saving, re-saving and generating a Latest (individual) DPR all write to the same DPR record:
+
+- The client sends the id of the DPR that is open (`dprId`, taken from the address when a draft is opened or resumed) with the answers.
+- `findEditableDraft` (`server/src/lib/dprDraftLookup.ts`) picks that DPR; if none is sent, the project's most recently changed draft. Both `POST /dpr/cluster/draft/save` and `POST /dpr/cluster/generate` use it, so generating again (for example once for PDF and once for Word) updates the DPR instead of listing it once per click.
+- A submitted, approved or rejected DPR is never overwritten: generating after that creates a new version.
+- Cluster DPRs keep their own flow.
+- Test: `npm run test:dpr-versions` in `server` (needs the API running).
+- Existing copies: `npx ts-node --transpile-only src/scripts/mergeDuplicateDrafts.ts` lists them (a dry run); add `--apply` to remove the older drafts of each individual project and keep the one changed last.
+

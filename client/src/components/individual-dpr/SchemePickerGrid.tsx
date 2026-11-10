@@ -286,7 +286,8 @@ export const SchemePickerGrid: React.FC<SchemePickerGridProps> = ({ onSelect }) 
                     card.isVanilla ? 'bg-secondary/15 text-secondary-text' : 'bg-primary/10 text-primary'
                   }`}
                 >
-                  {card.isVanilla ? <Landmark className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}
+                  {/* The same icon the level filter uses for this level. */}
+                  {React.createElement(LEVELS.find((item) => item.id === card.level)?.icon || Building2, { className: 'h-5 w-5' })}
                 </div>
                 {card.code && finder?.suggested.has(card.code) ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground">

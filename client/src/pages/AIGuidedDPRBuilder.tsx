@@ -1534,7 +1534,7 @@ Return ready-to-use content that can be directly filled into form fields. The us
             </div>
 
             {/* Step Indicators */}
-            <div role="region" aria-label={t('dprBuilder.title')} tabIndex={0} className="flex items-center justify-between mb-8 overflow-x-auto pb-4 scrollbar-hide focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+            <div role="region" aria-label={t('dprBuilder.title')} tabIndex={0} className="flex items-center justify-between mb-8 overflow-x-auto overflow-y-hidden pb-4 scrollbar-hide focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
               {STEPS.map((step, index) => {
                 const StepIcon = step.icon;
                 const isActive = index === currentStep;

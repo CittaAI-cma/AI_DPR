@@ -409,7 +409,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Navigation Tabs */}
         <div className="border-b border-border">
-          <div className="flex gap-1 overflow-x-auto" role="tablist">
+          <div className="flex gap-1 overflow-x-auto overflow-y-hidden" role="tablist">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -656,7 +656,7 @@ export const AdminDashboard: React.FC = () => {
                                   : dpr.status === 'rejected'
                                   ? 'bg-destructive/10 text-destructive-text'
                                   : dpr.status === 'submitted'
-                                  ? 'bg-warning/10 text-warning-text'
+                                  ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300'
                                   : 'bg-muted text-muted-foreground'
                               }`}
                             >

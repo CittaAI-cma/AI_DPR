@@ -131,7 +131,9 @@ export const Profile: React.FC = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* items-start: each field keeps its own height. Stretched cells (the Role card is tall) would let the global
+                  side-by-side rule push the input to the bottom, leaving a large gap under its label. */}
+              <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-6">
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-medium text-foreground flex items-center gap-2">
                     <User className="h-4 w-4" />

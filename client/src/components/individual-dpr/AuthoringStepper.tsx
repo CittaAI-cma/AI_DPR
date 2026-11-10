@@ -40,6 +40,11 @@ export const AuthoringStepper: React.FC<Props> = ({
   const tf = useClusterFormText();
   const livePercent = overall.percent;
 
+  // The strip scrolls sideways only. overflow-y-hidden matters: a hovered (enlarged) dot or a name bubble can overflow it by a
+  // pixel, and on systems with classic scrollbars that made a vertical scrollbar appear and vanish under the pointer, so the
+  // strip flickered when the pointer crossed the lines between the dots. The current step's name hides only while a dot is
+  // hovered (not over the lines), so crossing a line never blanks the names.
+
   // Keep the current step in view when the strip is wider than the screen, scrolling only the strip (not the page).
   const stripRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -78,7 +83,7 @@ export const AuthoringStepper: React.FC<Props> = ({
         onKeyDown={onStripKey}
         onPointerMove={() => hush && setHush(false)}
         onFocusCapture={() => hush && setHush(false)}
-        className="group/strip relative flex items-start overflow-x-auto py-[26px] [scrollbar-width:thin]"
+        className="group/strip relative flex items-start overflow-x-auto overflow-y-hidden py-[26px] [scrollbar-width:thin] max-sm:pb-2 max-sm:pt-3"
         role="list"
         aria-label={tf('DPR steps')}
       >
@@ -146,9 +151,9 @@ export const AuthoringStepper: React.FC<Props> = ({
                 {/* The name of the step you are on stays in view; pointing at (or tabbing to) any dot shows that dot's name instead. */}
                 <span
                   role="presentation"
-                  className={`pointer-events-none absolute top-full z-20 mt-1 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium leading-none text-white shadow-md transition-opacity duration-150 ${hush ? 'invisible' : ''} ${bubbleSide} ${
+                  className={`pointer-events-none absolute top-full z-20 mt-1 whitespace-nowrap max-sm:hidden rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium leading-none text-white shadow-md transition-opacity duration-150 ${hush ? 'invisible' : ''} ${bubbleSide} ${
                     current
-                      ? 'opacity-100 group-hover/strip:opacity-0 group-hover/dot:!opacity-100 group-focus-visible/dot:!opacity-100'
+                      ? 'opacity-100 group-has-[[data-step-dot]:hover]/strip:opacity-0 group-hover/dot:!opacity-100 group-focus-visible/dot:!opacity-100'
                       : 'opacity-0 group-hover/dot:opacity-100 group-focus-visible/dot:opacity-100'
                   }`}
                 >
@@ -161,6 +166,16 @@ export const AuthoringStepper: React.FC<Props> = ({
         })}
         </div>
       </div>
+      {/* On a phone the step's name is a line of its own (a floating name would be cut off at the edge of the strip). */}
+      {(() => {
+        const at = sections.findIndex((section) => section.step === currentStep);
+        const name = at >= 0 ? tf(sections[at].title).replace(/^\s*(Step|దశ)\s*\d+\s*[:.\-–]\s*/i, '') : '';
+        return name ? (
+          <p className="px-1 pb-2 text-xs font-medium text-foreground break-words sm:hidden" aria-hidden="true">
+            {stepLabel(at + 1)} · {name}
+          </p>
+        ) : null;
+      })()}
       {/* The bottom edge of the whole stepper is the progress bar: it fills along the border as the report is filled in. */}
       <div
         role="progressbar"

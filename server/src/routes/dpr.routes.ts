@@ -112,6 +112,7 @@ router.get('/:dprId/download/pdf', DPRController.downloadPDF);
 router.post('/:dprId/download/pdf', DPRController.downloadPDF);
 router.post('/:dprId/download/pdf/html', DPRController.downloadPDFHtml);
 router.get('/:dprId/download/docx', DPRController.downloadDOCX);
+router.post('/:dprId/download/docx/html', DPRController.downloadDOCXHtml);
 router.get('/:dprId/download/xls', DPRController.downloadXLS);
 
 router.get('/:dprId/quality', requireAiConsent, DPRController.analyzeQuality);

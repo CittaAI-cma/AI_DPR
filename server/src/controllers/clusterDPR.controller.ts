@@ -12,6 +12,7 @@ import { Project } from '../models/Project.model';
 import { DPRVersion } from '../models/DPRVersion.model';
 import { ClusterSection } from '../models/ClusterSection.model';
 import { payloadHasUnder18Applicant, under18Response } from '../lib/under18';
+import { findEditableDraft } from '../lib/dprDraftLookup';
 import { AuditService } from '../services/audit.service';
 import { KycFile } from '../models/KycFile.model';
 import {
@@ -780,18 +781,23 @@ export class ClusterDPRController {
       }
 
       // Calculate total cost from step 12 if available
+      // Amounts may arrive as text ("2.4"); adding text with + would join it ("0.002.4") and the project would not save.
+      const amount = (value: unknown) => {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : 0;
+      };
       const totalCost = clusterData.step12
-        ? (clusterData.step12.land || 0) +
-        (clusterData.step12.building || 0) +
-        (clusterData.step12.machinery || 0) +
-        (clusterData.step12.utilitiesAndInfrastructure || 0) +
-        (clusterData.step12.preliminaryAndPreOperative || 0) +
-        (clusterData.step12.workingCapitalMargin || 0)
+        ? amount(clusterData.step12.land) +
+          amount(clusterData.step12.building) +
+          amount(clusterData.step12.machinery) +
+          amount(clusterData.step12.utilitiesAndInfrastructure) +
+          amount(clusterData.step12.preliminaryAndPreOperative) +
+          amount(clusterData.step12.workingCapitalMargin)
         : 0;
 
       // Calculate own contribution from step 13 if available
-      const ownContribution = clusterData.step13?.spvContribution || 0;
-      const loanAmount = clusterData.step13?.bankLoan || 0;
+      const ownContribution = amount(clusterData.step13?.spvContribution);
+      const loanAmount = amount(clusterData.step13?.bankLoan);
 
       if (!project) {
         project = await Project.create({
@@ -825,11 +831,8 @@ export class ClusterDPRController {
       }
 
       // Create or update DPRVersion record
-      let dprVersion = await DPRVersion.findOne({
-        projectId: project._id.toString(),
-        userId,
-        status: 'draft',
-      }).sort({ createdAt: -1 });
+      // The DPR the person has open (its id is sent with their answers), else the latest draft of the project.
+      let dprVersion = await findEditableDraft(project._id.toString(), userId, clusterData.dprId);
 
       if (!dprVersion) {
         // Create base DPRVersion record

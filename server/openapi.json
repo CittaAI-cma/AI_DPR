@@ -3320,6 +3320,62 @@
         }
       }
     },
+    "/dpr/{dprId}/download/docx/html": {
+      "post": {
+        "tags": [
+          "DPR"
+        ],
+        "summary": "Download DOCXHtml",
+        "operationId": "postDprDprIdDownloadDocxHtml",
+        "parameters": [
+          {
+            "name": "dprId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
     "/dpr/{dprId}/download/pdf": {
       "get": {
         "tags": [

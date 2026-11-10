@@ -73,7 +73,7 @@ export function sanitizeValue(value: unknown, stats: SanitizeStats = { droppedKe
 }
 
 /** Endpoints that take a whole HTML document and clean it with the stricter document sanitiser instead. */
-const HTML_BODY_PATHS = [/\/download\/pdf\/html$/];
+const HTML_BODY_PATHS = [/\/download\/pdf\/html$/, /\/download\/docx\/html$/];
 
 function replaceContents(target: any, cleaned: any) {
   for (const key of Object.keys(target)) delete target[key];

@@ -68,7 +68,7 @@ export const SchemeBriefPanel: React.FC<SchemeBriefPanelProps> = ({ schemeCode, 
           </h2>
           <p className="mt-3 text-sm sm:text-base leading-6 text-muted-foreground">{loc(brief.intro, lang)}</p>
 
-          <div className="mt-6 flex gap-1 overflow-x-auto border-b border-border">
+          <div className="mt-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border">
             {TABS.map((item) => {
               const active = tab === item.id;
               return (

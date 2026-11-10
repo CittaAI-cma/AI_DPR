@@ -172,6 +172,7 @@ import { suggestUnitTitle } from '@/lib/individualDpr/coverTitle';
 import { getUnitName, withSyncedUnitName } from '@/lib/individualDpr/toIndividualPayload';
 import { individualDprApi } from '@/lib/individualDpr/individualDprApi';
 import { isKycUploaded, kycDisplayName, kycUploadPayload } from '@/lib/privacy/kycField';
+import { UploadSlot } from '@/components/individual-dpr/UploadSlot';
 import {
   normalizeMilestones,
   toDateInputValue,
@@ -290,6 +291,7 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
 
   // State for Step 18 file uploads (must be at top level due to React hooks rules)
   const [uploadingFiles, setUploadingFiles] = React.useState<Record<string, boolean>>({});
+  const [failedUploads, setFailedUploads] = React.useState<Record<string, boolean>>({});
 
   // Debug: Log when step data changes (reduced frequency)
   // React.useEffect(() => {
@@ -363,8 +365,11 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
   const scale = scaleOf(data, draftProjectCost(data));
   const setKind = (next: string) => setSchemeExtras({ ...(data.schemeExtras || {}), businessKind: next });
 
+  /** Fields kept with the scheme extras rather than in the step's own answers. */
+  const savedAsExtra = (field: string) =>
+    extraFieldNames.includes(field) || ['craft', 'currentTools', 'newTools', 'covOrLor', 'upiQr', 'fssai', 'apiicPark'].includes(field);
   const handleInputChange = (field: string, value: any) => {
-    if (extraFieldNames.includes(field) || ['craft', 'currentTools', 'newTools', 'covOrLor', 'upiQr', 'fssai', 'apiicPark'].includes(field)) {
+    if (savedAsExtra(field)) {
       updateExtras({ [field]: normalizeExtraValue(field, value) });
       return;
     }
@@ -4888,18 +4893,22 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
     const handleFileChange = async (field: string, file: File | null) => {
       if (file) {
         setUploadingFiles((prev) => ({ ...prev, [field]: true }));
+        setFailedUploads((prev) => ({ ...prev, [field]: false }));
         try {
           const uploadResult = await individualDprApi.uploadDocument(file);
           if (uploadResult.success && uploadResult.data) {
-            handleInputChange(field, kycUploadPayload(uploadResult.data, file.name));
+            // Always saved with this step's own answers. Going through handleInputChange would send a field such as
+            // covOrLor (an upload here, a yes/no choice in the extras) to the extras and squash the file to "cov".
+            setStepData(contentStep, { ...(getStepData(contentStep) || {}), [field]: kycUploadPayload(uploadResult.data, file.name) });
             toast.success(`${file.name} ${tf('uploaded successfully!')}`);
           } else {
             toast.error(uploadResult.message || tf('Failed to upload document'));
-            handleInputChange(field, file.name);
+            setFailedUploads((prev) => ({ ...prev, [field]: true }));
           }
         } catch (error: any) {
+          // A file that did not reach the server is not saved as uploaded (a bare file name would read as "Uploaded").
           toast.error(error.message || tf('Failed to upload document'));
-          handleInputChange(field, file.name);
+          setFailedUploads((prev) => ({ ...prev, [field]: true }));
         } finally {
           setUploadingFiles((prev) => ({ ...prev, [field]: false }));
         }
@@ -4919,42 +4928,23 @@ const IndividualDPRFormInner: React.FC<IndividualDPRFormProps> = ({
     const uploads = getStep18Uploads(schemeCode, data.ventureMatchAnswers, extras);
     const needEdu = showPmegpEducationGate(schemeCode, data.ventureMatchAnswers?.activity, totalCost);
 
+    const savedValue = (id: string) => stepData[id];
+    const slot = (id: string, label: string) => (
+      <UploadSlot
+        key={id}
+        id={id}
+        label={renderLabel(id, label)}
+        uploadedName={isKycUploaded(savedValue(id)) ? getDisplayName(savedValue(id)) : null}
+        uploading={!!uploadingFiles[id]}
+        failed={!!failedUploads[id]}
+        onFile={(file) => handleFileChange(id, file)}
+      />
+    );
+
     return (
       <div className="space-y-6">
-        {uploads.map((item) => (
-          <div key={item.id}>
-            {renderLabel(item.id, item.label)}
-            <div className="relative">
-              <Input
-                type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                onChange={(e) => handleFileChange(item.id, e.target.files?.[0] || null)}
-                disabled={uploadingFiles[item.id]}
-              />
-              {uploadingFiles[item.id] && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                </div>
-              )}
-            </div>
-            {isKycUploaded(stepData[item.id]) && (
-              <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData[item.id])}</p>
-            )}
-          </div>
-        ))}
-        {needEdu && (
-          <div>
-            {renderLabel('educationCertificate', '8th-pass / education certificate')}
-            <Input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => handleFileChange('educationCertificate', e.target.files?.[0] || null)}
-            />
-            {isKycUploaded(stepData.educationCertificate) && (
-              <p className="text-sm text-green-600 mt-1">✓ {tf("Uploaded")}: {getDisplayName(stepData.educationCertificate)}</p>
-            )}
-          </div>
-        )}
+        {uploads.map((item) => slot(item.id, item.label))}
+        {needEdu && slot('educationCertificate', '8th-pass / education certificate')}
       </div>
     );
   }

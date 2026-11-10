@@ -464,7 +464,7 @@ export const HowItWorksShowcase: React.FC<{ steps: HowItWorksStep[] }> = ({ step
         id={`${baseId}-panel`}
         role="tabpanel"
         aria-labelledby={`${baseId}-tab-${active}`}
-        className="order-1 min-w-0 lg:order-2"
+        className="theme-light order-1 min-w-0 lg:order-2"
       >
         <div ref={panelRef} className="pattern-lattice relative flex aspect-[1/1] w-full min-[480px]:aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-line">
           {step?.image ? (

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import { BorderStyle, Footer, Paragraph, TextRun } from 'docx';
+import { AlignmentType, BorderStyle, Footer, PageNumber, Paragraph, TextRun } from 'docx';
 
 // The same wording is shown in the live preview, the preview page and every downloaded file
 // (client copy: client/src/lib/aiDisclaimer.ts).
@@ -35,7 +35,7 @@ export async function stampAiDisclaimer(pdf: Buffer): Promise<Buffer> {
 }
 
 /** Footer for every page of a Word file: a thin line, then the disclaimer. */
-export function aiDisclaimerDocxFooters() {
+export function aiDisclaimerDocxFooters(options: { pageNumbers?: boolean } = {}) {
   return {
     default: new Footer({
       children: [
@@ -44,6 +44,15 @@ export function aiDisclaimerDocxFooters() {
           spacing: { before: 0, after: 0 },
           children: [new TextRun({ text: AI_DISCLAIMER_TEXT, size: 14, color: '4A5568' })],
         }),
+        ...(options.pageNumbers
+          ? [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 40, after: 0 },
+                children: [new TextRun({ children: ['Page ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES], size: 16, color: '4A5568' })],
+              }),
+            ]
+          : []),
       ],
     }),
   };

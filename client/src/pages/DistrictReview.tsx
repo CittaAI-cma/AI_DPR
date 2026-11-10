@@ -110,7 +110,7 @@ export const DistrictReview: React.FC = () => {
           )}
         </div>
 
-        <div className="mb-4 flex gap-1 overflow-x-auto border-b" role="tablist">
+        <div className="mb-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b" role="tablist">
           {TABS.map((tab) => (
             <button
               key={tab.status}

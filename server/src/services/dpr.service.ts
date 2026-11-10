@@ -4091,8 +4091,10 @@ export class DPRService {
           // Use base64 encoding for images if needed
           try {
             await page.setContent(safeHtml, {
-              waitUntil: ['load', 'networkidle0'],
-              timeout: 90000 // Increased timeout for large documents
+              // The page cannot reach the network (lockDownPage), so there is nothing to wait for after "load";
+              // waiting for network idle only added a 90 second stall to every download.
+              waitUntil: 'load',
+              timeout: 30000
             });
             console.log('✅ HTML content set successfully');
             // Wait a bit for all resources to load
@@ -4207,11 +4209,16 @@ export class DPRService {
       marginLeft?: string;
       format?: 'A4' | 'A3' | 'Letter' | 'Legal';
       preferCssPageSize?: boolean;
+      /** Aborted when the person cancels or the connection drops: Chrome is closed so it stops using the CPU. */
+      abortSignal?: AbortSignal;
     }
   ): Promise<Buffer> {
     if (!html || typeof html !== 'string') {
       throw new Error('HTML must be a string');
     }
+    const startedAt = Date.now();
+    const timings: string[] = [];
+    const lap = (name: string) => timings.push(`${name} ${Date.now() - startedAt}ms`);
 
     const pageMargin = options?.margin || '0';
 
@@ -4221,6 +4228,12 @@ export class DPRService {
       console.log('🔄 Launching Puppeteer for exact HTML-to-PDF...');
 
       const browser = await puppeteer.launch(puppeteerLaunchOptions());
+      lap('chrome started');
+      const onAbort = () => {
+        console.warn('⚠️  PDF request cancelled: closing Chrome');
+        void browser.close().catch(() => undefined);
+      };
+      options?.abortSignal?.addEventListener('abort', onAbort, { once: true });
 
       try {
         const page = await browser.newPage();
@@ -4228,18 +4241,30 @@ export class DPRService {
         // The HTML came from the browser, so treat it as untrusted: clean it, run it without JavaScript, and
         // block every network and file request (see lib/security).
         await lockDownPage(page);
-        const safeHtml = sanitizeHtmlDocument(html);
+        const pageFormat = options?.format || 'A4';
+        // A whole-page inset (options.margin) has to be written into the page's own CSS, after every other style. The
+        // captured page carries `@page { margin: 0 }` from the app's stylesheets, and Chrome lets a CSS @page margin override
+        // the margin given to the PDF engine, so the inset used to be lost (tables ran to the paper's edge).
+        const insetCss = options?.margin
+          ? `<style data-page-inset>@page { size: ${pageFormat}; margin: ${options.margin}; }</style>`
+          : '';
+        const sanitized = sanitizeHtmlDocument(html);
+        const safeHtml = insetCss
+          ? /<\/head>/i.test(sanitized)
+            ? sanitized.replace(/<\/head>/i, `${insetCss}</head>`)
+            : insetCss + sanitized
+          : sanitized;
 
         // Set viewport for A4 (96 DPI)
-        const pageFormat = options?.format || 'A4';
         const viewportWidth = pageFormat === 'A3' ? 1123 : pageFormat === 'Letter' || pageFormat === 'Legal' ? 816 : 794;
         await page.setViewport({ width: viewportWidth, height: 1123 });
 
         console.log('🔄 Setting client-rendered HTML content...');
         try {
           await page.setContent(safeHtml, {
-            waitUntil: ['load', 'networkidle0'],
-            timeout: 90000,
+            // See above: no network is allowed, so "load" is the end of loading. "networkidle0" only stalled for 90 s.
+            waitUntil: 'load',
+            timeout: 30000,
           });
           // Give layout a moment
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -4259,23 +4284,29 @@ export class DPRService {
           // ignore
         }
 
+        lap('page loaded');
         console.log('🔄 Generating PDF...');
         const pdfBuffer = await page.pdf({
           format: options?.format || 'A4',
           printBackground: true,
           displayHeaderFooter: false,
-          margin: {
-            top: options?.marginTop || pageMargin,
-            right: options?.marginRight || pageMargin,
-            bottom: options?.marginBottom || pageMargin,
-            left: options?.marginLeft || pageMargin,
-          },
-          preferCSSPageSize: options?.preferCssPageSize ?? !options?.margin,
+          // With a whole-page inset the CSS @page above carries the margin (and the paper size), so the engine adds none.
+          margin: options?.margin
+            ? { top: '0', right: '0', bottom: '0', left: '0' }
+            : {
+                top: options?.marginTop || pageMargin,
+                right: options?.marginRight || pageMargin,
+                bottom: options?.marginBottom || pageMargin,
+                left: options?.marginLeft || pageMargin,
+              },
+          preferCSSPageSize: options?.margin ? true : options?.preferCssPageSize ?? true,
           timeout: 120000,
           scale: 1.0,
         });
 
         const buffer = Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
+        lap('pdf printed');
+        console.log(`⏱️  PDF from page: ${timings.join(' | ')} (${Math.round(html.length / 1000)}KB of HTML)`);
 
         // Validate header
         const isValidPDF =

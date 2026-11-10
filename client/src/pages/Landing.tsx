@@ -175,7 +175,7 @@ export const Landing: React.FC = () => {
         </nav>
       </header>
 
-      <main id="main" className="theme-light text-foreground">
+      <main id="main" className="text-foreground">
         {/* Hero Section */}
         <section id="hero" aria-labelledby="hero-title" className="relative scroll-mt-24 overflow-hidden bg-white">
           <div className="page-container pt-12 sm:pt-14 lg:pt-16 lg:[@media(max-height:820px)]:pt-10">
@@ -276,11 +276,9 @@ export const Landing: React.FC = () => {
                 <span className="sm:block">{c.how.sub[1]}</span>
               </p>
             </div>
-            <div className="theme-light">
-              <Suspense fallback={<div className="min-h-[420px]" aria-hidden="true" />}>
-                <HowItWorksShowcase steps={steps} />
-              </Suspense>
-            </div>
+            <Suspense fallback={<div className="min-h-[420px]" aria-hidden="true" />}>
+              <HowItWorksShowcase steps={steps} />
+            </Suspense>
           </div>
         </section>
 

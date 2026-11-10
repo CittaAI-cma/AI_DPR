@@ -415,6 +415,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
   const kind = businessKind(rawData);
   const uploads = getIndividualUploads(schemeCode, data);
   const uploadStore = data.step18 || data.uploads || {};
+  const uploadedValue = (item: { id: string; label: string }) => uploadStore[item.id] || uploadStore[item.label];
 
   const typeHere = tf('Type here');
   // Out of the page flow (absolute), so it never changes the layout or the page breaks; hidden when printed.
@@ -875,7 +876,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
     if (showEmpty) return true;
     if (focusStep !== undefined && def.n <= focusStep) return true;
     if (def.id === 'uploads' || def.contentStep === 18) {
-      return uploads.some((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label])) || blockVisible(def.id);
+      return uploads.some((item) => isKycUploaded(uploadedValue(item))) || blockVisible(def.id);
     }
     return getIndividualDocFields(def.contentStep, schemeCode, budget, kind).some(fieldHasAnswers) || blockVisible(def.id);
   };
@@ -1054,7 +1055,7 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
         if (def.id === 'uploads' || def.contentStep === 18) {
           const uploaded = showEmptyProp || def.n === focusStep
             ? uploads
-            : uploads.filter((item) => isKycUploaded(uploadStore[item.id] || uploadStore[item.label]));
+            : uploads.filter((item) => isKycUploaded(uploadedValue(item)));
           return (
             <section key={def.id} id={`individual-section-${def.n}`} data-dpr-section={def.id} onFocusCapture={focusIn(def.n, def.id)} className={`individual-sec${hot ? ' dpr-sec-hot' : ''}${onOpenInForm ? ' has-open-form' : ''}`}>
               {openInFormButton(def.n)}
@@ -1065,9 +1066,9 @@ export const IndividualDPRDocumentView: React.FC<IndividualDPRDocumentViewProps>
               {uploaded.length ? (
                 <ul className="individual-doc-list">
                   {uploaded.map((u) => (
-                    <li key={u.id} className={isKycUploaded(uploadStore[u.id] || uploadStore[u.label]) ? 'is-uploaded' : undefined}>
+                    <li key={u.id} className={isKycUploaded(uploadedValue(u)) ? 'is-uploaded' : undefined}>
                       <span className="doc-label">{tf(u.label)}</span>
-                      <span className="doc-status">{isKycUploaded(uploadStore[u.id] || uploadStore[u.label]) ? tf('Uploaded') : tf('Not uploaded')}</span>
+                      <span className="doc-status">{isKycUploaded(uploadedValue(u)) ? tf('Uploaded') : tf('Not uploaded')}</span>
                     </li>
                   ))}
                 </ul>
